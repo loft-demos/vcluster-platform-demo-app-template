@@ -1,0 +1,45 @@
+name: delete-pr-preview
+
+# on pr closed with preview label or preview unlabeled
+on:
+  pull_request:
+    types: [closed, unlabeled]
+    branches:
+      - main
+
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  delete-pr-preview:
+    if: (github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'preview')) || github.event.label.name == 'preview'
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+    steps:
+      - id: checkout
+        if: github.event.action == 'unlabeled'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - id: delete-argocd-app
+        if: github.event.action == 'unlabeled'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --remove-label "preview-cluster-ready"
+      
+      - id: install-loft-cli
+        uses: loft-sh/setup-loft@v2
+        with:
+          version: v3.2.4
+          url: ${{ secrets.LOFT_URL }}
+          # Specify your Loft access key here
+          access-key: ${{ secrets.LOFT_GITHUB_ACTIONS_ACCESS_KEY }}
+
+      - id: delete-preview-vcluster
+        run: |
+          loft delete vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project preview
+     
