@@ -1,0 +1,30 @@
+name: create-vcluster
+
+on:
+  workflow_dispatch:
+  
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  create-vcluster:
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - id: install-loft-cli
+        uses: loft-sh/setup-loft@v2
+        with:
+          version: v3.2.4
+          url: ${{ secrets.LOFT_URL }}
+          # Specify your Loft access key here
+          access-key: ${{ secrets.LOFT_ACCESS_KEY }}
+
+      - id: create-vcluster
+        run: |
+          loft create vcluster $REPO_NAME --project default --recreate

@@ -1,0 +1,58 @@
+name: create-pr-preview
+
+# on merge to main from pull request (recommended)
+on:
+  pull_request:
+    types: [labeled]
+    branches:
+      - main
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  PR_LINK: ${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+
+jobs:
+  create-preview-env:
+    if: ${{ github.event.label.name == 'preview' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+      pull-requests: write
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - id: install-loft-cli
+        uses: loft-sh/setup-loft@v2
+        with:
+          version: v3.2.4
+          url: ${{ secrets.LOFT_URL }}
+          # Specify your Loft access key here
+          access-key: ${{ secrets.LOFT_PREVIEW_ACCESS_KEY }}
+
+      - id: create-preview-vcluster
+        run: |
+          loft create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project preview --recreate \
+            --link "GitHub PR=$PR_LINK" \
+            --link "Preview app=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}.previews.k8s.kurtmadel.com" \
+            --link "Argo CD App=https://argocd.k8s.kurtmadel.com/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-${{ github.event.pull_request.number }}?view=tree&resource="
+
+      - id: create-argocd-app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "preview-cluster-ready"
+
+      - id: add-pr-link
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ github.event.pull_request.number }}
+          header: release
+          message: |
+            [Preview environment app link](https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}.previews.k8s.kurtmadel.com)
+            
+            [Argo CD App](https://argocd.k8s.kurtmadel.com/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-${{ github.event.pull_request.number }}?view=tree&resource=)
+            
+            [Preview vcluster pods](${{ secrets.LOFT_URL }}/projects/preview/vclusters/$REPO_NAME-pr-${{ github.event.pull_request.number }}/pods)
+            
