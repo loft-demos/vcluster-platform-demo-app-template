@@ -35,11 +35,11 @@ jobs:
         uses: loft-sh/setup-loft@v2
         with:
           version: v3.2.4
-          url: ${{ secrets.LOFT_URL }}
+          url: https://REPLACE_LOFT_DEMO_DOMAIN
           # Specify your Loft access key here
-          access-key: ${{ secrets.LOFT_GITHUB_ACTIONS_ACCESS_KEY }}
+          access-key: ${{ secrets.LOFT_DEMO_ENV_ACCESS_KEY }}
 
       - id: delete-preview-vcluster
         run: |
-          loft delete vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project preview
+          loft delete vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework
      

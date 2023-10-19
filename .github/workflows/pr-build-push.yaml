@@ -36,7 +36,7 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ github.event.pull_request.head.sha }}
             org.opencontainers.image.title=${{ github.event.repository.name }}
-            org.opencontainers.image.vendor=kurtmadel.com
+            org.opencontainers.image.vendor=loft.sh
             org.opencontainers.image.source=${{ github.repositoryUrl }}
             org.opencontainers.image.description=Simple echo app based on the HashiCorp echo-http.
       - name: Set up QEMU
