@@ -34,7 +34,7 @@ jobs:
       - id: install-loft-cli
         uses: loft-sh/setup-loft@v2
         with:
-          version: v3.2.4
+          version: v3.3.0-beta.4
           url: https://REPLACE_LOFT_DEMO_DOMAIN
           # Specify your Loft access key here
           access-key: ${{ secrets.LOFT_DEMO_ENV_ACCESS_KEY }}
