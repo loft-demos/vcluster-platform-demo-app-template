@@ -39,7 +39,7 @@ jobs:
             --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN" \
             --link "Argo CD=https://argocd-REPLACE_LOFT_DEMO_DOMAIN/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-${{ github.event.pull_request.number }}?view=tree&resource="
 
-      - id: create-argocd-app
+      - id: trigger-argocd-appset
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
