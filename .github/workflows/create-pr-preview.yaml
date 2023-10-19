@@ -26,7 +26,7 @@ jobs:
       - id: install-loft-cli
         uses: loft-sh/setup-loft@v2
         with:
-          version: v3.2.4
+          version: v3.3.0-beta.4
           url: https://REPLACE_LOFT_DEMO_DOMAIN
           # Specify your Loft access key here
           access-key: ${{ secrets.LOFT_DEMO_ENV_ACCESS_KEY }}
@@ -35,7 +35,7 @@ jobs:
 
       - id: create-preview-vcluster
         run: |
-          loft create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework --recreate \
+          loft create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework \
             --template preview-template \
             --link "GitHub PR=$PR_LINK" \
             --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN" \
