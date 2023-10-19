@@ -30,6 +30,8 @@ jobs:
           url: https://REPLACE_LOFT_DEMO_DOMAIN
           # Specify your Loft access key here
           access-key: ${{ secrets.LOFT_DEMO_ENV_ACCESS_KEY }}
+          kubectl-install: false
+          kubectl-version: v1.28.2
 
       - id: create-preview-vcluster
         run: |
