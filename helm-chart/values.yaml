@@ -60,7 +60,7 @@ ingress:
   tls:
     - hosts:
         - REPO_NAME-REPLACE_LOFT_DEMO_DOMAIN
-resources: {}
+resources:
   limits:
     cpu: 200m
     memory: 256Mi
