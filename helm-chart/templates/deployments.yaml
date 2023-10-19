@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "echo.labels" . | nindent 4 }}
   annotations:
-    app.komodor.com/app.ref: {{ .Values.deployment.commit }}
+    app.github.com/app.ref: {{ .Values.deployment.commit }}
   {{- with .Values.deployment.annotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
