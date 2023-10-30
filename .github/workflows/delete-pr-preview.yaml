@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       id-token: write
+      pull-requests: write
     steps:
       - id: checkout
         if: github.event.action == 'unlabeled'
