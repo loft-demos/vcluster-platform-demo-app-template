@@ -11,7 +11,18 @@ Here is an example `management.loft.sh/v1` `Project` manifest with unrelated con
 
 ```yaml
 kind: Project
-
+apiVersion: management.loft.sh/v1
+metadata:
+  name: api-framework
+spec:
+  displayName: API Framework
+...
+  argoCD:
+    enabled: true
+    cluster: loft-cluster
+    namespace: argocd
+    project:
+      enabled: true
 ```
 
 #### Example: ApplicationSet Pull Request Generator
