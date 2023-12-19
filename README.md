@@ -115,7 +115,7 @@ spec:
           value: >-
             https://github.com/loft-demos/REPO_NAME/pull/{{number}}
 ```
-The `spec.template.spec.destination.server` is dynamic based on the pull request number availabe as `{{number}}` when using the Argo CD Pull Request generator.
+The `spec.template.spec.destination.server` is dynamic based on the pull request number availabe as the `{{number}}` parameter value when using the Argo CD Pull Request generator.
 
 #### Example: ApplicationSet Cluster Generator
 >[!IMPORTANT]
