@@ -168,7 +168,7 @@ spec:
       version: 0.0.0
 ...
 ```
-In this example the values for the `instanceTemplate.metadata.labels` - `env` and `team` are populated with the `env` parameter, but they could also be hardcoded so that every vCluster instance created from this template had the same `env` label value.
+In this example the value for the `instanceTemplate.metadata.labels.env` label is populated with the selected `env` parameter value, but the value also be hardcoded so that every vCluster instance created from this template had the same `env` label value. The `team` label is populated with the `project` vCluster.Pro Parameter values as documented [here](https://www.vcluster.com/pro/docs/apps/parameters#vclusterpro-parameter-values).
 
 The generated Argo CD Cluster `Secret` for a vCluster instance created in the `api-framework` project and using the above template:
 
