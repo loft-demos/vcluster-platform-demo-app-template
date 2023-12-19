@@ -47,6 +47,76 @@ spec:
 
 #### Example: ApplicationSet Pull Request Generator
 
+Once the vCluster.Pro Argo CD integration has been enabled for the vCluster.Pro project and the virtual cluster template, an Argo CD `ApplicationSet` may look something like the following:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: REPO_NAME-pr
+  namespace: argocd
+spec:
+  generators:
+  - pullRequest:
+      github:
+        appSecretName: loft-demo-org-cred
+        # The GitHub organization or user.
+        owner: loft-demos
+        # The Github repository
+        repo: REPO_NAME
+        # (optional) use a GitHub App to access the API instead of a PAT.
+        #appSecretName: github-app-repo-creds
+        # Labels is used to filter the PRs that you want to target. (optional)
+        labels:
+        - preview-cluster-ready
+      requeueAfterSeconds: 30
+  template:
+    metadata:
+      name: 'REPO_NAME-{{branch}}-{{number}}'
+    spec:
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+      source:
+        repoURL: 'https://github.com/loft-demos/REPO_NAME.git'
+        targetRevision: '{{head_sha}}'
+        path: helm-chart/
+        helm:
+          parameters:
+          - name: "image.repository"
+            value: ghcr.io/loft-demos/REPO_NAME
+          - name: "image.tag"
+            value: "{{head_short_sha}}"
+          - name: "image.args.text"
+            value: "Hello from REPO_NAME pr-{{number}} commit {{head_short_sha}}"
+          - name: "ingress.hosts[0].host"
+            value: REPO_NAME-pr-{{number}}-LOFT_DOMAIN
+          - name: ingress.hosts[0].paths[0].backend.service.name
+            value: REPO_NAME
+          - name: ingress.hosts[0].paths[0].backend.service.port.name
+            value: http
+          - name: ingress.hosts[0].paths[0].path
+            value: /
+          - name: ingress.hosts[0].paths[0].pathType
+            value: prefix
+          - name: "ingress.tls[0].hosts[0]"
+            value: REPO_NAME-pr-{{number}}-LOFT_DOMAIN
+      project: "default"
+      destination:
+        server: https://LOFT_DOMAIN/kubernetes/project/api-framework/virtualcluster/REPO_NAME-pr-{{number}}
+        namespace: preview-hello-world-app
+      info:
+        - name: Preview App Link
+          value: >-
+            https://REPO_NAME-pr-{{number}}-LOFT_DOMAIN
+        - name: GitHub PR
+          value: >-
+            https://github.com/loft-demos/REPO_NAME/pull/{{number}}
+```
+The `spec.template.spec.destination.server` is dynamic based on the pull request number availabe as `{{number}}` when using the Argo CD Pull Request generator.
+
 #### Example: ApplicationSet Cluster Generator
 >[!IMPORTANT]
 >The vCluster.Pro Argo CD integration, as described above, must be enabled on the vCluster.Pro project the vCluster instance is created in, for the vCluster instance to be automatically added to Argo CD as an available `Application` `destination` cluster.
