@@ -43,7 +43,7 @@ spec:
       enabled: true
 ```
 >[!IMPORTANT]
->The Argo CD instance must be in a vCluster.Pro connected cluster or in a vCluster instance that is managed by vCluster.Pro. More info is available [here](https://www.vcluster.com/pro/docs/virtual-clusters/argocd#enable-argo-cd-integration).
+>The Argo CD instance must be in a [vCluster.Pro connected cluster](https://www.vcluster.com/pro/docs/clusters/connect-cluster) or in a vCluster instance that is managed by vCluster.Pro. More info is available [here](https://www.vcluster.com/pro/docs/virtual-clusters/argocd#enable-argo-cd-integration).
 
 #### Example: ApplicationSet Pull Request Generator
 
