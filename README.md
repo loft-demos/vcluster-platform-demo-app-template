@@ -5,7 +5,7 @@ Simple echo app and helm chart repository template to use with Loft Labs vCluste
 
 ### Argo CD
 
-vCluster.Pro includes an Argo CD integration that will automatically add a vCluster instance, created with a virtual cluster template, to Argo CD as a target cluster of an Argo CD `Application` `destination`. 
+vCluster.Pro includes an Argo CD integration that will automatically add a vCluster instance, created with a [virtual cluster template](https://www.vcluster.com/pro/docs/virtual-clusters/templates), to Argo CD as a target cluster of an Argo CD `Application` `destination`. 
 
 *Example `management.loft.sh/v1` `VirtualClusterTemplate` manifest (with unrelated configuration execluded - [full version here](https://github.com/loft-demos/loft-demo-base/blob/main/loft/vcluster-templates.yaml)) that enables the automatic syncing of the vCluster instance created with the template to Argo CD:*
 
