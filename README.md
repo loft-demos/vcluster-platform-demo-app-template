@@ -7,7 +7,7 @@ Simple echo app and helm chart repository template to use with Loft Labs vCluste
 
 vCluster.Pro includes an Argo CD integration that will automatically add a vCluster instance, created with a virtual cluster template, to Argo CD as a target cluster. 
 
-*Example `management.loft.sh/v1` `VirtualClusterTemplate` manifest (with unrelated configuration execluded - full version here) that enables the automatic syncing of the vCluster instance created with the template to Argo CD:*
+*Example `management.loft.sh/v1` `VirtualClusterTemplate` manifest (with unrelated configuration execluded - [full version here](https://github.com/loft-demos/loft-demo-base/blob/main/loft/vcluster-templates.yaml)) that enables the automatic syncing of the vCluster instance created with the template to Argo CD:*
 
 ```yaml
 kind: VirtualClusterTemplate
@@ -25,7 +25,7 @@ spec:
 
 The virtual cluster template integration requires that the vCluster.Pro project, where the vCluster instance is created from said template, to have the Argo CD integration for projects enabled. 
 
-*Example `management.loft.sh/v1` `Project` manifest (with unrelated configuration execluded - full version here) that enables the syncing of vCluster instances to Argo CD:*
+*Example `management.loft.sh/v1` `Project` manifest (with unrelated configuration execluded - [full version here](https://github.com/loft-demos/loft-demo-base/blob/main/loft/projects.yaml)) that enables the syncing of vCluster instances to Argo CD:*
 
 ```yaml
 kind: Project
@@ -42,6 +42,8 @@ spec:
     project:
       enabled: true
 ```
+
+NOTE: The Argo CD instance must be in a vCluster.Pro connected cluster or in a vCluster instance that is managed by vCluster.Pro. More info is available [here](https://loft.sh/docs/master/virtual-clusters/argocd#enable-argo-cd-integration).
 
 #### Example: ApplicationSet Pull Request Generator
 
@@ -167,4 +169,32 @@ spec:
         syncOptions:
           - CreateNamespace=true
 ```
-Note the use of the `env` label as part of the `spec.template.spec.source.path`.
+Note the use of the `env` label as part of the `spec.template.spec.source.path` allowing vCluster instances with different `env` values to target different subdirectories in the GitHub repository for the Argo CD generated `Application`.
+
+The resulting Argo CD `Application` for the `hello-app-a1` repository:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello-app-a1-config
+  namespace: argocd
+spec:
+  destination:
+    namespace: hello-world-app
+    server: >-
+      https://a1.us.demo.dev/kubernetes/project/api-framework/virtualcluster/api-framework-dev
+  info:
+    - name: GitHub Repo
+      value: https://github.com/loft-demos/hello-app-a1/
+  project: default
+  source:
+    path: k8s-manifests/dev/
+    repoURL: https://github.com/loft-demos/hello-app-a1.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+```
