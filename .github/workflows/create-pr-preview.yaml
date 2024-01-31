@@ -29,7 +29,7 @@ jobs:
           version: v3.3.3
           url: https://REPLACE_LOFT_DEMO_DOMAIN
           # Specify your Loft access key here
-          access-key: ${{ secrets.LOFT_API_FRAMEWORK_TEAM_ACCESS_KEY }}
+          access-key: ${{ secrets.LOFT_DEMO_ENV_ACCESS_KEY }}
           kubectl-install: false
           kubectl-version: v1.28.2
 
