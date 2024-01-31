@@ -39,7 +39,7 @@ jobs:
             --template preview-template \
             --link "GitHub PR=$PR_LINK" \
             --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN" \
-            --link "Argo CD=https://argocd-REPLACE_LOFT_DEMO_DOMAIN/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-${{ github.event.pull_request.number }}?view=tree&resource="
+            --link "Argo CD=https://argocd-REPLACE_LOFT_DEMO_DOMAIN/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree"
 
       - id: trigger-argocd-appset
         env:
@@ -55,7 +55,7 @@ jobs:
           message: |
             [Preview environment app link](https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN)
             
-            [Argo CD App](https://argocd-REPLACE_LOFT_DEMO_DOMAIN/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-${{ github.event.pull_request.number }}?view=tree&resource=)
+            [Argo CD App](https://argocd-REPLACE_LOFT_DEMO_DOMAIN/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree)
             
             [Preview vcluster pods](REPLACE_LOFT_DEMO_DOMAIN/projects/api-framework/vclusters/$REPO_NAME-pr-${{ github.event.pull_request.number }}/pods)
             
