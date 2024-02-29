@@ -26,19 +26,19 @@ jobs:
       - id: install-loft-cli
         uses: loft-sh/setup-loft@v2
         with:
-          version: v3.3.3
+          version: v3.4.0
           url: https://REPLACE_LOFT_DEMO_DOMAIN
           # Specify your Loft access key here
           access-key: ${{ secrets.LOFT_DEMO_ENV_ACCESS_KEY }}
           kubectl-install: false
-          kubectl-version: v1.28.2
+          kubectl-version: v1.29.2
 
       - id: create-preview-vcluster
         run: |
           loft create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework \
             --template preview-template \
             --link "GitHub PR=$PR_LINK" \
-            --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN" \
+            --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN/" \
             --link "Argo CD=https://argocd-REPLACE_LOFT_DEMO_DOMAIN/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree"
 
       - id: trigger-argocd-appset
