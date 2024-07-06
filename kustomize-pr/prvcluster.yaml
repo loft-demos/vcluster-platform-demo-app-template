@@ -1,0 +1,11 @@
+apiVersion: demo.loft.sh/v1alpha1
+kind: XPRvCluster
+metadata:
+  name: prvcluster
+spec:
+  repo: hello-app-vcluster-pro
+  # vCluster Platform project in which to create vCluster
+  project: api-framework
+  # Supported k8sVersion values include: v1.30.0, v1.29.0, v1.28.5, v1.27.9, v1.26.12
+  k8sVersion: v1.30.0
+  pr_number: 1
