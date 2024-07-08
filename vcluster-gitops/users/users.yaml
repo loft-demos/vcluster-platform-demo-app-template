@@ -1,0 +1,57 @@
+apiVersion: management.loft.sh/v1
+kind: User
+metadata:
+  name: anna-smith
+spec:
+  displayName: Anna Smith
+  owner:
+    team: loft-admins
+  username: anna-smith
+  email: anna.smith@acme.com
+  subject: anna-smith
+  access:
+    - name: loft-access
+      verbs:
+        - get
+        - bind
+        - create
+        - deletekey
+        - getkey
+        - updatekey
+        - createkey
+      subresources:
+        - accesskeys
+        - clusters
+        - profile
+        - permissions
+      users:
+        - anna-smith
+---
+apiVersion: management.loft.sh/v1
+kind: User
+metadata:
+  name: eric-jones
+spec:
+  displayName: Eric Jones
+  owner:
+    team: loft-admins
+  username: eric-jones
+  email: eric.jones@acme.com
+  subject: eric-jones
+  access:
+    - name: loft-access
+      verbs:
+        - get
+        - bind
+        - create
+        - deletekey
+        - getkey
+        - updatekey
+        - createkey
+      subresources:
+        - accesskeys
+        - clusters
+        - profile
+        - permissions
+      users:
+        - eric-jones
