@@ -7,7 +7,7 @@ spec:
   owner:
     user: admin
   templateRef:
-    name: vcluster-pro-template
+    name: default-template
     version: 1.0.x
   clusterRef:
     cluster: loft-cluster
