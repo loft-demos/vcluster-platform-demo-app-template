@@ -1,4 +1,5 @@
 resources:
+- shared-secrets/shared-secrets.yaml
 - teams/teams.yaml
 - users/users.yaml
 - virtual-cluster-templates/vcluster-templates.yaml
