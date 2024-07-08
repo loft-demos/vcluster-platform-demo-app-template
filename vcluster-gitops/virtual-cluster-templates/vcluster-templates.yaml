@@ -1,10 +1,10 @@
 kind: VirtualClusterTemplate
 apiVersion: management.loft.sh/v1
 metadata:
-  name: vcluster-pro-template
+  name: default-template
 spec:
-  displayName: Virtual Cluster Pro Template
-  description: This virtual cluster template deploys a vCluster.Pro virtual cluster
+  displayName: Default Virtual Cluster Template
+  description: This virtual cluster template deploys a vCluster with embedded etcd and integrated CoreDNS.
   owner:
     team: loft-admins
   template:
