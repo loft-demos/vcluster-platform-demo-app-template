@@ -16,7 +16,7 @@ spec:
   allowedTemplates:
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
-      name: vcluster-pro-template
+      name: default-template
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
       name: preview-template
