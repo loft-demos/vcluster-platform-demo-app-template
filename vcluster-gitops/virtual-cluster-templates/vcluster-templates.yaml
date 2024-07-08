@@ -1,0 +1,194 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: vcluster-pro-template
+spec:
+  displayName: Virtual Cluster Pro Template
+  description: This virtual cluster template deploys a vCluster.Pro virtual cluster
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.20.0-beta.10
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        # Checkout https://vcluster.com/pro/docs/ for more config options
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+        instanceTemplate:
+          metadata:
+            labels:
+              env: '{{ .Values.env }}'
+              team: '{{ .Values.loft.project }}'
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.20.0-beta.10
+          values: >-
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+
+            controlPlane:
+              # Use an embedded managed etcd server instead of using the k3s default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              distro:
+                k8s:
+                  apiServer:
+                    image:
+                      tag:  {{ .Values.k8sVersion }}
+                  controllerManager:
+                    image:
+                      tag: {{ .Values.k8sVersion }}
+              coredns:
+                embedded: true
+
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      parameters:
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.30.2
+            - v1.29.6
+            - v1.28.11
+            - v1.27.9
+            - v1.26.15
+          defaultValue: v1.29.6
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+      version: 1.0.0
+    - template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.20.0-beta.10
+          values: |-
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      version: 0.0.0
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}
+---
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: preview-template
+spec:
+  displayName: vCluster.Pro Preview Template
+  template:
+    metadata:
+      labels:
+        loft.sh/import-argocd: 'true'
+      annotations:
+        sleepmode.loft.sh/delete-after: '72000'
+        loft.sh/require-ingress-authentication: 'true'
+        sleepmode.loft.sh/sleep-after: '600'
+        sleepmode.loft.sh/ignore-user-agents: 'argo*'
+    objects: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: preview-hello-world-app
+      ---
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: ghcr-login-secret
+        namespace: preview-hello-world-app
+        labels:
+          loft.sh/project-secret-name: ghcr-login-secret
+      data:
+        .dockerconfigjson: e30K
+      type: kubernetes.io/dockerconfigjson
+    access:
+      rules:
+        - teams:
+            - loft-admins
+          clusterRole: cluster-admin
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.20.0-beta.10
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        controlPlane:
+          # Use an embedded managed etcd server instead of using the k3s default SQLite backend
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          coredns:
+            embedded: true
+        policies:
+          limitRange:
+            enabled: true
+          podSecurityStandard: baseline
+          resourceQuota:
+            enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
