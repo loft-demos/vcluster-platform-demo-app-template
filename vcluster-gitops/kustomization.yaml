@@ -1,0 +1,7 @@
+resources:
+- teams/teams.yaml
+- users/users.yaml
+- virtual-cluster-templates/vcluster-templates.yaml
+- projects/projects.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
