@@ -1,0 +1,123 @@
+kind: Project
+apiVersion: management.loft.sh/v1
+metadata:
+  name: api-framework
+spec:
+  displayName: API Framework
+  owner:
+    team: loft-admins
+  quotas:
+    project:
+      count/virtualclusterinstances.active: '15'
+    user:
+      count/virtualclusterinstances: '4'
+  allowedClusters:
+    - name: loft-cluster
+  allowedTemplates:
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: vcluster-pro-template
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: preview-template
+  requireTemplate: {}
+  members:
+    - kind: Team
+      group: storage.loft.sh
+      name: api-framework
+      clusterRole: loft-management-project-user
+  access:
+    - name: loft-admin-access
+      verbs:
+        - get
+        - update
+        - patch
+        - delete
+      subresources:
+        - '*'
+      teams:
+        - loft-admins
+    - name: loft-access
+      verbs:
+        - get
+      subresources:
+        - members
+        - clusters
+        - templates
+        - chartinfo
+        - charts
+      teams:
+        - api-framework
+  argoCD:
+    enabled: true
+    cluster: loft-cluster
+    namespace: argocd
+    project:
+      enabled: true
+    sso:
+      enabled: true
+      host: https://argocd-REPLACE_BASE_DOMAIN/
+      assignedRoles:
+        - role:admin
+---
+kind: Project
+apiVersion: management.loft.sh/v1
+metadata:
+  name: auth-core
+spec:
+  displayName: Auth Core
+  description: AuthN and AuthZ core components built on top of the API Framework.
+  owner:
+    team: loft-admins
+  quotas:
+    project:
+      count/virtualclusterinstances.active: '20'
+  allowedClusters:
+    - name: '*'
+  allowedTemplates:
+    - kind: DevPodWorkspaceTemplate
+      group: storage.loft.sh
+      name: '*'
+    - kind: SpaceTemplate
+      group: storage.loft.sh
+      name: '*'
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: vcluster-pro-template
+  requireTemplate: {}
+  members:
+    - kind: Team
+      group: storage.loft.sh
+      name: auth-core
+      clusterRole: loft-management-project-user
+  access:
+    - name: loft-admin-access
+      verbs:
+        - get
+        - update
+        - patch
+        - delete
+      subresources:
+        - '*'
+      teams:
+        - loft-admins
+    - name: loft-access
+      verbs:
+        - get
+      subresources:
+        - members
+        - clusters
+        - templates
+        - chartinfo
+        - charts
+      teams:
+        - auth-core
+  argoCD:
+    enabled: true
+    cluster: loft-cluster
+    namespace: argocd
+    sso:
+      enabled: true
+      host: https://argocd-REPLACE_BASE_DOMAIN/
+      assignedRoles:
+        - role:admin
