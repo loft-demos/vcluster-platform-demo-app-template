@@ -41,7 +41,7 @@ spec:
         helmRelease:
           chart:
             version: 0.20.0-beta.10
-          values: >-
+          values: |+
             sync:
               toHost:
                 ingresses:
@@ -57,10 +57,10 @@ spec:
                 k8s:
                   apiServer:
                     image:
-                      tag:  {{ .Values.k8sVersion }}
+                      tag:  "{{ .Values.k8sVersion }}"
                   controllerManager:
                     image:
-                      tag: {{ .Values.k8sVersion }}
+                      tag: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
 
