@@ -1,0 +1,45 @@
+apiVersion: management.loft.sh/v1
+kind: Team
+metadata:
+  name: api-framework
+spec:
+  displayName: API Framework
+  owner:
+    team: loft-admins
+  users:
+    - anna-smith
+    - admin
+  clusterRoles:
+    - name: loft-management-project-user
+  access:
+    - name: loft-access
+      verbs:
+        - get
+        - bind
+      subresources:
+        - clusters
+      teams:
+        - api-framework
+---
+apiVersion: management.loft.sh/v1
+kind: Team
+metadata:
+  name: auth-core
+spec:
+  displayName: Auth Core
+  owner:
+    team: loft-admins
+  users:
+    - eric-jones
+    - admin
+  clusterRoles:
+    - name: loft-management-project-user
+  access:
+    - name: loft-access
+      verbs:
+        - get
+        - bind
+      subresources:
+        - clusters
+      teams:
+        - auth-core
