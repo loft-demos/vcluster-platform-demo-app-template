@@ -1,7 +1,7 @@
-# echo-app
-Simple echo app and helm chart repository template to use with Loft Labs vCluster.Pro demo examples.
+# vCluster Platform Demo App
+Simple demo app to use with Loft Labs vCluster Platform demo examples. The repository also include a `vcluster-gitops` directory used to setup different demos and serve as an example of managing the vCluster Platform with GitOps using Argo CD.
 
-## vCluster.Pro Integration Examples
+## vCluster Platform Integration Examples
 
 ### Argo CD
 
