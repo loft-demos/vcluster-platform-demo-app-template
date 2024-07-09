@@ -14,7 +14,7 @@ spec:
     pro: {}
     helmRelease:
       chart:
-        version: 0.20.0-beta.10
+        version: 0.20.0-beta.12
       values: |-
         sync:
           toHost:
@@ -40,7 +40,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.20.0-beta.10
+            version: 0.20.0-beta.12
           values: |+
             sync:
               toHost:
@@ -48,7 +48,7 @@ spec:
                   enabled: true
 
             controlPlane:
-              # Use an embedded managed etcd server instead of using the k3s default SQLite backend
+              # Use an embedded managed etcd server instead of using the default SQLite backend
               backingStore:
                 etcd:
                   embedded:
