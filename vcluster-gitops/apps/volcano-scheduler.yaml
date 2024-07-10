@@ -1,0 +1,17 @@
+apiVersion: management.loft.sh/v1
+kind: App
+metadata:
+  name: volcano-scheduler
+spec:
+  displayName: Volcano Scheduler
+  owner:
+    user: kurtmadel
+  recommendedApp:
+    - virtualcluster
+  defaultNamespace: volcano-system
+  icon: https://volcano.sh/img/volcano_logo.svg
+  config:
+    chart:
+      name: volcano
+      version: 1.9.0
+      repoURL: https://volcano-sh.github.io/helm-charts
