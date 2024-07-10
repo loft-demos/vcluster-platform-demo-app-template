@@ -6,5 +6,8 @@ resources:
 - projects/projects.yaml
 - project-secrets/project-secrets.yaml
 - virtual-cluster-instances/vcluster-instances.yaml
+- apps/kuberay-operator.yaml
+- apps/volcano-scheduler.yaml
+- virtual-cluster-templates/kuberay-volcano.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
