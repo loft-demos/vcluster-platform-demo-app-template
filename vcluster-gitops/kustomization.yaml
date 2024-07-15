@@ -6,6 +6,7 @@ resources:
 - projects/projects.yaml
 - project-secrets/project-secrets.yaml
 - project-secrets/loft-demo-org-cred.yaml
+- project-secrets/argocd-notifications-secret.yaml
 - virtual-cluster-instances/vcluster-instances.yaml
 - apps/kuberay-operator.yaml
 - apps/volcano-scheduler.yaml
