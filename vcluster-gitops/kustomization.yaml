@@ -5,6 +5,7 @@ resources:
 - virtual-cluster-templates/vcluster-templates.yaml
 - projects/projects.yaml
 - project-secrets/project-secrets.yaml
+- project-secrets/loft-demo-org-cred.yaml
 - virtual-cluster-instances/vcluster-instances.yaml
 - apps/kuberay-operator.yaml
 - apps/volcano-scheduler.yaml
