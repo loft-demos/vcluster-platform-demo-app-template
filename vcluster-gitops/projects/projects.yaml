@@ -20,6 +20,9 @@ spec:
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
       name: preview-template
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: pull-request-vcluster
   requireTemplate: {}
   members:
     - kind: Team
