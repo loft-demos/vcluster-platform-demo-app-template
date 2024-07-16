@@ -116,7 +116,7 @@ spec:
                   - name: "image.args.text"
                     value: "Hello from {{ .Values.loft.virtualClusterName }} commit {{`{{head_short_sha}}`}}"
                   - name: "ingress.hosts[0].host"
-                    value: {{ .Values.loft.virtualClusterName }}.us.demo.dev
+                    value: {{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
                   - name: ingress.hosts[0].paths[0].backend.service.name
                     value: {{ .Values.repoName }}
                   - name: ingress.hosts[0].paths[0].backend.service.port.name
@@ -126,7 +126,7 @@ spec:
                   - name: ingress.hosts[0].paths[0].pathType
                     value: prefix
                   - name: "ingress.tls[0].hosts[0]"
-                    value: {{ .Values.loft.virtualClusterName }}.us.demo.dev
+                    value: {{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
               project: "default"
               destination:
                 name: 'in-cluster'
@@ -134,7 +134,7 @@ spec:
               info:
                 - name: Preview App Link
                   value: >-
-                    https://{{ .Values.loft.virtualClusterName }}.us.demo.dev
+                    https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
                 - name: GitHub PR
                   value: >-
                     https://github.com/loft-demos/{{ .Values.repoName }}/pull/{{`{{number}}`}}
