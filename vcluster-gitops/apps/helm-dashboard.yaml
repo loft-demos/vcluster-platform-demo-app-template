@@ -23,10 +23,10 @@ spec:
         className: "nginx"
         annotations: {}
         hosts:
-          - host: helm-dashboard-{{ .Values.loft.virtualClusterName }}.us.demo.dev
+          - host: helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             paths:
               - path: /
                 pathType: ImplementationSpecific
         tls:
           - hosts:
-              - helm-dashboard-{{ .Values.loft.virtualClusterName }}.us.demo.dev
+              - helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
