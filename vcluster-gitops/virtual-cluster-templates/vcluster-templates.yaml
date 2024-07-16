@@ -36,6 +36,9 @@ spec:
             labels:
               env: '{{ .Values.env }}'
               team: '{{ .Values.loft.project }}'
+        apps:
+          - name: helm-dashboard
+            namespace: helm-dashboard
         pro:
           enabled: true
         helmRelease:
