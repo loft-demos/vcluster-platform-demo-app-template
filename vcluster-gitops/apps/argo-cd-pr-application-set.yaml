@@ -1,7 +1,31 @@
-apiVersion: management.loft.sh/v1
 kind: App
+apiVersion: management.loft.sh/v1
 metadata:
   name: argo-cd-pr-application-set
+  uid: c03b7a51-d161-48c8-b005-f44142b58868
+  resourceVersion: '7503'
+  generation: 1
+  creationTimestamp: '2024-07-15T20:33:39Z'
+  managedFields:
+    - manager: loft
+      operation: Update
+      apiVersion: management.loft.sh/v1
+      time: '2024-07-15T20:33:39Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:spec:
+          .: {}
+          f:config:
+            .: {}
+            f:bash:
+              .: {}
+              f:script: {}
+            f:chart: {}
+          f:displayName: {}
+          f:owner:
+            .: {}
+            f:team: {}
+          f:parameters: {}
 spec:
   displayName: argo-cd-pr-application-set
   owner:
@@ -19,6 +43,54 @@ spec:
           sleep 1; 
         done
 
+
+        POD=$(kubectl get pod -n argocd -l
+        app.kubernetes.io/component=applicationset-controller -o
+        jsonpath="{.items[0].metadata.name}")
+
+        kubectl delete pod -n argocd $POD
+
+
+        cat > notif-cm.yaml << EOF
+
+        apiVersion: v1
+
+        kind: ConfigMap
+
+        metadata:
+          name: argocd-notifications-cm
+          namespace: argocd
+        data:
+          service.github: |
+            appID: 410217 
+            installationID: 43032092
+            privateKey: {{`"\$github-privateKey"`}}
+          template.app-deployed: |
+            message: |
+              Application {{`{{.app.metadata.name}}`}} is now running new version of deployments manifests.
+            github:
+              repoURLPath: "{{`{{.app.spec.source.repoURL}}`}}"
+              revisionPath: "{{`{{.app.spec.source.targetRevision}}`}}"
+              status:
+                state: success
+                label: "argo-cd/{{`{{.app.metadata.name}}`}}"
+                targetURL: "{{`{{.context.argocdUrl}}/applications/{{.app.metadata.name}}`}}?operation=true"
+              pullRequestComment:
+                content: |
+                  **vCluster:** pull request [vCluster pods](https://romeo.us.demo.dev/projects/{{ .Values.loft.project }}/vclusters/{{ .Values.loft.virtualClusterName }}/pods)
+                  **Argo CD:** pull request specific [Argo CD instance]({{`{{.context.argocdUrl}}/applications/{{.app.metadata.name}}`}}?operation=true)
+                  **Deployed App:** application for this pull request has been deployed at: [{{`{{.app.metadata.name}}]({{.context.helloAppUrl}}`}}). 
+          trigger.on-deployed: |
+            - description: Application is synced and healthy. Triggered once per commit.
+              oncePer: app.status.operationState?.syncResult?.revision
+              send:
+              - app-deployed
+              when: app.status.operationState.phase in ['Succeeded']
+                and app.status.health.status == 'Healthy'
+        EOF
+
+        kubectl patch cm argocd-notifications-cm -n argocd --type merge
+        --patch-file ./notif-cm.yaml
 
         cat <<EOF | kubectl apply -f -
 
@@ -91,55 +163,6 @@ spec:
                   value: >-
                     https://github.com/loft-demos/{{ .Values.repoName }}/pull/{{`{{number}}`}}
         EOF
-
-
-        cat > notif-cm.yaml << EOF
-
-        apiVersion: v1
-
-        kind: ConfigMap
-
-        metadata:
-          name: argocd-notifications-cm
-          namespace: argocd
-        data:
-          service.github: |
-            appID: 410217 
-            installationID: 43032092
-            privateKey: {{`"\$github-privateKey"`}}
-          template.app-deployed: |
-            message: |
-              Application {{`{{.app.metadata.name}}`}} is now running new version of deployments manifests.
-            github:
-              repoURLPath: "{{`{{.app.spec.source.repoURL}}`}}"
-              revisionPath: "{{`{{.app.spec.source.targetRevision}}`}}"
-              status:
-                state: success
-                label: "argo-cd/{{`{{.app.metadata.name}}`}}"
-                targetURL: "{{`{{.context.argocdUrl}}/applications/{{.app.metadata.name}}`}}?operation=true"
-              pullRequestComment:
-                content: |
-                  **vCluster:** pull request [vCluster pods](https://vcluster-pro.us.demo.dev/projects/{{ .Values.loft.project }}/vclusters/{{ .Values.loft.virtualClusterName }}/pods)
-                  **Argo CD:** pull request specific [Argo CD instance]({{`{{.context.argocdUrl}}/applications/{{.app.metadata.name}}`}}?operation=true)
-                  **Deployed App:** application for this pull request has been deployed at: [{{`{{.app.metadata.name}}]({{.context.helloAppUrl}}`}}). 
-          trigger.on-deployed: |
-            - description: Application is synced and healthy. Triggered once per commit.
-              oncePer: app.status.operationState?.syncResult?.revision
-              send:
-              - app-deployed
-              when: app.status.operationState.phase in ['Succeeded']
-                and app.status.health.status == 'Healthy'
-        EOF
-
-        kubectl patch cm argocd-notifications-cm -n argocd --type merge
-        --patch-file ./notif-cm.yaml
-
-
-        POD=$(kubectl get pod -n argocd -l
-        app.kubernetes.io/component=applicationset-controller -o
-        jsonpath="{.items[0].metadata.name}")
-
-        kubectl delete pod -n argocd $POD
   parameters:
     - variable: vClusterName
       label: vCluster Name
@@ -147,3 +170,4 @@ spec:
     - variable: repoName
       label: Repository Name
       description: Repository name for pull request
+status: {}
