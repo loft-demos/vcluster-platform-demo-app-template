@@ -2,30 +2,6 @@ kind: App
 apiVersion: management.loft.sh/v1
 metadata:
   name: argo-cd-pr-application-set
-  uid: c03b7a51-d161-48c8-b005-f44142b58868
-  resourceVersion: '7503'
-  generation: 1
-  creationTimestamp: '2024-07-15T20:33:39Z'
-  managedFields:
-    - manager: loft
-      operation: Update
-      apiVersion: management.loft.sh/v1
-      time: '2024-07-15T20:33:39Z'
-      fieldsType: FieldsV1
-      fieldsV1:
-        f:spec:
-          .: {}
-          f:config:
-            .: {}
-            f:bash:
-              .: {}
-              f:script: {}
-            f:chart: {}
-          f:displayName: {}
-          f:owner:
-            .: {}
-            f:team: {}
-          f:parameters: {}
 spec:
   displayName: argo-cd-pr-application-set
   owner:
@@ -77,7 +53,7 @@ spec:
                 targetURL: "{{`{{.context.argocdUrl}}/applications/{{.app.metadata.name}}`}}?operation=true"
               pullRequestComment:
                 content: |
-                  **vCluster:** pull request [vCluster pods](https://romeo.us.demo.dev/projects/{{ .Values.loft.project }}/vclusters/{{ .Values.loft.virtualClusterName }}/pods)
+                  **vCluster:** pull request [vCluster pods](https://{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/projects/{{ .Values.loft.project }}/vclusters/{{ .Values.loft.virtualClusterName }}/pods)
                   **Argo CD:** pull request specific [Argo CD instance]({{`{{.context.argocdUrl}}/applications/{{.app.metadata.name}}`}}?operation=true)
                   **Deployed App:** application for this pull request has been deployed at: [{{`{{.app.metadata.name}}]({{.context.helloAppUrl}}`}}). 
           trigger.on-deployed: |
@@ -170,4 +146,3 @@ spec:
     - variable: repoName
       label: Repository Name
       description: Repository name for pull request
-status: {}
