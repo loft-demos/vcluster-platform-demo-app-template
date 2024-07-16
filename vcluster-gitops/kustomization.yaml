@@ -10,6 +10,8 @@ resources:
 - virtual-cluster-instances/vcluster-instances.yaml
 - apps/kuberay-operator.yaml
 - apps/volcano-scheduler.yaml
+- apps/argo-cd-pr-application-set.yaml
+- apps/helm-dashboard.yaml
 - virtual-cluster-templates/kuberay-volcano.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
