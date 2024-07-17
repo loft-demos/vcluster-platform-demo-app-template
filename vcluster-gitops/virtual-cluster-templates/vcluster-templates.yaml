@@ -73,6 +73,11 @@ spec:
                       tag: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
+            expiremental:
+              syncSettings:
+                syncLabels:
+                  - demos.loft.sh/do-not-change
+                  - x.demos.loft.sh/*
 
             # Checkout https://vcluster.com/pro/docs/ for more config options
         accessPoint:
