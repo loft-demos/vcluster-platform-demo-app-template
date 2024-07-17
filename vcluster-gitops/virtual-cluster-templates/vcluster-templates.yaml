@@ -73,7 +73,8 @@ spec:
                       tag: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
-            expiremental:
+                
+            experimental:
               syncSettings:
                 syncLabels:
                   - demos.loft.sh/do-not-change
