@@ -17,12 +17,16 @@ spec:
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
       name: default-template
+      isDefault: true
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
       name: preview-template
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
       name: pull-request-vcluster
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: kuberay-volcano
   requireTemplate: {}
   members:
     - kind: Team
