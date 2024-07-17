@@ -51,6 +51,13 @@ spec:
                   enabled: true
 
             controlPlane:
+              statefulSet:
+                annotations:
+                  demo.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
+                labels:
+                  env: '{{ .Values.env }}'
+                  team: '{{ .Values.loft.project }}'
+                  pvClaimName: '{{ .Values.pvClaimName }}'
               # Use an embedded managed etcd server instead of using the default SQLite backend
               backingStore:
                 etcd:
@@ -93,6 +100,11 @@ spec:
             - qa
             - prod
           defaultValue: dev
+        - variable: pvClaimName
+          label: Persistent Volume Claim Name
+          description: >-
+            The claim to use as the persistent volume for the vCluster `StatefulSet`
+          required: true
       version: 1.0.0
     - template:
         metadata: {}
