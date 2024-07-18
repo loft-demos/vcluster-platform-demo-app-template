@@ -2,7 +2,7 @@ name: delete-old-repo-package
 
 # on merge to main from pull request (recommended)
 on:
-  create
+  workflow_dispatch:
 jobs:
   delete-old-repo-package:
     runs-on: ubuntu-22.04
