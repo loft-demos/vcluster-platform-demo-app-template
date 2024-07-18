@@ -2,22 +2,20 @@ name: delete-old-repo-package
 
 # on merge to main from pull request (recommended)
 on:
+  create:
   workflow_dispatch:
 jobs:
   delete-old-repo-package:
-    runs-on: ubuntu-22.04
-    permissions:
-      id-token: write
-      packages: admin
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
-      - id: delete package
+      - id: delete-package
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ steps.generate-githubapp-token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.KM_PAT_DELETE_PACKAGES }}
         run: |
-          curl -L \
-            -X DELETE \
+          gh api \
+            --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            https://api.github.com/orgs/loft-demos/packages/container/${{ github.event.repository.name }}
+            /orgs/loft-demos/packages/container/${{ github.event.repository.name }}
