@@ -10,10 +10,7 @@ spec:
   owner:
     team: loft-admins
   template:
-    metadata:
-      annotations:
-        sleepmode.loft.sh/delete-after: '720000'
-        sleepmode.loft.sh/sleep-after: '7200'
+    metadata: {}
     instanceTemplate:
       metadata: {}
     pro:
@@ -34,9 +31,7 @@ spec:
     - template:
         metadata:
           annotations:
-            sleepmode.loft.sh/delete-after: '700000'
             sleepmode.loft.sh/ignore-user-agents: argo*
-            sleepmode.loft.sh/sleep-after: '7200'
         instanceTemplate:
           metadata:
             annotations:
@@ -154,6 +149,12 @@ spec:
           chart:
             version: 0.20.0-beta.12
           values: |-
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 7200
+                autoDelete:
+                  afterInactivity: 720000
             sync:
               toHost:
                 ingresses:
