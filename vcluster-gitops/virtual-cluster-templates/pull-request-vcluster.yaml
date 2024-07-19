@@ -57,7 +57,7 @@ spec:
                     oidc.config: |
                        issuer: https://{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/oidc
                        clientID: argocd-{{ .Values.loft.virtualClusterName }}
-                       clientSecret: {{ .Values.loft.clusterAnnotations.oidcClientSecret }}
+                       clientSecret: $oidc-secret:clientSecret
                        Name: Loft
                   params:
                     "server.insecure": true
