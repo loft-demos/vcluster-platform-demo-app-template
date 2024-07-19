@@ -45,6 +45,13 @@ spec:
           chart:
             version: 0.20.0-beta.12
           values: |+
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 10800
+                autoDelete:
+                  afterInactivity: 120000
+                  
             sync:
               toHost:
                 ingresses:
@@ -86,6 +93,11 @@ spec:
         spaceTemplate:
           metadata: {}
       parameters:
+        - variable: pvClaimName
+          label: Persistent Volume Claim Name
+          description: >-
+            The claim to use as the persistent volume for the vCluster `StatefulSet`
+          required: true
         - variable: k8sVersion
           label: k8sVersion
           description: Please select Kubernetes version
@@ -106,11 +118,6 @@ spec:
             - qa
             - prod
           defaultValue: dev
-        - variable: pvClaimName
-          label: Persistent Volume Claim Name
-          description: >-
-            The claim to use as the persistent volume for the vCluster `StatefulSet`
-          required: true
       version: 1.0.0
     - template:
         metadata: {}
@@ -183,6 +190,12 @@ spec:
       chart:
         version: 0.20.0-beta.10
       values: |-
+        external:
+          platform:
+            autoSleep:
+              afterInactivity: 10800
+            autoDelete:
+              afterInactivity: 120000
         sync:
           toHost:
             ingresses:
