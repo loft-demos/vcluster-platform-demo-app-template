@@ -119,8 +119,18 @@ spec:
             name: loft-demo-org-cred
             namespace: argocd
             labels:
-              argocd.argoproj.io/secret-type: repo-creds
               loft.sh/project-secret-name: loft-demo-org-cred
+              argocd.argoproj.io/secret-type: repo-creds
+          type: Opaque
+          ---
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: oidc-secret
+            namespace: argocd
+            labels:
+              loft.sh/project-secret-name: oidc-secret
+              app.kubernetes.io/part-of: argocd
           type: Opaque
           ---
           apiVersion: v1
