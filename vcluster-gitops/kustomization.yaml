@@ -8,6 +8,7 @@ resources:
 - project-secrets/loft-demo-org-cred.yaml
 - project-secrets/argocd-notifications-secret.yaml
 - virtual-cluster-instances/vcluster-instances.yaml
+- apps/argo-cd.yaml
 - apps/kuberay-operator.yaml
 - apps/volcano-scheduler.yaml
 - apps/argo-cd-pr-application-set.yaml
