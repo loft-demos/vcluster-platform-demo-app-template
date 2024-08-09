@@ -14,7 +14,7 @@ spec:
     pro: {}
     helmRelease:
       chart:
-        version: 0.20.0-beta.12
+        version: 0.20.0-beta.15
       values: |-
         sync:
           toHost:
@@ -33,6 +33,9 @@ spec:
             sleepmode.loft.sh/ignore-user-agents: argo*
         instanceTemplate:
           metadata:
+            annotations:
+              loft.sh/custom-links: >-
+                Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             labels:
               env: '{{ .Values.env }}'
               team: '{{ .Values.loft.project }}'
@@ -43,12 +46,12 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.20.0-beta.12
+            version: 0.20.0-beta.15
           values: |+
             external:
               platform:
                 autoSleep:
-                  afterInactivity: 10800
+                  afterInactivity: 600
                 autoDelete:
                   afterInactivity: 120000
                   
@@ -98,6 +101,7 @@ spec:
           description: >-
             The claim to use as the persistent volume for the vCluster `StatefulSet`
           required: true
+          defaultValue: "{{ .Values.loft.virtualClusterName }}"
         - variable: k8sVersion
           label: k8sVersion
           description: Please select Kubernetes version
@@ -127,7 +131,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.20.0-beta.10
+            version: 0.20.0-beta.15
           values: |-
             sync:
               toHost:
@@ -188,7 +192,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.20.0-beta.10
+        version: 0.20.0-beta.15
       values: |-
         external:
           platform:
