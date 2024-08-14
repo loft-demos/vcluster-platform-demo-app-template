@@ -51,9 +51,9 @@ spec:
             external:
               platform:
                 autoSleep:
-                  afterInactivity: 1500
+                  afterInactivity: 2400
                 autoDelete:
-                  afterInactivity: 150000
+                  afterInactivity: 180000
                   
             sync:
               toHost:
