@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vcluster-gitops
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    kustomize:
+      patches:
+        - patch: |-
+            - op: replace
+              path: /spec/argoCD/sso/host
+              value: "https://argocd-{{ .Values.loft.virtualClusterName }}.us.demo.dev"
+          target:
+            kind: Project
+    path: vcluster-gitops
+    repoURL: https://github.com/loft-demos/{{ .Values.loft.virtualClusterName }}-app.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
