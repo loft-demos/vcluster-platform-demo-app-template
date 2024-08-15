@@ -40,7 +40,7 @@ spec:
           service.github: |
             appID: 410217 
             installationID: 43032092
-            privateKey: {{`"\$github-privateKey"`}}
+            privateKey: {{`"\$githubAppPrivateKey"`}}
           template.app-deployed: |
             message: |
               Application {{`{{.app.metadata.name}}`}} is now running new version of deployments manifests.
