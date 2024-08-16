@@ -3,9 +3,8 @@ apiVersion: management.loft.sh/v1
 metadata:
   name: loft-demo-org-cred
   namespace: p-api-framework
+  labels:
+    loft.sh/project-secret-name: loft-demo-org-cred
 spec:
   displayName: loft-demo-org-cred
   data:
-    githubAppID: NDEwMjE3
-    type: aGVsbQ==
-    url: aHR0cHM6Ly9naXRodWIuY29tL2xvZnQtZGVtb3M=
