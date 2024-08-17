@@ -20,13 +20,13 @@ spec:
       isDefault: true
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
-      name: preview-template
-    - kind: VirtualClusterTemplate
-      group: storage.loft.sh
       name: pull-request-vcluster
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
       name: kuberay-volcano
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: argo-cd-vcluster
   requireTemplate: {}
   members:
     - kind: Team
@@ -57,15 +57,16 @@ spec:
         - api-framework
   argoCD:
     enabled: true
-    cluster: loft-cluster
+    virtualClusterInstance: argocd
     namespace: argocd
-    project:
-      enabled: true
     sso:
       enabled: true
-      host: https://argocd-REPLACE_BASE_DOMAIN/
+      host: https://argocd-REPLACE_BASE_DOMAIN
       assignedRoles:
         - role:admin
+    project:
+      enabled: true
+      metadata: {}
   namespacePattern:
     virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'
 ---
@@ -121,6 +122,59 @@ spec:
         - charts
       teams:
         - auth-core
+  argoCD:
+    enabled: true
+    cluster: loft-cluster
+    namespace: argocd
+    sso:
+      enabled: true
+      host: https://argocd-REPLACE_BASE_DOMAIN/
+      assignedRoles:
+        - role:admin
+---
+kind: Project
+apiVersion: management.loft.sh/v1
+metadata:
+  name: default
+  annotations:
+    loft.sh/project-namespace: p-default
+spec:
+  displayName: Default Project
+  description: This is the default project
+  quotas: {}
+  allowedClusters:
+    - name: '*'
+  allowedRunners:
+    - name: '*'
+  allowedTemplates:
+    - kind: SpaceTemplate
+      group: storage.loft.sh
+      name: '*'
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: '*'
+    - kind: DevPodWorkspaceTemplate
+      group: storage.loft.sh
+      name: '*'
+  requireTemplate:
+    disabled: true
+  members:
+    - kind: User
+      group: storage.loft.sh
+      name: '*'
+      clusterRole: loft-management-project-user
+  access:
+    - name: loft-access
+      verbs:
+        - get
+      subresources:
+        - members
+        - clusters
+        - templates
+        - chartinfo
+        - charts
+      users:
+        - '*'
   argoCD:
     enabled: true
     cluster: loft-cluster
