@@ -40,6 +40,7 @@ spec:
                 .Values.loft.clusterAnnotations.domain }}
         apps:
           - name: argocd
+            version: 2.12.1
             namespace: argocd
             parameters: |
               appValues: |
