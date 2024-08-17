@@ -3,7 +3,7 @@ resources:
 - teams/teams.yaml
 - users/users.yaml
 - virtual-cluster-templates/vcluster-templates.yaml
-- virtual-cluster-templates/argo-cd-vcluster
+- virtual-cluster-templates/argo-cd-vcluster.yaml
 - projects/projects.yaml
 - project-secrets/project-secrets.yaml
 - project-secrets/loft-demo-org-cred.yaml
