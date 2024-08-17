@@ -1,9 +1,9 @@
-apiVersion: management.loft.sh/v1
 kind: App
+apiVersion: management.loft.sh/v1
 metadata:
   name: argocd
 spec:
-  displayName: ArgoCD
+  displayName: Argo CD
   description: Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes
   recommendedApp:
     - cluster
@@ -26,6 +26,45 @@ spec:
             enabled: true
             hosts:
             - my-domain.com
+  versions:
+    - icon: https://argo-cd.readthedocs.io/en/stable/assets/logo.png
+      config:
+        chart:
+          name: argo-cd
+          version: 7.4.4
+          repoURL: https://argoproj.github.io/argo-helm
+        values: '{{ .Values.appValues }}'
+      parameters:
+        - variable: appValues
+          label: Helm Values
+          description: The helm values to use to deploy this chart.
+          type: multiline
+          defaultValue: |-
+            server:
+              ingress:
+                enabled: true
+                hosts:
+                - my-domain.com
+      version: 2.12.1
+    - icon: https://argo-cd.readthedocs.io/en/stable/assets/logo.png
+      config:
+        chart:
+          name: argo-cd
+          version: 7.4.4
+          repoURL: https://argoproj.github.io/argo-helm
+        values: '{{ .Values.appValues }}'
+      parameters:
+        - variable: appValues
+          label: Helm Values
+          description: The helm values to use to deploy this chart.
+          type: multiline
+          defaultValue: |-
+            server:
+              ingress:
+                enabled: true
+                hosts:
+                - my-domain.com
+      version: 0.0.0
   access:
     - verbs:
         - get
