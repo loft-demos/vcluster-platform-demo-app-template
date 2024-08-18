@@ -62,6 +62,7 @@ spec:
               secret:
                 labels:
                   loft.sh/project-secret-name: argocd-notifications-secret
+      - name: argo-cd-cluster-application-set
     objects: |-
       apiVersion: v1
       kind: Namespace
