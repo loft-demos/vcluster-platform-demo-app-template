@@ -103,3 +103,19 @@ spec:
       ingress: {}
     spaceTemplate:
       metadata: {}
+      objects: |-
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: argo-webhook-url
+        type: Opaque
+        stringData:
+          url: "https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}/api/webhook"
+        ---
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: argo-appset-webhook-url
+        type: Opaque
+        stringData:
+          url: "https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}-appset/api/webhook"
