@@ -2,6 +2,9 @@ resources:
 - shared-secrets/shared-secrets.yaml
 - teams/teams.yaml
 - users/users.yaml
+- apps/argo-cd.yaml
+- apps/helm-dashboard.yaml
+- apps/argo-cd-cluster-application-set.yaml
 - virtual-cluster-templates/vcluster-templates.yaml
 - virtual-cluster-templates/argo-cd-vcluster.yaml
 - projects/projects.yaml
@@ -9,11 +12,9 @@ resources:
 - project-secrets/loft-demo-org-cred.yaml
 - project-secrets/argocd-notifications-secret.yaml
 - virtual-cluster-instances/vcluster-instances.yaml
-- apps/argo-cd.yaml
 - apps/kuberay-operator.yaml
 - apps/volcano-scheduler.yaml
 - apps/argo-cd-pr-application-set.yaml
-- apps/helm-dashboard.yaml
 - virtual-cluster-templates/kuberay-volcano.yaml
 - virtual-cluster-templates/pull-request-vcluster.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
