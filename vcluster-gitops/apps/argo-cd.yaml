@@ -46,6 +46,8 @@ spec:
                 hosts:
                 - my-domain.com
       version: 2.12.1
+      defaultNamespace: argocd
+      wait: true
     - icon: https://argo-cd.readthedocs.io/en/stable/assets/logo.png
       config:
         chart:
