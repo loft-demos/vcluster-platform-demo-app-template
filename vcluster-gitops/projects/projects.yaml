@@ -56,17 +56,14 @@ spec:
       teams:
         - api-framework
   argoCD:
-    enabled: true
+    enabled: false
     virtualClusterInstance: argocd
     namespace: argocd
     sso:
-      enabled: true
+      enabled: false
       host: https://argocd-REPLACE_BASE_DOMAIN
       assignedRoles:
         - role:admin
-    project:
-      enabled: true
-      metadata: {}
   namespacePattern:
     virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'
 ---
@@ -123,14 +120,17 @@ spec:
       teams:
         - auth-core
   argoCD:
-    enabled: true
+    enabled: false
     cluster: loft-cluster
     namespace: argocd
     sso:
-      enabled: true
+      enabled: false
       host: https://argocd-REPLACE_BASE_DOMAIN/
       assignedRoles:
         - role:admin
+    project:
+      enabled: true
+      metadata: {}
 ---
 kind: Project
 apiVersion: management.loft.sh/v1
@@ -176,11 +176,11 @@ spec:
       users:
         - '*'
   argoCD:
-    enabled: true
+    enabled: false
     cluster: loft-cluster
     namespace: argocd
     sso:
-      enabled: true
+      enabled: false
       host: https://argocd-REPLACE_BASE_DOMAIN/
       assignedRoles:
         - role:admin
