@@ -110,7 +110,7 @@ spec:
           name: argo-webhook-url
         type: Opaque
         stringData:
-          url: "https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}/api/webhook"
+          url: "https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/api/webhook"
         ---
         apiVersion: v1
         kind: Secret
@@ -118,4 +118,4 @@ spec:
           name: argo-appset-webhook-url
         type: Opaque
         stringData:
-          url: "https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}-appset/api/webhook"
+          url: "https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}-appset.{{ .Values.loft.clusterAnnotations.domain }}/api/webhook"
