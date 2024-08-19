@@ -12,6 +12,15 @@ spec:
   config:
     chart: {}
     manifests: |-
+      apiVersion: demo.loft.sh/v1alpha1
+      kind: ArgoCDWebhook
+      metadata:
+        name: "{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-webhooks"
+        namespace: argocd
+      spec:
+        repoName: "{{ .Values.loft.clusterAnnotations.domainPrefix }}-app"
+        virtualClusterNamespace: "{{ .Values.loft.virtualClusterNamespace }}"
+      ---
       apiVersion: argoproj.io/v1alpha1
       kind: ApplicationSet
       metadata:
