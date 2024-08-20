@@ -12,7 +12,10 @@ spec:
   template:
     metadata: {}
     instanceTemplate:
-      metadata: {}
+      metadata:
+        annotations:
+          loft.sh/custom-links: >-
+            Repo=https://github.com/loft-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
     apps:
       - name: argocd
         version: 2.12.1
