@@ -101,17 +101,18 @@ spec:
           description: >-
             The claim to use as the persistent volume for the vCluster `StatefulSet`
           required: true
-          defaultValue: "{{ .Values.loft.virtualClusterName }}"
+          defaultValue: "pvclaim-id"
         - variable: k8sVersion
           label: k8sVersion
           description: Please select Kubernetes version
           options:
-            - v1.30.2
-            - v1.29.6
-            - v1.28.11
-            - v1.27.9
+            - v1.31.0
+            - v1.30.4
+            - v1.29.8
+            - v1.28.12
+            - v1.27.16
             - v1.26.15
-          defaultValue: v1.29.6
+          defaultValue: v1.29.8
         - variable: env
           label: Deployment Environment
           description: >-
