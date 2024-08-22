@@ -44,12 +44,12 @@ spec:
     team: loft-admins
   recommendedApp:
     - cluster
+  defaultNamespace: istio-system
   config:
-    chart: {}
-    bash:
-      script: >-
-        kubectl apply -f
-        https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.0/standard-install.yaml
+    chart:
+      name: gateway-api
+      version: 1.1.0
+      repoURL: https://charts.appscode.com/stable/
 ---
 apiVersion: management.loft.sh/v1
 kind: VirtualClusterTemplate
@@ -167,8 +167,8 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.20.0-beta.15
-          values: |
+            version: 0.21.0-alpha.5
+          values: |-
             external:
               platform:
                 autoSleep:
@@ -180,6 +180,14 @@ spec:
               toHost:
                 ingresses:
                   enabled: true
+                customResourceDefinitions:
+                  httproutes.gateway.networking.k8s.io:
+                    enabled: true
+                    translate:
+                      - path: spec.rules[*].backendRefs[*].name
+                        reference:
+                          kind: Service
+                          apiVersion: v1
 
             controlPlane:
               statefulSet:
@@ -201,34 +209,6 @@ spec:
                       tag: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
-                
-            experimental:
-              genericSync:
-                role:
-                  extraRules:
-                    - apiGroups: ["gateway.networking.k8s.io"]
-                      resources: ["httproutes"]
-                      verbs: ["create", "delete", "patch", "update", "get", "list", "watch"]
-                # extra cluster scoper permissions required for the plugin
-                clusterRole:
-                  extraRules:
-                    - apiGroups: ["apiextensions.k8s.io"]
-                      resources: ["customresourcedefinitions"]
-                      verbs: ["get", "list", "watch"]
-                export:
-                  - apiVersion: gateway.networking.k8s.io/v1
-                    kind: HTTPRoute
-                    patches:
-                      - op: rewriteName
-                        path: .spec.rules[*].backendRefs[*].name
-                    reversePatches:
-                      - op: copyFromObject
-                        fromPath: status
-                        path: status
-              syncSettings:
-                syncLabels:
-                  - demos.loft.sh/do-not-change
-                  - x.demos.loft.sh/*
 
             # Checkout https://vcluster.com/pro/docs/ for more config options
         accessPoint:
