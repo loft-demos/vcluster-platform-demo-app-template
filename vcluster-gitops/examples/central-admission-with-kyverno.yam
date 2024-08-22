@@ -1,0 +1,21 @@
+kind: App
+apiVersion: management.loft.sh/v1
+metadata:
+  name: kyverno
+spec:
+  displayName: Kyverno
+  description: Kyverno is a Kubernetes Native Policy Management engine.
+  owner:
+    team: loft-admins
+  recommendedApp:
+    - cluster
+  defaultNamespace: kyverno
+  icon: >-
+    https://kyverno.io/blog/2022/10/24/kyverno-1.8-released/kyverno.png
+  config:
+    chart:
+      name: kyverno
+      version: 3.2.6
+      repoURL: https://kyverno.github.io/kyverno/
+    values:
+---
