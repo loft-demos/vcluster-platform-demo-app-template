@@ -9,6 +9,17 @@ spec:
   config:
     chart: {}
     bash:
+      podSecurityContext:
+        fsGroup: 0
+      securityContext:
+        capabilities:
+          drop:
+            - ALL
+        privileged: false
+        runAsUser: 999
+        runAsGroup: 999
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
       script: >
         kubectl wait --for condition=established --timeout=60s
         crd/applicationsets.argoproj.io
