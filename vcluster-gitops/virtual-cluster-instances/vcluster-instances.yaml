@@ -18,12 +18,12 @@ metadata:
   namespace: p-api-framework
 spec:
   owner:
-    user: admin
+    team: api-framework
   templateRef:
     name: default-template
     version: 1.0.x
   clusterRef:
     cluster: loft-cluster
   parameters: |
-    k8sVersion: v1.29.6
+    k8sVersion: v1.29.8
     env: 'qa'
