@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-vcluster-external-argocd
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          appSecretName: loft-demo-org-cred
+          labels:
+            - create-pr-vcluster-external-argocd
+          owner: loft-demos
+          repo: romeo-app
+        requeueAfterSeconds: 30
+        template:
+          metadata: {}
+          spec:
+            destination: {}
+            project: ''
+  template:
+    metadata:
+      name: romeo-app-pr-{{number}}
+    spec:
+      destination:
+        name: in-cluster
+        namespace: p-auth-core
+      info:
+        - name: PR vCluster Argo CD URL
+          value: https://argocd-romeo.us.demo.dev
+        - name: GitHub PR
+          value: https://github.com/loft-demos/romeo-app/pull/{{number}}
+      project: default
+      source:
+        kustomize:
+          namePrefix: romeo-app-pr-{{number}}-
+          patches:
+            - patch: |-
+                - op: add
+                  path: /metadata/labels/vclusterName
+                  value: romeo-app-pr-{{number}}-vcluster
+                - op: add
+                  path: /metadata/labels/repo
+                  value: romeo-app
+                - op: add
+                  path: /metadata/labels/pr
+                  value: 'true'
+                - op: add
+                  path: /metadata/labels/prNumber
+                  value: '{{number}}'
+                - op: add
+                  path: /metadata/labels/targetRevision
+                  value: '{{head_sha}}'
+                - op: add
+                  path: /metadata/labels/headShortSha
+                  value: '{{head_short_sha}}'
+                - op: add
+                  path: /metadata/labels/headBranch
+                  value: '{{branch}}'
+              target:
+                kind: VirtualClusterInstance
+                name: vcluster
+        path: kustomize-pr/external-argocd/
+        repoURL: https://github.com/loft-demos/romeo-app.git
+        targetRevision: '{{head_sha}}'
+      syncPolicy:
+        automated:
+          selfHeal: true
