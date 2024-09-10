@@ -60,7 +60,7 @@ spec:
               target:
                 kind: VirtualClusterInstance
                 name: vcluster
-        path: kustomize-pr/external-argocd/
+        path: argocd/pr-environments/kustomize
         repoURL: https://github.com/loft-demos/romeo-app.git
         targetRevision: '{{head_sha}}'
       syncPolicy:
