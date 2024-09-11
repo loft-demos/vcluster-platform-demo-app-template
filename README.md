@@ -1,5 +1,5 @@
-# vCluster Platform Demo App
-Simple demo app to use with Loft Labs vCluster Platform demo examples. The repository also include a `vcluster-gitops` directory used to setup different demos and serve as an example of managing the vCluster Platform with GitOps using Argo CD.
+# vCluster Platform Demo Repository
+This repository template is used to create vCluster Platform environments via GitOps and provides demo use cases as code. The repository includes a `vcluster-gitops` directory that serves as an example of managing the vCluster Platform with GitOps using Argo CD.
 
 ## vCluster Platform Integration Examples
 
