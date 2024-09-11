@@ -118,11 +118,11 @@ spec:
       teams:
         - auth-core
   argoCD:
-    enabled: enabled
+    enabled: true
     cluster: loft-cluster
     namespace: argocd
     sso:
-      enabled: enabled
+      enabled: true
       host: https://argocd-REPLACE_BASE_DOMAIN/
       assignedRoles:
         - role:admin
