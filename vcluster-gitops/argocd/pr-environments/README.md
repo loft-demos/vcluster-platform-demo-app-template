@@ -2,7 +2,7 @@
 
 **with vCluster and Argo CD**
 
-This example leverages the vCluster Platform Argo CD integration that automatically adds a vCluster instance to an Argo CD instance that has been added to a vCluster Platform Project by creating an Argo CD Cluster `Secret`. This integration includes the syncing of the `VirtualClusterInstance` CRD `metadata.labels` to the Argo CD Cluster `Secret`. These `labels` can then be used with the Argo CD Application Set Cluster Generator.
+This example leverages the vCluster Platform Argo CD integration that automatically adds a vCluster instance to an Argo CD instance as an Application deployment server. This requires that the Argo CD instance has been integrated with a vCluster Platform Project. The vCluster Platform will then create an Argo CD Cluster `Secret` when a vCluster is created in the Project and either manually or automatically added to Argo CD. This integration also includes the syncing of the `VirtualClusterInstance` CRD `metadata.labels` to the Argo CD Cluster `Secret`. These `labels` can then be used with the [Argo CD Application Set Cluster Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/#pass-additional-key-value-pairs-via-values-field).
 
 On the Argo CD side, this examples leverages two different Argo CD Application Sets. The first Application Set is responsible for creating the vCluster for the Pull Request. The second Application Set is responsible for deploying the example application to that vCluster.
 
@@ -21,7 +21,7 @@ On the Argo CD side, this examples leverages two different Argo CD Application S
   - A Pull Request label, `create-pr-vcluster-external-argocd` is used to filter Pull Requests and make the ephermeral preview environment opt in, instead of created for every repostiory pull request. This is optional.
   - **Kustomize App:** A Kustomize app is used to create the `VirtualClusterInstance` so that the *Pull Request Generator based ApplicationSet* may add dynamic labels that will then be applied to the Argo CD cluster `Secret` via the vCluster Platform integration, and eventually utilized by the *Cluster Generator based ApplicationSet*.
     - The `VirtualClusterInstance` includes the `metadata.label` `loft.sh/import-argocd: 'true'` that will trigger the vCluster Platform to automatically add the vCluster to the Argo CD instance that is configured with the vCluster Platform Project where the vCluster is created - in this example, that is the `auth-core` project. Also note that the `VirtualClusterInstance` uses a Virtual Cluster template per the `spec.templateRef` object. The `default-template` specified could have been configured to auto-add to Argo CD, by setting the `label` previously mentioned, that setting does not need to be enabled on the template. Additional `labels` are added dynamically with the Argo CD Pull Request Generator as described below.
-  - Pull Request Generator dynamic labels include:
+  - The Pull Request Generator dynamic labels include:
     - `vclusterName`: Used to create a reference to this `VirtualClusterInstance` as the `server` URL value
     - `repo`: the repository for the GitHub Pull Request and the application code that needs to be deployed by Argo CD
     - `pr`: Set to 'true' and used as a filter for the *Cluster Generator based ApplicationSet* so that only Pull Request ephemeral vCluster instances will trigger the generate of an Argo CD `Application` to deploy the Pull Request association application
