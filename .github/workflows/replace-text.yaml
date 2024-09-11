@@ -12,6 +12,7 @@ env:
 
 jobs:
   replace-text:
+    if: ${{ !github.event.repository.is_template }}
     runs-on: ubuntu-22.04
     permissions:
       contents: write
