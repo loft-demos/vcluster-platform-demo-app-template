@@ -82,12 +82,10 @@ spec:
   allowedClusters:
     - name: '*'
   allowedTemplates:
-    - kind: DevPodWorkspaceTemplate
+    - kind: VirtualClusterTemplate
       group: storage.loft.sh
-      name: '*'
-    - kind: SpaceTemplate
-      group: storage.loft.sh
-      name: '*'
+      name: default-template
+      isDefault: true
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
       name: vcluster-pro-template
@@ -120,11 +118,11 @@ spec:
       teams:
         - auth-core
   argoCD:
-    enabled: false
+    enabled: enabled
     cluster: loft-cluster
     namespace: argocd
     sso:
-      enabled: false
+      enabled: enabled
       host: https://argocd-REPLACE_BASE_DOMAIN/
       assignedRoles:
         - role:admin
