@@ -11,7 +11,7 @@ spec:
           labels:
             - create-pr-vcluster-external-argocd
           owner: loft-demos
-          repo: romeo-app
+          repo: {REPLACE_REPO_NAME}
         requeueAfterSeconds: 30
         template:
           metadata: {}
@@ -20,25 +20,25 @@ spec:
             project: ''
   template:
     metadata:
-      name: romeo-app-pr-{{number}}
+      name: {REPLACE_REPO_NAME}-pr-{{number}}
     spec:
       destination:
         name: in-cluster
         namespace: p-auth-core
       info:
         - name: PR vCluster Argo CD URL
-          value: https://argocd-romeo.us.demo.dev
+          value: https://argocd-{REPLACE_VCLUSTER_NAME}.us.demo.dev
         - name: GitHub PR
-          value: https://github.com/loft-demos/romeo-app/pull/{{number}}
+          value: https://github.com/loft-demos/{REPLACE_REPO_NAME}/pull/{{number}}
       project: default
       source:
         kustomize:
-          namePrefix: romeo-app-pr-{{number}}-
+          namePrefix: {REPLACE_REPO_NAME}-pr-{{number}}-
           patches:
             - patch: |-
                 - op: add
                   path: /metadata/labels/vclusterName
-                  value: romeo-app-pr-{{number}}-vcluster
+                  value: {REPLACE_REPO_NAME}-pr-{{number}}-vcluster
                 - op: add
                   path: /metadata/labels/repo
                   value: romeo-app
@@ -61,7 +61,7 @@ spec:
                 kind: VirtualClusterInstance
                 name: vcluster
         path: argocd/pr-environments/kustomize
-        repoURL: https://github.com/loft-demos/romeo-app.git
+        repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
         targetRevision: '{{head_sha}}'
       syncPolicy:
         automated:
