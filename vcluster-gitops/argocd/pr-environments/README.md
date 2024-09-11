@@ -7,7 +7,8 @@ This example leverages the vCluster Platform Argo CD integration that automatica
 On the Argo CD side, this examples leverages two different Argo CD Application Sets. The first Application Set is responsible for creating the vCluster for the Pull Request. The second Application Set is responsible for deploying the example application to that vCluster.
 
 > [!NOTE]
-> The Application Set that is responsible for creating the vCluster does not have to be in a vCluster Platform Project integrated Argo CD instance, but it does have to have the ability to create Kubernetes resources in the Kubernetes cluster where the vCluster Platform is installed.
+> The Application Set that is responsible for creating the vCluster does not have to be in a vCluster Platform Project integrated Argo CD instance, but it does have to have the ability to create Kubernetes resources in the Kubernetes cluster where the vCluster Platform is installed - more specifically, it must be able to apply the `VirtualClusterInstance` resources to a vCluster Platform Project `Namespace`.
+> The second Application Set must be applied to the same Argo CD instance that is integrated with the vCluster Platform Project where the Pull Request vCluster is created, as that vCluster must be available as the target server for the example application deployment.
 
 ### Components:
 - vCluster Platform: leverages the `VirtualClusterInstance` CRD
