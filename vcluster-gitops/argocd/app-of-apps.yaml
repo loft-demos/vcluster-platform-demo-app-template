@@ -1,0 +1,31 @@
+# The Argo CD Application for bootstrapping different PR releated Argo CD Application Sets
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pr-apps-bootstrap
+  namespace: argocd
+  labels:
+    pr.argocd.demos.loft.sh: bootstrap
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
+    targetRevision: HEAD
+    path: vcluster-gitops/argocd/pr-environments/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true    
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 1
+      backoff:
+        duration: 5s 
+        factor: 2 
+        maxDuration: 1m
