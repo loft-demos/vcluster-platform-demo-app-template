@@ -41,7 +41,7 @@ spec:
                   value: {REPLACE_REPO_NAME}-pr-{{number}}-vcluster
                 - op: add
                   path: /metadata/labels/repo
-                  value: romeo-app
+                  value: {REPLACE_REPO_NAME}
                 - op: add
                   path: /metadata/labels/pr
                   value: 'true'
