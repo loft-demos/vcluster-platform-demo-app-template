@@ -2,6 +2,13 @@
 
 **with vCluster and Argo CD**
 
+This example leverages the vCluster Platform Argo CD integration that automatically adds a vCluster instance to an Argo CD instance that has been added to a vCluster Platform Project by creating an Argo CD Cluster `Secret`. This integration includes the syncing of the `VirtualClusterInstance` CRD `metadata.labels` to the Argo CD Cluster `Secret`. These `labels` can then be used with the Argo CD Application Set Cluster Generator.
+
+On the Argo CD side, this examples leverages two different Argo CD Application Sets. The first Application Set is responsible for creating the vCluster for the Pull Request. The second Application Set is responsible for deploying the example application to that vCluster.
+
+> [!NOTE]
+> The Application Set that is responsible for creating the vCluster does not have to be in a vCluster Platform Project integrated Argo CD instance, but it does have to have the ability to create Kubernetes resources in the Kubernetes cluster where the vCluster Platform is installed.
+
 ### Components:
 - vCluster Platform: leverages the `VirtualClusterInstance` CRD
 - vCluster instances
