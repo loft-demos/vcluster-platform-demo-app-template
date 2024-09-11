@@ -1,0 +1,39 @@
+name: replace-text
+
+# on push to main
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'helm-chart/Chart.yaml'
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  replace-text:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: set-vcluster-name
+        id: set-vcluster-name
+        run: |
+          VCLUSTER_NAME=$(echo ${REPO_NAME%-app})
+          echo $VCLUSTER_NAME
+          echo "VCLUSTER_NAME=$(echo $VCLUSTER_NAME)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v3
+      - uses: flcdrg/replace-multiple-action@v2.0.148
+        with:
+          files: '**/*.yaml'
+          find: '[{ "find": "{REPLACE_REPO_NAME}", "replace": "${{ env.REPO_NAME }}" }, { "find": "{REPLACE_VCLUSTER_NAME}", "replace": "${{ env.VCLUSTER_NAME }}" }]'
+          prefix: ''
+          suffix: ''
+      - uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Disable this workflow
+        shell: bash
+        run: |
+          gh workflow disable -R $GITHUB_REPOSITORY "${{ github.workflow }}"
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
