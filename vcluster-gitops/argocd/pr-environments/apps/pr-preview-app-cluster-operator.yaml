@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: vcluster-pr-preview-app
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            pr: 'true'
+  template:
+    metadata:
+      name: "{{metadata.labels.vclusterName}}"
+    spec:
+      destination:
+        namespace: preview-hello-world-app
+        server: "https://romeo.us.demo.dev/kubernetes/project/auth-core/virtualcluster/{{metadata.labels.vclusterName}}"
+      info:
+        - name: GitHub Repo
+          value: https://github.com/loft-demos/{{metadata.labels.repo}}/
+      project: default
+      source:
+        repoURL: https://github.com/loft-demos/{{metadata.labels.repo}}.git
+        targetRevision: "{{metadata.labels.targetRevision}}"
+        path: helm-chart/
+        helm:
+          parameters:
+          - name: "image.repository"
+            value: "ghcr.io/loft-demos/{{metadata.labels.repo}}"
+          - name: "image.tag"
+            value: "{{metadata.labels.headBranch}}"
+          - name: "image.args.text"
+            value: "Hello from {{metadata.labels.vclusterName}} commit {{metadata.labels.headShortSha}}"
+          - name: "ingress.hosts[0].host"
+            value: "{{metadata.labels.vclusterName}}.us.demo.dev"
+          - name: ingress.hosts[0].paths[0].backend.service.name
+            value: "{{metadata.labels.repo}}"
+          - name: ingress.hosts[0].paths[0].backend.service.port.name
+            value: http
+          - name: ingress.hosts[0].paths[0].path
+            value: /
+          - name: ingress.hosts[0].paths[0].pathType
+            value: prefix
+          - name: "ingress.tls[0].hosts[0]"
+            value: "{{metadata.labels.vclusterName}}.us.demo.dev"
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
