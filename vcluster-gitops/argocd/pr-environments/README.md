@@ -2,8 +2,11 @@
 
 **with vCluster and Argo CD**
 
-vCluster Platform
-vCluster instance
+Leverages:
+- vCluster Platform
+- vCluster instances
+- Argo CD
+  
 Argo CD ApplicationSets:
 - **Pull Request Generator based ApplicationSet** creates the vCluster instances via a Kustomize app that is automatically added as a server to an Argo CD instances that is intergrated with a vCluster Platform Project
   - **Kustomize App:** A Kustomize app is used to create the `VirtualClusterInstance` so that the *Pull Request Generator based ApplicationSet* may add dynamic labels that will be applied to the Argo CD cluster `Secret` and be utilized by the `Cluster Generator based ApplicationSet`. These labels include:
