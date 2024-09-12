@@ -4,8 +4,8 @@
 
 This example leverages the vCluster Platform Argo CD integration that automatically adds a vCluster instance to an Argo CD instance as an Application deployment server target to create dynamic ephemeral Kubernetes clusters for GitHub Pull Requests. This requires that the [Argo CD instance has been integrated with a vCluster Platform Project](https://www.vcluster.com/docs/platform/integrations/argocd#enable-argo-cd-integration-per-project). The vCluster Platform will then create an Argo CD Cluster `Secret` when a vCluster instance in the Project is either manually or automatically added to the integrated Argo CD instance. This integration also includes the syncing of the `VirtualClusterInstance` CRD `metadata.labels` to the Argo CD Cluster `Secret`. These `labels` can then be used with the [Argo CD Application Set Cluster Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/#pass-additional-key-value-pairs-via-values-field) as they are in this example.
 
-On the Argo CD side, this example leverages two different Argo CD Application Sets: 
-1. The first Application Set is responsible for creating the vCluster for the Pull Request.
+This example also leverages Argo CD ApplicationSets to dynamically create a virtual Kubernetes cluster (or vCluster) per Pull Request and deploy the Pull Request associated application to that vCluster. This example leverages two different Argo CD ApplicationSets: 
+1. The first Application Set is responsible for triggering the creation of the vCluster for the Pull Request.
 2. The second Application Set is responsible for deploying the example application to that vCluster.
 
 > [!NOTE]
