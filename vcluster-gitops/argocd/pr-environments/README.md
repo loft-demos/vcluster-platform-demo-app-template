@@ -27,6 +27,8 @@ On the Argo CD side, this examples leverages two different Argo CD Application S
     - `vclusterName`: Used to create a reference to this `VirtualClusterInstance` as the `server` URL value
     - `repo`: the repository for the GitHub Pull Request and the application code that needs to be deployed by Argo CD
     - `pr`: Set to 'true' and used as a filter for the *Cluster Generator based ApplicationSet* so that only Pull Request ephemeral vCluster instances will trigger the generate of an Argo CD `Application` to deploy the Pull Request association application
+    - `headBranch`: The head branch of the Pull Request. This use to pull the correct container image associated with the Pull Request. The head branch is used insteat of the commit sha because the Pull Request vCluster will not be recreated for any new commits to the head branch of the Pull Request but the commits to the head branch will trigger a new container image build and a redeployment by Argo CD.
     - `targetRevision`: The commit SHA of the Pull Request head branch to target for the generated Argo CD `Application`
+    - `headShortSha`: The short, 8 character, version of the commit SHA of the Pull Request head branch. This is only used in the output of the example app.
 - **Cluster Generator based ApplicationSet** uses labels, dynamically added to the `VirtualClusterInstance` created with the Pull Request Generator based ApplicationSet, to deploy the actual application code associated with the head commit of the Pull Request (in this example it is a Helm based application)
 
