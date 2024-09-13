@@ -15,7 +15,7 @@ spec:
     spec:
       destination:
         namespace: preview-hello-world-app
-        server: "https://romeo.us.demo.dev/kubernetes/project/auth-core/virtualcluster/{{metadata.labels.vclusterName}}"
+        server: "https://{REPLACE_VCLUSTER_NAME}.us.demo.dev/kubernetes/project/auth-core/virtualcluster/{{metadata.labels.vclusterName}}"
       info:
         - name: GitHub Repo
           value: https://github.com/loft-demos/{{metadata.labels.repo}}/
