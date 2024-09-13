@@ -22,7 +22,7 @@ spec:
       project: default
       source:
         repoURL: https://github.com/loft-demos/{{metadata.labels.repo}}.git
-        targetRevision: "{{metadata.labels.targetRevision}}"
+        targetRevision: "{{metadata.labels.headBranch}}"
         path: helm-chart/
         helm:
           parameters:
