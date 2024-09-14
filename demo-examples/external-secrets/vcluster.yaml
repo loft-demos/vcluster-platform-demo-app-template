@@ -24,7 +24,7 @@ integrations:
     enabled: true
     # Webhook defines whether the host webhooks are reused or not
     webhook:
-      enabled: true
+      enabled: false
     # Sync defines the syncing behavior for the integration
     sync:
       # ExternalSecrets defines whether to sync external secrets or not
