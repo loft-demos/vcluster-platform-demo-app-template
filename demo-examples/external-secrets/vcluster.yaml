@@ -8,6 +8,7 @@ controlPlane:
     enabled: true
     embedded: true
 
+# the following extra ClusterRole rule is need to allow the vCluster ServiceAccount to get ValidatingWebhookConfigurations for the Extneral Secrets Operator
 rbac:
   clusterRole:
     enabled: true
