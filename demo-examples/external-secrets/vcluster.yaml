@@ -8,6 +8,14 @@ controlPlane:
     enabled: true
     embedded: true
 
+rbac:
+  clusterRole:
+    enabled: true
+    extraRules:
+      - apiGroups: ["admissionregistration.k8s.io/v1"]
+        resources: ["ValidatingWebhookConfiguration"]
+        verbs: ["get"]
+
 integrations:
   # ExternalSecrets reuses a host external secret operator and makes certain CRDs from it available inside the vCluster
   externalSecrets:
