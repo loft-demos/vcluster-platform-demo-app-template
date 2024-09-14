@@ -1,0 +1,30 @@
+sync:
+  toHost:
+    ingresses:
+      enabled: true
+
+controlPlane:
+  coredns:
+    enabled: true
+    embedded: true
+
+integrations:
+  # ExternalSecrets reuses a host external secret operator and makes certain CRDs from it available inside the vCluster
+  externalSecrets:
+    # Enabled defines whether the external secret integration is enabled or not
+    enabled: true
+    # Webhook defines whether the host webhooks are reused or not
+    webhook:
+      enabled: false
+    # Sync defines the syncing behavior for the integration
+    sync:
+      # ExternalSecrets defines whether to sync external secrets or not
+      externalSecrets:
+        enabled: true
+      # Stores defines whether to sync stores or not
+      stores:
+        enabled: false
+      # ClusterStores defines whether to sync cluster stores or not
+      clusterStores:
+        # Enabled defines if this option should be enabled.
+        enabled: true
