@@ -15,7 +15,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.21.0-alpha.7
+        version: 0.21.0-alpha.8
       values: |-
         sync:
           toHost:
@@ -46,7 +46,7 @@ spec:
               # ClusterStores defines whether to sync cluster stores or not
               clusterStores:
                 # Enabled defines if this option should be enabled.
-                enabled: true
+                enabled: false
     accessPoint:
       ingress: {}
     spaceTemplate:
