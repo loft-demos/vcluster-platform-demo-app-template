@@ -167,7 +167,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.21.0-alpha.5
+            version: 0.21.0-alpha.10
           values: |-
             external:
               platform:
