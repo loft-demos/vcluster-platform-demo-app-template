@@ -53,14 +53,13 @@ spec:
         - templates
         - chartinfo
         - charts
+        - runners
       teams:
         - api-framework
   argoCD:
-    enabled: false
     virtualClusterInstance: argocd
     namespace: argocd
     sso:
-      enabled: false
       host: https://argocd-REPLACE_BASE_DOMAIN
       assignedRoles:
         - role:admin
@@ -115,6 +114,7 @@ spec:
         - templates
         - chartinfo
         - charts
+        - runners
       teams:
         - auth-core
   argoCD:
@@ -171,14 +171,13 @@ spec:
         - templates
         - chartinfo
         - charts
+        - runners
       users:
         - '*'
   argoCD:
-    enabled: false
     cluster: loft-cluster
     namespace: argocd
     sso:
-      enabled: false
       host: https://argocd-REPLACE_BASE_DOMAIN/
       assignedRoles:
         - role:admin
