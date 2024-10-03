@@ -131,7 +131,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.20.0
+            version: 0.20.1
           values: |-
             sync:
               toHost:
@@ -192,7 +192,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.20.0
+        version: 0.20.1
       values: |-
         external:
           platform:
