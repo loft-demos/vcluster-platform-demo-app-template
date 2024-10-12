@@ -13,4 +13,4 @@ jobs:
       - name: Show vCluster Version
         run: vcluster --version
       - name: Show kubectl Version
-        run: kubectl --version --client
+        run: kubectl version --client=true
