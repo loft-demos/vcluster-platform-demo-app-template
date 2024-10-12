@@ -1,0 +1,18 @@
+name: vcluster version
+on:
+  push:
+    branches:
+      - 'main'
+jobs:
+  whoami:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install vCluster CLI
+        uses: loft-sh/setup-vcluster@main
+        with:
+          kubectl-install: true
+          kubectl-version: v1.30.2
+      - name: Show vCluster Version
+        run: vcluster --version
+      - name: Show kubectl Version
+        run: kubectl --version --client
