@@ -46,7 +46,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.20.1-beta.3
+            version: 0.21.0-beta.2
           values: |+
             external:
               platform:
@@ -83,12 +83,6 @@ spec:
                       tag: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
-                
-            experimental:
-              syncSettings:
-                syncLabels:
-                  - demos.loft.sh/do-not-change
-                  - x.demos.loft.sh/*
 
             # Checkout https://vcluster.com/pro/docs/ for more config options
         accessPoint:
@@ -192,7 +186,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.20.1
+        version: 0.21.0-beta.2
       values: |-
         external:
           platform:
