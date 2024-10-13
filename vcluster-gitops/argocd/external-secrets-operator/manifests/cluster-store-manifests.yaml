@@ -42,17 +42,6 @@ roleRef:
   name: eso-demo-cluster-store-role
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ghcr-login-secret
-  namespace: eso-demo
-  labels:
-    loft.sh/project-secret-name: ghcr-login-secret
-data:
-  .dockerconfigjson: e30K
-type: kubernetes.io/dockerconfigjson
----
 apiVersion: external-secrets.io/v1beta1
 kind: ClusterSecretStore
 metadata:
