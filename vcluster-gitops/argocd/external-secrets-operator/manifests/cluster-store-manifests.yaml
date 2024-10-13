@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eso-demo
+  namespace: eso-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: eso-demo-cluster-store-role
+rules:
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - selfsubjectrulesreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "dave" to read secrets in the "development" namespace.
+# You need to already have a ClusterRole named "secret-reader".
+kind: RoleBinding
+metadata:
+  name: read-secrets
+  #
+  # The namespace of the RoleBinding determines where the permissions are granted.
+  # This only grants permissions within the "development" namespace.
+  namespace: eso-demo
+subjects:
+- kind: ServiceAccount
+  name: eso-demo
+  namespace: eso-demo
+roleRef:
+  kind: ClusterRole
+  name: eso-demo-cluster-store-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ghcr-login-secret
+  namespace: eso-demo
+  labels:
+    loft.sh/project-secret-name: ghcr-login-secret
+data:
+  .dockerconfigjson: e30K
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: eso-demo-cluster-secret-store
+spec:
+  provider:
+    kubernetes:
+      # with this, the store is able to pull only from `eso-demo` namespace
+      remoteNamespace: eso-demo
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          key: ca.crt
+          namespace: eso-demo
+      auth:
+        serviceAccount:
+          name: "eso-demo"
+          namespace: "eso-demo"
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: ghcr-image-pull-secret
+  namespace: default
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: eso-demo-cluster-secret-store
+  target:
+    name: ghcr-image-pull-secret  # name of the k8s Secret to be created
+    template:
+      type: kubernetes.io/dockerconfigjson
+  data:
+  - secretKey: .dockerconfigjson
+    remoteRef:
+      key: ghcr-login-secret
+      property: .dockerconfigjson
+---
