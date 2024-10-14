@@ -20,11 +20,12 @@ spec:
     namespace: eso-demo
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
+      selfHeal: true    
     syncOptions:
     - CreateNamespace=true
     retry:
-      limit: 1
+      limit: 5
       backoff:
         duration: 5s 
         factor: 2 
