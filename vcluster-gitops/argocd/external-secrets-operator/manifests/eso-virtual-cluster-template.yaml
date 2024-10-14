@@ -1,0 +1,172 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: eso-example-template
+spec:
+  displayName: External Secrets Operator Virtual Cluster Template
+  description: This virtual cluster template includes an example of the vCluster Pro External Secrets Operator integration.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.20.0
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        # Checkout https://vcluster.com/pro/docs/ for more config options
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: >-
+                Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+            labels:
+              env: '{{ .Values.env }}'
+              team: '{{ .Values.loft.project }}'
+        apps:
+          - name: helm-dashboard
+            namespace: helm-dashboard
+        pro:
+          enabled: true
+        objects: |
+          ---
+          apiVersion: external-secrets.io/v1beta1
+          kind: ExternalSecret
+          metadata:
+            name: ghcr-image-pull-secret
+            namespace: default
+          spec:
+            refreshInterval: 1h
+            secretStoreRef:
+              kind: ClusterSecretStore
+              name: eso-demo-cluster-secret-store
+            target:
+              name: ghcr-image-pull-secret  # name of the k8s Secret to be created
+              template:
+                type: kubernetes.io/dockerconfigjson
+            data:
+            - secretKey: .dockerconfigjson
+              remoteRef:
+                key: ghcr-login-secret
+                property: .dockerconfigjson
+        helmRelease:
+          chart:
+            version: 0.21.0-beta.2
+          values: |+
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 2400
+                autoDelete:
+                  afterInactivity: 180000
+                  
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+
+            integrations:
+              externalSecrets:
+                enabled: true
+
+            controlPlane:
+              statefulSet:
+                annotations:
+                  demo.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
+                labels:
+                  env: '{{ .Values.env }}'
+                  team: '{{ .Values.loft.project }}'
+                  pvClaimName: '{{ .Values.pvClaimName }}'
+              # Use an embedded managed etcd server instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              distro:
+                k8s:
+                  apiServer:
+                    image:
+                      tag:  "{{ .Values.k8sVersion }}"
+                  controllerManager:
+                    image:
+                      tag: "{{ .Values.k8sVersion }}"
+              coredns:
+                embedded: true
+
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      parameters:
+        - variable: pvClaimName
+          label: Persistent Volume Claim Name
+          description: >-
+            The claim to use as the persistent volume for the vCluster `StatefulSet`
+          required: true
+          defaultValue: "pvclaim-id"
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.31.1
+            - v1.30.5
+            - v1.29.9
+            - v1.28.14
+            - v1.27.16
+          defaultValue: v1.30.5
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+      version: 1.0.0
+    - template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.20.1
+          values: |-
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      version: 0.0.0
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}
