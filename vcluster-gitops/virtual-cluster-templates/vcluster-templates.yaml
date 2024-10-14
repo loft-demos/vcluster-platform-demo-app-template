@@ -45,28 +45,6 @@ spec:
         pro:
           enabled: true
         objects: |
-          {{if .Values.loft.clusterAnnotations.eso}}
-          ---
-          apiVersion: external-secrets.io/v1beta1
-          kind: ExternalSecret
-          metadata:
-            name: ghcr-image-pull-secret
-            namespace: default
-          spec:
-            refreshInterval: 1h
-            secretStoreRef:
-              kind: ClusterSecretStore
-              name: eso-demo-cluster-secret-store
-            target:
-              name: ghcr-image-pull-secret  # name of the k8s Secret to be created
-              template:
-                type: kubernetes.io/dockerconfigjson
-            data:
-            - secretKey: .dockerconfigjson
-              remoteRef:
-                key: ghcr-login-secret
-                property: .dockerconfigjson
-          {{else}}
           ---
           apiVersion: v1
           kind: Secret
@@ -78,7 +56,6 @@ spec:
           data:
             .dockerconfigjson: e30K
           type: kubernetes.io/dockerconfigjson
-          {{end}}
         helmRelease:
           chart:
             version: 0.21.0-beta.2
@@ -94,16 +71,6 @@ spec:
               toHost:
                 ingresses:
                   enabled: true
-
-            {{if .Values.loft.clusterAnnotations.eso}}
-            integrations:
-              externalSecrets:
-                enabled: true
-                sync:
-                  # ExternalSecrets defines whether to sync external secrets or not
-                  externalSecrets:
-                    enabled: true
-            {{end}}
 
             controlPlane:
               statefulSet:
