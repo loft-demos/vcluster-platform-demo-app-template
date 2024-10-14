@@ -45,7 +45,6 @@ spec:
         pro:
           enabled: true
         objects: |
-          {{if .Values.loft.clusterAnnotations.eso}}
           ---
           apiVersion: external-secrets.io/v1beta1
           kind: ExternalSecret
@@ -66,19 +65,6 @@ spec:
               remoteRef:
                 key: ghcr-login-secret
                 property: .dockerconfigjson
-          {{else}}
-          ---
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: ghcr-login-secret
-            namespace: default
-            labels:
-              loft.sh/project-secret-name: ghcr-login-secret
-          data:
-            .dockerconfigjson: e30K
-          type: kubernetes.io/dockerconfigjson
-          {{end}}
         helmRelease:
           chart:
             version: 0.21.0-beta.2
@@ -95,15 +81,9 @@ spec:
                 ingresses:
                   enabled: true
 
-            {{if .Values.loft.clusterAnnotations.eso}}
             integrations:
               externalSecrets:
                 enabled: true
-                sync:
-                  # ExternalSecrets defines whether to sync external secrets or not
-                  externalSecrets:
-                    enabled: true
-            {{end}}
 
             controlPlane:
               statefulSet:
