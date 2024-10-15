@@ -93,6 +93,17 @@ spec:
                   env: '{{ .Values.env }}'
                   team: '{{ .Values.loft.project }}'
                   pvClaimName: '{{ .Values.pvClaimName }}'
+                resources:
+                  # Limits are resource limits for the container
+                  limits:
+                    ephemeral-storage: 4Gi
+                    memory: 2Gi
+                    cpu: 2
+                  # Requests are minimal resources that will be consumed by the container
+                  requests:
+                    ephemeral-storage: 500Mi
+                    cpu: 400m
+                    memory: 512Mi
               # Use an embedded managed etcd server instead of using the default SQLite backend
               backingStore:
                 etcd:
