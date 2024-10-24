@@ -91,12 +91,6 @@ spec:
             labels:
               env: '{{ .Values.env }}'
               team: '{{ .Values.loft.project }}'
-            annotations:
-              loft.sh/custom-links: >-
-                Helm-Dashboard=https://helm-dashboard-{{
-                .Values.loft.virtualClusterName }}-{{
-                .Values.loft.clusterAnnotations.domainPrefix }}.{{
-                .Values.loft.clusterAnnotations.domain }}
         objects: |-
           apiVersion: v1
           kind: Namespace
