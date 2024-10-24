@@ -1,0 +1,288 @@
+apiVersion: management.loft.sh/v1
+kind: App
+metadata:
+  name: istio-base
+spec:
+  displayName: Istio Base
+  owner:
+    team: loft-admins
+  recommendedApp:
+    - cluster
+  defaultNamespace: istio-system
+  icon: https://seeklogo.com/images/I/istio-logo-92FF583709-seeklogo.com.png
+  config:
+    chart:
+      name: base
+      version: 1.22.3
+      repoURL: https://istio-release.storage.googleapis.com/charts
+---
+apiVersion: management.loft.sh/v1
+kind: App
+metadata:
+  name: istiod
+spec:
+  displayName: Istiod
+  owner:
+    team: loft-admins
+  recommendedApp:
+    - cluster
+  defaultNamespace: istio-system
+  icon: https://seeklogo.com/images/I/istio-logo-92FF583709-seeklogo.com.png
+  config:
+    chart:
+      name: istiod
+      version: 1.22.3
+      repoURL: https://istio-release.storage.googleapis.com/charts
+---
+apiVersion: management.loft.sh/v1
+kind: App
+metadata:
+  name: istio-ingress
+spec:
+  displayName: Istio Ingress Gateway
+  owner:
+    team: loft-admins
+  recommendedApp:
+    - cluster
+  defaultNamespace: istio-ingress
+  icon: https://seeklogo.com/images/I/istio-logo-92FF583709-seeklogo.com.png
+  config:
+    chart:
+      name: gateway
+      version: 1.22.3
+      repoURL: https://istio-release.storage.googleapis.com/charts
+---
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: istio-virtual-service-example
+spec:
+  displayName: Istio Virtual Service Example
+  description: >-
+    This virtual cluster template deploys a vCluster with generic sync configured to sync `virtualservices.networking.istio.io` from the vCluster to the host.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.20.0-beta.15
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        # Checkout https://vcluster.com/pro/docs/ for more config options
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+        instanceTemplate:
+          metadata:
+            labels:
+              env: '{{ .Values.env }}'
+              team: '{{ .Values.loft.project }}'
+        objects: |-
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: grpc-routing
+          ---
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: grpc-routing
+            namespace: grpc-routing
+          ---
+          apiVersion: gateway.networking.k8s.io/v1
+          kind: Gateway
+          metadata:
+            name: grpc-routing-gateway
+            namespace: grpc-routing
+            labels:
+              example: grpc-routing
+          spec:
+            gatewayClassName: istio
+            listeners:
+              - name: http
+                protocol: HTTP
+                port: 80
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            namespace: grpc-routing
+            labels:
+              app: yages
+              example: grpc-routing
+            name: yages
+          spec:
+            selector:
+              matchLabels:
+                app: yages
+            replicas: 1
+            template:
+              metadata:
+                labels:
+                  app: yages
+              spec:
+                serviceAccountName: grpc-routing
+                containers:
+                  - name: grpcsrv
+                    image: ghcr.io/projectcontour/yages:v0.1.0
+                    ports:
+                      - containerPort: 9000
+                        protocol: TCP
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            namespace: grpc-routing
+            labels:
+              app: yages
+              example: grpc-routing
+            name: yages
+          spec:
+            ports:
+              - name: grpc
+                port: 9000
+                protocol: TCP
+                targetPort: 9000
+            selector:
+              app: yages
+          ---
+          apiVersion: gateway.networking.k8s.io/v1
+          kind: GRPCRoute
+          metadata:
+            namespace: grpc-routing
+            name: yages
+            labels:
+              example: grpc-routing
+          spec:
+            parentRefs:
+              - name: grpc-routing-gateway
+            hostnames:
+              - "grpc-example.com"
+            rules:
+              - backendRefs:
+                  - group: ""
+                    kind: Service
+                    name: yages
+                    port: 9000
+                    weight: 1
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.21.0-beta.5
+          values: |-
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 6000
+                autoDelete:
+                  afterInactivity: 150000
+                  
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+                customResources:
+                  gateways.gateway.networking.k8s.io:
+                    enabled: true
+                  grpcroutes.gateway.networking.k8s.io:
+                    enabled: true
+                    patches:
+                      - path: .spec.parentRefs[*].name
+                        reference:
+                          kind: Gateway
+                          apiVersion: gateway.networking.k8s.io/v1
+                      - path: .spec.rules[*].backendRefs[*].name
+                        reference:
+                          kind: Service
+                          apiVersion: v1
+
+            controlPlane:
+              statefulSet:
+                labels:
+                  env: '{{ .Values.env }}'
+                  team: '{{ .Values.loft.project }}'
+              # Use an embedded managed etcd server instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              distro:
+                k8s:
+                  apiServer:
+                    image:
+                      tag:  "{{ .Values.k8sVersion }}"
+                  controllerManager:
+                    image:
+                      tag: "{{ .Values.k8sVersion }}"
+              coredns:
+                embedded: true
+
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      parameters:
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.30.2
+            - v1.29.6
+            - v1.28.11
+            - v1.27.9
+            - v1.26.15
+          defaultValue: v1.29.6
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+      version: 1.0.0
+    - template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.20.0-beta.15
+          values: |-
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      version: 0.0.0
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
