@@ -128,6 +128,12 @@ spec:
             - qa
             - prod
           defaultValue: dev
+        - variable: booleanExample
+          label: Boolean Example
+          description: >-
+            Example for boolean parameter type
+          type: boolean
+          section: Examples
       version: 1.0.0
     - template:
         metadata: {}
