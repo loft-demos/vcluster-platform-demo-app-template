@@ -44,18 +44,6 @@ spec:
             namespace: helm-dashboard
         pro:
           enabled: true
-        objects: |
-          ---
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: ghcr-login-secret
-            namespace: default
-            labels:
-              loft.sh/project-secret-name: ghcr-login-secret
-          data:
-            .dockerconfigjson: e30K
-          type: kubernetes.io/dockerconfigjson
         helmRelease:
           chart:
             version: 0.21.0-beta.6
@@ -63,7 +51,7 @@ spec:
             external:
               platform:
                 autoSleep:
-                  afterInactivity: 2400
+                  afterInactivity: 3600
                 autoDelete:
                   afterInactivity: 180000
                   
@@ -71,6 +59,18 @@ spec:
               toHost:
                 ingresses:
                   enabled: true
+            
+            experimental:
+              genericSync:
+                hooks:
+                  virtualToHost:
+                  - apiVersion: v1
+                    kind: Pod
+                    patches:
+                    - op: add
+                      path: spec.imagePullSecrets[0]
+                      value: 
+                        name: hook-image-pull-secret
 
             controlPlane:
               statefulSet:
@@ -101,6 +101,16 @@ spec:
           ingress: {}
         spaceTemplate:
           metadata: {}
+          objects: |
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: hook-image-pull-secret
+              labels:
+                loft.sh/project-secret-name: ghcr-login-secret
+            data:
+              .dockerconfigjson: e30K
+            type: kubernetes.io/dockerconfigjson
       parameters:
         - variable: k8sVersion
           label: k8sVersion
