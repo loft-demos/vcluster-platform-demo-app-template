@@ -140,13 +140,7 @@ spec:
             - qa
             - prod
           defaultValue: dev
-          section: Kubernetes Environment
-        - variable: booleanExample
-          label: Boolean Example
-          description: >-
-            Example for boolean parameter type
-          type: boolean
-          section: Examples
+          section: Deployment Environment
       version: 1.0.0
     - template:
         metadata: {}
