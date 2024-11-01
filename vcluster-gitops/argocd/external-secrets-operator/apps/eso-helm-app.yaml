@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: eso-app
+  name: eso-helm-app
   namespace: argocd
   labels:
     eso.demos.loft.sh: eso
