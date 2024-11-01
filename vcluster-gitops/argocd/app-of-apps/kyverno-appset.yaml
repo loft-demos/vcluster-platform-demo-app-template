@@ -12,7 +12,7 @@ spec:
   template:
     metadata:
       # name is the name of the kubernetes cluster as selected by the spec above
-      name: 'eso-apps'
+      name: 'kyverno-apps'
       labels:
         kyverno.demos.loft.sh: kyverno
     spec:
