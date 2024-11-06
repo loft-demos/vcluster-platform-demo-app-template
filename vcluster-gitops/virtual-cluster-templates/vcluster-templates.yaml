@@ -27,7 +27,131 @@ spec:
     spaceTemplate:
       metadata: {}
   versions:
-    - template:
+    - version: 1.0.1
+      template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+          labels:
+             loft.sh/import-argocd: 'true'
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: >-
+                Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+            labels:
+              env: '{{ .Values.env }}'
+              team: '{{ .Values.loft.project }}'
+        apps:
+          - name: helm-dashboard
+            namespace: helm-dashboard
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.21.0-beta.8
+          values: |+
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 180
+                autoDelete:
+                  afterInactivity: 180000
+                  
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            
+            experimental:
+              genericSync:
+                hooks:
+                  virtualToHost:
+                  - apiVersion: v1
+                    kind: Pod
+                    patches:
+                    - op: add
+                      path: spec.imagePullSecrets[0]
+                      value: 
+                        name: hook-image-pull-secret
+
+            controlPlane:
+              statefulSet:
+                annotations:
+                  demo.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
+                labels:
+                  env: '{{ .Values.env }}'
+                  team: '{{ .Values.loft.project }}'
+                  pvClaimName: '{{ .Values.pvClaimName }}'
+                resources:
+                  # Limits are resource limits for the container
+                  limits:
+                    ephemeral-storage: 8Gi
+                    memory: 2Gi
+                    cpu: 1
+              # Use an embedded managed etcd server instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              distro:
+                k8s:
+                  apiServer:
+                    image:
+                      tag:  "{{ .Values.k8sVersion }}"
+                  controllerManager:
+                    image:
+                      tag: "{{ .Values.k8sVersion }}"
+              coredns:
+                embedded: true
+
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+          objects: |
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: hook-image-pull-secret
+              labels:
+                loft.sh/project-secret-name: ghcr-login-secret
+            data:
+              .dockerconfigjson: e30K
+            type: kubernetes.io/dockerconfigjson
+      parameters:
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.31.1
+            - v1.30.5
+            - v1.29.9
+            - v1.28.14
+            - v1.27.16
+          defaultValue: v1.30.5
+          section: Kubernetes Environment
+        - variable: pvClaimName
+          label: Persistent Volume Claim Name
+          description: >-
+            The claim to use as the persistent volume for the vCluster `StatefulSet`
+          required: true
+          defaultValue: "pvclaim-id"
+          section: Kubernetes Environment
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+          section: Deployment Environment
+    - version: 1.0.0
+      template:
         metadata:
           annotations:
             sleepmode.loft.sh/ignore-user-agents: argo*
@@ -46,7 +170,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.21.0-beta.6
+            version: 0.21.0-beta.7
           values: |+
             external:
               platform:
@@ -147,7 +271,6 @@ spec:
             - prod
           defaultValue: dev
           section: Deployment Environment
-      version: 1.0.0
     - template:
         metadata: {}
         instanceTemplate:
