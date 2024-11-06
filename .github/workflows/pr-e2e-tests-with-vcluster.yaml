@@ -16,14 +16,16 @@ jobs:
     steps:
       - name: Install vCluster CLI
         uses: loft-sh/setup-vcluster@main
+      - name: Show vCluster Version
+        run: vcluster --version
       - name: Login to vCluster Platform instance
         env:
           VCLUSTER_PLATFORM_URL: ${{ secrets.VCLUSTER_PLATFORM_URL }}
           ACCESS_KEY: ${{ secrets.VCLUSTER_PLATFORM_ACCESS_KEY }}
         run: vcluster platform login $VCLUSTER_PLATFORM_URL --access-key $ACCESS_KEY
       - name: Create PR Virtual Cluster
-        run: vcluster platform create $VCLUSTER_NAME --project api-framework
+        run: vcluster platform create vcluster $VCLUSTER_NAME --project api-framework
       - name: Run Tests
         run: sleep 5
       - name: Delete PR Virtual Cluster
-        run: vcluster platform delete $VCLUSTER_NAME --project api-framework
+        run: vcluster platform delete vcluster $VCLUSTER_NAME --project api-framework
