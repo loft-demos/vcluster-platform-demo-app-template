@@ -25,6 +25,8 @@ jobs:
         run: vcluster platform login $VCLUSTER_PLATFORM_URL --access-key $ACCESS_KEY
       - name: Create PR Virtual Cluster
         run: vcluster platform create vcluster $VCLUSTER_NAME --project api-framework
+      - name: List vCluster Namespaces
+        run: kubectl get ns
       - name: Run Tests
         run: sleep 5
       - name: Delete PR Virtual Cluster
