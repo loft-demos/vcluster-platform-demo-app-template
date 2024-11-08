@@ -46,7 +46,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.21.0-beta.6
+            version: 0.21.0-beta.9
           values: |+
             external:
               platform:
@@ -93,12 +93,7 @@ spec:
                     enabled: true
               distro:
                 k8s:
-                  apiServer:
-                    image:
-                      tag:  "{{ .Values.k8sVersion }}"
-                  controllerManager:
-                    image:
-                      tag: "{{ .Values.k8sVersion }}"
+                  version: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
 
@@ -217,7 +212,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.21.0-beta.6
+        version: 0.21.0-beta.9
       values: |-
         external:
           platform:
