@@ -148,7 +148,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.20.2
+            version: 0.21.1
           values: |-
             external:
               platform:
@@ -177,11 +177,6 @@ spec:
                       tag: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
-
-            experimental:
-              syncSettings:
-                syncLabels:
-                  - "app.kubernetes.io/part-of"
         accessPoint:
           ingress: {}
         spaceTemplate:
