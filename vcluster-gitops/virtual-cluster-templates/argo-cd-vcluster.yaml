@@ -86,7 +86,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.21.0-beta.6
+        version: 0.21.1
       values: |
         sync:
           toHost:
