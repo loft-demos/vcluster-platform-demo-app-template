@@ -84,7 +84,7 @@ spec:
                         clientID: PATCHED
                         component: oidcServer
                       name: loft-argocd-oidc-secret
-                      namespace: loft
+                      namespace: vcluster-platform
                     stringData:
                       clientID: PATCHED
                       clientSecret: '$OIDC_CLIENT_SECRET'
