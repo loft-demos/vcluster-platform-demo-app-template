@@ -28,6 +28,7 @@ spec:
         helm:
           valuesObject:
             hostname: rancher-{{metadata.labels.loftDemoDomain}}
+            agentTLSMode: "system-store"
             tls: "ingress"
             ingress:
               enabled: true
