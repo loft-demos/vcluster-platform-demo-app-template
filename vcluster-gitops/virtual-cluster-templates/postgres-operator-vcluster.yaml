@@ -1,0 +1,81 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: postgres-operator-template
+spec:
+  displayName: Postgres Operator Template
+  template:
+    metadata:
+      labels:
+        loft.sh/import-argocd: 'true'
+      annotations:
+        sleepmode.loft.sh/delete-after: '72000'
+        loft.sh/require-ingress-authentication: 'true'
+        sleepmode.loft.sh/sleep-after: '600'
+        sleepmode.loft.sh/ignore-user-agents: 'argo*'
+    objects: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: preview-hello-world-app
+      ---
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: ghcr-login-secret
+        namespace: preview-hello-world-app
+        labels:
+          loft.sh/project-secret-name: ghcr-login-secret
+      data:
+        .dockerconfigjson: e30K
+      type: kubernetes.io/dockerconfigjson
+    access:
+      rules:
+        - teams:
+            - loft-admins
+          clusterRole: cluster-admin
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.21.1
+      values: |-
+        external:
+          platform:
+            autoSleep:
+              afterInactivity: 10800
+            autoDelete:
+              afterInactivity: 120000
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+            customResources:
+              postgresqls.acid.zalan.do:
+                enabled: true
+
+        controlPlane:
+          # Use an embedded managed etcd server instead of using the k3s default SQLite backend
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          coredns:
+            embedded: true
+        policies:
+          limitRange:
+            enabled: true
+          podSecurityStandard: baseline
+          resourceQuota:
+            enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
