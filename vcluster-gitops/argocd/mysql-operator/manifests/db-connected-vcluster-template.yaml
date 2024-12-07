@@ -1,0 +1,137 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: db-connector-vcluster
+spec:
+  displayName: Database Connector Virtual Cluster
+  description: This virtual cluster template enables scalable and secure virtual cluster management by automatically provisioning isolated databases and non-privileged users on a centralized MySQL database server for each vCluster backing store.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.21.1
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+          labels:
+            loft.sh/import-argocd: 'true'
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: >-
+                Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+            labels:
+              env: '{{ .Values.env }}'
+              team: '{{ .Values.loft.project }}'
+        apps:
+          - name: helm-dashboard
+            namespace: helm-dashboard
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.21.1
+          values: |+
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 7200
+                autoDelete:
+                  afterInactivity: 180000
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true        
+            experimental:
+              genericSync:
+                hooks:
+                  virtualToHost:
+                  - apiVersion: v1
+                    kind: Pod
+                    patches:
+                    - op: add
+                      path: spec.imagePullSecrets[0]
+                      value: 
+                        name: hook-image-pull-secret
+            controlPlane:
+              statefulSet:
+                labels:
+                  env: '{{ .Values.env }}'
+                  team: '{{ .Values.loft.project }}'
+                resources:
+                  limits:
+                    ephemeral-storage: 8Gi
+                    memory: 2Gi
+                    cpu: 1
+              # Use a Platform database connector instead of using the default SQLite backend
+              backingStore:
+                database:
+                  external:
+                    enabled: true
+                    connector: database-connector
+              distro:
+                k8s:
+                  version: "{{ .Values.k8sVersion }}"
+              coredns:
+                embedded: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+          objects: |
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: hook-image-pull-secret
+              labels:
+                loft.sh/project-secret-name: ghcr-login-secret
+            data:
+              .dockerconfigjson: e30K
+            type: kubernetes.io/dockerconfigjson
+      parameters:
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.31.1
+            - v1.30.5
+            - v1.29.9
+            - v1.28.14
+          defaultValue: v1.30.5
+          section: Kubernetes Environment
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+          section: Deployment Environment
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}
