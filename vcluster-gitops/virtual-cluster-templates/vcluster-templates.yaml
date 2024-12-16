@@ -51,11 +51,12 @@ spec:
             external:
               platform:
                 autoSleep:
-                  afterInactivity: 3600
+                  afterInactivity: 1500
                   autoWakeup:
-                    schedule: 0 8 * * 1-5
+                    schedule: 0 7-17 * * 1-5
+                  timezone: "America/New_York"
                 autoDelete:
-                  afterInactivity: 180000
+                  afterInactivity: 1800000
                   
             sync:
               toHost:
