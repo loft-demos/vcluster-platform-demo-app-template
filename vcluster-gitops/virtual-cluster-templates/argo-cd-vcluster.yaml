@@ -88,6 +88,15 @@ spec:
       chart:
         version: 0.21.1
       values: |
+        external:
+          platform:
+            autoSleep:
+              schedule: 0 22 * * *
+              autoWakeup:
+                schedule: 0 6 * * 1-5
+              timezone: "America/New_York"
+            autoDelete:
+              afterInactivity: 18000000
         sync:
           toHost:
             ingresses:
