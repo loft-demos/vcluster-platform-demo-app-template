@@ -61,21 +61,14 @@ spec:
             sync:
               toHost:
                 ingresses:
-                  enabled: true
-            
-            experimental:
-              genericSync:
-                hooks:
-                  virtualToHost:
-                  - apiVersion: v1
-                    kind: Pod
-                    patches:
-                    - op: add
-                      path: spec.imagePullSecrets[0]
-                      value: 
-                        name: hook-image-pull-secret
+                  enabled: true 
 
             controlPlane:
+              advanced:
+                workloadServiceAccount:
+                  enabled: true
+                  imagePullSecrets:
+                  - name: "hook-image-pull-secret"
               statefulSet:
                 annotations:
                   demo.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
