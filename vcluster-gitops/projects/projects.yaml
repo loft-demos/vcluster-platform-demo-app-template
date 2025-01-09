@@ -9,6 +9,7 @@ spec:
   quotas:
     project:
       count/virtualclusterinstances.active: '15'
+      requests.nvidia.com/gpu: '10'
     user:
       count/virtualclusterinstances: '4'
   allowedClusters:
