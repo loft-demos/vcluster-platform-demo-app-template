@@ -46,14 +46,16 @@ spec:
           enabled: true
         helmRelease:
           chart:
+            name: vcluster
+            repo: https://loft-demos.github.io/vcluster-charts
             version: 0.22.3
-          values: |+
+          values: |
             external:
               platform:
                 autoSleep:
-                  afterInactivity: 1500
+                  afterInactivity: 1620
                   autoWakeup:
-                    schedule: 0 7-17 * * 1-5
+                    schedule: 11 7-17 * * 1-5
                   timezone: "America/New_York"
                 autoDelete:
                   afterInactivity: 1800000
@@ -61,7 +63,16 @@ spec:
             sync:
               toHost:
                 ingresses:
-                  enabled: true 
+                  enabled: true
+                secrets:
+                  all: true
+                customResources:
+                  postgresqls.acid.zalan.do:
+                    enabled: true
+            
+            #plugins:
+              #rancher:
+                #image: ghcr.io/loft-sh/rancher-nodeless-plugin:0.0.5
 
             controlPlane:
               advanced:
@@ -82,14 +93,17 @@ spec:
                     ephemeral-storage: 8Gi
                     memory: 2Gi
                     cpu: 1
+                image:
+                  repository: "loft-demos/vcluster-pro"
+                  tag: "0.22.3-k8s.{{ .Values.k8sVersion }}"
+                persistence:
+                  volumeClaim:
+                    storageClass: "standard-rwo"
               # Use an embedded managed etcd server instead of using the default SQLite backend
               backingStore:
                 etcd:
                   embedded:
                     enabled: true
-              distro:
-                k8s:
-                  version: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
 
@@ -113,11 +127,11 @@ spec:
           label: k8sVersion
           description: Please select Kubernetes version
           options:
-            - v1.32.0
-            - v1.31.4
-            - v1.30.8
-            - v1.29.12
-          defaultValue: v1.31.4
+            - v1.32.1
+            - v1.31.5
+            - v1.30.9
+            - v1.29.14
+          defaultValue: v1.31.5
           section: Kubernetes Environment
         - variable: pvClaimName
           label: Persistent Volume Claim Name
@@ -172,7 +186,7 @@ apiVersion: management.loft.sh/v1
 metadata:
   name: preview-template
 spec:
-  displayName: vCluster.Pro Preview Template
+  displayName: vCluster Preview Template
   template:
     metadata:
       labels:
@@ -214,13 +228,18 @@ spec:
             autoSleep:
               afterInactivity: 10800
               autoWakeup:
-                schedule: 0 8 * * 1-5
+                schedule: 11 8-16 * * 1-5
             autoDelete:
               afterInactivity: 120000
         sync:
           toHost:
             ingresses:
               enabled: true
+            secrets:
+              all: true
+            customResources:
+              postgresqls.acid.zalan.do:
+                enabled: true
 
         controlPlane:
           # Use an embedded managed etcd server instead of using the k3s default SQLite backend
@@ -247,3 +266,71 @@ spec:
         - '*'
       users:
         - admin
+---
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: sleepy-vcluster-template
+  annotations:
+    argocd.argoproj.io/sync-options: Validate=false
+spec:
+  displayName: Sleepy vCluster Template
+  description: This template deploys a sleepy virtual cluster
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        name: vcluster
+        repo: https://loft-demos.github.io/vcluster-charts
+        version: 0.22.3
+      values: |
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        controlPlane:
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          coredns:
+            embedded: true
+          statefulSet:
+            image:
+              repository: "loft-demos/vcluster-pro"
+              tag: "0.22.3-k8s.{{ .Values.k8sVersion }}"
+        
+        external:
+          platform:
+            autoSleep:
+              afterInactivity: {{ mul .Values.sleepAfter 60 }}
+            autoDelete:
+              afterInactivity: {{ mul .Values.sleepAfter 120 }}
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  parameters:
+    - variable: sleepAfter
+      label: Sleep After Inactivity (minutes)
+      type: number
+      defaultValue: '2'
+    - variable: k8sVersion
+      label: k8sVersion
+      description: Please select Kubernetes version
+      options:
+        - v1.32.1
+        - v1.31.5
+        - v1.30.9
+        - v1.29.14
+      defaultValue: v1.31.5
+  access:
+    - verbs:
+        - get
+      users:
+        - '*'
