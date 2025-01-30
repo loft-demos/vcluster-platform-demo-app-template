@@ -148,7 +148,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.21.1
+            version: 0.22.3
           values: |-
             external:
               platform:
@@ -186,12 +186,11 @@ spec:
           label: k8sVersion
           description: Please select Kubernetes version
           options:
-            - v1.30.2
-            - v1.29.8
-            - v1.28.11
-            - v1.27.9
-            - v1.26.15
-          defaultValue: v1.29.8
+            - v1.32.1
+            - v1.31.5
+            - v1.30.9
+            - v1.29.14
+          defaultValue: v1.31.5
         - variable: prnumber
           label: PR Number
           type: string
