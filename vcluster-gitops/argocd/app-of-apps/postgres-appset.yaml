@@ -22,7 +22,7 @@ spec:
         namespace: argocd
       project: default
       source:
-        repoURL: https://github.com/loft-demos/alpha-app
+        repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
         targetRevision: HEAD
         path: vcluster-gitops/argocd/postgres-operator/apps
       syncPolicy:
