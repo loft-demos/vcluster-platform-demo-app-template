@@ -1,18 +1,18 @@
 # Ephemeral vCluster for Pull Requests
 ### with Ephemeral Argo CD Instance 
 
-This setup enables the automatic creation of ephemeral vCluster instances for each pull request, complete with an Argo CD deployment for managing application code changes dynamically.
+This setup enables the automatic creation of ephemeral vCluster instances for each pull request, complete with an ephemeral Argo CD deployment inside that vCluster for managing application code changes dynamically.
 
 ## Key Components & Workflow
 1. vCluster Platform
-   - Utilizes VirtualClusterInstance and VirtualClusterTemplate CRDs to provision vClusters dynamically.
+   - Utilizes `VirtualClusterInstance` and `VirtualClusterTemplate` CRDs to provision vClusters dynamically.
    - The App CRD deploys Argo CD inside each ephemeral vCluster, configuring an ApplicationSet for managing GitHub-based applications.
    - Supports SSO via OIDC for secure authentication.
 2. Crossplane
    - Manages cloud-native resources using Kubernetes and GitHub providers.
    - Uses compositions to automate provisioning:
-     - XPullRequestEnvironment: Creates an isolated environment for each pull request.
-     - XArgoCDWebhook: Manages webhooks for triggering deployments.
+     - `XPullRequestEnvironment`: Creates an isolated environment for each pull request.
+     - `XArgoCDWebhook`: Manages webhooks for triggering deployments.
 3. Argo CD
    - Deploys an ApplicationSet leveraging the Pull Request Generator, ensuring each PR gets its own isolated environment for testing.
 4. Ingress Nginx
