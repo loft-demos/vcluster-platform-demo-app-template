@@ -5,8 +5,8 @@ metadata:
 spec:
   displayName: Pull Request vCluster
   description: >-
-    Intended for ephemeral vClusters for GitHub pull requests and includes an
-    Argo CD instance.
+    Used for ephemeral vCluster instances for GitHub pull requests and includes an
+    Argo CD instance installed in the vCluster.
   owner:
     team: loft-admins
   template:
