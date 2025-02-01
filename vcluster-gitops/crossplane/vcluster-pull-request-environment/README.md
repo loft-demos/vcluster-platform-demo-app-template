@@ -9,7 +9,7 @@ This setup enables the automatic creation of ephemeral vCluster instances for ea
    - The `App` CRD deploys Argo CD inside each ephemeral vCluster, configuring an ApplicationSet for managing GitHub-based applications.
    - Supports SSO via OIDC for secure authentication.
 2. Crossplane
-   - Manages cloud-native resources using Kubernetes and GitHub providers.
+   - Manages cloud-native resources using [Kubernetes](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator/crossplane/provider-kubernetes) and [GitHub](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator/crossplane/provider-github) providers.
    - Uses compositions resources definitions to automate provisioning of ephemeral PR vCluster:
      - `XPullRequestEnvironment`: Creates an isolated vCluster environment for each pull request.
      - `XArgoCDWebhook`: Manages ephemeral webhooks for triggering Argo CD deployments for every commit to a Pull Request head branch.
