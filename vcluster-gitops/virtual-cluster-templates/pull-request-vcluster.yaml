@@ -62,7 +62,9 @@ spec:
                        name: Loft
                   params:
                     "server.insecure": true
-                    timeout.reconciliation: 0 
+                    timeout.reconciliation: 0  
+                  secret:
+                    createSecret: true
                   rbac:
                     policy.csv: |-
                       g, Administration, role:admin
@@ -79,6 +81,14 @@ spec:
                     tls: true
                   ingressGrpc:
                     enabled: false
+                controller:
+                  resources:
+                    limits:
+                      cpu: 1000m
+                      memory: 2Gi
+                    requests:
+                      cpu: 250m
+                      memory: 512Mi
                 ## ApplicationSet controller
                 applicationSet:
                   enabled: true
