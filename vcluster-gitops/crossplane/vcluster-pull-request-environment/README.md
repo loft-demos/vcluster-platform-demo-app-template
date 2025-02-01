@@ -11,15 +11,15 @@ This setup enables the automatic creation of ephemeral vCluster instances for ea
 2. Crossplane
    - Manages cloud-native resources using Kubernetes and GitHub providers.
    - Uses compositions to automate provisioning:
-     - `XPullRequestEnvironment`: Creates an isolated environment for each pull request.
-     - `XArgoCDWebhook`: Manages webhooks for triggering deployments.
+     - `XPullRequestEnvironment`: Creates an isolated vCluster environment for each pull request.
+     - `XArgoCDWebhook`: Manages ephemeral webhooks for triggering Argo CD deployments for every commit to a Pull Request head branch.
 3. Argo CD
    - Deploys an ApplicationSet leveraging the Pull Request Generator, ensuring each PR gets its own isolated environment for testing.
 4. Ingress Nginx
    - Provides ingress routing for ephemeral vClusters and Argo CD instances.
 
 ## How It Works
-- When a pull request is opened, Argo CD triggers Crossplane to provision an ephemeral vCluster using VirtualClusterTemplate.
+- When a pull request is opened, Argo CD triggers Crossplane to provision an ephemeral vCluster using a VirtualClusterTemplate - see [pull-request-vcluster.yaml](../../virtual-cluster-templates/pull-request-vcluster.yaml).
 - Another, completely ephemeral, Argo CD instance is deployed inside the vCluster, and an ApplicationSet is created to manage the application from the PR branch.
 - The system integrates OIDC-based SSO, allowing developers to access Argo CD securely.
 - Upon merging or closing the PR, the ephemeral environment is automatically cleaned up, keeping the system efficient and cost-effective.
