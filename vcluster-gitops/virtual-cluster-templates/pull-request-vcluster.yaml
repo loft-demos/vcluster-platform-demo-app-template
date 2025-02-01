@@ -39,17 +39,21 @@ spec:
                 https://argocd-{{ .Values.loft.virtualClusterName }}.{{
                 .Values.loft.clusterAnnotations.domain }}
         apps:
+          # Argo CD vCluster Platform App - installs Argo CD into vCluster with Helm - see ../apps/argo-cd.yaml
           - name: argocd
             version: 2.12.1
             namespace: argocd
             parameters: |
               appValues: |
                 global:
+                  # domain needs to be set if you want to use OIDC based SSO
+                  # the .Values.loft.clusterAnnotations.domain is set on the vCluster Platform Cluster resource - see https://github.com/loft-demos/loft-demo-base/blob/main/vcluster-platform-demo-generator/vcluster-platform-gitops/apps/apps.yaml#L404-L405
                   domain: argocd-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
                 configs:
                   cm:
                     create: true
                     application.resourceTrackingMethod: annotation
+                    # OIDC config uses vCluster Platform as an OIDC Provider - see https://www.vcluster.com/docs/platform/how-to/oidc-provider
                     oidc.config: |
                        issuer: https://{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/oidc
                        clientID: argocd-{{ .Values.loft.virtualClusterName }}
@@ -93,8 +97,10 @@ spec:
                     helloAppUrl: "https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}"
                   logLevel: "debug"
                   secret:
+                    # label triggers the use of a vCluster Platform Project secret
                     labels:
                       loft.sh/project-secret-name: argocd-notifications-secret
+          # vCluster Platform App (Bash type) used to create the Argo CD ApplicationSet used to deploy the Pull Request application Helm chart
           - name: argo-cd-pr-application-set
             namespace: argocd
             parameters: |
@@ -169,12 +175,7 @@ spec:
                     enabled: true
               distro:
                 k8s:
-                  apiServer:
-                    image:
-                      tag:  "{{ .Values.k8sVersion }}"
-                  controllerManager:
-                    image:
-                      tag: "{{ .Values.k8sVersion }}"
+                  version: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
         accessPoint:
