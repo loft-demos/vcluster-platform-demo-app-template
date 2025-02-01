@@ -52,13 +52,14 @@ spec:
                 configs:
                   cm:
                     create: true
+                    url: https://argocd-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
                     application.resourceTrackingMethod: annotation
                     # OIDC config uses vCluster Platform as an OIDC Provider - see https://www.vcluster.com/docs/platform/how-to/oidc-provider
                     oidc.config: |
                        issuer: https://{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/oidc
                        clientID: argocd-{{ .Values.loft.virtualClusterName }}
                        clientSecret: $oidc-secret:clientSecret
-                       Name: Loft
+                       name: Loft
                   params:
                     "server.insecure": true
                     timeout.reconciliation: 0 
