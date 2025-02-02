@@ -5,7 +5,7 @@ This repository template is used to create vCluster Platform environments via Gi
 
 ### Argo CD
 
-vCluster.Pro includes an Argo CD integration that will automatically add a vCluster instance, created with a [virtual cluster template](https://www.vcluster.com/pro/docs/virtual-clusters/templates), to Argo CD as a target cluster of an Argo CD `Application` `destination`. 
+vCluster Platform includes an Argo CD integration that will automatically add a vCluster instance, created with a [virtual cluster template](https://www.vcluster.com/pro/docs/virtual-clusters/templates), to Argo CD as a target cluster of an Argo CD `Application` `destination`. 
 
 *Example `management.loft.sh/v1` `VirtualClusterTemplate` manifest (with unrelated configuration execluded - [full version here](https://github.com/loft-demos/loft-demo-base/blob/main/loft/vcluster-templates.yaml)) that enables the automatic syncing of the vCluster instance created with the template to Argo CD:*
 
@@ -23,7 +23,7 @@ spec:
 ...
 ```
 
-The virtual cluster template integration requires that the vCluster.Pro project, where the vCluster instance is created from said template, to have the Argo CD integration for projects enabled. 
+The virtual cluster template integration requires the [vCluster Platform Project](https://www.vcluster.com/docs/platform/administer/projects/create), where the vCluster instance is created from said template, to have the [Argo CD integration for Projects](https://www.vcluster.com/docs/platform/integrations/argocd#project-integration) enabled.
 
 *Example `management.loft.sh/v1` `Project` manifest (with unrelated configuration execluded - [full version here](https://github.com/loft-demos/loft-demo-base/blob/main/loft/projects.yaml)) that enables the syncing of vCluster instances to Argo CD:*
 
@@ -45,7 +45,8 @@ spec:
 >[!IMPORTANT]
 >The Argo CD instance must be in a [vCluster.Pro connected cluster](https://www.vcluster.com/pro/docs/clusters/connect-cluster) or in a vCluster instance that is managed by vCluster.Pro. More info is available [here](https://www.vcluster.com/pro/docs/virtual-clusters/argocd#enable-argo-cd-integration).
 
-#### Example: ApplicationSet Pull Request Generator
+<details>
+<summary>Example: ApplicationSet Pull Request Generator</summary>summary>
 
 Once the vCluster.Pro Argo CD integration has been enabled for the vCluster.Pro project and the virtual cluster template, an Argo CD `ApplicationSet` using the [Argo CD Pull Request Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/) may look something like the following:
 
@@ -116,6 +117,7 @@ spec:
             https://github.com/loft-demos/REPO_NAME/pull/{{number}}
 ```
 The `spec.template.spec.destination.server` is dynamic based on the pull request number availabe as the `{{number}}` parameter value when using the Argo CD Pull Request generator.
+</details>
 
 #### Example: ApplicationSet Cluster Generator
 >[!IMPORTANT]
