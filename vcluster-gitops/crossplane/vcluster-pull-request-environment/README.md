@@ -5,13 +5,15 @@ This setup enables the automatic creation of ephemeral vCluster instances for ea
 
 ## Key Components & Workflow
 1. vCluster Platform
-   - Utilizes `VirtualClusterInstance` and `VirtualClusterTemplate` vCluster Platform CRDs as part of [the `pullrequestenvironments` Crossplane composition](./vcluster-pull-request-environment-composition.yaml) to dynamically provision vCluster instances.
-   - The `App` CRD deploys Argo CD inside each ephemeral vCluster, configuring an ApplicationSet for managing GitHub-based applications.
-   - Supports SSO via OIDC for secure authentication.
+   - Utilizes `VirtualClusterInstance`, that uses a `VirtualClusterTemplate` vCluster Platform custom resource, as part of [the `pullrequestenvironments` Crossplane composition](./vcluster-pull-request-environment-composition.yaml) to dynamically provision vCluster instances.
+   - The [`argocd` `App` custom resource](./argo-cd.yaml) deploys Argo CD inside each ephemeral vCluster, configuring an `ApplicationSet` for managing GitHub-based applications.
+   - Supports SSO via OIDC provided by vCluster Platform for secure authentication.
+      - [OIDC `Secret` deployed into the `vcluster-platform` namespace](./vcluster-pull-request-environment-composition.yaml#L72-L131)
+      - [Argo CD OIDC configuration that is part of the `VirtualClusterTemplate` configuration](../../virtual-cluster-templates/pull-request-vcluster.yaml#L58-L62)
 2. vCluster
    - The actual Kubernetes cluster used to host an ephemeral Argo CD instance and to host the Helm based application associated with the Pull Request.
 3. Crossplane
-   - Manages cloud-native resources using [Kubernetes](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator/crossplane/provider-kubernetes) and [GitHub](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator/crossplane/provider-github) providers.
+   - Manages cloud-native resources using the [Kubernetes](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator/crossplane/provider-kubernetes) and [GitHub](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator/crossplane/provider-github) providers.
    - Uses compositions resources definitions to automate provisioning of ephemeral PR vCluster:
      - `XPullRequestEnvironment`: Creates an isolated vCluster environment for each pull request.
      - `XArgoCDWebhook`: Manages ephemeral webhooks for triggering Argo CD deployments for every commit to a Pull Request head branch.
