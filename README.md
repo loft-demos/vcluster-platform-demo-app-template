@@ -280,29 +280,29 @@ spec:
 ### Ephmeral Virtual Clusters for Pull Requests
 Creating an ephemeral Kubernetes cluster for every GitHub pull request introduces several challenges across infrastructure, security, cost, and operational management. Here are some key considerations:
 
-1. Infrastructure & Performance Challenges
-  - Cluster Provisioning Overhead: Spinning up a new Kubernetes cluster (even a vCluster) for every PR requires compute resources and may lead to long provisioning times.
+1. **Infrastructure & Performance Challenges**
+  - Cluster Provisioning Overhead: Spinning up a new Kubernetes cluster for every PR requires compute resources and may lead to long provisioning times.
   - Resource Contention: In high-traffic repositories, multiple PRs could overwhelm the available infrastructure, impacting CI/CD pipeline performance.
   - Storage Management: Persistent storage can be complex in ephemeral environments, especially for stateful applications requiring data retention.
-2. Cost & Resource Management
+2. **Cost & Resource Management**
   - Compute Costs: Creating a cluster per PR consumes CPU, memory, and networking resources, leading to potential cost overruns if not properly managed.
   - Idle Resource Waste: If PR clusters are not properly cleaned up after merging or closing, they may linger and increase cloud costs unnecessarily.
-3. Security & Access Control
+3. **Security & Access Control**
   - Multi-Tenancy Risks: Running multiple ephemeral environments on shared infrastructure requires strict network isolation and RBAC policies to prevent unauthorized access.
   - OIDC & Authentication Complexity: Ensuring secure authentication for every ephemeral instance (especially in a dynamic environment) adds operational overhead.
   - GitHub Webhook Security: The automation that triggers ephemeral clusters must be secured to avoid unauthorized cluster creation or code execution.
-4. CI/CD Pipeline Complexity
+4. **CI/CD Pipeline Complexity**
   - State & Data Persistence: Testing in ephemeral clusters requires handling temporary databases, caching strategies, and external dependencies.
   - PR Environment Lifecycle Management: Automating cleanup after PR closure is crucial but can be error-prone, leading to leftover resources.
   - Secret Management: Each ephemeral cluster may need different secrets or environment variables, requiring a secure and automated way to inject them.
-5. Integration with Argo CD & Crossplane
+5. **Integration with Argo CD & Crossplane**
   - Application Deployment Latency: Argo CD’s sync processes and Crossplane’s provisioning may introduce delays when spinning up environments.
   - GitHub Rate Limits: Frequent interactions with GitHub (e.g., setting up webhooks, fetching repo state) can hit API rate limits, slowing down the process.
   - Ingress & Networking: Exposing services from ephemeral clusters requires proper Ingress configuration, which can be tricky when scaling across multiple PR environments.
 
 #### Mitigation Strategies
-- Use vCluster Instead of Full Kubernetes Clusters: vClusters reduce resource overhead while still providing isolation.
-- Implement Auto-Cleanup & TTLs: Automatically delete ephemeral clusters after a set time to avoid resource waste.
-- Optimize CI/CD Pipelines: Use caching and incremental builds to speed up provisioning and reduce redundant cluster setups.
-- Enforce Strong RBAC & Network Policies: Secure ephemeral clusters with least privilege access and strict namespace isolation.
-- Monitor & Optimize Costs: Use tools like Kubernetes cost monitoring (e.g., Kubecost) to track and optimize ephemeral cluster expenses.
+- **Use vCluster Instead of Full Kubernetes Clusters:** vCluster with vCluster Platform reduces resource overhead with [Sleep Mode and Auto Delete](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/sleep-mode), while still providing isolation. 
+- **Implement Auto-Cleanup & TTLs:** Automatically delete ephemeral clusters after a set time to avoid resource waste.
+- **Optimize CI/CD Pipelines:** Use caching and incremental builds to speed up provisioning and reduce redundant cluster setups.
+- **Enforce Strong RBAC & Network Policies:** Secure ephemeral clusters with least privilege access and strict namespace isolation.
+- **Monitor & Optimize Costs:** Leverage the vCluster Platfrom [Cost Control Dashboard](https://www.vcluster.com/docs/platform/configure/cost-control) to track and optimize ephemeral cluster expenses.
