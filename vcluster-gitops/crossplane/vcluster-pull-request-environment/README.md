@@ -1,7 +1,7 @@
 # Ephemeral vCluster for Pull Requests
 ### with Ephemeral Argo CD Instance 
 
-This setup enables the automatic creation of ephemeral vCluster instances for each pull request, complete with an ephemeral Argo CD deployment inside that vCluster for managing application code changes dynamically.
+This setup enables the automatic creation of ephemeral vCluster instances for each pull request, complete with an ephemeral Argo CD deployment inside that vCluster for managing the Pull Request application code changes dynamically.
 
 ## Key Components & Workflow
 1. vCluster Platform
