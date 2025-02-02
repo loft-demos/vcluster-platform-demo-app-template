@@ -235,7 +235,7 @@ Creating an ephemeral Kubernetes cluster for every GitHub pull request introduce
 
 #### Two Approaches
 The examples in this repository explore two approaches for creating ephmeral GitHub pull request environments with vCluster:
-1. **Shared Argo CD with ephemeral vCluster:**
+##### 1. Shared Argo CD with ephemeral vCluster:
 
 **✅ Pros**
 
@@ -257,7 +257,8 @@ The examples in this repository explore two approaches for creating ephmeral Git
 
 **✖ Possible State Pollution** – If a PR fails to clean up resources, it could leave orphaned deployments in the shared cluster.
 
-2. **Completely ephemeral environment with an ephemeral Argo CD deployed into the ephmeral vCluster:**
+##### 2. Completely ephemeral environment with an ephemeral Argo CD deployed into the ephmeral vCluster:
+Details of this setup, to include the components used, Kubernetes resources configuration and explanation are available [here](https://github.com/loft-demos/vcluster-platform-demo-app-template/tree/main/vcluster-gitops/crossplane/vcluster-pull-request-environment).
 
 **✅ Pros**
 
