@@ -301,8 +301,8 @@ Creating an ephemeral Kubernetes cluster for every GitHub pull request introduce
   - Ingress & Networking: Exposing services from ephemeral clusters requires proper Ingress configuration, which can be tricky when scaling across multiple PR environments.
 
 #### Mitigation Strategies
-- **Use vCluster Instead of Full Kubernetes Clusters:** vCluster with vCluster Platform reduces resource overhead with [Sleep Mode and Auto Delete](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/sleep-mode), while still providing isolation. 
-- **Implement Auto-Cleanup & TTLs:** Automatically delete ephemeral clusters after a set time to avoid resource waste.
+- **Use vCluster Instead of Full Kubernetes Clusters:** vCluster with vCluster Platform reduces resource overhead with [features like Sleep Mode](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/sleep-mode), while still providing isolation. 
+- **Implement Auto-Cleanup & TTLs:** Use [vCluster Platform Auto Delete](https://www.vcluster.com/docs/platform/configure/cost-control) to automatically delete ephemeral virtual clusters after a set time to avoid resource waste.
 - **Optimize CI/CD Pipelines:** Use caching and incremental builds to speed up provisioning and reduce redundant cluster setups.
-- **Enforce Strong RBAC & Network Policies:** Secure ephemeral clusters with least privilege access and strict namespace isolation.
-- **Monitor & Optimize Costs:** Leverage the vCluster Platfrom [Cost Control Dashboard](https://www.vcluster.com/docs/platform/configure/cost-control) to track and optimize ephemeral cluster expenses.
+- **Enforce Strong RBAC & Network Policies:** Secure ephemeral virtual clusters with least privilege access and strict namespace isolation with vCluster Platform Virtual Cluster Templates.
+- **Monitor & Optimize Costs:** Leverage the vCluster Platfrom [Cost Control Dashboard](https://www.vcluster.com/docs/platform/configure/cost-control) to track and optimize ephemeral vCluster expenses.
