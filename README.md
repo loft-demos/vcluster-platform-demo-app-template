@@ -306,3 +306,9 @@ Creating an ephemeral Kubernetes cluster for every GitHub pull request introduce
 - **Optimize CI/CD Pipelines:** Use caching and incremental builds to speed up provisioning and reduce redundant cluster setups.
 - **Enforce Strong RBAC & Network Policies:** Secure ephemeral virtual clusters with least privilege access and strict namespace isolation with vCluster Platform Virtual Cluster Templates.
 - **Monitor & Optimize Costs:** Leverage the vCluster Platfrom [Cost Control Dashboard](https://www.vcluster.com/docs/platform/configure/cost-control) to track and optimize ephemeral vCluster expenses.
+
+#### Two Approaches
+The examples in this repository explore two approaches for creating ephmeral GitHub pull request environments with vCluster:
+- Shared Argo CD with ephemeral vCluster.
+- Completely ephemeral environment with an ephemeral Argo CD deployed into the ephmeral vCluster.
+
