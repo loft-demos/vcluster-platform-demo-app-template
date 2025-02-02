@@ -5,7 +5,7 @@ This setup enables the automatic creation of ephemeral vCluster instances for ea
 
 ## Key Components & Workflow
 1. vCluster Platform
-   - Utilizes `VirtualClusterInstance` and `VirtualClusterTemplate` vCluster Platform CRDs as part of the `pullrequestenvironments` Crossplane composition to dynamically provision vCluster instances.
+   - Utilizes `VirtualClusterInstance` and `VirtualClusterTemplate` vCluster Platform CRDs as part of [the `pullrequestenvironments` Crossplane composition](./vcluster-pull-request-environment-composition.yaml) to dynamically provision vCluster instances.
    - The `App` CRD deploys Argo CD inside each ephemeral vCluster, configuring an ApplicationSet for managing GitHub-based applications.
    - Supports SSO via OIDC for secure authentication.
 2. vCluster
