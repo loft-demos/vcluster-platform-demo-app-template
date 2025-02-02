@@ -277,7 +277,7 @@ spec:
 ```
 </details>
 
-### Ephmeral Virtual Clusters for Pull Requests
+### Ephmeral Kubernetes Clusters for Pull Requests
 Creating an ephemeral Kubernetes cluster for every GitHub pull request introduces several challenges across infrastructure, security, cost, and operational management. Here are some key considerations:
 
 1. **Infrastructure & Performance Challenges**
