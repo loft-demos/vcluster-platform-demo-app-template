@@ -236,6 +236,7 @@ Creating an ephemeral Kubernetes cluster for every GitHub pull request introduce
 #### Two Approaches
 The examples in this repository explore two approaches for creating ephmeral GitHub pull request environments with vCluster:
 1. **Shared Argo CD with ephemeral vCluster:**
+
 **✅ Pros**
 
 **✔ Lower Resource Usage** – A single Argo CD instance manages all PR environments, reducing infrastructure costs.
@@ -251,6 +252,7 @@ The examples in this repository explore two approaches for creating ephmeral Git
 **✖ Possible State Pollution** – If a PR fails to clean up resources, it could leave orphaned deployments in the shared cluster.
 
 2. **Completely ephemeral environment with an ephemeral Argo CD deployed into the ephmeral vCluster:**
+
 **✅ Pros**
 
 **✔ Full Isolation** – Each PR gets its own vCluster and Argo CD, preventing conflicts.
