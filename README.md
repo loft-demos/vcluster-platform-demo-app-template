@@ -46,7 +46,7 @@ spec:
 >The Argo CD instance must be in a [vCluster.Pro connected cluster](https://www.vcluster.com/pro/docs/clusters/connect-cluster) or in a vCluster instance that is managed by vCluster.Pro. More info is available [here](https://www.vcluster.com/pro/docs/virtual-clusters/argocd#enable-argo-cd-integration).
 
 <details>
-<summary>Example: ApplicationSet Pull Request Generator</summary>summary>
+<summary>**Example: ApplicationSet Pull Request Generator**</summary>
 
 Once the vCluster.Pro Argo CD integration has been enabled for the vCluster.Pro project and the virtual cluster template, an Argo CD `ApplicationSet` using the [Argo CD Pull Request Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/) may look something like the following:
 
@@ -119,7 +119,8 @@ spec:
 The `spec.template.spec.destination.server` is dynamic based on the pull request number availabe as the `{{number}}` parameter value when using the Argo CD Pull Request generator.
 </details>
 
-#### Example: ApplicationSet Cluster Generator
+<details>
+<summary>**Example: ApplicationSet Cluster Generator**</summary>
 >[!IMPORTANT]
 >The vCluster.Pro Argo CD integration, as described above, must be enabled on the vCluster.Pro project the vCluster instance is created in, for the vCluster instance to be automatically added to Argo CD as an available `Application` `destination` cluster.
 
@@ -274,3 +275,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ```
+</details>
