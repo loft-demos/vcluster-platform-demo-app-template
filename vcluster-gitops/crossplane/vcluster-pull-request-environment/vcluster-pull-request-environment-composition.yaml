@@ -19,7 +19,8 @@ spec:
         apiVersion: pt.fn.crossplane.io/v1beta1
         kind: Resources
         resources:
-          - base:
+          - name: vcluster
+            base:
               apiVersion: kubernetes.crossplane.io/v1alpha2
               kind: Object
               spec:
@@ -40,7 +41,6 @@ spec:
                   name: kubernetes-provider
                 readiness:
                   policy: DeriveFromObject
-            name: vcluster
             patches:
               - fromFieldPath: metadata.name
                 toFieldPath: spec.forProvider.manifest.metadata.name
@@ -69,7 +69,8 @@ spec:
               - fieldPath: status.atProvider.manifest.status.phase
                 matchString: Ready
                 type: MatchString
-          - base:
+          - name: loft-argocd-oidc-secret
+            base:
               apiVersion: kubernetes.crossplane.io/v1alpha2
               kind: Object
               spec:
@@ -92,7 +93,6 @@ spec:
                       redirectURIs: PATCHED
                 providerConfigRef:
                   name: kubernetes-provider
-            name: loft-argocd-oidc-secret
             patches:
               - fromFieldPath: metadata.name
                 toFieldPath: spec.forProvider.manifest.metadata.name
