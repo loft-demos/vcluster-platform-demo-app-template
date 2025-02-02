@@ -17,17 +17,17 @@ This setup enables the automatic creation of ephemeral vCluster instances for ea
      - `XArgoCDWebhook`: Manages ephemeral webhooks for triggering Argo CD deployments for every commit to a Pull Request head branch.
 4. Argo CD
    - There are actually two Argo CD instances used for this setup:
-      1. Argo CD running in the host cluster with an `ApplicationSet` that uses the Pull Request Generator that creates a Kustomize `Application` from this [directory](../../../kustomize-pr) for every Pull Request that has the `pr-vcluster` label applied.
+      1. Argo CD running in the host cluster with the [*pr-vcluster-internal-argocd*](../../argocd/pr-environments/apps/pr-vcluster-internal-argocd.yaml) `ApplicationSet` that uses the Pull Request Generator that creates a Kustomize `Application` from this [directory](../../../kustomize-pr) for every Pull Request that has the `pr-vcluster` label applied.
       2. The ephemeral Argo CD instance deployed inside of the PR vCluster and actually deploys the PR application to the PR vCluster.
-5. Ingress Nginx
+5. Ingress Nginx Controller
    - Actually runs in the host cluster.
-   - Provides ingress routing for the PR app deployed into the vCluster and the ephemeral Argo CD instance deployed in the PR vCluster by sycing `Ingress` resources from the PR vCluster to the host cluster.
+   - Provides ingress routing for the PR app deployed into the vCluster and the ephemeral Argo CD instance deployed in the PR vCluster by [sycing `Ingress` resources from the PR vCluster to the host cluster](../../virtual-cluster-templates/pull-request-vcluster.yaml#L176-L179).
 
 ## How It Works
-- When a pull request is opened, Argo CD triggers Crossplane to provision an ephemeral vCluster using a VirtualClusterTemplate - see [pull-request-vcluster.yaml](../../virtual-cluster-templates/pull-request-vcluster.yaml).
-- Another, completely ephemeral, Argo CD instance is deployed inside the vCluster, and an ApplicationSet is created to manage the application from the PR branch.
-- The system integrates OIDC-based SSO, allowing developers to access Argo CD securely.
-- Upon merging or closing the PR, the ephemeral environment is automatically cleaned up, keeping the system efficient and cost-effective.
+- When a pull request is opened, Argo CD triggers Crossplane to provision an ephemeral vCluster using a `VirtualClusterTemplate` - see [pull-request-vcluster.yaml](../../virtual-cluster-templates/pull-request-vcluster.yaml).
+- Another, completely ephemeral, Argo CD instance is deployed inside the vCluster, and an `ApplicationSet` is created to manage the application from the PR branch.
+- The system integrates [OIDC-based SSO provided by vCluster Platform](https://www.vcluster.com/docs/platform/how-to/oidc-provider), allowing developers to access Argo CD securely.
+- Upon merging or closing the PR, the ephemeral environment is automatically cleaned up using the [vCluster Platform Auto Delete feature](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/sleep-mode#working-with-auto-delete), keeping the system efficient and cost-effective.
 
 This approach enables fast, isolated, and repeatable CI/CD workflows, enhancing development velocity and reducing integration risks.
 
