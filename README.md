@@ -236,5 +236,33 @@ Creating an ephemeral Kubernetes cluster for every GitHub pull request introduce
 #### Two Approaches
 The examples in this repository explore two approaches for creating ephmeral GitHub pull request environments with vCluster:
 1. **Shared Argo CD with ephemeral vCluster:**
+**✅ Pros**
+
+**✔ Lower Resource Usage** – A single Argo CD instance manages all PR environments, reducing infrastructure costs.
+**✔ Faster PR Deployments** – No need to spin up a new Argo CD instance for every PR, making pipelines more efficient.
+**✔ Persistent History & Logs** – Debugging is easier since logs and deployment history remain even after a PR is merged or closed.
+**✔ Simpler Maintenance** – No need to manage lifecycle automation for ephemeral Argo CD instances.
+
+**❌ Cons**
+
+**✖ Potential Performance Issues** – Multiple PRs sharing the same Argo CD instance could lead to Argo CD performance bottlenecks.
+**✖ Security & Multi-Tenancy Issues** – Requires strict RBAC to prevent unauthorized access between PR environments.
+**✖ Harder to Test Argo CD Changes** – If a PR modifies Argo CD configurations, testing becomes trickier without impacting the shared instance.
+**✖ Possible State Pollution** – If a PR fails to clean up resources, it could leave orphaned deployments in the shared cluster.
+
 2. **Completely ephemeral environment with an ephemeral Argo CD deployed into the ephmeral vCluster:**
+**✅ Pros**
+
+**✔ Full Isolation** – Each PR gets its own vCluster and Argo CD, preventing conflicts.
+**✔ Better Security** – No risk of PRs affecting shared Argo CD configurations or external clusters.
+**✔ Cleaner State Management** – When the PR is closed, the entire vCluster and Argo CD instance are deleted, avoiding leftover resources.
+**✔ Easier Testing of Argo CD Configs** – If Argo CD configuration itself is part of the PR, you can test changes safely.
+**✔ No RBAC Headaches** – No need to worry about multi-tenant access control in a shared instance.
+
+**❌ Cons**
+
+**✖ Higher Resource Consumption** – Spinning up a new Argo CD instance per PR requires more CPU/memory.
+**✖ Longer PR Setup Time** – Each PR needs to spin up a fresh vCluster + Argo CD, which may slow CI/CD pipelines.
+**✖ No Persistent History** – Logs and application states are lost when the vCluster is deleted, making debugging harder.
+**✖ More Complex Management** – Requires automation to spin up and tear down vCluster and Argo CD per PR efficiently.
 
