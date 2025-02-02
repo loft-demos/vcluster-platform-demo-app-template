@@ -17,7 +17,7 @@ This setup enables the automatic creation of ephemeral vCluster instances for ea
      - `XArgoCDWebhook`: Manages ephemeral webhooks for triggering Argo CD deployments for every commit to a Pull Request head branch.
 4. Argo CD
    - There are actually two Argo CD instances used for this setup:
-      1. Argo CD running in the host cluster with the [*pr-vcluster-internal-argocd*](../../argocd/pr-environments/apps/pr-vcluster-internal-argocd.yaml) `ApplicationSet` that uses the Pull Request Generator that creates a Kustomize `Application` from this [directory](../../../kustomize-pr) for every Pull Request that has the `pr-vcluster` label applied.
+      1. Argo CD running in the host cluster with the [*pr-vcluster-internal-argocd*](../../argocd/pr-environments/apps/pr-vcluster-internal-argocd.yaml) `ApplicationSet` that uses the [Pull Request Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/) that creates a Kustomize `Application` from this [directory](../../../kustomize-pr) for every Pull Request that has the `pr-vcluster` label applied.
       2. The ephemeral Argo CD instance deployed inside of the PR vCluster and actually deploys the PR application to the PR vCluster.
 5. Ingress Nginx Controller
    - Actually runs in the host cluster.
