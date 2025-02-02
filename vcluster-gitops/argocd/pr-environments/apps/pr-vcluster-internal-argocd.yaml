@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: pr-vcluster
+  name: pr-vcluster-internal-argocd
   namespace: argocd
 spec:
   generators:
