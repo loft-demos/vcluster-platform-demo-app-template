@@ -29,13 +29,12 @@ This setup enables the automatic creation of ephemeral PR vCluster instances for
    - Provides ingress routing for the PR app deployed into the vCluster and the ephemeral Argo CD instance deployed in the PR vCluster by [sycing `Ingress` resources from the PR vCluster to the host cluster](../../virtual-cluster-templates/pull-request-vcluster.yaml#L176-L179).
 
 ## How It Works
-- When a pull request is opened and the `pr-vcluster` label is applied to the PR, an Argo CD `ApplicationSet` using the Pull Request Generator is triggered in the Argo CD instance running in the host cluster. The `ApplicationSet` generates a Kustomize `Application` that deploys a Crossplane Claim that results in the creation of a `VirtualClusterInstance` configured with a `VirtualClusterTemplate` and a Kubernetes `Secret` for vCluster Platform provided OIDC SSO for the ephemeral Argo CD instanced deployed in the PR vCluster.
-- The `VirtualClusterTemplate` is configured to deploy the ephemeral Argo CD instance inside the PR vCluster, and an `ApplicationSet` is deployed to the ephemeral Argo CD instance that is triggered by the same Pull Request and generates an Argo CD Helm `Application` for the Pull Request `head` commit and is deployed to the PR vCluster.
+- When a pull request is opened and the `pr-vcluster` label is applied to the PR, an Argo CD `ApplicationSet` using the Pull Request Generator is triggered in the Argo CD instance running in the host cluster. The `ApplicationSet` generates an Argo CD Kustomize `Application` that patches (addes the PR number) and deploys a `PullRequestEnvironment` Crossplane Claim that results in the creation of a `VirtualClusterInstance` configured with a `VirtualClusterTemplate` and a Kubernetes `Secret` for vCluster Platform provided OIDC SSO for the ephemeral Argo CD instanced deployed in the PR vCluster.
+- The `VirtualClusterTemplate` is configured to deploy the ephemeral Argo CD instance inside the PR vCluster, and an `ApplicationSet` that is deployed to the ephemeral Argo CD instance. That `ApplicationSet` is triggered by the same Pull Request and generates an Argo CD Helm `Application` for the Pull Request `head` commit and is deployed to the PR vCluster.
 - After the Helm `Application` for the Pull Request `head` commit is deployed to the PR vCluster, the PR vCluster Argo CD Notifications controller updates the GitHub Pull Request with relevant links.
 - The system integrates [OIDC-based SSO provided by vCluster Platform](https://www.vcluster.com/docs/platform/how-to/oidc-provider), allowing developers to access Argo CD securely.
-- The `VirtualClusterTemplate` used for the PR vCluster is [configured with activity based Sleep Mode and Auto Delete](./virtual-cluster-templates/pull-request-vcluster.yaml#L170-L175). This allows the PR vCluster to be scaled down to zero pods by vCluster Platform when a given Pull Request remains open but the PR vCluster is not actively being used. It will also automatically delete the vCluster after the specified amount of time.
+- The `VirtualClusterTemplate` used for the PR vCluster is [configured with activity based Sleep Mode and Auto Delete](./virtual-cluster-templates/pull-request-vcluster.yaml#L170-L175). This allows the PR vCluster to be scaled down to zero pods by vCluster Platform when a given Pull Request remains open but the PR vCluster is not actively being used for two hours. It will also automatically delete the vCluster after the specified amount of time.
 - Upon merging or closing the PR (or removing the `pr-vcluster` label), the host cluster Argo CD `ApplicationSet` triggers the deletion of the associated PR vCluster `Application` resulting in the deletion of the PR vCluster, keeping the system efficient and cost-effective.
-
 ```mermaid
 flowchart LR
     PR-->Host-Argo;
@@ -44,7 +43,6 @@ flowchart LR
     PR-vCluster-->vCluster-Argo;
     vCluster-Argo-->PR-App;
 ```
-
 This approach enables fast, isolated, and repeatable CI/CD workflows, enhancing development velocity and reducing integration risks.
 
 ## Component List
