@@ -41,6 +41,7 @@ graph TD;
     ArgoHost-->Crossplane;
     Crossplane-->PRvCluster;
     PRvCluster-->ArgovCluster;
+    ArgovCluster-->DeployedApp;
 ```
 
 This approach enables fast, isolated, and repeatable CI/CD workflows, enhancing development velocity and reducing integration risks.
