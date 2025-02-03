@@ -37,11 +37,11 @@ This setup enables the automatic creation of ephemeral PR vCluster instances for
 
 ```mermaid
 flowchart LR
-    PR-->ArgoHost;
-    ArgoHost-->Crossplane;
-    Crossplane-->PRvCluster;
-    PRvCluster-->ArgovCluster;
-    ArgovCluster-->DeployedApp;
+    PR-->Host-Argo;
+    Host-Argo-->Crossplane;
+    Crossplane-->PR-vCluster;
+    PR-vCluster-->vCluster-Argo;
+    vCluster-Argo-->PR-App;
 ```
 
 This approach enables fast, isolated, and repeatable CI/CD workflows, enhancing development velocity and reducing integration risks.
