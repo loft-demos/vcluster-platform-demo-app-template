@@ -1,7 +1,7 @@
 # Ephemeral vCluster for Pull Requests
 ### with Ephemeral Argo CD Instance 
 
-This setup enables the automatic creation of ephemeral PR vCluster instances for each repo pull request with the `pr-vcluster` label, to include an ephemeral Argo CD deployd inside that PR vCluster for managing the Pull Request application code changes dynamically.
+This setup enables the automatic creation of ephemeral PR vCluster instances for each repo pull request with the `pr-vcluster` label, to include an ephemeral Argo CD deployed inside that PR vCluster for managing the Pull Request application code changes dynamically.
 
 ## Key Components & Workflow
 1. vCluster Platform
