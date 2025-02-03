@@ -22,8 +22,8 @@ This setup enables the automatic creation of ephemeral PR vCluster instances for
 4. Argo CD
    - There are actually two Argo CD instances used for this setup:
       1. Argo CD running in the host cluster with the [*pr-vcluster-internal-argocd*](../../argocd/pr-environments/apps/pr-vcluster-internal-argocd.yaml) `ApplicationSet` that uses the [Pull Request Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/) that creates a Kustomize `Application` from this [directory](../../../kustomize-pr) - that includes the `PullRequestEnvironment` Crossplane Claim - for every Pull Request that has the `pr-vcluster` label applied.
-         2. 
-      2. The ephemeral Argo CD instance deployed inside of the PR vCluster and actually deploys the PR application to the PR vCluster.
+         - 
+      2. The ephemeral Argo CD instance deployed inside of the PR vCluster and actually deploys the PR application [Helm chart](https://github.com/loft-demos/vcluster-platform-demo-app-template/tree/main/helm-chart) into the PR vCluster via an Argo CD `ApplicationSet` that is deployed the PR vCluster Argo CD via [the *argo-cd-pr-application-set*](../../apps/argo-cd-pr-application-set.yaml) `App` template by [this *pull-request-vcluster*](../../virtual-cluster-templates/pull-request-vcluster.yaml) `VirtualClusterTemplate` [here](../../virtual-cluster-templates/pull-request-vcluster.yaml#L116-L124).
 5. Ingress Nginx Controller
    - Actually runs in the host cluster.
    - Provides ingress routing for the PR app deployed into the vCluster and the ephemeral Argo CD instance deployed in the PR vCluster by [sycing `Ingress` resources from the PR vCluster to the host cluster](../../virtual-cluster-templates/pull-request-vcluster.yaml#L176-L179).
