@@ -5,6 +5,6 @@ metadata:
   namespace: p-api-framework
 spec:
   project: api-framework
-  repo: REPO_NAME
+  repo: {REPLACE_REPO_NAME}
   # Supported k8sVersion values include: v1.32.1, v1.31.5, v1.30.9, v1.29.14
   k8sVersion: v1.32.1
