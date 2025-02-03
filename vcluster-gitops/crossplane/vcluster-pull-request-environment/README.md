@@ -5,8 +5,8 @@ This setup enables the automatic creation of ephemeral PR vCluster instances for
 
 ## Key Components & Workflow
 1. vCluster Platform
-   - Utilizes `VirtualClusterInstance`, that uses a `VirtualClusterTemplate` vCluster Platform custom resource, as part of [the `pullrequestenvironments` Crossplane composition](./vcluster-pull-request-environment-composition.yaml) to dynamically provision vCluster instances.
-   - The [`argocd` `App` custom resource](./argo-cd.yaml) deploys Argo CD inside each ephemeral vCluster, configuring an `ApplicationSet` for managing GitHub-based applications.
+   - Utilizes [the `VirtualClusterInstance` CRD](https://www.vcluster.com/docs/platform/api/resources/virtualclusterinstance/), that is configured with a `VirtualClusterTemplate` vCluster Platform custom resource, as part of [the `pullrequestenvironments` Crossplane composition](./vcluster-pull-request-environment-composition.yaml) to dynamically provision PR vCluster instances.
+   - The [`argocd` `App` custom resource](./argo-cd.yaml) deploys Argo CD inside each ephemeral vCluster, configuring an `ApplicationSet` for managing deployment of [the repo application code](https://github.com/loft-demos/vcluster-platform-demo-app-template/tree/main/src).
    - Supports SSO via OIDC provided by vCluster Platform for secure authentication.
       - [OIDC `Secret` deployed into the `vcluster-platform` namespace](./vcluster-pull-request-environment-composition.yaml#L72-L131)
       - [Argo CD OIDC configuration that is part of the `VirtualClusterTemplate` configuration](../../virtual-cluster-templates/pull-request-vcluster.yaml#L58-L62)
