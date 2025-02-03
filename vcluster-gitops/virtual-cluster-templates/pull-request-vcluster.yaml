@@ -52,12 +52,14 @@ spec:
                 configs:
                   cm:
                     create: true
+                    # the cm.url is required to make the Argo CD OIDC SSO work
                     url: https://argocd-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
                     application.resourceTrackingMethod: annotation
                     # OIDC config uses vCluster Platform as an OIDC Provider - see https://www.vcluster.com/docs/platform/how-to/oidc-provider
                     oidc.config: |
                        issuer: https://{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/oidc
                        clientID: argocd-{{ .Values.loft.virtualClusterName }}
+                       # this same OIDC clientSecret is also added to the vCluster Platform OIDC provider Secret resource
                        clientSecret: $oidc-secret:clientSecret
                        name: Loft
                   params:
