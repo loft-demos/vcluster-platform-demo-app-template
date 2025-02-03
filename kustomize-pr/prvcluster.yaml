@@ -1,7 +1,7 @@
 apiVersion: virtualcluster.demo.loft.sh/v1alpha1
 kind: PullRequestEnvironment
 metadata:
-  name: vcluster
+  name: pr-vcluster
   namespace: p-api-framework
 spec:
   project: api-framework
