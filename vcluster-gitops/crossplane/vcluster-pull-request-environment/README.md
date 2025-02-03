@@ -37,10 +37,13 @@ This setup enables the automatic creation of ephemeral PR vCluster instances for
 
 ```mermaid
 sequenceDiagram
-    PR-->Host Argo CD;
-    Host Argo CD-->PR vCluster;
-    PR vCluster-->vCluster Argo CD;
-    vCluster Argo CD-->PR App;
+    participant ArgoHost as Host<br/>Argo CD
+    participant ArgoVcluster as vCluster<br/>Argo CD
+    participant PrVcluster as PR<br/>vCluster
+    PR-->ArgoHost;
+    Host Argo CD-->PrVcluster;
+    PrVcluster-->ArgoVcluster;
+    ArgoVclusterD-->PRApp;
 ```
 
 This approach enables fast, isolated, and repeatable CI/CD workflows, enhancing development velocity and reducing integration risks.
