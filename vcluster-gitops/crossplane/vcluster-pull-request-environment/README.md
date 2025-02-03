@@ -41,7 +41,7 @@ sequenceDiagram
     participant ArgoVcluster as vCluster<br/>Argo CD
     participant PrVcluster as PR<br/>vCluster
     PR-->ArgoHost;
-    Host Argo CD-->PrVcluster;
+    ArgoHost-->PrVcluster;
     PrVcluster-->ArgoVcluster;
     ArgoVclusterD-->PRApp;
 ```
