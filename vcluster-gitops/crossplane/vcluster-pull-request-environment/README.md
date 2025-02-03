@@ -35,6 +35,14 @@ This setup enables the automatic creation of ephemeral PR vCluster instances for
 - The `VirtualClusterTemplate` used for the PR vCluster is [configured with activity based Sleep Mode and Auto Delete](./virtual-cluster-templates/pull-request-vcluster.yaml#L170-L175). This allows the PR vCluster to be scaled down to zero pods by vCluster Platform when a given Pull Request remains open but the PR vCluster is not actively being used. It will also automatically delete the vCluster after the specified amount of time.
 - Upon merging or closing the PR (or removing the `pr-vcluster` label), the host cluster Argo CD `ApplicationSet` triggers the deletion of the associated PR vCluster `Application` resulting in the deletion of the PR vCluster, keeping the system efficient and cost-effective.
 
+```mermaid
+sequenceDiagram
+    PR-->Host Argo CD;
+    Host Argo CD-->PR vCluster;
+    PR vCluster-->vCluster Argo CD;
+    vCluster Argo CD-->PR App;
+```
+
 This approach enables fast, isolated, and repeatable CI/CD workflows, enhancing development velocity and reducing integration risks.
 
 ## Component List
