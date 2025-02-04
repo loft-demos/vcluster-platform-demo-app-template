@@ -17,8 +17,9 @@ To set up ephemeral vCluster instances for pull requests, each containing an eph
   `kubectl apply -f argo-cd-pr-application-set.yaml -n vcluster-platform`
 
 **4. Configure the VirtualClusterTemplate:**
-  - Define a `VirtualClusterTemplate` custom resource that specifies the configuration for the ephemeral vCluster instances.
-  - Configure the values for Argo CD within the ephemeral vCluster: 
+  - Define a `VirtualClusterTemplate` custom resource that specifies the configuration for the ephemeral vCluster instances - see [vcluster-gitops/virtual-cluster-templates/pull-request-vcluster.yaml](../../virtual-cluster-templates/pull-request-vcluster.yaml)
+  - Within that template:
+    - Configure the values for the Argo CD `App` - see [vcluster-gitops/virtual-cluster-templates/pull-request-vcluster.yaml#L42-L93](../../virtual-cluster-templates/pull-request-vcluster.yaml#L42-L93)
     - Configure SSO via OIDC:
       - Set up Single Sign-On (SSO) using OpenID Connect (OIDC) within the vCluster Platform for secure authentication to the ephemeral vClusters and Argo CD instances.
 
