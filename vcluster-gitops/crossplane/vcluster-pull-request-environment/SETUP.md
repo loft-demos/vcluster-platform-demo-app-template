@@ -22,10 +22,18 @@ To set up ephemeral vCluster instances for pull requests, each containing an eph
     - Configure SSO via OIDC:
       - Set up Single Sign-On (SSO) using OpenID Connect (OIDC) within the vCluster Platform for secure authentication to the ephemeral vClusters and Argo CD instances.
 
-**5. Set Up Crossplane Composition:**
+**5. Install Crossplane into the same cluster where vCluster Platform is installed:**
+
+```
+helm repo add crossplane-stable https://charts.crossplane.io/stable
+helm repo update
+helm update --install crossplane --namespace crossplane-system --create-namespace crossplane-stable/crossplane --version 1.17.4
+```
+
+**6. Set Up Crossplane Composition:**
   - Utilize Crossplane to create a composition that includes the VirtualClusterInstance and other necessary resources.
   - The composition should be configured to handle the provisioning of resources upon the creation of a pull request with the `pr-vcluster` label.
 
-**6. Create and Label a Pull Request:**
+**7. Create and Label a Pull Request:**
   - When creating a pull request that requires an ephemeral environment, add the pr-vcluster label to trigger the provisioning process.
 
