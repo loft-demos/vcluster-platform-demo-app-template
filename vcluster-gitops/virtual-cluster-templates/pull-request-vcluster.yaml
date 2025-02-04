@@ -60,7 +60,7 @@ spec:
                        issuer: https://{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/oidc
                        clientID: argocd-{{ .Values.loft.virtualClusterName }}
                        # this same OIDC clientSecret is also added to the vCluster Platform OIDC provider Secret resource
-                       # The Crossplane composition adds that secret here: [vcluster-pull-request-environment-composition.yaml#L72-L131](./vcluster-pull-request-environment-composition.yaml#L72-L131)
+                       # The Crossplane composition adds that secret here: vcluster-gitops/crossplane/vcluster-pull-request-environment/vcluster-pull-request-environment-composition.yaml#L72-L131
                        clientSecret: $oidc-secret:clientSecret
                        name: Loft
                   params:
