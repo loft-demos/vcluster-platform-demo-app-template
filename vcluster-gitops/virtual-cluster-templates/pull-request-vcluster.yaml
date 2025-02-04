@@ -41,7 +41,7 @@ spec:
         apps:
           # Argo CD vCluster Platform App - installs Argo CD into vCluster with Helm - see ../apps/argo-cd.yaml
           - name: argocd
-            version: 2.12.1
+            version: 2.14.1
             namespace: argocd
             parameters: |
               appValues: |
@@ -60,6 +60,7 @@ spec:
                        issuer: https://{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/oidc
                        clientID: argocd-{{ .Values.loft.virtualClusterName }}
                        # this same OIDC clientSecret is also added to the vCluster Platform OIDC provider Secret resource
+                       # The Crossplane composition adds that secret here: [vcluster-pull-request-environment-composition.yaml#L72-L131](./vcluster-pull-request-environment-composition.yaml#L72-L131)
                        clientSecret: $oidc-secret:clientSecret
                        name: Loft
                   params:
