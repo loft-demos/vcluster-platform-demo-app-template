@@ -16,13 +16,13 @@ To set up ephemeral vCluster instances for pull requests, each containing an eph
 
 **4. Create an `App` custom resource for Argo CD in vCluster Platform** - see [vcluster-gitops/apps/argo-cd.yaml](../../apps/argo-cd.yaml):
   
-    `kubectl apply -f argo-cd.yaml -n vclusterr-platform`
+    kubectl apply -f argo-cd.yaml -n vclusterr-platform
   
   - Install Argo CD into the same cluster where vCluster Platform is installed with the `App`: [Installing Apps on a Cluster](https://www.vcluster.com/docs/platform/use-platform/apps/use-on-demand#installing-apps-on-a-cluster)
 
 **5. Create an `App` custom resource for the ApplicationSet** - to be deployed to the ephemeral Argo CD to manage the deployment of your application's code from the repository - see [vcluster-gitops/apps/argo-cd-pr-application-set.yaml](../../apps/argo-cd-pr-application-set.yaml):
   
-    `kubectl apply -f argo-cd-pr-application-set.yaml -n vcluster-platform`
+    kubectl apply -f argo-cd-pr-application-set.yaml -n vcluster-platform
 
 **6. Configure the VirtualClusterTemplate:**
   - Define a `VirtualClusterTemplate` custom resource that specifies the configuration for the ephemeral vCluster instances - see [vcluster-gitops/virtual-cluster-templates/pull-request-vcluster.yaml](../../virtual-cluster-templates/pull-request-vcluster.yaml)
