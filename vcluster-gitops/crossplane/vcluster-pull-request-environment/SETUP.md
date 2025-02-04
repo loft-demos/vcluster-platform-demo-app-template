@@ -8,7 +8,7 @@ To set up ephemeral vCluster instances for pull requests, each containing an eph
 
 **2. Creater a vCluster Platform Project:** This example uses the **API Framework** Project - see [vcluster-gitops/projects/projects.yaml#L1-L68](../../projects/projects.yaml#L1-L68)
 
-    `kubectl apply -f projects.yaml -n vcluster-platform`
+    kubectl apply -f projects.yaml -n vcluster-platform
 
 **3. Create Project Secrets:**
   - Create OIDC `ProjectSecret`
