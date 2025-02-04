@@ -31,7 +31,7 @@ spec:
       config:
         chart:
           name: argo-cd
-          version: 7.4.4
+          version: 7.8.0
           repoURL: https://argoproj.github.io/argo-helm
         values: '{{ .Values.appValues }}'
       parameters:
@@ -45,7 +45,7 @@ spec:
                 enabled: true
                 hosts:
                 - my-domain.com
-      version: 2.12.1
+      version: 2.14.1
       defaultNamespace: argocd
       wait: true
     - icon: https://argo-cd.readthedocs.io/en/stable/assets/logo.png
