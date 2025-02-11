@@ -130,7 +130,7 @@ spec:
             - v1.32.1
             - v1.31.5
             - v1.30.9
-            - v1.29.14
+            - v1.29.13
           defaultValue: v1.31.5
           section: Kubernetes Environment
         - variable: pvClaimName
@@ -327,7 +327,7 @@ spec:
         - v1.32.1
         - v1.31.5
         - v1.30.9
-        - v1.29.14
+        - v1.29.13
       defaultValue: v1.31.5
   access:
     - verbs:
