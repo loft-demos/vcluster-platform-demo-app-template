@@ -18,13 +18,14 @@ spec:
             Repo=https://github.com/loft-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
     apps:
       - name: argocd
-        version: 2.12.1
+        version: 2.14.1
         parameters: |
           appValues: |-
             global:
               domain: {{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             configs:
               cm:
+                url: https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
                 create: true
                 application.resourceTrackingMethod: annotation
               params:
