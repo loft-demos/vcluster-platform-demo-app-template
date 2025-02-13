@@ -62,6 +62,10 @@ spec:
                   
             sync:
               toHost:
+                pods:
+                  patches:
+                    - path: metadata.annotations
+                      expression: 'value["loft.demos/business_unit"]="{{ .Values.loft.project }}";value'
                 ingresses:
                   enabled: true
                 secrets:
