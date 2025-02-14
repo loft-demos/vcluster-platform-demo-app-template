@@ -24,7 +24,7 @@ The vCluster Pro embedded CoreDNS with the resolve DNS plugin must be used, as s
 1. Login to the vCluster Platform: `vcluster platform login https://your.vcluster-platform.host
 2. Create a kube context to the vCluster platform Management API: `vcluster platform connect management`
 3. Clone this repository: `git clone https://github.com/loft-demos/vcluster-platform-demo-app-template.git`
-4. Change into the `vcluster-platform-demo-app-template` directory: `cd vcluster-platform-demo-app-template`
+4. Change into the `vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/` directory: `cd vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/`
 5. Deploy the [projects.yaml](./manifests/projects.yaml) manifest: `kubectl apply -f ./manifests/projects.yaml`
 6. Deploy the [vcluster-a.yaml](./manifests/vcluster-a.yaml) manifest: `kubectl apply -f ./manifests/vcluster-a.yaml`
 7. Deploy the [vcluster-b.yaml](./manifests/vcluster-b.yaml) manifest: `kubectl apply -f ./manifests/vcluster-b.yaml`
