@@ -2,6 +2,8 @@ apiVersion: management.loft.sh/v1
 kind: Project
 metadata:
   name: alpha
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   displayName: Alpha
   owner:
@@ -33,4 +35,39 @@ spec:
   namespacePattern:
     virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'
 ---
-
+apiVersion: management.loft.sh/v1
+kind: Project
+metadata:
+  name: beta
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  displayName: Beta
+  owner:
+    team: loft-admins
+  quotas: {}
+  allowedClusters:
+    - name: loft-cluster
+  allowedRunners:
+    - name: '*'
+  allowedTemplates:
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: default-template
+      isDefault: true
+  requireTemplate:
+    disabled: true
+  requirePreset: {}
+  access:
+    - name: loft-admin-access
+      verbs:
+        - get
+        - update
+        - patch
+        - delete
+      subresources:
+        - '*'
+      teams:
+        - loft-admins
+  namespacePattern:
+    virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'
