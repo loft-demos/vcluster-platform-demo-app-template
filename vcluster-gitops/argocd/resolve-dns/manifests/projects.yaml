@@ -1,0 +1,36 @@
+apiVersion: management.loft.sh/v1
+kind: Project
+metadata:
+  name: alpha
+spec:
+  displayName: Alpha
+  owner:
+    team: loft-admins
+  quotas: {}
+  allowedClusters:
+    - name: loft-cluster
+  allowedRunners:
+    - name: '*'
+  allowedTemplates:
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: default-template
+      isDefault: true
+  requireTemplate:
+    disabled: true
+  requirePreset: {}
+  access:
+    - name: loft-admin-access
+      verbs:
+        - get
+        - update
+        - patch
+        - delete
+      subresources:
+        - '*'
+      teams:
+        - loft-admins
+  namespacePattern:
+    virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'
+---
+
