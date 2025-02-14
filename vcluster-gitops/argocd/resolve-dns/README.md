@@ -1,6 +1,6 @@
 # Resolve DNS Example
 
-Based on the vCluster documentation [here](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/networking/resolve-dns).
+Resolve DNS is a vCluster Pro distro feature and this example is based on the vCluster documentation [here](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/networking/resolve-dns).
 
 This example includes two vCluster instances deployed to two different vCluster Platform projects. 
 
