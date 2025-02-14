@@ -55,9 +55,18 @@ The vCluster Pro embedded CoreDNS with the resolve DNS plugin must be used, as s
 
 ## Demonstrate the Resolve DNS Feature
 After you have setup your environment, either manually or via the automate Demo generator, you an demonstrate the Resolve DNS feature with the following steps:
-1. Connect to **vcluster-b**: `vcluster platform connect vcluster vcluster-b --project beta`
-2. Launch an interactive shell inside the `curl-pod` running inside of `vcluster-b`: `kubectl exec -it curl-pod -n default -- /bin/bash`
-3. Within the interactive shell of the `curl-pod` executive the following `curl` command: `curl nginx-b.svc-b.svc.cluster.local`
+1. Connect to **vcluster-b**:
+    ```
+    vcluster platform connect vcluster vcluster-b --project beta
+    ```
+2. Launch an interactive shell inside the `curl-pod` running inside of `vcluster-b`:
+    ```
+    kubectl exec -it curl-pod -n default -- /bin/ash
+    ```
+3. Within the interactive shell of the `curl-pod` executive the following `curl` command:
+    ```
+    curl nginx-b.svc-b.svc.cluster.local
+    ```
 4. The response will be the HTML of the default nginx welcome page.
 
 
