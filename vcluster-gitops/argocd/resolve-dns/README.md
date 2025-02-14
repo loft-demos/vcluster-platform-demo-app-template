@@ -21,13 +21,16 @@ controlPlane:
 The vCluster Pro embedded CoreDNS with the resolve DNS plugin must be used, as show in the example configuration, but setting `embedded: true`. The `resolveDNS` configuration maps the Nginx `Service` deployed to **vcluster-a** to a DNS entry in **vcluster-b** that resolves to `nginx-b.svc-b`.
 
 ## Manual Setup
-1. Login to the vCluster Platform: `vcluster platform login https://your.vcluster-platform.host
-2. Create a kube context to the vCluster platform Management API: `vcluster platform connect management`
-3. Clone this repository: `git clone https://github.com/loft-demos/vcluster-platform-demo-app-template.git`
-4. Change into the `vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/` directory: `cd vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/`
-5. Deploy the [projects.yaml](./manifests/projects.yaml) manifest: `kubectl apply -f ./manifests/projects.yaml`
-6. Deploy the [vcluster-a.yaml](./manifests/vcluster-a.yaml) manifest: `kubectl apply -f ./manifests/vcluster-a.yaml`
-7. Deploy the [vcluster-b.yaml](./manifests/vcluster-b.yaml) manifest: `kubectl apply -f ./manifests/vcluster-b.yaml`
+1. Login to the vCluster Platform:
+   ```
+   vcluster platform login https://your.vcluster-platform.host
+   ```
+3. Create a kube context to the vCluster platform Management API: `vcluster platform connect management`
+4. Clone this repository: `git clone https://github.com/loft-demos/vcluster-platform-demo-app-template.git`
+5. Change into the `vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/` directory: `cd vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/`
+6. Deploy the [projects.yaml](./manifests/projects.yaml) manifest: `kubectl apply -f ./manifests/projects.yaml`
+7. Deploy the [vcluster-a.yaml](./manifests/vcluster-a.yaml) manifest: `kubectl apply -f ./manifests/vcluster-a.yaml`
+8. Deploy the [vcluster-b.yaml](./manifests/vcluster-b.yaml) manifest: `kubectl apply -f ./manifests/vcluster-b.yaml`
 
 ## vCluster Platform Demo Setup
 1. When creating a new vCluster Platform demo vCluster select **Resolve DNS** under the **Feature Examples** section. That will result in the above manifest automatically being deployed to the vCluster Platform demo environment vCluster.
