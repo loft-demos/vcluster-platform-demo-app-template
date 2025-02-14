@@ -1,0 +1,83 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: vcluster-a
+  namespace: p-alpha
+spec:
+  displayName: vcluster-a
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    objects: |-
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: svc-a
+      ---
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: nginx-sa
+        namespace: svc-a
+      ---
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nginx-a
+        namespace: svc-a
+      spec:
+        type: ClusterIP
+        selector:
+          app: nginx-a
+        ports:
+          - port: 80         
+            targetPort: 80
+      ---
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-a
+        namespace: svc-a
+      spec:
+        selector:
+          matchLabels:
+            app: nginx-a
+        template:
+          metadata:
+            labels:
+              app: nginx-a
+          spec:
+            serviceAccountName: nginx-sa
+            containers:
+              - name: nginx-a
+                image: nginx
+    pro: {}
+    helmRelease:
+      chart:
+        name: vcluster
+        version: 0.22.4
+      values: |
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+        controlPlane:
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          coredns:
+            enabled: true
+            embedded: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  clusterRef:
+    cluster: loft-cluster
+    namespace: alpha-v-vcluster-a
+    virtualCluster: vcluster-a
+  networkPeer: true
