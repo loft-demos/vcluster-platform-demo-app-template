@@ -25,12 +25,15 @@ The vCluster Pro embedded CoreDNS with the resolve DNS plugin must be used, as s
    ```
    vcluster platform login https://your.vcluster-platform.host
    ```
-3. Create a kube context to the vCluster platform Management API: `vcluster platform connect management`
-4. Clone this repository: `git clone https://github.com/loft-demos/vcluster-platform-demo-app-template.git`
-5. Change into the `vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/` directory: `cd vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/`
-6. Deploy the [projects.yaml](./manifests/projects.yaml) manifest: `kubectl apply -f ./manifests/projects.yaml`
-7. Deploy the [vcluster-a.yaml](./manifests/vcluster-a.yaml) manifest: `kubectl apply -f ./manifests/vcluster-a.yaml`
-8. Deploy the [vcluster-b.yaml](./manifests/vcluster-b.yaml) manifest: `kubectl apply -f ./manifests/vcluster-b.yaml`
+3. Create a kube context to the vCluster platform Management API:
+  ```
+  vcluster platform connect management
+  ```
+5. Clone this repository: `git clone https://github.com/loft-demos/vcluster-platform-demo-app-template.git`
+6. Change into the `vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/` directory: `cd vcluster-platform-demo-app-template/vcluster-gitops/argocd/resolve-dns/`
+7. Deploy the [projects.yaml](./manifests/projects.yaml) manifest: `kubectl apply -f ./manifests/projects.yaml`
+8. Deploy the [vcluster-a.yaml](./manifests/vcluster-a.yaml) manifest: `kubectl apply -f ./manifests/vcluster-a.yaml`
+9. Deploy the [vcluster-b.yaml](./manifests/vcluster-b.yaml) manifest: `kubectl apply -f ./manifests/vcluster-b.yaml`
 
 ## vCluster Platform Demo Setup
 1. When creating a new vCluster Platform demo vCluster select **Resolve DNS** under the **Feature Examples** section. That will result in the above manifest automatically being deployed to the vCluster Platform demo environment vCluster.
