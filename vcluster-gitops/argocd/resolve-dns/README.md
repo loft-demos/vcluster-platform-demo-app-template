@@ -1,3 +1,39 @@
 # Resolve DNS Example
 
 Based on the vCluster documentation [here](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/networking/resolve-dns).
+
+This example includes two vCluster instances deployed to two different vCluster Platform projects. 
+
+The **vcluster-a** vCluster in the Alpha project includes an Nginx `Deployment` and `Service` named `nginx-a` in the `svc-a` `Namespace`.
+
+The **vcluster-b** vClusterr in the Beta project includes the following `resolveDNS` configuration and deploys a `Pod` with `curl`:
+```
+networking:
+  resolveDNS:
+    - service: svc-b/nginx-b
+      target:
+        vClusterService: alpha-v-vcluster-a/vcluster-a/svc-a/nginx-a
+controlPlane:
+  coredns:
+    enabled: true
+    embedded: true
+```
+
+## Manual Setup
+1. Login to the vCluster Platform: `vcluster platform login https://your.vcluster-platform.host
+2. Create a kube context to the vCluster platform Management API: `vcluster platform connect management`
+3. Deploy the ./maniftest/projects.yaml manfiest: `kubectl apply -f 
+4. Deploy the ./maniftest/vcluster-a.yaml manifest
+5. Deploy the ./maniftest/vcluster-b.yaml manifest
+
+## vCluster Platform Demo Setup
+1. When creating a new vCluster Platform demo vCluster select **Resolve DNS** under the **Feature Examples** section. That will result in the above manifest automatically being deployed to the vCluster Platform demo environment vCluster.
+
+## Demonstrate the Resolve DNS Feature
+After you have setup your environment, either manually or via the automate Demo generator, you an demonstrate the Resolve DNS feature with the following steps:
+1. Connect to **vcluster-b**: `vcluster platform connect vcluster vcluster-b --project beta`
+2. Launch an interactive shell inside the `curl-pod` running inside of `vcluster-b`: `kubectl exec -it curl-pod -n default -- /bin/bash`
+3. Within the interactive shell of the `curl-pod` executive the following `curl` command: `curl nginx-b.svc-b.svc.cluster.local`
+4. The response will be the HTML of the default nginx welcome page.
+
+
