@@ -6,7 +6,7 @@ This example includes two vCluster instances deployed to two different vCluster 
 
 The **vcluster-a** vCluster in the Alpha project includes an Nginx `Deployment` and `Service` named `nginx-a` in the `svc-a` `Namespace`.
 
-The **vcluster-b** vCluster in the Beta project includes the following `resolveDNS` configuration and deploys a `Pod` with `curl` to demonstrate the working resolve DNS configuration:
+The **vcluster-b** vCluster in the Beta project includes the following `resolveDNS` configuration and deploys a `Pod` with `curl` to demonstrate the working Resolve DNS configuration:
 ```
 networking:
   resolveDNS:
