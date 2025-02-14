@@ -3,6 +3,8 @@ kind: VirtualClusterInstance
 metadata:
   name: vcluster-b
   namespace: p-beta
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   displayName: vcluster-b
   owner:
