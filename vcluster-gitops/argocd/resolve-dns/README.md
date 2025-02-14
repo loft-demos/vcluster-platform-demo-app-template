@@ -6,7 +6,7 @@ This example includes two vCluster instances deployed to two different vCluster 
 
 The **vcluster-a** vCluster in the Alpha project includes an Nginx `Deployment` and `Service` named `nginx-a` in the `svc-a` `Namespace`.
 
-The **vcluster-b** vClusterr in the Beta project includes the following `resolveDNS` configuration and deploys a `Pod` with `curl`:
+The **vcluster-b** vCluster in the Beta project includes the following `resolveDNS` configuration and deploys a `Pod` with `curl` to demonstrate the working resolve DNS configuration:
 ```
 networking:
   resolveDNS:
@@ -18,7 +18,7 @@ controlPlane:
     enabled: true
     embedded: true
 ```
-The vCluster Pro embedded CoreDNS with the resolve DNS plugin must be used, as show in the example configuration, but setting `embedded: true`. The `resolveDNS` configuration maps the Nginx `Service` deployed to **vcluster-a** to a DNS entry in **vcluster-b** that resolves to `nginx-b.svc-b`.
+The vCluster Pro embedded CoreDNS with the resolve DNS plugin must be used, as show in the example configuration, by setting `embedded: true`. The `resolveDNS` configuration maps the Nginx `Service` deployed to **vcluster-a** to a DNS entry in **vcluster-b** that resolves to `nginx-b.svc-b.svc.cluster.local`.
 
 ## Manual Setup
 1. Login to the vCluster Platform:
