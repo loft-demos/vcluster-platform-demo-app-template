@@ -18,6 +18,7 @@ controlPlane:
     enabled: true
     embedded: true
 ```
+The vCluster Pro embedded CoreDNS with the resolve DNS plugin must be used, as show in the example configuration, but setting `embedded: true`. The `resolveDNS` configuration maps the Nginx `Service` deployed to **vcluster-a** to a DNS entry in **vcluster-b** that resolves to `nginx-b.svc-b`.
 
 ## Manual Setup
 1. Login to the vCluster Platform: `vcluster platform login https://your.vcluster-platform.host
