@@ -171,10 +171,10 @@ spec:
               toHost:
                 ingresses:
                   enabled: true
-                customResourceDefinitions:
+                customResources:
                   httproutes.gateway.networking.k8s.io:
                     enabled: true
-                    translate:
+                    patches:
                       - path: spec.rules[*].backendRefs[*].name
                         reference:
                           kind: Service
