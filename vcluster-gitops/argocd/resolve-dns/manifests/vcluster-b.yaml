@@ -52,6 +52,13 @@ spec:
           coredns:
             enabled: true
             embedded: true
+        external:
+          platform:
+            autoSleep:
+              afterInactivity: 34800
+              autoWakeup:
+                schedule: 30 7 * * 1-5
+              schedule: 0 19 * * 1-5
     accessPoint:
       ingress: {}
     spaceTemplate:
