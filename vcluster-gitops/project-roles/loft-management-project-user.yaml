@@ -1,0 +1,44 @@
+apiVersion: management.loft.sh/v1
+kind: ClusterRoleTemplate
+metadata:
+  name: loft-management-project-user
+  labels:
+    demos.loft.sh/aggregate-to-project-user: 'true'
+    loft.sh/project-role: 'true'
+spec:
+  displayName: Project User
+  description: >-
+    Allows the user or team to create and manage their virtual cluster
+    instances, space instances and devpod workspace instances.
+  management: true
+  access:
+    - verbs:
+        - get
+      users:
+        - '*'
+  clusterRoleTemplate:
+    metadata:
+      creationTimestamp: null
+    rules:
+      - verbs:
+          - create
+          - get
+          - list
+        apiGroups:
+          - management.loft.sh
+        resources:
+          - virtualclusterinstances
+          - spaceinstances
+          - projectsecrets
+          - devpodworkspaceinstances
+          - devpodworkspaceinstances/up
+          - devpodworkspaceinstances/ssh
+          - devpodworkspaceinstances/stop
+          - devpodworkspaceinstances/getstatus
+      - verbs:
+          - portforward
+          - watch
+        apiGroups:
+          - management.loft.sh
+        resources:
+          - devpodworkspaceinstances
