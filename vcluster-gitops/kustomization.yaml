@@ -7,6 +7,7 @@ resources:
 - apps/argo-cd-cluster-application-set.yaml
 - virtual-cluster-templates/vcluster-templates.yaml
 - virtual-cluster-templates/argo-cd-vcluster.yaml
+- project-roles/loft-management-project-user.yaml
 - project-roles/project-user-with-logs.yaml
 - projects/projects.yaml
 - project-secrets/project-secrets.yaml
