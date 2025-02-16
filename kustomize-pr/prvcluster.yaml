@@ -6,5 +6,5 @@ metadata:
 spec:
   project: api-framework
   repo: {REPLACE_REPO_NAME}
-  # Supported k8sVersion values include: v1.32.1, v1.31.5, v1.30.9, v1.29.14
-  k8sVersion: v1.32.1
+  # Supported k8sVersion values include: v1.32.2, v1.31.6, v1.30.10, v1.29.14
+  k8sVersion: v1.32.2
