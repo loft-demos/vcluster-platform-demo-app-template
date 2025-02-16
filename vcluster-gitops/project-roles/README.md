@@ -12,7 +12,7 @@ The `aggregationRule`:
             demos.loft.sh/aggregate-to-project-user: 'true'
 ```
 
-Resulting in a minimal permission rules:
+Allows for minimal permission rules while retaining all of the existing **Project User** role rules:
 ```
     rules:
       - verbs:
