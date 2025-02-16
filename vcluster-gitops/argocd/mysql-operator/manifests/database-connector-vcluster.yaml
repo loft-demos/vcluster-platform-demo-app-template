@@ -20,6 +20,6 @@ spec:
     namespace: loft-default-v-database-connector-vcluster
     virtualCluster: database-connector-vcluster
   parameters: |
-    k8sVersion: v1.31.1
+    k8sVersion: v1.31.6
     env: dev
   networkPeer: true
