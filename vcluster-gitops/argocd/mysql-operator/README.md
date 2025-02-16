@@ -1,4 +1,5 @@
-# MySQL Operator with the vCluster Platform Database Connector Feature
+# MySQL Operator 
+## with the vCluster Platform Database Connector Feature
 
 The MySQL Operator simplifies deploying and managing MySQL clusters on Kubernetes by automating provisioning, scaling, backups, and failover while ensuring high availability and secure access. The [vCluster Platform Database Connector](https://www.vcluster.com/docs/platform/administer/connector/database) allows admins to configure a shared database server to manage backing stores for multiple virtual clusters, automatically creating isolated databases and non-privileged users per vCluster. This integration streamlines database management, enhances security, and enables seamless scaling of virtual clusters with external database support.
 
