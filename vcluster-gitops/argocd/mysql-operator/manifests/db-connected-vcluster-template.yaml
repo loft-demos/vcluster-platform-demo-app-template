@@ -34,20 +34,14 @@ spec:
             loft.sh/import-argocd: 'true'
         instanceTemplate:
           metadata:
-            annotations:
-              loft.sh/custom-links: >-
-                Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             labels:
               env: '{{ .Values.env }}'
               team: '{{ .Values.loft.project }}'
-        apps:
-          - name: helm-dashboard
-            namespace: helm-dashboard
         pro:
           enabled: true
         helmRelease:
           chart:
-            version: 0.21.1
+            version: 0.22.4
           values: |+
             external:
               platform:
@@ -61,17 +55,6 @@ spec:
               toHost:
                 ingresses:
                   enabled: true        
-            experimental:
-              genericSync:
-                hooks:
-                  virtualToHost:
-                  - apiVersion: v1
-                    kind: Pod
-                    patches:
-                    - op: add
-                      path: spec.imagePullSecrets[0]
-                      value: 
-                        name: hook-image-pull-secret
             controlPlane:
               statefulSet:
                 labels:
@@ -97,16 +80,6 @@ spec:
           ingress: {}
         spaceTemplate:
           metadata: {}
-          objects: |
-            apiVersion: v1
-            kind: Secret
-            metadata:
-              name: hook-image-pull-secret
-              labels:
-                loft.sh/project-secret-name: ghcr-login-secret
-            data:
-              .dockerconfigjson: e30K
-            type: kubernetes.io/dockerconfigjson
       parameters:
         - variable: k8sVersion
           label: k8sVersion
