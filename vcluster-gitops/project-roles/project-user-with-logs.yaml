@@ -16,29 +16,16 @@ spec:
       users:
         - '*'
   clusterRoleTemplate:
-    metadata:
-      creationTimestamp: null
+    metadata: {}
     rules:
       - verbs:
-          - create
           - get
           - list
         apiGroups:
           - management.loft.sh
         resources:
-          - virtualclusterinstances
           - virtualclusterinstances/log
-          - spaceinstances
-          - projectsecrets
-          - devpodworkspaceinstances
-          - devpodworkspaceinstances/up
-          - devpodworkspaceinstances/ssh
-          - devpodworkspaceinstances/stop
-          - devpodworkspaceinstances/getstatus
-      - verbs:
-          - portforward
-          - watch
-        apiGroups:
-          - management.loft.sh
-        resources:
-          - devpodworkspaceinstances
+    aggregationRule:
+      clusterRoleSelectors:
+        - matchLabels:
+            demos.loft.sh/aggregate-to-project-user: 'true'
