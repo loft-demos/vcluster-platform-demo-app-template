@@ -2,6 +2,8 @@ kind: VirtualClusterTemplate
 apiVersion: management.loft.sh/v1
 metadata:
   name: db-connector-vcluster
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   displayName: Database Connector Virtual Cluster
   description: This virtual cluster template enables scalable and secure virtual cluster management by automatically provisioning isolated databases and non-privileged users on a centralized MySQL database server for each vCluster backing store.
