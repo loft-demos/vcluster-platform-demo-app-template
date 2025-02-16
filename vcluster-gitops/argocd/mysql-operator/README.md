@@ -8,4 +8,5 @@ By enabling the installation of MySQL, the resulting vCluster Platform demo envi
 - the creation of an InnoDB MySQL Cluster utilizing a credentials `Secret` created from a vCluster Platfrom `ProjectSecret` [here](https://github.com/loft-demos/loft-demo-base/blob/main/vcluster-platform-demo-generator/vcluster-platform-gitops/project-secrets/project-secrets.yaml#L68-L77)
 - the creation of a vCluster Platform database connector `Secret` created from a vCluster Platfrom `ProjectSecret` [here](https://github.com/loft-demos/loft-demo-base/blob/main/vcluster-platform-demo-generator/vcluster-platform-gitops/project-secrets/project-secrets.yaml#L79-L88)
 - the creation of the *Database Connector Virtual Cluster* `VirtualClusterTemplate` [configured](./manifests/db-connected-vcluster-template.yaml#L69-L73) to use the vCluster Platform database connector for its `backingStore`
+- the creation of a `VirtualClusterInstance` [configured](./manifests/database-connector-vcluster.yaml#L15-L17) to use the *Database Connector Virtual Cluster* `VirtualClusterTemplate`
 
