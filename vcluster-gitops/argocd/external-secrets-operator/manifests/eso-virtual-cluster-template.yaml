@@ -2,6 +2,8 @@ kind: VirtualClusterTemplate
 apiVersion: management.loft.sh/v1
 metadata:
   name: eso-example-template
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   displayName: External Secrets Operator Virtual Cluster Template
   description: This virtual cluster template includes an example of the vCluster Pro External Secrets Operator integration.
