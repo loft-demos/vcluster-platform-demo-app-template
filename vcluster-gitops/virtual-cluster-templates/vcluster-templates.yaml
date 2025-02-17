@@ -48,7 +48,7 @@ spec:
           chart:
             name: vcluster
             repo: https://loft-demos.github.io/vcluster-charts
-            version: 0.22.3
+            version: 0.22.4
           values: |
             external:
               platform:
@@ -70,9 +70,6 @@ spec:
                   enabled: true
                 secrets:
                   all: true
-                customResources:
-                  postgresqls.acid.zalan.do:
-                    enabled: true
             
             #plugins:
               #rancher:
@@ -99,7 +96,7 @@ spec:
                     cpu: 1
                 image:
                   repository: "loft-demos/vcluster-pro"
-                  tag: "0.22.3-k8s.{{ .Values.k8sVersion }}"
+                  tag: "0.22.4-k8s.{{ .Values.k8sVersion }}"
                 persistence:
                   volumeClaim:
                     storageClass: "standard-rwo"
@@ -134,7 +131,7 @@ spec:
             - v1.32.2
             - v1.31.6
             - v1.30.10
-            - v1.29.13
+            - v1.29.14
           defaultValue: v1.31.6
           section: Kubernetes Environment
         - variable: pvClaimName
@@ -225,7 +222,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.22.3
+        version: 0.22.4
       values: |-
         external:
           platform:
@@ -241,9 +238,6 @@ spec:
               enabled: true
             secrets:
               all: true
-            customResources:
-              postgresqls.acid.zalan.do:
-                enabled: true
 
         controlPlane:
           # Use an embedded managed etcd server instead of using the k3s default SQLite backend
@@ -290,7 +284,7 @@ spec:
       chart:
         name: vcluster
         repo: https://loft-demos.github.io/vcluster-charts
-        version: 0.22.3
+        version: 0.22.4
       values: |
         sync:
           toHost:
@@ -307,7 +301,7 @@ spec:
           statefulSet:
             image:
               repository: "loft-demos/vcluster-pro"
-              tag: "0.22.3-k8s.{{ .Values.k8sVersion }}"
+              tag: "0.22.4-k8s.{{ .Values.k8sVersion }}"
         
         external:
           platform:
@@ -331,7 +325,7 @@ spec:
         - v1.32.2
         - v1.31.6
         - v1.30.10
-        - v1.29.13
+        - v1.29.14
       defaultValue: v1.31.6
   access:
     - verbs:
