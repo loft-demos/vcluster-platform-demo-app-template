@@ -56,7 +56,12 @@ spec:
             sync:
               toHost:
                 ingresses:
-                  enabled: true        
+                  enabled: true
+                secrets:
+                  all: true
+                customResources:
+                  innodbclusters.mysql.oracle.com:
+                    enabled: true
             controlPlane:
               statefulSet:
                 labels:
