@@ -1,0 +1,14 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: vcluster-instance
+  namespace: p-auth-core
+spec:
+  interval: 10m
+  targetNamespace: p-auth-core
+  sourceRef:
+    kind: GitRepository
+    name: juliet-app
+  path: "./vcluster-gitops/argocd/flux/kustomize"
+  prune: true
+  timeout: 1m
