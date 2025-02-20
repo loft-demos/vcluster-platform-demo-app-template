@@ -34,6 +34,10 @@ spec:
       group: storage.loft.sh
       name: api-framework
       clusterRole: loft-management-project-user-with-vcluster-logs
+    - kind: Team
+      group: storage.loft.sh
+      clusterRole: loft-management-project-admin
+      name: loft-admins
   access:
     - name: loft-admin-access
       verbs:
@@ -95,6 +99,10 @@ spec:
       group: storage.loft.sh
       name: auth-core
       clusterRole: loft-management-project-user
+    - kind: Team
+      group: storage.loft.sh
+      clusterRole: loft-management-project-admin
+      name: loft-admins
   access:
     - name: loft-admin-access
       verbs:
@@ -164,6 +172,10 @@ spec:
       group: storage.loft.sh
       name: '*'
       clusterRole: loft-management-project-user
+    - kind: Team
+      group: storage.loft.sh
+      clusterRole: loft-management-project-admin
+      name: loft-admins
   access:
     - name: loft-access
       verbs:
