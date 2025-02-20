@@ -6,6 +6,8 @@ By enabling the installation of Flux, the resulting vCluster Platform demo envir
 - The [Capcitor UI](https://github.com/gimlet-io/capacitor) for Flux
 - A Flux `GitRepository` for this reposiotry and mapped to the **Auth Core** vCluster Platform Project namespace - `p-auth-core`
 - A Flux `Kustomization` resource that will create the `VirtualClusterInstance` resources defined under the [kustomize directory](./kustomize)
+  - vcluster-with-template.yaml: Creates a vCluster instance with a `templateRef` and allows managing the `vcluster.yaml` values in a `VirtualClusterTemplate` resource. This `VirtualClusterInstance` resource references the `default-template` as defined [here](../../virtual-cluster-templates/vcluster-templates.yaml#L1-L183).
+  - vcluster-without-template.yaml: Creates a vCluster instance with the `vcluster.yaml` values as a field of that resource.
 
 ## Using the `VirtualClusterInstance` CRD
 The `VirtualClusterInstance` CRD is documented [here](https://www.vcluster.com/docs/platform/api/resources/virtualclusterinstance/). It is a vCluster Platform custom Kubernetes resource for managing vCluster instances with vCluster Platform Projects. There is no need to import a vCluster created with the `VirtualClusterInstance` CRD as it is automatically imported and managed by the Platform.
