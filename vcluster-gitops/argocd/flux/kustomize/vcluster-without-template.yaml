@@ -1,0 +1,63 @@
+kind: VirtualClusterInstance
+apiVersion: management.loft.sh/v1
+metadata:
+  name: vcluster-deployed-with-flux
+  namespace: p-auth-core
+spec:
+  displayName: vCluster Deployed with Flux
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    access:
+      defaultClusterRole: view
+      rules:
+        - teams:
+            - loft-admins
+          clusterRole: cluster-admin
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        name: vcluster
+        repo: https://loft-demos.github.io/vcluster-charts
+        version: 0.22.3
+      values: |
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        controlPlane:
+          coredns:
+            enabled: true
+            embedded: true
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          statefulSet:
+            image:
+              repository: "loft-demos/vcluster-pro"
+              tag: "0.22.4-k8s.v1.31.6"
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  clusterRef:
+    cluster: loft-cluster
+  access:
+    - name: instance-access
+      verbs:
+        - create
+        - use
+        - get
+      subresources:
+        - logs
+        - kubeconfig
+      teams:
+        - auth-core
+        - loft-admins
+  networkPeer: true
