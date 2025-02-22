@@ -1,6 +1,10 @@
-# Dynamic Ephemeral Preview Environments for Pull Requests 
+# Automated Pull Request Environments with vCluster Platform and ArgoCD 
 
-**with vCluster and Argo CD**
+The `pr-environments` examples cover two different approaches for using vCluster Platform and Argo CD to create and deploy to ephemeral Kubernetes virtual clusters for GitHub Pull Requests.
+
+The first approach leverages a pre-existing shared Argo CD instance that has been integrated with a vCluster Platform project.
+
+The second approach is completely ephemeral. 
 
 This example leverages the vCluster Platform Argo CD integration that automatically adds a vCluster instance to an Argo CD instance as an Application deployment server target to create dynamic ephemeral Kubernetes clusters for GitHub Pull Requests. This requires that the [Argo CD instance has been integrated with a vCluster Platform Project](https://www.vcluster.com/docs/platform/integrations/argocd#enable-argo-cd-integration-per-project). The vCluster Platform will then create an Argo CD Cluster `Secret` when a vCluster instance in the vCluster Platform Project is either manually or automatically added to the integrated Argo CD instance. This integration also includes the syncing of the `VirtualClusterInstance` Kubernetes custom resource definition (CRD) `metadata.labels` to the Argo CD Cluster `Secret`. These `labels` can then be used with the [Argo CD Application Set Cluster Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/#pass-additional-key-value-pairs-via-values-field) as they are in this example.
 
