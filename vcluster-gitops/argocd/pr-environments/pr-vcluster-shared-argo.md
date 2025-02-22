@@ -1,8 +1,13 @@
-## PR vCluster with Shared Argo CD
+# PR vCluster with Shared Argo CD
 
 Both the PR vClsuter and the PR preview app are deployed by a shared Argo CD instance. The only thing deployed into the vCluster is the PR preview app itself.
 
-Flow - a specific label is add
+## Flow 
+
+1. A specific label is added to the Pull Request (this example uses `create-pr-vcluster-external-argocd`)
+2. An Arog CD `ApplicationSet` is triggered and generates an Argo CD `Application` specific to the give Pull Request and uses Kustomize to deploy a PR specific `VirtualClusterInstance` custom resource
+3. As the vCluster is being created based on the `ApplicationSet` modified `VirutalClusterInstance`, the vCluster Platform integration triggers the creation of an Argo CD cluster `Secret` with `metadata.labels` used in the second Argo CD `ApplicationSet`
+4. 
 
 This example leverages the vCluster Platform Argo CD integration that automatically adds a vCluster instance to an Argo CD instance as an Application deployment server target to create dynamic ephemeral Kubernetes clusters for GitHub Pull Requests. This requires that the [Argo CD instance has been integrated with a vCluster Platform Project](https://www.vcluster.com/docs/platform/integrations/argocd#enable-argo-cd-integration-per-project). The vCluster Platform will then create an Argo CD Cluster `Secret` when a vCluster instance in the vCluster Platform Project is either manually or automatically added to the integrated Argo CD instance. This integration also includes the syncing of the `VirtualClusterInstance` Kubernetes custom resource definition (CRD) `metadata.labels` to the Argo CD Cluster `Secret`. These `labels` can then be used with the [Argo CD Application Set Cluster Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/#pass-additional-key-value-pairs-via-values-field) as they are in this example.
 
