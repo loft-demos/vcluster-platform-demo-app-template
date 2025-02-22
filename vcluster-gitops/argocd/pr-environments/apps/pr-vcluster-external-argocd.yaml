@@ -30,10 +30,10 @@ spec:
           value: https://argocd-{REPLACE_VCLUSTER_NAME}.us.demo.dev
         - name: GitHub PR
           value: https://github.com/loft-demos/{REPLACE_REPO_NAME}/pull/{{number}}
-      project: default
+      project: loft-auth-core
       source:
         kustomize:
-          namePrefix: {REPLACE_REPO_NAME}-pr-{{number}}-
+          namePrefix: juliet-app-pr-{{number}}-
           patches:
             - patch: |-
                 - op: add
@@ -43,8 +43,8 @@ spec:
                   path: /metadata/labels/repo
                   value: {REPLACE_REPO_NAME}
                 - op: add
-                  path: /metadata/labels/pr
-                  value: 'true'
+                  path: /metadata/labels/prLabel
+                  value: 'create-pr-vcluster-external-argocd'
                 - op: add
                   path: /metadata/labels/prNumber
                   value: '{{number}}'
@@ -62,7 +62,7 @@ spec:
                 name: vcluster
         path: vcluster-gitops/argocd/pr-environments/kustomize
         repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
-        targetRevision: '{{head_sha}}'
+        targetRevision: '{{branch}}'
       syncPolicy:
         automated:
           selfHeal: true
