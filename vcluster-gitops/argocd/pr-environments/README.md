@@ -27,7 +27,7 @@ The second approach leverages a pre-existing shared Argo CD instance that has be
 
 **✖ Harder to Test Argo CD Changes** – If a PR modifies Argo CD configurations, testing becomes trickier without impacting the shared instance.
 
-**✖ Possible State Pollution** – If a PR fails to clean up resources, it could leave orphaned deployments in the shared cluster.
+**✖ Possible State Pollution** – If a PR fails to clean up resources, it could leave orphaned vCluster instances in the shared cluster.
 
 ### 2. Embedded Argo CD is deployed into and deploys to the ephmeral PR vCluster:
 Details of this setup, to include the components used, Kubernetes resources configuration and explanation are available [here](../../crossplane/vcluster-pull-request-environment).
@@ -49,8 +49,6 @@ Details of this setup, to include the components used, Kubernetes resources conf
 **✖ Higher Resource Consumption** – Spinning up a new Argo CD instance per PR requires more CPU/memory.
 
 **✖ Longer PR Setup Time** – Each PR needs to spin up a fresh vCluster + Argo CD, which may slow CI/CD pipelines.
-
-**✖ No Persistent History** – Logs and application states are lost when the vCluster is deleted, making debugging harder.
 
 **✖ More Complex Management** – Requires automation to spin up and tear down vCluster and Argo CD per PR efficiently.
 
