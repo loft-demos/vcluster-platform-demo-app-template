@@ -6,7 +6,7 @@ config:
   look: classic
 ---
 flowchart TD
-    A["GitHub Repo"] --> B["Pull Request"] -->| Labeled | L[create-pr-vcluster-external-argocd] 
+    A["GitHub Repo"] -->| Create | B["Pull Request"] -->| Labeled | L[create-pr-vcluster-external-argocd] 
     L -->| Triggers | C["Argo CD PR vCluster AppSet"]
     C -->| Creates | V["PR vCluster"]
     V --> | Triggers |CS["Argo CD Cluster Secret"]
