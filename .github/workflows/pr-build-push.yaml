@@ -29,7 +29,7 @@ jobs:
           ref: ${{ github.head_ref }}
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v4
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -39,8 +39,6 @@ jobs:
             org.opencontainers.image.vendor=loft.sh
             org.opencontainers.image.source=${{ github.repositoryUrl }}
             org.opencontainers.image.description=Simple echo app based on the HashiCorp echo-http.
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
@@ -55,9 +53,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./src
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.pull_request.head.ref }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
           labels: ${{ steps.meta.outputs.labels }}
