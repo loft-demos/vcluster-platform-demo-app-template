@@ -13,7 +13,7 @@ spec:
                 labels:
                   - create-pr-vcluster-external-argocd
                 owner: loft-demos
-                repo: juliet-app
+                repo: {REPLACE_REPO_NAME}
               requeueAfterSeconds: 30
           - clusters:
               selector:
@@ -23,7 +23,7 @@ spec:
                     values:
                       - "{{number}}" 
                 matchLabels:
-                  repo: juliet-app
+                  repo: {REPLACE_REPO_NAME}
                   prLabel: 'create-pr-vcluster-external-argocd'
   template:
     metadata:
