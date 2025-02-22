@@ -1,0 +1,218 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: pull-request-vcluster
+spec:
+  displayName: Pull Request vCluster
+  description: >-
+    Used for ephemeral vCluster instances for GitHub pull requests and includes an
+    Argo CD instance installed in the vCluster.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.20.0
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: >-
+                https://argocd-{{ .Values.loft.virtualClusterName }}.{{
+                .Values.loft.clusterAnnotations.domain }}
+        apps:
+          # Argo CD vCluster Platform App - installs Argo CD into vCluster with Helm - see ../apps/argo-cd.yaml
+          - name: argocd
+            version: 2.14.1
+            namespace: argocd
+            parameters: |
+              appValues: |
+                global:
+                  # domain needs to be set if you want to use OIDC based SSO
+                  # the .Values.loft.clusterAnnotations.domain is set on the vCluster Platform Cluster resource - see https://github.com/loft-demos/loft-demo-base/blob/main/vcluster-platform-demo-generator/vcluster-platform-gitops/apps/apps.yaml#L404-L405
+                  domain: argocd-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                configs:
+                  cm:
+                    create: true
+                    # the cm.url is required to make the Argo CD OIDC SSO work
+                    url: https://argocd-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                    application.resourceTrackingMethod: annotation
+                    # OIDC config uses vCluster Platform as an OIDC Provider - see https://www.vcluster.com/docs/platform/how-to/oidc-provider
+                    oidc.config: |
+                       issuer: https://{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}/oidc
+                       clientID: argocd-{{ .Values.loft.virtualClusterName }}
+                       # this same OIDC clientSecret is also added to the vCluster Platform OIDC provider Secret resource
+                       # The Crossplane composition adds that secret here: vcluster-gitops/crossplane/vcluster-pull-request-environment/vcluster-pull-request-environment-composition.yaml#L72-L131
+                       clientSecret: $oidc-secret:clientSecret
+                       name: Loft
+                  params:
+                    "server.insecure": true
+                    timeout.reconciliation: 0  
+                  secret:
+                    createSecret: true
+                  rbac:
+                    policy.csv: |-
+                      g, Administration, role:admin
+                      g, Sales, role:admin
+                      g, Engineering, role:admin
+                server:
+                  ingress:
+                    enabled: true
+                    annotations:
+                      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+                      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+                    ingressClassName: "nginx"
+                    hostname: argocd-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                    tls: true
+                  ingressGrpc:
+                    enabled: false
+                controller:
+                  resources:
+                    limits:
+                      cpu: 1000m
+                      memory: 2Gi
+                    requests:
+                      cpu: 250m
+                      memory: 512Mi
+                ## ApplicationSet controller
+                applicationSet:
+                  enabled: true
+                  logLevel: "debug"
+                  ingress:
+                    enabled: true
+                    ingressClassName: "nginx"
+                    annotations:
+                      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+                    hostname: argocd-appset-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                    tls: true
+                notifications:
+                  argocdUrl: https://argocd-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                  cm:
+                    create: true
+                  context:
+                    helloAppUrl: "https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}"
+                  logLevel: "debug"
+                  secret:
+                    # label triggers the use of a vCluster Platform Project secret
+                    labels:
+                      loft.sh/project-secret-name: argocd-notifications-secret
+          # vCluster Platform App (Bash type) used to create the Argo CD ApplicationSet used to deploy the Pull Request application Helm chart
+          - name: argo-cd-pr-application-set
+            namespace: argocd
+            parameters: |
+              argocdUrl: >-
+                https://argocd-{{ .Values.loft.virtualClusterName }}.{{
+                .Values.loft.clusterAnnotations.domain }}
+              vClusterName: '{{ .Values.loft.virtualClusterName }}'
+              repoName: '{{ .Values.reponame }}'
+        objects: |-
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: argocd
+          ---
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: loft-demo-org-cred
+            namespace: argocd
+            labels:
+              loft.sh/project-secret-name: loft-demo-org-cred
+              argocd.argoproj.io/secret-type: repo-creds
+          type: Opaque
+          ---
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: oidc-secret
+            namespace: argocd
+            labels:
+              loft.sh/project-secret-name: oidc-secret
+              app.kubernetes.io/part-of: argocd
+          type: Opaque
+          ---
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: preview-hello-world-app
+          ---
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: ghcr-login-secret
+            namespace: preview-hello-world-app
+            labels:
+              loft.sh/project-secret-name: ghcr-login-secret
+          data:
+            .dockerconfigjson: e30K
+          type: kubernetes.io/dockerconfigjson
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.22.3
+          values: |-
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 7200
+                autoDelete:
+                  afterInactivity: 720000
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+
+            controlPlane:
+              # Use an embedded managed etcd server instead of using the k3s default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              distro:
+                k8s:
+                  version: "{{ .Values.k8sVersion }}"
+              coredns:
+                embedded: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      parameters:
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.32.1
+            - v1.31.5
+            - v1.30.9
+            - v1.29.14
+          defaultValue: v1.31.5
+        - variable: prnumber
+          label: PR Number
+          type: string
+          defaultValue: '1'
+        - variable: reponame
+          label: Repo Name
+          type: string
+          defaultValue: hello-app
+      version: 1.0.0
+status: {}
