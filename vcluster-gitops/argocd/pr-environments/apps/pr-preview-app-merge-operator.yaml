@@ -27,7 +27,7 @@ spec:
                   prLabel: 'create-pr-vcluster-external-argocd'
   template:
     metadata:
-      name: "{{metadata.labels.vclusterName}}"
+      name: {REPLACE_REPO_NAME}-pr-{{number}}-preview-app
     spec:
       destination:
         namespace: preview-hello-world-app
