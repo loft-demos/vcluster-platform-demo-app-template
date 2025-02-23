@@ -28,6 +28,11 @@ spec:
   template:
     metadata:
       name: {REPLACE_REPO_NAME}-pr-{{number}}-preview-app
+      annotations:
+        notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ""
+      labels:
+        vclusterName: "{{metadata.labels.vclusterName}}"
+        vclusterProjectId: "{{metadata.labels.vclusterProjectId}}"
     spec:
       destination:
         namespace: preview-hello-world-app
