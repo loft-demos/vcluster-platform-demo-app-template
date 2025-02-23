@@ -9,7 +9,7 @@ flowchart TD
     A["GitHub Repo"] -->| Create | B["Pull Request"] -->| Labeled | L[create-pr-vcluster-external-argocd] 
     L -->| Triggers | C["Argo CD PR vCluster AppSet"]
     C -->| Creates | V["PR vCluster"]
-    V --> | Triggers |CS["Argo CD Cluster Secret"]
+    V --> | vCluster Platform Creates |CS["Argo CD Cluster Secret"]
     L --> | Triggers |AS["Argo CD Preview App AppSet"]
     CS --> | Triggers |AS["Argo CD Preview App AppSet"]
     AS --> MP["Pull Request Generator"]
