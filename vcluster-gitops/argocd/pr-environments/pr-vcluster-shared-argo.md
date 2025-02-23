@@ -11,6 +11,7 @@ Both the PR vClsuter and the PR preview app are deployed by a shared Argo CD ins
     - `repo` the Pull Request GitHub repository
     - `prLabel` has to match `create-pr-vcluster-external-argocd`
     - `prNumber` is the GitHub Pull Request number
+
 5. As the vCluster is being created based on the `ApplicationSet` modified `VirutalClusterInstance`, the vCluster Platform integration triggers the creation of an Argo CD cluster `Secret` with `metadata.labels` used in the second Argo CD `ApplicationSet`
 6. Once the Argo CD cluster `secret` is created with the necessary `metadata.labels`, it, along with the properly labeled Pull Request trigger the second Argo CD `ApplicationSet` that uses the Merge generator to merge the template parameters from the Clusters and Pull Request generators to generate an `Application` that will deploy the PR preview application into the PR vCluster
 7. Additional commits to the Pull Request head branch will automatically update the second `Application` and depoy the updated container image with a tag based on the short commit sha of the last commit to the Pull Request head branch
