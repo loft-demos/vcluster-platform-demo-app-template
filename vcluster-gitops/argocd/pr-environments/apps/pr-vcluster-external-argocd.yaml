@@ -37,6 +37,9 @@ spec:
           patches:
             - patch: |-
                 - op: add
+                  path: /metadata/labels/vclusterProjectId
+                  value: auth-core
+                - op: add
                   path: /metadata/labels/vclusterName
                   value: {REPLACE_REPO_NAME}-pr-{{number}}-vcluster
                 - op: add
