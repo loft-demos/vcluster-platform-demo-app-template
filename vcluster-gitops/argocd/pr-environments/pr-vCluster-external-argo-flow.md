@@ -17,5 +17,5 @@ flowchart TD
     MP --> MG["Merge Generator"]
     MC --> MG["Merge Generator"]
     MG -->| Creates | APP["Preview Helm App"]
-    APP --> | Deployed | V
+    APP --> | Argo CD Deploys | V
 ```
