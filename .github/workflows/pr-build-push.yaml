@@ -59,3 +59,18 @@ jobs:
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
           labels: ${{ steps.meta.outputs.labels }}
+  wakeup-vcluster:
+    if: contains(github.event.pull_request.labels.*.name, 'create-pr-vcluster-external-argocd')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install vCluster CLI
+        uses: loft-sh/setup-vcluster@main
+      - name: Show vCluster Version
+        run: vcluster --version
+      - name: Login to vCluster Platform instance
+        env:
+          VCLUSTER_PLATFORM_URL: ${{ secrets.VCLUSTER_PLATFORM_URL }}
+          ACCESS_KEY: ${{ secrets.VCLUSTER_PLATFORM_ACCESS_KEY }}
+        run: vcluster platform login $VCLUSTER_PLATFORM_URL --access-key $ACCESS_KEY
+      - name: Wakeup PR Virtual Cluster
+        run: vcluster platform wakeup vcluster ${{ github.event.repository.name }}-pr-${{ github.event.pull_request.number }}-vcluster
