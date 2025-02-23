@@ -20,7 +20,7 @@ spec:
             project: ''
   template:
     metadata:
-      name: {REPLACE_REPO_NAME}-pr-{{number}}
+      name: {REPLACE_REPO_NAME}-pr-{{number}}-vcluster
     spec:
       destination:
         name: in-cluster
