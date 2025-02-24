@@ -7,7 +7,7 @@ config:
 ---
 flowchart TD
     A["GitHub Repo"] -->| Create | B["Pull Request"] -->| Labeled | LPR[create-pr-vcluster-external-argocd] 
-    LPR -->| Triggers | C["Argo CD PR vCluster AppSet"]
+    LPR -->| Triggers PR Generator | C["Argo CD PR vCluster AppSet"]
     C -->| AppSet Generates | VA["PR vCluster Kustomize App"]
     VA --> | vCluster Platform Creates |V["PR vCluster"]
     V --> | vCluster Platform Creates |CS["Argo CD Cluster Secret"]
