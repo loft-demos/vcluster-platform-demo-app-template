@@ -5,7 +5,7 @@ Both the PR vClsuter and the PR preview app are deployed by a shared Argo CD ins
 ## Flow 
 
 1. A specific GitHub label is added to the Pull Request (this example uses `create-pr-vcluster-external-argocd`)
-2. An Argo CD `ApplicationSet`, configured with the Pull Request generator, is triggered and generates an Argo CD `Application` specific to the given Pull Request and uses Kustomize to deploy a PR specific `VirtualClusterInstance` custom resource:
+2. An Argo CD `ApplicationSet`, configured with the Pull Request generator, is triggered and generates an Argo CD `Application` specific to the given Pull Request and uses Kustomize to deploy a PR specific `VirtualClusterInstance` custom resource that leverages a `VitualClusterTemplate` custom resource for most of its configuration:
 
     - The Argo CD `ApplicationSet` allows using Pull Requests specific parameters with patches to kustomize the `VirtualClusterInstance` resource and is used to add the following `labels` for use with the PR preview app `ApplicationSet` to uniquely identify and target the PR vCluster:
 
