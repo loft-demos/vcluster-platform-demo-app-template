@@ -11,7 +11,7 @@ flowchart TD
     C -->| AppSet Generates | VA["PR vCluster Kustomize App"]
     VA --> | vCluster Platform Creates |V["PR vCluster"]
     V --> | vCluster Platform Creates |CS["Argo CD Cluster Secret"]
-    LPR --> | Triggers Pull Request Generator |AS["Argo CD Preview App AppSet"]
+    LPR --> | Triggers PR Generator |AS["Argo CD Preview App AppSet"]
     CS --> | Triggers Clusters Generator |AS["Argo CD Preview App AppSet"]
     MG -->| AppSet Matrix Generator Creates | APP["PR Preview Helm App"]
     APP --> | Argo CD Deploys | V
