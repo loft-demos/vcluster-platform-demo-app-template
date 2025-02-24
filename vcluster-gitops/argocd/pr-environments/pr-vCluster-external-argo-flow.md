@@ -13,6 +13,6 @@ flowchart TD
     V --> | vCluster Platform Creates |CS["Argo CD Cluster Secret"]
     LPR --> | Triggers PR Generator |AS["Argo CD Preview App AppSet"]
     CS --> | Triggers Clusters Generator |AS["Argo CD Preview App AppSet"]
-    MG -->| AppSet Matrix Generator Creates | APP["PR Preview Helm App"]
+    AS -->| AppSet Matrix Generator Creates | APP["PR Preview Helm App"]
     APP --> | Argo CD Deploys | V
 ```
