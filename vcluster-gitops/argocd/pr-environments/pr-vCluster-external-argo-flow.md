@@ -17,6 +17,6 @@ flowchart TD
     AS --> MC["Clusters Generator"]
     MP --> MG["Merge Generator"]
     MC --> MG["Merge Generator"]
-    MG -->| AppSet Generates | APP["Preview Helm App"]
+    MG -->| AppSet Generates | APP["PR Preview Helm App"]
     APP --> | Argo CD Deploys | V
 ```
