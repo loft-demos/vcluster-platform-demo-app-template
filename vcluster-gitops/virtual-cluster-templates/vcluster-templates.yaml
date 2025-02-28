@@ -86,11 +86,12 @@ spec:
                   - name: "hook-image-pull-secret"
               statefulSet:
                 annotations:
-                  demo.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
+                  demos.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
                 labels:
                   env: '{{ .Values.env }}'
-                  team: '{{ .Values.loft.project }}'
-                  pvClaimName: '{{ .Values.pvClaimName }}'
+                  demos.loft.sh/project: '{{ .Values.loft.project }}'
+                  demos.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
+                  demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
                 resources:
                   # Limits are resource limits for the container
                   limits:
