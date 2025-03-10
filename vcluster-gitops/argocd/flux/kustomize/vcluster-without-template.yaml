@@ -23,12 +23,18 @@ spec:
       chart:
         name: vcluster
         repo: https://loft-demos.github.io/vcluster-charts
-        version: 0.22.3
+        version: 0.23.0
       values: |
         sync:
           toHost:
             ingresses:
               enabled: true
+
+        exportKubeConfig:
+          context: loft
+          server: https://vcluster-deployed-with-flux.loft-auth-core-v-vcluster-deployed-with-flux:443
+          secret:
+            name: vcluster-platform-kubeconfig
 
         controlPlane:
           coredns:
@@ -41,11 +47,66 @@ spec:
           statefulSet:
             image:
               repository: "loft-demos/vcluster-pro"
-              tag: "0.22.4-k8s.v1.31.6"
+              tag: "0.23.0-k8s.v1.32.1"
     accessPoint:
       ingress: {}
     spaceTemplate:
       metadata: {}
+      apps:
+        - name: generate-vcluster-kubeconfig
+      objects: |-
+        ---
+        apiVersion: kustomize.toolkit.fluxcd.io/v1
+        kind: Kustomization
+        metadata:
+          name: apps
+        spec:
+          dependsOn:
+            - name: vcluster-deployed-with-flux
+          interval: 1h
+          retryInterval: 3m
+          timeout: 5m
+          prune: true
+          wait: true
+          path: ./vcluster-gitops/argocd/flux/flux-deploy-apps
+          sourceRef:
+            kind: GitRepository
+            name: {REPLACE_REPO_NAME}
+            namespace: p-auth-core
+          patches:
+            - target:
+                kind: HelmRepository
+              patch: |
+                - op: add
+                  path: /metadata/namespace
+                  value:
+                    p-auth-core
+            - target:
+                kind: HelmRelease
+              patch: |
+                - op: add
+                  path: /metadata/namespace
+                  value:
+                    p-auth-core
+                - op: add
+                  path: /spec/kubeConfig
+                  value:
+                    secretRef:
+                      name: vcp-vcluster-deployed-with-flux-flux-kubeconfig
+                - op: add
+                  path: /spec/values
+                  value:
+                    ui:
+                      message: "deployed to vcluster-deployed-with-flux test-11"
+                - op: add
+                  path: /spec/values/ingress
+                  value:
+                    enabled: true
+                    hosts:
+                      - host: podinfo-vcluster-deployed-with-flux-{REPLACE_VCLUSTER_NAME}.us.demo.dev
+                        paths:
+                          - path: /
+                            pathType: ImplementationSpecific
   clusterRef:
     cluster: loft-cluster
   access:
