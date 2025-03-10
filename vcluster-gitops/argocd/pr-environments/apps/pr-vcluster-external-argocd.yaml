@@ -33,7 +33,7 @@ spec:
       project: loft-auth-core
       source:
         kustomize:
-          namePrefix: juliet-app-pr-{{number}}-
+          namePrefix: {REPLACE_REPO_NAME}-pr-{{number}}-
           patches:
             - patch: |-
                 - op: add

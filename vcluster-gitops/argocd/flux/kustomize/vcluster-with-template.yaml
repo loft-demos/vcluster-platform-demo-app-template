@@ -8,7 +8,7 @@ spec:
   owner:
     team: auth-core
   templateRef:
-    name: default-template
+    name: vcluster-flux-template
     version: 1.0.x
   clusterRef:
     cluster: loft-cluster
