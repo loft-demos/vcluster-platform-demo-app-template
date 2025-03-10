@@ -1,0 +1,115 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: vcluster-flux-template
+  annotations:
+    argocd.argoproj.io/sync-options: Validate=false
+spec:
+  displayName: Virtual Cluster Flux Template
+  description: This virtual cluster template is configured to integrate the resulting vCluster with Flux by creating a Flux KubeConfig Secret and then automatically using Flux to deploy a `HelmRelease` based application into the vCluster.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.23.0
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata: {}
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: |-
+                Flux-App=https://podinfo-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+        apps:
+          - name: helm-dashboard
+            namespace: helm-dashboard
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            name: vcluster
+            repo: https://loft-demos.github.io/vcluster-charts
+            version: 0.23.0
+          values: |
+            exportKubeConfig:
+              context: loft
+              server: https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.virtualClusterNamespace }}:443
+              secret:
+                name: 'flux-kubeconfig'
+                
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 1620
+                  autoWakeup:
+                    schedule: 11 7-17 * * 1-5
+                  timezone: "America/New_York"
+                autoDelete:
+                  afterInactivity: 1800000
+                  
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+
+            controlPlane:
+              statefulSet:
+                image:
+                  repository: "loft-demos/vcluster-pro"
+                  tag: "0.23.0-k8s.v1.32.1"
+              # Use an embedded managed etcd server instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+          apps:
+            - name: generate-vcluster-kubeconfig
+    - version: 0.0.0
+      template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.20.1
+          values: |-
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}

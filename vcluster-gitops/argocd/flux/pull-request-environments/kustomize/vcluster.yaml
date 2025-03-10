@@ -1,0 +1,17 @@
+---
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: preview-vcluster
+  namespace: p-auth-core
+spec:
+  owner:
+    team: auth-core
+  templateRef:
+    name: vcluster-flux-template
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+  parameters: |
+    k8sVersion: v1.31.5
+    env: 'dev'
