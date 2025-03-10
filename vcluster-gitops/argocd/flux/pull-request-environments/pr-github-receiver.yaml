@@ -1,0 +1,13 @@
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Receiver
+metadata:
+  name: pr-github-receiver
+  namespace: p-auth-core
+spec:
+  type: github
+  secretRef:
+    name: pr-github-receiver-token
+  resources:
+    - apiVersion: source.toolkit.fluxcd.io/v1
+      kind: GitRepository
+      name: {REPLACE_REPO_NAME}

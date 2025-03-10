@@ -1,0 +1,15 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSetInputProvider
+metadata:
+  name: preview-pull-requests
+  namespace: p-auth-core
+  annotations:
+    fluxcd.controlplane.io/reconcileEvery: "1m"
+spec:
+  type: GitHubPullRequest
+  url: https://github.com/loft-demos/{REPLACE_REPO_NAME}
+  filter:
+    labels:
+      - "deploy/flux-vcluster-preview"
+  defaultValues:
+    chart: "helm-chart"
