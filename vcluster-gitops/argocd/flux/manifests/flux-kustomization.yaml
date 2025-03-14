@@ -19,3 +19,7 @@ spec:
       kind: VirtualClusterInstance
       failed: "status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')"
       current: "status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')"
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: demo-admin-access-key
