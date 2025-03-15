@@ -17,3 +17,12 @@ stringData:
   headers: |
     Authorization: Bearer ${accessKey}
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-app-secret
+  namespace: p-auth-core
+  labels:
+    loft.sh/project-secret-name: loft-demo-org-cred
+data:
+---
