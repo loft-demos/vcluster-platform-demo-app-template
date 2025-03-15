@@ -143,6 +143,12 @@ spec:
                     name: flux-kubeconfig
                     key: config
               - op: add
+                # the uninstall config is needed to ensure the HelmRelease is deleted when a PR is closed or the Flux preview label is removed while the PR vCluster is sleeping
+                path: /spec/uninstall
+                value:
+                  timeout: 1s
+                  deletionPropagation: orphan
+              - op: add
                 path: /spec/values
                 value:
                   ui:
