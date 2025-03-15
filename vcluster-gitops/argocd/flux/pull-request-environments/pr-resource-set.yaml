@@ -47,7 +47,7 @@ spec:
         namespace: p-auth-core
       spec:
         provider: generic # or 'github' if using GitHub App
-        interval: 1h
+        interval: 48h
         url: https://github.com/loft-demos/{REPLACE_REPO_NAME}
         ref:
           # configured to only watch the Pull Request branch as the vCluster does not need to be updated for each PR commit
@@ -59,7 +59,7 @@ spec:
         name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
         namespace: p-auth-core
       spec:
-        interval: 1m
+        interval: 48h
         # the vCluster Platfrom Auth Core project namespace
         targetNamespace: p-auth-core
         sourceRef:
@@ -92,7 +92,7 @@ spec:
         namespace: p-auth-core
       spec:
         provider: generic # or 'github' if using GitHub App
-        interval: 1h
+        interval: 48h
         url: https://github.com/loft-demos/{REPLACE_REPO_NAME}
         ref:
           # using PR head sha will trigger update on every commit to PR head branch
@@ -108,7 +108,7 @@ spec:
           # this dependsOn allows for vCluster to be up and running before Flux deploys HelmRelease
           - name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
             namespace: p-auth-core
-        interval: 1h
+        interval: 48h
         retryInterval: 3m
         timeout: 5m
         prune: true
