@@ -4,10 +4,12 @@ metadata:
   name: preview-pull-requests
   namespace: p-auth-core
   annotations:
-    fluxcd.controlplane.io/reconcileEvery: "1m"
+    fluxcd.controlplane.io/reconcileEvery: "4h"
 spec:
   type: GitHubPullRequest
   url: https://github.com/loft-demos/{REPLACE_REPO_NAME}
+  secretRef:
+    name: github-app-secret
   filter:
     labels:
       - "deploy/flux-vcluster-preview"
