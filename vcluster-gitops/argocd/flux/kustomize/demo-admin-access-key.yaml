@@ -7,3 +7,13 @@ spec:
   key: "${accessKey}"
   type: User
   user: admin
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vcluster-platform-provider-headers
+  namespace: p-auth-core
+stringData:
+  headers: |
+    Authorization: Bearer ${accessKey}
+---
