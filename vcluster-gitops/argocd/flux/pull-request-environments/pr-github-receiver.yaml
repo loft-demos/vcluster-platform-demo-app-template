@@ -8,6 +8,6 @@ spec:
   secretRef:
     name: pr-github-receiver-token
   resources:
-    - apiVersion: source.toolkit.fluxcd.io/v1
-      kind: GitRepository
-      name: {REPLACE_REPO_NAME}
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSetInputProvider
+      name: preview-pull-requests
