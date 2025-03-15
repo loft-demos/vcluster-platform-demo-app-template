@@ -10,11 +10,39 @@ spec:
       kind: ResourceSetInputProvider
       name: preview-pull-requests
   resources:
+    - apiVersion: notification.toolkit.fluxcd.io/v1beta3
+      kind: Provider
+      metadata:
+        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        type: generic
+        timeout: 2m
+        # address is specific to the vCluster create for a give pull request id
+        address: https://{REPLACE_VCLUSTER_NAME}.us.demo.dev/kubernetes/project/auth-core/virtualcluster/{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+        secretRef:
+          name: vcluster-platform-provider-headers
+    - apiVersion: notification.toolkit.fluxcd.io/v1beta3
+      kind: Alert
+      metadata:
+        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        eventMetadata:
+          summary: "PR Updated, wakeup vCluster"
+        providerRef:
+          name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        eventSeverity: info
+        inclusionList:
+          - ".*commit.*"
+        eventSources:
+          - kind: GitRepository
+            name: '{REPLACE_REPO_NAME}-preview-<< inputs.id >>'
     - apiVersion: source.toolkit.fluxcd.io/v1
       kind: GitRepository
       metadata:
         # GitRepository resource for the vCluster instance
-        name: {REPLACE_REPO_NAME}-preview-flux-vcluster-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-preview-flux-<< inputs.id >>
         # the vCluster Platfrom Auth Core project namespace
         namespace: p-auth-core
       spec:
@@ -28,7 +56,7 @@ spec:
       kind: Kustomization
       metadata:
         # repo name with PR number and part PR label is enough to make the Virtual Cluster Instance name unique
-        name: {REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
         namespace: p-auth-core
       spec:
         interval: 1m
@@ -36,7 +64,7 @@ spec:
         targetNamespace: p-auth-core
         sourceRef:
           kind: GitRepository
-          name: {REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>
+          name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
         path: "./vcluster-gitops/argocd/flux/pull-request-environments/kustomize"
         prune: true
         timeout: 2m
@@ -54,7 +82,7 @@ spec:
               - op: add
                 path: /metadata/name
                 value:
-                  {REPLACE_REPO_NAME}-preview-flux-vcluster-<< inputs.id >>
+                  {REPLACE_REPO_NAME}-preview-flux-<< inputs.id >>
     # two GitRepistories are used as the one for the vCluster only needs to be updated per PR
     # this one, for the PR app deployment into the vCluster, needs to be updated for every PR commit
     - apiVersion: source.toolkit.fluxcd.io/v1
@@ -78,7 +106,7 @@ spec:
       spec:
         dependsOn:
           # this dependsOn allows for vCluster to be up and running before Flux deploys HelmRelease
-          - name: {REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>
+          - name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
             namespace: p-auth-core
         interval: 1h
         retryInterval: 3m
@@ -96,8 +124,8 @@ spec:
             patch: |
               - op: add
                 path: /metadata/namespace
-                value: # based on Auth Core project pattern for vCluster namespaces
-                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>
+                value: # based on Auth Core vCluster Platform project pattern for vCluster namespaces
+                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
           - target:
               kind: HelmRelease
             patch: |
@@ -105,7 +133,7 @@ spec:
                 path: /metadata/namespace
                 # the HelmRelease must be in the same namespace as the kubeConfig.secretRef for the vCluster
                 value: 
-                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>
+                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
               - op: add
                 # the kubeConfig.secretRef must be in the same namesapce as the HelmRelease
                 # the vCluster exportKubeConfig is configured to create the Flux useable vCluster Kube Config in the vCluster host namespace
@@ -118,13 +146,13 @@ spec:
                 path: /spec/values
                 value:
                   ui:
-                    message: "deployed to {REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >> << inputs.sha >>" # use of sha here to simulate dynamic app deployment
+                    message: "deployed to {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >> << inputs.sha >>" # use of sha here to simulate dynamic app deployment
               - op: add
                 path: /spec/values/ingress
                 value:
                   enabled: true
                   hosts:
-                    - host: podinfo-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>.us.demo.dev
+                    - host: podinfo-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>.us.demo.dev
                       paths:
                         - path: /
                           pathType: ImplementationSpecific
