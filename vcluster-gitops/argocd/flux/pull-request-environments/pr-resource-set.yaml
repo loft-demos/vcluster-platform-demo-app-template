@@ -67,8 +67,8 @@ spec:
           name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
         path: "./vcluster-gitops/argocd/flux/pull-request-environments/kustomize"
         prune: true
-        timeout: 2m
-        wait: true
+        timeout: 5m
+        wait: false
         # important: this feature requires Flux 2.5+
         healthCheckExprs:
           - apiVersion: management.loft.sh/v1
@@ -97,6 +97,20 @@ spec:
         ref:
           # using PR head sha will trigger update on every commit to PR head branch
           commit: << inputs.sha >>
+    - apiVersion: notification.toolkit.fluxcd.io/v1beta3
+      kind: Alert
+      metadata:
+        name: github-pr-comment-{REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        providerRef:
+          name: github-dispatch
+        exclusionList:
+          - ".*uninstall failed.*"
+        eventSources:
+          - kind: HelmRelease
+            name: '*'
+            namespace: "loft-auth-core-v-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>"
     # Kustomization wrapper for HelmRelease to allow use of dependsOn
     - apiVersion: kustomize.toolkit.fluxcd.io/v1
       kind: Kustomization
