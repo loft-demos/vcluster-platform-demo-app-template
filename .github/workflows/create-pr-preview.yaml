@@ -23,19 +23,18 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
-      - id: install-loft-cli
-        uses: loft-sh/setup-loft@v2
-        with:
-          version: v3.4.0
-          url: https://REPLACE_LOFT_DEMO_DOMAIN
-          # Specify your Loft access key here
-          access-key: ${{ secrets.LOFT_DEMO_ENV_ACCESS_KEY }}
-          kubectl-install: false
-          kubectl-version: v1.29.2
-
+      - id: Install vCluster CLI
+        uses: loft-sh/setup-vcluster@main
+      - name: Show vCluster Version
+        run: vcluster --version
+      - name: Login to vCluster Platform instance
+        env:
+          VCLUSTER_PLATFORM_URL: ${{ secrets.VCLUSTER_PLATFORM_URL }}
+          ACCESS_KEY: ${{ secrets.VCLUSTER_PLATFORM_ACCESS_KEY }}
+        run: vcluster platform login $VCLUSTER_PLATFORM_URL --access-key $ACCESS_KEY
       - id: create-preview-vcluster
         run: |
-          loft create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework \
+          vcluster platform create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework \
             --template preview-template \
             --link "GitHub PR=$PR_LINK" \
             --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN/" \
@@ -46,7 +45,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh pr edit ${{ github.event.pull_request.number }} --add-label "preview-cluster-ready"
-
       - id: add-pr-link
         uses: marocchino/sticky-pull-request-comment@v2
         with:
