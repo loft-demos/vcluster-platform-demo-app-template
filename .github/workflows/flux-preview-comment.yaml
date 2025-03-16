@@ -1,0 +1,30 @@
+name: flux-preview-comment
+on:
+  repository_dispatch:
+jobs:
+  comment:
+    if: github.event.client_payload.metadata.pr-number != ''
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Compose Comment
+        run: |
+          tee comment.md <<'EOF'
+          Flux deployment ${{ github.event.client_payload.severity }}:
+          - Preview URL: ${{ github.event.client_payload.metadata.preview-url }}
+          - Revision: ${{ github.event.client_payload.metadata.revision }}
+          - Status: ${{ github.event.client_payload.message }}
+          - Commit: ${{ github.event.client_payload.metadata.sha }}
+          EOF
+      - name: Post Comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.client_payload.metadata.pr-number }}
+        run: |
+          gh pr comment $PR_NUMBER \
+          --repo $GITHUB_REPO \
+          --body-file comment.md \
+          --create-if-none \
+          --edit-last
