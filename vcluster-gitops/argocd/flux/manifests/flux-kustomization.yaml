@@ -17,8 +17,8 @@ spec:
   healthCheckExprs:
     - apiVersion: management.loft.sh/v1
       kind: VirtualClusterInstance
-      failed: "status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')"
-      current: "status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')"
+      failed: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'False')"
+      current: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'True')"
   postBuild:
     substituteFrom:
       - kind: Secret
