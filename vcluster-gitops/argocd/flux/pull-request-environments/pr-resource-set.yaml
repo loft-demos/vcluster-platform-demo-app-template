@@ -97,6 +97,8 @@ spec:
         ref:
           # using PR head sha will trigger update on every commit to PR head branch
           commit: << inputs.sha >>
+    # Alert used to add comment to pull request
+    # It is created in the p-auth-core namespace because injecting the GitHub PAT Secret into the vCluster namespace takes too long
     - apiVersion: notification.toolkit.fluxcd.io/v1beta3
       kind: Alert
       metadata:
@@ -148,6 +150,13 @@ spec:
                 # the HelmRelease must be in the same namespace as the kubeConfig.secretRef for the vCluster
                 value: 
                   loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+              - op: add
+                path: /metadata/annotations
+                # the following annotations are used to populate notifications
+                value:
+                  event.toolkit.fluxcd.io/preview-url: "https://podinfo-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>.us.demo.dev"
+                  event.toolkit.fluxcd.io/pr-number: "<< inputs.id >>"
+                  event.toolkit.fluxcd.io/sha: "<< inputs.sha >>"
               - op: add
                 # the kubeConfig.secretRef must be in the same namesapce as the HelmRelease
                 # the vCluster exportKubeConfig is configured to create the Flux useable vCluster Kube Config in the vCluster host namespace
