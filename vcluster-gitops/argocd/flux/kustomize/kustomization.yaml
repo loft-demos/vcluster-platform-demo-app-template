@@ -3,5 +3,3 @@ kind: Kustomization
 resources:
   - vcluster-without-template.yaml
   - demo-admin-access-key.yaml
-patchesStrategicMerge:
-  - vcluster-instance-storage-patch.yaml
