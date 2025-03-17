@@ -31,18 +31,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh pr edit ${{ github.event.pull_request.number }} --remove-label "preview-cluster-ready"
-      
-      - id: install-loft-cli
-        uses: loft-sh/setup-loft@v2
-        with:
-          version: v3.3.3
-          url: https://REPLACE_LOFT_DEMO_DOMAIN
-          # Specify your Loft access key here
-          access-key: ${{ secrets.LOFT_DEMO_ENV_ACCESS_KEY }}
-          kubectl-install: false
-          kubectl-version: v1.28.2
-
+      - name: Install vCluster CLI
+        uses: loft-sh/setup-vcluster@main
+      - name: Show vCluster Version
+        run: vcluster --version
+      - name: Login to vCluster Platform instance
+        env:
+          VCLUSTER_PLATFORM_URL: ${{ secrets.VCLUSTER_PLATFORM_URL }}
+          ACCESS_KEY: ${{ secrets.VCLUSTER_PLATFORM_ACCESS_KEY }}
+        run: vcluster platform login $VCLUSTER_PLATFORM_URL --access-key $ACCESS_KEY
       - id: delete-preview-vcluster
         run: |
-          loft delete vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework
+          vcluster platform delete vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework
      
