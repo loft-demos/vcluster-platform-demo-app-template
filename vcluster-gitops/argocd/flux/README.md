@@ -4,7 +4,7 @@ By enabling the Flux demo setup, the resulting vCluster Platform demo environmen
 ### Applications (apps): 
 Argo CD `Application` resources that will trigger additional installs
   - Flux Operator - Uses Flux ResourceSets to provision ephemeral vCluster environments for pull requests.
-  - [Flux2](https://fluxcd.io/flux/) - The core Flux GitOps engine. TODO - replace with Flux Operator managed `FluxInstance`
+  - [Flux2](https://fluxcd.io/flux/) - The core Flux GitOps engine, installed with the Flux Operator managed [`FluxInstance`](./manifests/flux-instance.yaml)
 ### Manifests:
   - Headlamp with the Flux plugin - A user interface for visualizing and managing some aspects of Flux.
   - vCluster Platform `VirtualClusterTemplate` - A vCluster Platform resource used to create `VirtualClusterInstances` with the required configuration to integrated easily with Flux.
