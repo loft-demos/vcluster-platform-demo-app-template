@@ -33,6 +33,9 @@ spec:
     createNamespace: true
     remediation:
       retries: 3
+  uninstall:
+    timeout: 1s
+    deletionPropagation: orphan
   # Default values
   # https://github.com/stefanprodan/podinfo/blob/master/charts/podinfo/values.yaml
   values:
