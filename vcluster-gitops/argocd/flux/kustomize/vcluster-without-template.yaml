@@ -64,6 +64,9 @@ spec:
           timeout: 5m
           prune: true
           wait: true
+          dependsOn:
+            name: vcluster-instance
+            namespace: p-auth-core
           path: ./vcluster-gitops/argocd/flux/flux-deploy-apps
           sourceRef:
             kind: GitRepository
