@@ -8,3 +8,15 @@ metadata:
 spec:
   displayName: loft-demo-org-cred
   data:
+---
+kind: ProjectSecret
+apiVersion: management.loft.sh/v1
+metadata:
+  name: loft-demo-org-cred
+  namespace: p-auth-core
+  labels:
+    loft.sh/project-secret-name: loft-demo-org-cred
+spec:
+  displayName: loft-demo-org-cred
+  data:
+---
