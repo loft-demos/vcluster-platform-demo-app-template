@@ -92,6 +92,9 @@ spec:
       isDefault: true
     - kind: VirtualClusterTemplate
       group: storage.loft.sh
+      name: vcluster-flux-template
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
       name: vcluster-pro-template
   requireTemplate: {}
   members:
