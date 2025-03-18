@@ -129,6 +129,7 @@ spec:
         - runners
       teams:
         - auth-core
+        - loft-admins
   argoCD:
     enabled: true
     cluster: loft-cluster
