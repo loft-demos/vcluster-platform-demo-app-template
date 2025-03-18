@@ -56,7 +56,7 @@ spec:
       kind: Kustomization
       metadata:
         # repo name with PR number and part PR label is enough to make the Virtual Cluster Instance name unique
-        name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-preview-vcluster-<< inputs.id >>
         namespace: p-auth-core
       spec:
         interval: 48h
@@ -117,12 +117,12 @@ spec:
     - apiVersion: kustomize.toolkit.fluxcd.io/v1
       kind: Kustomization
       metadata:
-        name: preview-app
+        name: {REPLACE_REPO_NAME}-preview-app-<< inputs.id >>
         namespace: p-auth-core
       spec:
         dependsOn:
           # this dependsOn allows for vCluster to be up and running before Flux deploys HelmRelease
-          - name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+          - name: {REPLACE_REPO_NAME}-preview-vcluster-<< inputs.id >>
             namespace: p-auth-core
         interval: 48h
         retryInterval: 3m
