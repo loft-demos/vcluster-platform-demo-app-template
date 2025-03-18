@@ -42,7 +42,7 @@ spec:
       kind: GitRepository
       metadata:
         # GitRepository resource for the vCluster instance
-        name: {REPLACE_REPO_NAME}-preview-flux-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-vcluster-<< inputs.id >>
         # the vCluster Platfrom Auth Core project namespace
         namespace: p-auth-core
       spec:
@@ -64,7 +64,7 @@ spec:
         targetNamespace: p-auth-core
         sourceRef:
           kind: GitRepository
-          name: {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+          name: {REPLACE_REPO_NAME}-vcluster-<< inputs.id >>
         path: "./vcluster-gitops/argocd/flux/pull-request-environments/kustomize"
         prune: true
         timeout: 5m
