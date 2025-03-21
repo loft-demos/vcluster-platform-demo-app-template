@@ -1,5 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - vcluster-flux-template.yaml
+  - vcluster-flux-demo-project.yaml
   - vcluster-without-template.yaml
+  - vcluster-with-template.yaml
   - demo-admin-access-key.yaml

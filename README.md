@@ -1,7 +1,17 @@
 # vCluster Platform Demo Repository
-This repository template is used to create vCluster Platform environments via GitOps and provides demo use cases as code. The repository includes a `vcluster-gitops` directory that serves as an example of managing the vCluster Platform with GitOps using Argo CD.
+This repository template is used to create vCluster Platform Demo environments via GitOps and provides selectable demo use cases as code. The repository includes a `vcluster-gitops` directory that preconfigures a vCluster Platform Demo environment (a templated vCluster) and serves as an example of managing the vCluster Platform with GitOps using Argo CD.
 
 ## vCluster Platform Integration Examples
+
+- vCluster Platform GitOps: Mainly used to create and update vCluster Platform custom resources to preconfigure the vCluster Platform Demo environment. The resources are deployed to the vCluster Platform Demo vCluster via Argo CD.
+- Argo CD: Argo CD is used for vCluster Platform Demo GitOps, to install additional selectable demo use cases as code.
+- Crossplane
+- External Secrets Operator
+- Kyverno
+- Flux
+- MySQL Operator: 
+- Postgres Operator
+- KubeRay with Volcano Scheduler
 
 ### Argo CD Integrations
 

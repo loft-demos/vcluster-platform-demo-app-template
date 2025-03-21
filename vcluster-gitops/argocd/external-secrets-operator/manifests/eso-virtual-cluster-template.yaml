@@ -117,12 +117,6 @@ spec:
         spaceTemplate:
           metadata: {}
       parameters:
-        - variable: pvClaimName
-          label: Persistent Volume Claim Name
-          description: >-
-            The claim to use as the persistent volume for the vCluster `StatefulSet`
-          required: true
-          defaultValue: "pvclaim-id"
         - variable: k8sVersion
           label: k8sVersion
           description: Please select Kubernetes version
