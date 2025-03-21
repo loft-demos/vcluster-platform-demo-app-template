@@ -1,0 +1,59 @@
+# Argo CD App of Apps for vCluster Platform
+
+The Argo CD App of Apps patterns is used with the vCluster Platform Demo `VirtualClusterTemplate` to provide the optional installation of different vCluster Platform demo use cases into the vCluster Platform Demo vCluster. Template boolean parameters are used to set the values of the Argo CD Cluster `Secret` `metadata.labels` generated for the demo vCluster in the `argocd` `namespace` within the demo vCluster.
+
+Once the demo vCluster is running and Argo CD is deployed into the demo vCluster, the vCluster Platform Demo App of Apps Argo CD `Application` is added to the demo vCluster Argo CD instance via the vCluster Platform GitOps seed `Application` via the `Kustomziation` yaml configuration [here](../vcluster-gitops/kustomization.yaml).
+
+The vCluster Platform App of Apps triggers the creation of a number of additional Argo CD `ApplicationSets`, `Applications` and other Kubernetes manifests in the `app-of-apps` [folder](./app-of-apps).
+
+The Argo CD `ApplicationSets` use the Cluster Generator to selectively create Argo CD `Applications` based on the value of the vCluster Platform Demo template generated Argo CD Cluster `Secret` `metadata.labels`. For example, the following Argo CD  Cluster `Secret` will trigger the `ApplicationSet` creation of the External Secrets Operator and Kyverno `Applications`:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    # required for Argo CD to identify this as a target cluster
+    argocd.argoproj.io/secret-type: cluster
+    flux: 'true'
+    resolveDNS: ''
+    eso: 'true'
+    kyverno: 'true'
+    postgres: ''
+    mysql: ''
+    rancher: ''
+  name: cluster-local
+  namespace: argocd
+stringData:
+  config: '{"tlsClientConfig":{"insecure":false}}'
+  name: in-cluster
+  server: https://kubernetes.default.svc
+type: Opaque
+```
+
+And here is an example Cluster Generator `ApplicationSet` configuration:
+
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: eso-cluster
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            eso: 'true'
+  template:
+    metadata:
+      name: 'eso-apps'
+      labels:
+        eso.demos.loft.sh: eso
+    spec:
+      destination:
+        # server is the url of the cluster as selected by the spec above
+        server: '{{server}}'
+      ...
+```
+
