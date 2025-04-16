@@ -24,7 +24,7 @@ spec:
       source:
         repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
         targetRevision: HEAD
-        path: vcluster-gitops/argocd/postgres-operator/apps
+        path: vcluster-use-cases/custom-resource-sync/apps
       syncPolicy:
         automated:
           prune: true

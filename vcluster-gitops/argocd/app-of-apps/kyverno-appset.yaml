@@ -24,7 +24,7 @@ spec:
       source:
         repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
         targetRevision: HEAD
-        path: vcluster-gitops/argocd/kyverno/apps
+        path: vcluster-use-cases/central-admission-control/apps
       syncPolicy:
         automated:
           prune: true

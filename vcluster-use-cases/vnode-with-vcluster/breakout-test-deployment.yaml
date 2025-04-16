@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: breakout-test
+  namespace: default
+  labels:
+    app: breakout-test
+spec:
+  selector:
+    matchLabels:
+      app: breakout-test
+  template:
+    metadata:
+      labels:
+        app: breakout-test
+    spec:
+      containers:
+        - name: breakout
+          image: busybox
+          command:
+            - /bin/sh
+          args:
+            - '-c'
+            - sleep 10000
+          securityContext:
+            privileged: true
+      nodeSelector:
+        kubernetes.io/hostname: kpi-w51
+      hostNetwork: true
+      hostPID: true

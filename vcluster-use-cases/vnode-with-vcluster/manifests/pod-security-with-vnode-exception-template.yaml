@@ -1,0 +1,93 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: vcluster-pss-baseline-vnode-config
+spec:
+  displayName: Baseline Pod Security Standard Template with Exception for vNode
+  description: This template deploys a vCluster with Pod Security Standards that includes an exception for Pods that use vNode as their `RuntimeClass`, and is configured via the Kubernetes API server Pod Security Admission Controller configuration passed to the vCluster Kubernetes control plane's kube-apiserver.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.24.1
+      values: >-
+        controlPlane:
+          coredns:
+            embedded: true
+          distro:
+            k8s:
+              apiServer:
+                # 
+                extraArgs:
+                  - "--admission-control-config-file=/etc/kubernetes/pod-security-admission-config.yaml"
+          statefulSet:
+            persistence:
+              addVolumes:
+                - name: pod-security-admission-config
+                  configMap:
+                    name: pod-security-admission-config
+              addVolumeMounts:
+                - name: pod-security-admission-config
+                  mountPath: /etc/kubernetes
+                  readOnly: true
+        sync:
+          fromHost:
+            runtimeClasses:
+              enabled: true
+          toHost:
+            ingresses:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+      objects: |-
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: pod-security-admission-config
+        data:
+          pod-security-admission-config.yaml: |-
+            apiVersion: apiserver.config.k8s.io/v1
+            kind: AdmissionConfiguration
+            plugins:
+            - name: PodSecurity
+              configuration:
+                apiVersion: pod-security.admission.config.k8s.io/v1 # see compatibility note
+                kind: PodSecurityConfiguration
+                # Defaults applied when a mode label is not set.
+                #
+                # Level label values must be one of:
+                # - "privileged" (default)
+                # - "baseline"
+                # - "restricted"
+                #
+                # Version label values must be one of:
+                # - "latest" (default) 
+                # - specific version like "v1.32"
+                defaults:
+                  enforce: "baseline"
+                  enforce-version: "latest"
+                  audit: "baseline"
+                  audit-version: "latest"
+                  warn: "baseline"
+                  warn-version: "latest"
+                exemptions:
+                  # Array of authenticated usernames to exempt.
+                  usernames: []
+                  # Array of runtime class names to exempt.
+                  runtimeClasses: 
+                    - vnode
+                  # Array of namespaces to exempt.
+                  namespaces: []
+  access:
+    - verbs:
+        - get
+      users:
+        - '*'

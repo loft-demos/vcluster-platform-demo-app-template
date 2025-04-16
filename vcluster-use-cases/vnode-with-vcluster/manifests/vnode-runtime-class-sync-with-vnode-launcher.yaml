@@ -1,0 +1,84 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: vnode-runtime-class-sync-with-vnode-launcher
+spec:
+  displayName: vNode Runtime Class Sync with vNode Launcher
+  description: >-
+    This template requires that vNode is installed in the host cluster. The template syncs host cluster runtime classes, to include the vNode `RuntimeClass`, into the vCluster created with this template.
+    Additionally, this templates creates a `vnode-launcher` `pod` into the host namespace of the vCluster that will allow sharing a single vNode runtime across multiple vCluster workload pods.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    objects: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: vnode
+        annotations:
+          vnode.loft.sh/vnode-name: "{{ .Values.loft.virtualClusterName }}-vnode"
+      spec:
+        runtimeClassName: vnode-launcher
+        containers:
+          - image: ubuntu:jammy
+            name: vnode
+            volumeMounts:
+              - mountPath: /var/lib/vnode
+                name: var-lib-vnode
+              - mountPath: /var/lib/containerd
+                name: var-lib-containerd
+              - mountPath: /var/lib/kubelet
+                name: var-lib-kubelet
+              - mountPath: /run
+                name: run
+        volumes:
+          - name: run
+            emptyDir: {}
+          - name: var-lib-vnode
+            emptyDir: {}
+          - name: var-lib-containerd
+            emptyDir: {}
+          - name: var-lib-kubelet
+            emptyDir: {}
+      ---
+      apiVersion: node.k8s.io/v1
+      kind: RuntimeClass
+      metadata:
+        name: vnode
+      handler: vnode
+      ---
+      apiVersion: node.k8s.io/v1
+      kind: RuntimeClass
+      metadata:
+        name: vnode-launcher
+      handler: vnode-launcher
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.24.1
+      values: |
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+            pods:
+              runtimeClassName: vnode
+              patches:
+                - path: metadata.annotations
+                  expression: 'value["vnode.loft.sh/vnode-name"]="{{ .Values.loft.virtualClusterName }}-vnode";value'
+        controlPlane:
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          coredns:
+            enabled: true
+            embedded: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}

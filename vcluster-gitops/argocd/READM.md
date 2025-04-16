@@ -1,12 +1,10 @@
 # Argo CD App of Apps for vCluster Platform
 
-The Argo CD App of Apps patterns is used with the vCluster Platform Demo `VirtualClusterTemplate` to provide the optional installation of different vCluster Platform demo use cases into the vCluster Platform Demo vCluster. Template boolean parameters are used to set the values of the Argo CD Cluster `Secret` `metadata.labels` generated for the demo vCluster in the `argocd` `namespace` within the demo vCluster.
+The Argo CD App of Apps patterns is used with the vCluster Platform Demo `VirtualClusterTemplate` to provide the optional installation of different vCluster Platform use case demos into the vCluster Platform Demo vCluster environment. `VirtualClusterTemplate` boolean parameters are used to set the values of the Argo CD Cluster `Secret` `metadata.labels` generated for the demo vCluster in the `argocd` `namespace` within the demo vCluster.
 
-Once the demo vCluster is running and Argo CD is deployed into the demo vCluster, the vCluster Platform Demo App of Apps Argo CD `Application` is added to the demo vCluster Argo CD instance via the vCluster Platform GitOps seed `Application` via the `Kustomziation` yaml configuration [here](../vcluster-gitops/kustomization.yaml).
+Once the demo vCluster is running and Argo CD is deployed into the demo vCluster (via a vCluster Platform `App` template), the vCluster Platform Demo *App of Apps* Argo CD `Application` is added to the demo vCluster Argo CD instance via the vCluster Platform GitOps seed `Application` (the seed `Application` is added with a vCluster Platform Bash `App`) via the `Kustomziation` yaml configuration [here](../vcluster-gitops/kustomization.yaml).
 
-The vCluster Platform App of Apps triggers the creation of a number of additional Argo CD `ApplicationSets`, `Applications` and other Kubernetes manifests in the `app-of-apps` [folder](./app-of-apps).
-
-The Argo CD `ApplicationSets` use the Cluster Generator to selectively create Argo CD `Applications` based on the value of the vCluster Platform Demo template generated Argo CD Cluster `Secret` `metadata.labels`. For example, the following Argo CD  Cluster `Secret` will trigger the `ApplicationSet` creation of the External Secrets Operator and Kyverno `Applications`:
+The vCluster Platform Argo CD *App of Apps* triggers the creation of a number of additional Argo CD `ApplicationSets`, `Applications` and other Kubernetes manifests in the `app-of-apps` [folder](./app-of-apps) to include a number of Argo CD `ApplicationSets` that use the Cluster Generator to selectively create Argo CD `Applications` based on the value of the vCluster Platform Demo template generated Argo CD Cluster `Secret` `metadata.labels`. For example, the following Argo CD vCluster Demo Cluster `Secret` will trigger the `ApplicationSet` creation of the External Secrets Operator and Kyverno Argo CD `Applications`:
 
 ```
 apiVersion: v1

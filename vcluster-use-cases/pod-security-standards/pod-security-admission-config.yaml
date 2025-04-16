@@ -1,0 +1,32 @@
+apiVersion: apiserver.config.k8s.io/v1
+kind: AdmissionConfiguration
+plugins:
+- name: PodSecurity
+  configuration:
+    apiVersion: pod-security.admission.config.k8s.io/v1 # see compatibility note
+    kind: PodSecurityConfiguration
+    # Defaults applied when a mode label is not set.
+    #
+    # Level label values must be one of:
+    # - "privileged" (default)
+    # - "baseline"
+    # - "restricted"
+    #
+    # Version label values must be one of:
+    # - "latest" (default) 
+    # - specific version like "v1.32"
+    defaults:
+      enforce: "baseline"
+      enforce-version: "latest"
+      audit: "baseline"
+      audit-version: "latest"
+      warn: "baseline"
+      warn-version: "latest"
+    exemptions:
+      # Array of authenticated usernames to exempt.
+      usernames: []
+      # Array of runtime class names to exempt.
+      runtimeClasses: 
+        - vnode
+      # Array of namespaces to exempt.
+      namespaces: []

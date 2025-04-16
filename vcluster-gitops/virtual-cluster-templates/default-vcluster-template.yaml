@@ -1,0 +1,173 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: default-template
+spec:
+  displayName: Default Virtual Cluster Template
+  description: This virtual cluster template deploys a vCluster with embedded etcd and integrated CoreDNS.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.24.1
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        # Checkout https://vcluster.com/pro/docs/ for more config options
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: >-
+                Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+            labels:
+              env: '{{ .Values.env }}'
+              demos.loft.sh/project: '{{ .Values.loft.project }}'
+              demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
+        apps:
+          - name: helm-dashboard
+            namespace: helm-dashboard
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            name: vcluster
+            repo: https://loft-demos.github.io/vcluster-charts
+            version: 0.24.1
+          values: |
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 1620
+                  timezone: America/New_York
+                  autoWakeup:
+                    schedule: 11 7-17 * * 1-5
+                autoDelete:
+                  afterInactivity: 1800000
+                  
+            sync:
+              toHost:
+                pods:
+                  patches:
+                    - path: metadata.annotations
+                      expression: 'value["demos.loft.sh/project"]="{{ .Values.loft.project }}";value'
+                    - path: metadata.labels
+                      expression: 'value["demos.loft.sh/owner"]="{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}";value'
+                ingresses:
+                  enabled: true
+                secrets:
+                  all: true
+            controlPlane:
+              advanced:
+                workloadServiceAccount:
+                  enabled: true
+                  imagePullSecrets:
+                  - name: "hook-image-pull-secret"
+              statefulSet:
+                annotations:
+                  demos.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
+                labels:
+                  env: '{{ .Values.env }}'
+                  demos.loft.sh/project: '{{ .Values.loft.project }}'
+                  demos.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
+                  demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
+                resources:
+                  # Limits are resource limits for the container
+                  limits:
+                    ephemeral-storage: 8Gi
+                    memory: 2Gi
+                    cpu: 1
+                image:
+                  repository: "loft-demos/vcluster-pro"
+                  tag: "0.24.0-k8s.{{ .Values.k8sVersion }}"
+              # Use an embedded managed etcd server instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+          objects: |
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: hook-image-pull-secret
+              labels:
+                loft.sh/project-secret-name: ghcr-login-secret
+            data:
+              .dockerconfigjson: e30K
+            type: kubernetes.io/dockerconfigjson
+      parameters:
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.32.2
+            - v1.31.6
+            - v1.30.10
+            - v1.29.14
+          defaultValue: v1.31.6
+          section: Kubernetes Environment
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+          section: Deployment Environment
+    - template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.24.1
+          values: |-
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      version: 0.0.0
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}
+---
