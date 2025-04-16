@@ -1,20 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: eso-cluster
+  name: virtual-scheduler-cluster
   namespace: argocd
 spec:
   generators:
     - clusters:
         selector:
           matchLabels:
-            eso: 'true'
+            virtual-scheduler: 'true'
   template:
     metadata:
       # name is the name of the kubernetes cluster as selected by the spec above
-      name: 'eso-apps'
+      name: 'virtual-scheduler-apps'
       labels:
-        eso.demos.loft.sh: eso
+        virtual-scheduler.demos.loft.sh: virtual-scheduler
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above
@@ -24,7 +24,7 @@ spec:
       source:
         repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
         targetRevision: HEAD
-        path: vcluster-use-cases/external-secrets-operator/apps
+        path: vcluster-use-cases/virtual-scheduler/apps
       syncPolicy:
         automated:
           prune: true

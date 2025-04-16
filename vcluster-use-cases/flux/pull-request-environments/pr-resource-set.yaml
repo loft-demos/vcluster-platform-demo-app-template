@@ -1,0 +1,187 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSet
+metadata:
+  name: preview-app
+  # the vCluster Platfrom Auth Core project namespace
+  namespace: p-auth-core
+spec:
+  inputsFrom:
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSetInputProvider
+      name: preview-pull-requests
+  resources:
+    - apiVersion: notification.toolkit.fluxcd.io/v1beta3
+      kind: Provider
+      metadata:
+        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        type: generic
+        timeout: 2m
+        # address is specific to the vCluster create for a give pull request id
+        address: https://{REPLACE_VCLUSTER_NAME}.us.demo.dev/kubernetes/project/auth-core/virtualcluster/{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+        secretRef:
+          name: vcluster-platform-provider-headers
+    - apiVersion: notification.toolkit.fluxcd.io/v1beta3
+      kind: Alert
+      metadata:
+        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        eventMetadata:
+          summary: "PR Updated, wakeup vCluster"
+        providerRef:
+          name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        eventSeverity: info
+        inclusionList:
+          - ".*commit.*"
+        eventSources:
+          - kind: GitRepository
+            name: '{REPLACE_REPO_NAME}-preview-<< inputs.id >>'
+    - apiVersion: source.toolkit.fluxcd.io/v1
+      kind: GitRepository
+      metadata:
+        # GitRepository resource for the vCluster instance
+        name: {REPLACE_REPO_NAME}-vcluster-<< inputs.id >>
+        # the vCluster Platfrom Auth Core project namespace
+        namespace: p-auth-core
+      spec:
+        provider: generic # or 'github' if using GitHub App
+        interval: 48h
+        url: https://github.com/loft-demos/{REPLACE_REPO_NAME}
+        ref:
+          # configured to only watch the Pull Request branch as the vCluster does not need to be updated for each PR commit
+          branch: << inputs.branch >> 
+    - apiVersion: kustomize.toolkit.fluxcd.io/v1
+      kind: Kustomization
+      metadata:
+        # repo name with PR number and part PR label is enough to make the Virtual Cluster Instance name unique
+        name: {REPLACE_REPO_NAME}-preview-vcluster-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        interval: 48h
+        # the vCluster Platfrom Auth Core project namespace
+        targetNamespace: p-auth-core
+        sourceRef:
+          kind: GitRepository
+          name: {REPLACE_REPO_NAME}-vcluster-<< inputs.id >>
+        path: "./vcluster-use-cases/flux/pull-request-environments/kustomize"
+        prune: true
+        timeout: 5m
+        wait: false
+        # important: this feature requires Flux 2.5+
+        healthCheckExprs:
+          - apiVersion: management.loft.sh/v1
+            kind: VirtualClusterInstance
+            failed: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'False')"
+            current: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'True')"
+        patches:
+          - target:
+              kind: VirtualClusterInstance
+            patch: |
+              - op: add
+                path: /metadata/name
+                value:
+                  {REPLACE_REPO_NAME}-preview-flux-<< inputs.id >>
+    # two GitRepistories are used as the one for the vCluster only needs to be updated per PR
+    # this one, for the PR app deployment into the vCluster, needs to be updated for every PR commit
+    - apiVersion: source.toolkit.fluxcd.io/v1
+      kind: GitRepository
+      metadata:
+        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        provider: generic # or 'github' if using GitHub App
+        interval: 48h
+        url: https://github.com/loft-demos/{REPLACE_REPO_NAME}
+        ref:
+          # using PR head sha will trigger update on every commit to PR head branch
+          commit: << inputs.sha >>
+    # Alert used to add comment to pull request
+    # It is created in the p-auth-core namespace because injecting the GitHub PAT Secret into the vCluster namespace takes too long
+    - apiVersion: notification.toolkit.fluxcd.io/v1beta3
+      kind: Alert
+      metadata:
+        name: github-pr-comment-{REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        providerRef:
+          name: github-dispatch
+        exclusionList:
+          - ".*uninstall failed.*"
+        eventSources:
+          - kind: HelmRelease
+            name: '*'
+            namespace: "loft-auth-core-v-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>"
+    # Kustomization wrapper for HelmRelease to allow use of dependsOn
+    - apiVersion: kustomize.toolkit.fluxcd.io/v1
+      kind: Kustomization
+      metadata:
+        name: {REPLACE_REPO_NAME}-preview-app-<< inputs.id >>
+        namespace: p-auth-core
+      spec:
+        dependsOn:
+          # this dependsOn allows for vCluster to be up and running before Flux deploys HelmRelease
+          - name: {REPLACE_REPO_NAME}-preview-vcluster-<< inputs.id >>
+            namespace: p-auth-core
+        interval: 48h
+        retryInterval: 3m
+        timeout: 5m
+        prune: true
+        wait: true
+        path: ./vcluster-use-cases/flux/flux-deploy-apps
+        sourceRef:
+          kind: GitRepository
+          # using this GitRepository tied to the PR head commit sha
+          name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        patches:
+          - target:
+              kind: HelmRepository
+            patch: |
+              - op: add
+                path: /metadata/namespace
+                value: # based on Auth Core vCluster Platform project pattern for vCluster namespaces
+                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+          - target:
+              kind: HelmRelease
+            patch: |
+              - op: add
+                path: /metadata/namespace
+                # the HelmRelease must be in the same namespace as the kubeConfig.secretRef for the vCluster
+                value: 
+                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+              - op: add
+                path: /metadata/annotations
+                # the following annotations are used to populate notifications
+                value:
+                  event.toolkit.fluxcd.io/preview-url: "https://podinfo-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>.us.demo.dev"
+                  event.toolkit.fluxcd.io/pr-number: "<< inputs.id >>"
+                  event.toolkit.fluxcd.io/sha: "<< inputs.sha >>"
+              - op: add
+                # the kubeConfig.secretRef must be in the same namesapce as the HelmRelease
+                # the vCluster exportKubeConfig is configured to create the Flux useable vCluster Kube Config in the vCluster host namespace
+                path: /spec/kubeConfig
+                value:
+                  secretRef:
+                    name: flux-kubeconfig
+                    key: config
+              - op: add
+                # the uninstall config is needed to ensure the HelmRelease is deleted when a PR is closed or the Flux preview label is removed while the PR vCluster is sleeping
+                path: /spec/uninstall
+                value:
+                  timeout: 1s
+                  deletionPropagation: orphan
+              - op: add
+                path: /spec/values
+                value:
+                  ui:
+                    message: "deployed to {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >> << inputs.sha >>" # use of sha here to simulate dynamic app deployment
+              - op: add
+                path: /spec/values/ingress
+                value:
+                  enabled: true
+                  hosts:
+                    - host: podinfo-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>.us.demo.dev
+                      paths:
+                        - path: /
+                          pathType: ImplementationSpecific

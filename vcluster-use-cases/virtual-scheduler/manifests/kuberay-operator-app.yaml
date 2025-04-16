@@ -1,0 +1,22 @@
+apiVersion: management.loft.sh/v1
+kind: App
+metadata:
+  name: kuberay-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  displayName: KubeRay Operator
+  owner:
+    user: kurtmadel
+  recommendedApp:
+    - virtualcluster
+  defaultNamespace: kuberay
+  icon: https://miro.medium.com/v2/resize:fit:1200/1*K0XOgcu2KuMknFkGzXuEBg.png
+  config:
+    chart:
+      name: kuberay-operator
+      version: 1.1.1
+      repoURL: https://ray-project.github.io/kuberay-helm/
+    values: |-
+      batchScheduler:
+        enabled: true

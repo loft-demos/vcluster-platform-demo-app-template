@@ -24,7 +24,7 @@ spec:
       source:
         repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
         targetRevision: HEAD
-        path: vcluster-gitops/argocd/resolve-dns/apps
+        path: vcluster-use-cases/resolve-dns/apps
       syncPolicy:
         automated:
           prune: true

@@ -7,11 +7,11 @@ This repository template is used to create vCluster Platform Demo environments v
 - Argo CD: Argo CD is used for vCluster Platform Demo GitOps, to install additional selectable demo use cases as code.
 - Crossplane
 - External Secrets Operator
-- Kyverno
-- Flux
-- MySQL Operator: 
+- vCluster Central Admission Control with Kyverno
+- vCluster Integration with Flux
+- MySQL Operator
 - Postgres Operator
-- KubeRay with Volcano Scheduler
+- vCluster Virtual Scheduler with Volcano Scheduler and KubeRay
 
 ### Argo CD Integrations
 

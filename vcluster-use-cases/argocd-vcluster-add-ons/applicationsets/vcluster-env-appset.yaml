@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: vcluster-env-config
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: dev
+    - clusters:
+        selector:
+          matchLabels:
+            env: qa
+    - clusters:
+        selector:
+          matchLabels:
+            env: prod
+  template:
+    metadata:
+      name: {REPLACE_REPO_NAME}-{{name}}
+    spec:
+      destination:
+        namespace: {REPLACE_REPO_NAME}-{{metadata.labels.env}}
+        server: '{{server}}'
+      info:
+        - name: GitHub Repo
+          value: https://github.com/loft-demos/{REPLACE_REPO_NAME}/
+      project: 'loft-{{metadata.labels.team}}'
+      source:
+        path: vcluster-use-cases/argocd-vcluster-add-ons/manifests/{{metadata.labels.env}}/
+        repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
+        targetRevision: main
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

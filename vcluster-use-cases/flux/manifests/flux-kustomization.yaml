@@ -1,0 +1,25 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: vcluster-instance
+  namespace: p-auth-core
+spec:
+  interval: 1m
+  targetNamespace: p-auth-core
+  sourceRef:
+    kind: GitRepository
+    name: {REPLACE_REPO_NAME}
+  path: "./vcluster-use-cases/flux/kustomize"
+  prune: true
+  timeout: 2m
+  wait: true
+  # important: this feature requires Flux 2.5+
+  healthCheckExprs:
+    - apiVersion: management.loft.sh/v1
+      kind: VirtualClusterInstance
+      failed: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'False')"
+      current: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'True')"
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: demo-admin-access-key

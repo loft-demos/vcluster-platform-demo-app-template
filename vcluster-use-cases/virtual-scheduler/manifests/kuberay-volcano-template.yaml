@@ -1,0 +1,46 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: kuberay-volcano
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  displayName: KubeRay with Volcano Scheduler
+  owner:
+    user: admin
+  template:
+    metadata:
+      labels:
+        loft.sh/import-argocd: 'true'
+    instanceTemplate:
+      metadata: {}
+    apps:
+      - name: kuberay-operator
+        namespace: kuberay
+      - name: volcano-scheduler
+        namespace: volcano-system
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.24.0
+      values: |
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+          fromHost:
+            nodes:
+              enabled: true
+
+        controlPlane:
+          coredns:
+            enabled: true
+            embedded: true
+          advanced:
+            virtualScheduler:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
