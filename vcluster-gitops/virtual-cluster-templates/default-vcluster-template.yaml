@@ -52,13 +52,15 @@ spec:
             repo: https://loft-demos.github.io/vcluster-charts
             version: 0.24.0
           values: |
+            sleepMode:
+              enabled: true
+              autoSleep:
+                afterInactivity: 45m
+              timeZone: America/New_York
+              autoWakeup:
+                schedule: 11 7-17 * * 1-5
             external:
               platform:
-                autoSleep:
-                  afterInactivity: 1620
-                  timezone: America/New_York
-                  autoWakeup:
-                    schedule: 11 7-17 * * 1-5
                 autoDelete:
                   afterInactivity: 1800000
                   
