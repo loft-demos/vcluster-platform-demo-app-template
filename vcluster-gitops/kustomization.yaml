@@ -1,5 +1,7 @@
 resources:
 - shared-secrets/shared-secrets.yaml
+- project-roles/loft-management-project-user.yaml
+- project-roles/project-user-with-logs.yaml
 - teams/teams.yaml
 - users/users.yaml
 - apps/argo-cd.yaml
@@ -8,8 +10,6 @@ resources:
 - virtual-cluster-templates/default-vcluster-template.yaml
 - virtual-cluster-templates/vcluster-templates.yaml
 - virtual-cluster-templates/argo-cd-vcluster.yaml
-- project-roles/loft-management-project-user.yaml
-- project-roles/project-user-with-logs.yaml
 - projects/projects.yaml
 - project-secrets/project-secrets.yaml
 - project-secrets/loft-demo-org-cred.yaml
