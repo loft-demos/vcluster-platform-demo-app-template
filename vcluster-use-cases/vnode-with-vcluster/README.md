@@ -1,6 +1,6 @@
 # vNode with vCluster
 
-vNode enhances the tenant separation already provided by vCluster by providing strong node-level isolation through Linux user namespaces and seccomp filters for vCluster workloads.
+vNode enhances the tenant separation already provided by vCluster by providing strong node-level isolation through Linux user namespaces and seccomp filters for vCluster workloads. The usecase examples installed will highlight the integration of vNode with vCluster and can be used to demonstrate the hard-mulitenant isolated provided by vNode for vCluster workloads.
 
 Enabling this use case for the demo environment will create:
 
