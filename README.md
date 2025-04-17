@@ -5,6 +5,7 @@ This repository template is used to create vCluster Platform Demo environments v
 
 - vCluster Platform GitOps: Mainly used to create and update vCluster Platform custom resources to preconfigure the vCluster Platform Demo environment. The resources are deployed to the vCluster Platform Demo vCluster via Argo CD.
 - Argo CD: Argo CD is used for vCluster Platform Demo GitOps, to install additional selectable demo use cases as code.
+- Using vNode with vCluster
 - Crossplane
 - External Secrets Operator
 - vCluster Central Admission Control with Kyverno
