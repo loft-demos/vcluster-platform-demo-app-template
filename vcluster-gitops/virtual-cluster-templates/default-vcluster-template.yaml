@@ -14,7 +14,7 @@ spec:
     pro: {}
     helmRelease:
       chart:
-        version: 0.24.1
+        version: 0.24.0
       values: |-
         sync:
           toHost:
@@ -152,7 +152,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.24.1
+            version: 0.24.0
           values: |-
             sync:
               toHost:
