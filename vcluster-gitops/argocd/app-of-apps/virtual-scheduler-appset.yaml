@@ -8,7 +8,7 @@ spec:
     - clusters:
         selector:
           matchLabels:
-            virtual-scheduler: 'true'
+            virtualScheduler: 'true'
   template:
     metadata:
       # name is the name of the kubernetes cluster as selected by the spec above
