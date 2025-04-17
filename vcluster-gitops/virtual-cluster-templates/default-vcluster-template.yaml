@@ -50,7 +50,7 @@ spec:
           chart:
             name: vcluster
             repo: https://loft-demos.github.io/vcluster-charts
-            version: 0.24.1
+            version: 0.24.0
           values: |
             external:
               platform:
