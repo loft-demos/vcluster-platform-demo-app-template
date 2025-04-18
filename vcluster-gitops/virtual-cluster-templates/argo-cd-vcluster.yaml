@@ -18,7 +18,7 @@ spec:
             Repo=https://github.com/loft-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
     apps:
       - name: argocd
-        version: 2.14.1
+        version: 2.14.10
         parameters: |
           appValues: |-
             global:
@@ -87,15 +87,17 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.21.1
+        version: 0.24.1
       values: |
+        sleepMode:
+          enabled: true
+          autoSleep:
+            schedule: 0 22 * * *
+          timeZone: America/New_York
+          autoWakeup:
+            schedule: 0 6 * * 1-5
         external:
           platform:
-            autoSleep:
-              schedule: 0 22 * * *
-              autoWakeup:
-                schedule: 0 6 * * 1-5
-              timezone: "America/New_York"
             autoDelete:
               afterInactivity: 18000000
         sync:
