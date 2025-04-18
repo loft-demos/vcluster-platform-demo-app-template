@@ -55,7 +55,7 @@ spec:
             sleepMode:
               enabled: true
               autoSleep:
-                afterInactivity: 45m
+                afterInactivity: 30m
               timeZone: America/New_York
               autoWakeup:
                 schedule: 11 7-17 * * 1-5
@@ -98,7 +98,7 @@ spec:
                     cpu: 1
                 image:
                   repository: "loft-demos/vcluster-pro"
-                  tag: "0.24.0-k8s.{{ .Values.k8sVersion }}"
+                  tag: "0.24.1-k8s.{{ .Values.k8sVersion }}"
               # Use an embedded managed etcd server instead of using the default SQLite backend
               backingStore:
                 etcd:
@@ -127,11 +127,11 @@ spec:
           label: k8sVersion
           description: Please select Kubernetes version
           options:
-            - v1.32.2
-            - v1.31.6
-            - v1.30.10
+            - v1.32.3
+            - v1.31.7
+            - v1.30.11
             - v1.29.14
-          defaultValue: v1.31.6
+          defaultValue: v1.31.7
           section: Kubernetes Environment
         - variable: env
           label: Deployment Environment
