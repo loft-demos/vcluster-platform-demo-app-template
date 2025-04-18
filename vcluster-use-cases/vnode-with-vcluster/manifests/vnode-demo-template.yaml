@@ -110,4 +110,4 @@ spec:
       description: >-
         The value for the kubernetes.io/hostname node selector for both demo pods to be scheduled.
       required: true
-      defaultValue: "kpi-w51"
+      defaultValue: "kind-control-plane"
