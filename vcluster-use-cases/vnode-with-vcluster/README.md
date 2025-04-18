@@ -12,12 +12,38 @@ Enabling this use case for the demo environment will create:
 
 This demo shows how easy it is to breakout of a privileged container while also showing that the same type of breakout is not possible with vNode.
 
-### Show that the vNode looks privileged
+### Prerequisites
+
+A Kubernetes cluster with [vNode installed](https://www.vnode.com/docs/#before-you-begin) that is connected to your vCluster Platform demo environment.
+
+If you don't have a Kubernetes cluster with vNode installed already available, it is probably easiest to use a KinD cluster - [KinD Quickstart](https://kind.sigs.k8s.io/docs/user/quick-start/).
+
+Once you have a KinD cluster up and running, [connect it to your vCluster Platform](https://www.vcluster.com/docs/platform/administer/clusters/connect-cluster?x0=3) demo environment.
+
+Install vNode.
+
+In vCluster Platform create a vCluster in the Default project from the vNode Demo Template. This will create the `vnode` `RuntimeClass` in the vCluster and create two highly privileged `Deployments` - one using the vNode `RuntimeClass` and the other not use it.
+
+### Show that the breakout test container without vNode is able to see the node's full process tree
+
+- shell in the  `breakout-test` (non-vnode) `pod`
+- run `whoami` and run `pstree -p` to show the full `node` process tree
+- get the process id of the vnode `pod` lowest level `vnode-container` - it would be **3096** in the example below
+
+ ```bash
+ whoami
+pstree -p
+...
+|-vnode-container(2975)-+-vnode-init(3001)-+-vnode-container(3096)-+-pause(3120)
+           |                       |                       |                  |-sh(3537)
+```
+
+### Show that the vNode looks privileged but is only able to see the vNode process tree
 
 - shell into the `breakout-test-vnode` `pod` that is configured with the `vnode` `runtimeClass`
 - run `whoami` and run `pstree -p` to show the reduced process tree
 - change directory to what seems like the node's real root directory - `/proc/1/root`
-- create a file and show that the file is owned by `root` within the vNode
+- create the file `i-think-i-am-root` and show that the file is owned by `root` within the vNode
 
 ```
 whoami
@@ -27,46 +53,40 @@ touch i-think-i-am-root
 ls -ltr
 ```
 
-### Switch to the breakout test container without vNode
-
-- shell in the  `breakout-test` (non-vnode) `pod` 
-- run `whoami` and run `pstree -p` to show the full `node` process tree
-- get the process id of the vnode `pod` lowest level `vnode-container` - it would be **3096** in the example below
-- change directory into the root of that process
-- list the files and point out that the `i-think-i-am-root` is not owned by `root` outside of the vNode
-- show that 
-
- ```
-pstree -p
-...
-|-vnode-container(2975)-+-vnode-init(3001)-+-vnode-container(3096)-+-pause(3120)
-           |                       |                       |                  |-sh(3537)
-...
-cd /proc/3096/root
-ls -ltr
-rm i-think-i-am-root
-```
-
 ### On the physical node switch to root and create a file
 
-```
-sudo -i
+If you are using KinD, you can access the KinD cluster node via Docker with `docker exec -it $(docker ps -aqf "name=kind-control-plane") sh` on the machine where you are running KinD
+
+```bash
+sudo -i #not necessary for KinD
 cd /
 touch i-am-the-real-root-do-not-delete
 ls -ltr
 ```
 
-### Switch to the breakout test container without vNode
+### Switch back to the breakout test container without vNode
 
-```
+- change directory into the root of that process of the vNode `pod` container
+- list the files and point out that the `i-think-i-am-root` is not owned by `root` outside of the vNode
+- show that you are able to delete the `i-think-i-am-root` created in the vNode `pod` container
+- next change into the actual root of the node using `/proc/1/root`
+- 
+
+```bash
+cd /proc/3096/root
+ls -ltr
+rm i-think-i-am-root
+ls -ltr
+
 cd /proc/1/root
 ls -ltr
 rm i-am-the-real-root-do-not-delete
+ls -ltr
 ```
 
 ### Back on the physical node as root, show that the file was delete
 
-```
+```bash
 ls -ltr
 ```
 
