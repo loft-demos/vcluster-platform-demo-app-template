@@ -1,12 +1,12 @@
 # vNode with vCluster
 
-vNode enhances the tenant separation already provided by vCluster by providing strong node-level isolation through Linux user namespaces and seccomp filters for vCluster workloads. The use case examples installed will highlight the integration of vNode with vCluster and can be used to demonstrate the hard-mulitenant isolated provided by vNode for vCluster workloads.
+vNode enhances the tenant separation already provided by vCluster by providing strong node-level isolation through Linux user namespaces and seccomp filters for vCluster workloads. The use case examples installed will highlight the integration of vNode with vCluster and can be used to demonstrate the hard multi-tenant isolation provided by vNode for vCluster workloads.
 
 Enabling this use case for the demo environment will create:
 
 - The *vnode-demo-template* `VirtualClusterTemplate` that deploys the `vnode` `RuntimeClass` into the vCluster along with two highly privileged `Deployments` deployed to the same `node`, one using the `vnode` `RuntimeClass` and the other not using it. This allows you to easily **breakout** of the non-vnode workload and have root access to the underlying node, whereas the same is not possible with the **vnode enabled** workload.
 - The *vcluster-pss-baseline-vnode-config* `VirtualClusterTemplate` that provides a configuration with Pod Security Standards configured for the vCluster control plane Kubernetes API server Pod Security Admission Controller. The configuration is passed to the vCluster Kubernetes kube-apiserver via the *pod-security-admission-config* `ConfigMap` configured as part of the template. The passed in Kubernetes API Server `AdmissionConfiguration`, for the `PodSecurity` plugin `PodSecurityConfiguration`, enforces the **Baseline Pod Security Standards** policy with an exception for vCluster workloads using the `vnode` `runtimeClass`.
-- The *vnode-runtime-class-sync-with-vnode-launcher* `VirtualClusterTemplate` 
+- The *vnode-runtime-class-sync-with-vnode-launcher* `VirtualClusterTemplate` deploys the `vnode` `RuntimeClass` into the vCluster created with this template. Additionally, this templates creates a `vnode-launcher` `pod` in the host namespace of the vCluster that will allow sharing a single vNode runtime across multiple vCluster workload pods.
 
 ## Privilege Escalation vNode Demo
 
@@ -55,7 +55,7 @@ ls -ltr
 
 ### On the physical node switch to root and create a file
 
-If you are using KinD, you can access the KinD cluster node via Docker with `docker exec -it $(docker ps -aqf "name=kind-control-plane") sh` on the machine where you are running KinD
+If you are using KinD, you can access the KinD cluster node via Docker with `docker exec -it $(docker ps -aqf "name=kind-control-plane") bash` on the machine where you are running KinD (as long as you created a single node KinD cluster).
 
 ```bash
 sudo -i #not necessary for KinD
