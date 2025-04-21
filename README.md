@@ -4,15 +4,15 @@ This repository template is used to create vCluster Platform Demo environments v
 ## vCluster Platform Integration Examples
 
 - vCluster Platform GitOps: Mainly used to create and update vCluster Platform custom resources to preconfigure the vCluster Platform Demo environment. The resources are deployed to the vCluster Platform Demo vCluster via Argo CD.
-- Argo CD: Argo CD is used for vCluster Platform Demo GitOps, to install additional selectable demo use cases as code.
+- Argo CD: In addition to showcasing vCluster Platform integrations, Argo CD is used for vCluster Platform Demo GitOps and to install additional template selectable demo use cases as code.
 - Using vNode with vCluster
 - Crossplane
-- External Secrets Operator
-- vCluster Central Admission Control with Kyverno
+- External Secrets Operator showcases [vCluster integration with ESO](https://www.vcluster.com/docs/vcluster/integrations/external-secrets/guide).
+- vCluster [Central Admission Control](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/policies/admission-control) with Kyverno
 - vCluster Integration with Flux
-- MySQL Operator
-- Postgres Operator
-- vCluster Virtual Scheduler with Volcano Scheduler and KubeRay
+- MySQL Operator example that showcases using the [vCluster Platform database connector](https://www.vcluster.com/docs/platform/administer/connector/database) to provide backing stores for Platform managed vCluster instances.
+- Postgres Operator showcases custom resource syncing.
+- vCluster [Virtual Scheduler](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/control-plane/other/advanced/virtual-scheduler) with Volcano Scheduler and KubeRay
 
 ### Argo CD Integrations
 
