@@ -20,7 +20,7 @@ If you don't have a Kubernetes cluster with vNode installed already available, i
 
 Once you have a KinD cluster up and running, [connect it to your vCluster Platform](https://www.vcluster.com/docs/platform/administer/clusters/connect-cluster?x0=3) demo environment.
 
-Install vNode.
+[Install vNode](https://www.vnode.com/docs/#install-vnode).
 
 In vCluster Platform create a vCluster in the Default project from the vNode Demo Template. This will create the `vnode` `RuntimeClass` in the vCluster and create two highly privileged `Deployments` - one using the vNode `RuntimeClass` and the other not use it.
 
@@ -70,7 +70,6 @@ ls -ltr
 - list the files and point out that the `i-think-i-am-root` is not owned by `root` outside of the vNode
 - show that you are able to delete the `i-think-i-am-root` created in the vNode `pod` container
 - next change into the actual root of the node using `/proc/1/root`
-- 
 
 ```bash
 cd /proc/3096/root
