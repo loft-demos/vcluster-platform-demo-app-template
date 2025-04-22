@@ -69,14 +69,19 @@ spec:
                 property: .dockerconfigjson
         helmRelease:
           chart:
-            version: 0.22.4
+            version: 0.24.1
           values: |+
+            sleepMode:
+              enabled: true
+              autoSleep:
+                afterInactivity: 37m
+              timeZone: America/New_York
+              autoWakeup:
+                schedule: 11 7-17 * * 1-5
             external:
               platform:
-                autoSleep:
-                  afterInactivity: 2400
                 autoDelete:
-                  afterInactivity: 180000
+                  afterInactivity: 1800000
                   
             sync:
               toHost:

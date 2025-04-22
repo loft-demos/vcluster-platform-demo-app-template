@@ -2,7 +2,7 @@ kind: VirtualClusterInstance
 apiVersion: management.loft.sh/v1
 metadata:
   name: vcluster-deployed-with-flux
-  namespace: p-auth-core
+  namespace: p-vcluster-flux-demo
 spec:
   displayName: vCluster Deployed with Flux
   owner:
@@ -23,7 +23,7 @@ spec:
       chart:
         name: vcluster
         repo: https://loft-demos.github.io/vcluster-charts
-        version: 0.23.0
+        version: 0.24.0
       values: |
         sync:
           toHost:
@@ -32,9 +32,9 @@ spec:
 
         exportKubeConfig:
           context: loft
-          server: https://vcluster-deployed-with-flux.loft-auth-core-v-vcluster-deployed-with-flux:443
+          server: https://vcluster-deployed-with-flux.vcluster-flux-demo-v-vcluster-deployed-with-flux:443
           secret:
-            name: vcluster-platform-kubeconfig
+            name: vcluster-flux-kubeconfig
 
         controlPlane:
           coredns:
@@ -47,7 +47,7 @@ spec:
           statefulSet:
             image:
               repository: "loft-demos/vcluster-pro"
-              tag: "0.23.0-k8s.v1.32.1"
+              tag: "0.24.1-k8s.v1.32.3"
     accessPoint:
       ingress: {}
     spaceTemplate:
@@ -57,7 +57,7 @@ spec:
         apiVersion: kustomize.toolkit.fluxcd.io/v1
         kind: Kustomization
         metadata:
-          name: apps
+          name: flux-deployed-apps
         spec:
           interval: 1h
           retryInterval: 3m
@@ -65,13 +65,13 @@ spec:
           prune: true
           wait: true
           dependsOn:
-            - name: vcluster-instance
-              namespace: p-auth-core
-          path: ./vcluster-gitops/argocd/flux/flux-deploy-apps
+            - name: vcluster-flux-kustomize
+              namespace: p-vcluster-flux-demo
+          path: ./vcluster-use-cases/flux/flux-deploy-apps
           sourceRef:
             kind: GitRepository
-            name: {REPLACE_REPO_NAME}
-            namespace: p-auth-core
+            name: vcluster-flux-demo
+            namespace: p-vcluster-flux-demo
           patches:
             - target:
                 kind: HelmRepository
@@ -79,30 +79,31 @@ spec:
                 - op: add
                   path: /metadata/namespace
                   value:
-                    p-auth-core
+                    vcluster-flux-demo-v-vcluster-deployed-with-flux
             - target:
                 kind: HelmRelease
               patch: |
                 - op: add
                   path: /metadata/namespace
                   value:
-                    p-auth-core
+                    vcluster-flux-demo-v-vcluster-deployed-with-flux
                 - op: add
                   path: /spec/kubeConfig
                   value:
                     secretRef:
-                      name: vcp-vcluster-deployed-with-flux-flux-kubeconfig
+                      name: vcluster-flux-kubeconfig
+                      key: config
                 - op: add
                   path: /spec/values
                   value:
                     ui:
-                      message: "deployed to vcluster-deployed-with-flux test-11"
+                      message: "deployed to vcluster-deployed-with-flux test-1"
                 - op: add
                   path: /spec/values/ingress
                   value:
                     enabled: true
                     hosts:
-                      - host: podinfo-vcluster-deployed-with-flux-{REPLACE_VCLUSTER_NAME}.us.demo.dev
+                      - host: podinfo-vcluster-deployed-with-flux-tango.us.demo.dev
                         paths:
                           - path: /
                             pathType: ImplementationSpecific
@@ -118,6 +119,6 @@ spec:
         - logs
         - kubeconfig
       teams:
-        - auth-core
+        - api-framework
         - loft-admins
   networkPeer: true

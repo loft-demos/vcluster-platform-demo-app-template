@@ -1,14 +1,216 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: vcluster-flux-template
+  annotations:
+    argocd.argoproj.io/sync-options: Validate=false
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  displayName: Virtual Cluster Flux Template
+  description: This virtual cluster template is configured to integrate the resulting vCluster with Flux by creating a Flux KubeConfig Secret and then automatically using Flux to deploy a `HelmRelease` based application into the vCluster.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.23.0
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata: {}
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: |-
+                Flux-App=https://podinfo-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+        apps:
+          - name: helm-dashboard
+            namespace: helm-dashboard
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            name: vcluster
+            repo: https://loft-demos.github.io/vcluster-charts
+            version: 0.23.0
+          values: |
+            exportKubeConfig:
+              context: loft
+              server: https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.virtualClusterNamespace }}:443
+              secret:
+                name: 'flux-kubeconfig'
+                
+            external:
+              platform:
+                autoSleep:
+                  afterInactivity: 330
+                  autoWakeup:
+                    schedule: 11 7-17 * * 1-5
+                  timezone: "America/New_York"
+                autoDelete:
+                  afterInactivity: 1800000
+                  
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+
+            controlPlane:
+              statefulSet:
+                image:
+                  repository: "loft-demos/vcluster-pro"
+                  tag: "0.23.0-k8s.v1.32.1"
+              # Use an embedded managed etcd server instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+          #apps: 
+            #- name: generate-vcluster-kubeconfig
+    - version: 0.0.0
+      template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.20.1
+          values: |-
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}
+---
+kind: Project
+apiVersion: management.loft.sh/v1
+metadata:
+  name: vcluster-flux-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  displayName: vCluster Flux Demo
+  owner:
+    team: loft-admins
+  quotas:
+    project:
+      count/virtualclusterinstances.active: '15'
+      requests.nvidia.com/gpu: '10'
+    user:
+      count/virtualclusterinstances: '4'
+  allowedClusters:
+    - name: loft-cluster
+  allowedTemplates:
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: vcluster-flux-template
+      isDefault: true
+  requireTemplate: {}
+  members:
+    - kind: Team
+      group: storage.loft.sh
+      name: api-framework
+      clusterRole: loft-management-project-user-with-vcluster-logs
+    - kind: Team
+      group: storage.loft.sh
+      clusterRole: loft-management-project-admin
+      name: loft-admins
+  access:
+    - name: loft-admin-access
+      verbs:
+        - get
+        - update
+        - patch
+        - delete
+      subresources:
+        - '*'
+      teams:
+        - loft-admins
+    - name: loft-access
+      verbs:
+        - get
+      subresources:
+        - members
+        - clusters
+        - templates
+        - chartinfo
+        - charts
+        - runners
+      teams:
+        - api-framework
+  namespacePattern:
+    virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: demo-admin-access-key
+  namespace: p-vcluster-flux-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    loft.sh/project-secret-name: demo-admin-access-key
+type: Opaque
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: vcluster-flux-demo
+  namespace: p-vcluster-flux-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  interval: 5m0s
+  url: https://github.com/loft-demos/tango-app.git
+  ref:
+    branch: main
+---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: vcluster-instance
-  namespace: p-auth-core
+  name: vcluster-flux-kustomize
+  namespace: p-vcluster-flux-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   interval: 1m
-  targetNamespace: p-auth-core
+  targetNamespace: p-vcluster-flux-demo
   sourceRef:
     kind: GitRepository
-    name: {REPLACE_REPO_NAME}
+    name: vcluster-flux-demo
   path: "./vcluster-use-cases/flux/kustomize"
   prune: true
   timeout: 2m
