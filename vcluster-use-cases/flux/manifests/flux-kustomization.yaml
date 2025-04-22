@@ -171,6 +171,7 @@ spec:
         - runners
       teams:
         - api-framework
+        - loft-admins
   namespacePattern:
     virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'
 ---
