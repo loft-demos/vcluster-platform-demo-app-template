@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dind-vnode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dind-vnode
+  template:
+    metadata:
+      labels:
+        app: dind-vnode
+    spec:
+      runtimeClassName: vnode
+      containers:
+      - name: dind
+        image: docker:24.0.2-dind
+        securityContext:
+          privileged: true  # vNode isolates this
+        volumeMounts:
+        - name: docker-lib
+          mountPath: /var/lib/docker
+        - name: docker-run
+          mountPath: /var/run
+        env:
+        - name: DOCKER_TLS_CERTDIR
+          value: ""  # Disables TLS inside DinD for simplicity
+      volumes:
+      - name: docker-lib
+        emptyDir: {}
+      - name: docker-run
+        emptyDir: {}
