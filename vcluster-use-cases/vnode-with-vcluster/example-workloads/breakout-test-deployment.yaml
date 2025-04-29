@@ -28,3 +28,19 @@ spec:
         kubernetes.io/hostname: kpi-w51
       hostNetwork: true
       hostPID: true
+
+
+Is this really true: "If you use privileged: true + hostPID: true on vanilla Kubernetes — even with Pod User Namespaces — you're running a container with almost full host privileges" - if I create the following pod in K8s 1.33, will I be able to breakout to the real root filesystem using a /proc mount?
+apiVersion: v1
+kind: Pod
+metadata:
+  name: userns
+spec:
+  hostUsers: false
+  containers:
+  - name: shell
+    command: ["sleep", "infinity"]
+    image: debian
+    securityContext:
+       privileged: true
+  hostPID: true
