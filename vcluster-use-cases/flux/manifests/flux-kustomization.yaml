@@ -195,7 +195,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   interval: 5m0s
-  url: https://github.com/loft-demos/tango-app.git
+  url: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
   ref:
     branch: main
 ---
