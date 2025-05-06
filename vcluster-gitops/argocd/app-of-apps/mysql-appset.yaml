@@ -24,7 +24,7 @@ spec:
       source:
         repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
         targetRevision: HEAD
-        path: vcluster-use-cases/vcluster-platform-database-connector/apps
+        path: vcluster-use-cases/database-connector/apps
       syncPolicy:
         automated:
           prune: true

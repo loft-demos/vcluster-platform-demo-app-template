@@ -127,11 +127,11 @@ spec:
           label: k8sVersion
           description: Please select Kubernetes version
           options:
-            - v1.32.3
-            - v1.31.7
-            - v1.30.11
-            - v1.29.14
-          defaultValue: v1.31.7
+            - v1.33.0
+            - v1.32.4
+            - v1.31.8
+            - v1.30.12
+          defaultValue: v1.32.4
           section: Kubernetes Environment
         - variable: env
           label: Deployment Environment
