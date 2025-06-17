@@ -6,6 +6,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   displayName: KubeRay with Volcano Scheduler
+  description: >-
+    Enables scheduling inside the vCluster and installs the Volcano scheduler along with the KubeRay Operator.
   owner:
     user: admin
   template:
