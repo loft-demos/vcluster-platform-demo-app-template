@@ -9,6 +9,7 @@ resources:
 - virtual-cluster-templates/default-vcluster-template.yaml
 - virtual-cluster-templates/vcluster-templates.yaml
 - virtual-cluster-templates/argo-cd-vcluster.yaml
+- virtual-cluster-templates/sleepy-vcluster-template.yaml
 - projects/projects.yaml
 - project-secrets/project-secrets.yaml
 - project-secrets/loft-demo-org-cred.yaml
