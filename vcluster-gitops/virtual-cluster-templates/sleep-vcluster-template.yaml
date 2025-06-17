@@ -1,0 +1,69 @@
+---
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: sleepy-vcluster-template
+  annotations:
+    argocd.argoproj.io/sync-options: Validate=false
+spec:
+  displayName: Sleepy vCluster Template
+  description: This template deploys a sleepy virtual cluster
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        name: vcluster
+        version: 0.25.1
+      values: |
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        controlPlane:
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          coredns:
+            embedded: true
+          distro:
+            k8s:
+              image:
+                tag: "{{ .Values.k8sVersion }}"
+        sleepMode:
+          enabled: true
+          autoSleep:
+            afterInactivity: "{{ .Values.sleepAfter }}m"
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  parameters:
+    - variable: sleepAfter
+      label: Sleep After Inactivity (minutes)
+      type: number
+      options:
+        - '30'
+        - '45'
+        - '60'
+        - '120'
+      defaultValue: '45'
+    - variable: k8sVersion
+      label: k8sVersion
+      description: Please select Kubernetes version
+      options:
+        - v1.33.1
+        - v1.32.5
+        - v1.31.9
+        - v1.30.13
+      defaultValue: v1.32.5
+  access:
+    - verbs:
+        - get
+      users:
+        - '*'
