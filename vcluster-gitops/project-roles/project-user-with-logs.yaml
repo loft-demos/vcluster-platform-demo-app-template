@@ -7,8 +7,8 @@ metadata:
 spec:
   displayName: Project User with vCluster Logs Access
   description: >-
-    Allows the user or team to create, manage and view logs of their vCluster
-    instances.
+    Allows the user or team to view logs of their vCluster
+    instances in addition to standard Project Uesr permissions.
   management: true
   access:
     - verbs:
@@ -19,13 +19,24 @@ spec:
     metadata: {}
     rules:
       - verbs:
+          - create
+          - get
+          - list
+        apiGroups:
+          - management.loft.sh
+        resources:
+          - virtualclusterinstances
+          - spaceinstances
+          - projectsecrets
+          - devpodworkspaceinstances
+          - devpodworkspaceinstances/up
+          - devpodworkspaceinstances/ssh
+          - devpodworkspaceinstances/stop
+          - devpodworkspaceinstances/getstatus
+      - verbs:
           - get
           - list
         apiGroups:
           - management.loft.sh
         resources:
           - virtualclusterinstances/log
-    aggregationRule:
-      clusterRoleSelectors:
-        - matchLabels:
-            demos.loft.sh/aggregate-to-project-user: 'true'
