@@ -1,6 +1,5 @@
 resources:
 - shared-secrets/shared-secrets.yaml
-- project-roles/loft-management-project-user.yaml
 - project-roles/project-user-with-logs.yaml
 - teams/teams.yaml
 - users/users.yaml
