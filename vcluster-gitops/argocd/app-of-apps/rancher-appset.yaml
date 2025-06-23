@@ -24,7 +24,7 @@ spec:
       source:
         chart: rancher
         repoURL: https://releases.rancher.com/server-charts/stable
-        targetRevision: 2.9.3
+        targetRevision: 2.10.3
         helm:
           valuesObject:
             hostname: rancher-{{metadata.labels.loftDemoDomain}}
