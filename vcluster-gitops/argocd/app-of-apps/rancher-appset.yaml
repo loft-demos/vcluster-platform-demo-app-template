@@ -19,7 +19,7 @@ spec:
       destination:
         # server is the url of the cluster as selected by the spec above
         server: '{{server}}'
-        namespace: rancher
+        namespace: cattle-system
       project: default
       source:
         chart: rancher
