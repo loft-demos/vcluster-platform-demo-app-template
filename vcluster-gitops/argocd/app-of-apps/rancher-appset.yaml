@@ -12,7 +12,7 @@ spec:
   template:
     metadata:
       # name is the name of the kubernetes cluster as selected by the spec above
-      name: 'rancher-apps'
+      name: 'rancher'
       labels:
         rancher.demos.loft.sh: rancher
     spec:
