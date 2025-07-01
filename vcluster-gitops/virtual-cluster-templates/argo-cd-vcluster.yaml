@@ -14,8 +14,9 @@ spec:
     instanceTemplate:
       metadata:
         annotations:
-          loft.sh/custom-links: >-
-            Repo=https://github.com/loft-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
+          loft.sh/custom-links: |-
+            Argo-CD=https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+            GitOps-Repo=https://github.com/loft-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
     apps:
       - name: argocd
         version: 2.14.10

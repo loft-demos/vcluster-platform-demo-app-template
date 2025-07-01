@@ -49,8 +49,7 @@ spec:
         helmRelease:
           chart:
             name: vcluster
-            repo: https://loft-demos.github.io/vcluster-charts
-            version: 0.24.0
+            version: 0.26.0-beta-8
           values: |
             sleepMode:
               enabled: true
@@ -82,23 +81,33 @@ spec:
                   enabled: true
                   imagePullSecrets:
                   - name: "hook-image-pull-secret"
+              distro:
+                k8s:
+                  image:
+                    tag: "{{ .Values.k8sVersion }}"
+              service:
+                labels:
+                  env: '{{ .Values.env }}'
+                  demos.loft.sh/project: '{{ .Values.loft.project }}'
+                  demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
               statefulSet:
                 annotations:
                   demos.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
                 labels:
                   env: '{{ .Values.env }}'
                   demos.loft.sh/project: '{{ .Values.loft.project }}'
-                  demos.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
                   demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
+                pods:
+                  labels:
+                    env: '{{ .Values.env }}'
+                    demos.loft.sh/project: '{{ .Values.loft.project }}'
+                    demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
                 resources:
                   # Limits are resource limits for the container
                   limits:
                     ephemeral-storage: 8Gi
                     memory: 2Gi
                     cpu: 1
-                image:
-                  repository: "loft-demos/vcluster-pro"
-                  tag: "0.24.1-k8s.{{ .Values.k8sVersion }}"
               # Use an embedded managed etcd server instead of using the default SQLite backend
               backingStore:
                 etcd:
@@ -127,11 +136,11 @@ spec:
           label: k8sVersion
           description: Please select Kubernetes version
           options:
-            - v1.33.0
-            - v1.32.4
-            - v1.31.8
-            - v1.30.12
-          defaultValue: v1.32.4
+            - v1.33.2
+            - v1.32.6
+            - v1.31.10
+            - v1.30.14
+          defaultValue: v1.32.6
           section: Kubernetes Environment
         - variable: env
           label: Deployment Environment

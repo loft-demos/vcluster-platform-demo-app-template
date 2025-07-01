@@ -1,0 +1,122 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: db-connector-vcluster
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  displayName: Database Connector Virtual Cluster
+  description: This virtual cluster template enables scalable and secure virtual cluster management by automatically provisioning isolated databases and non-privileged users on a centralized MySQL database server for each vCluster backing store.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.24.1
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+          labels:
+            loft.sh/import-argocd: 'true'
+        instanceTemplate:
+          metadata:
+            labels:
+              env: '{{ .Values.env }}'
+              team: '{{ .Values.loft.project }}'
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.24.1
+          values: |+
+            sleepMode:
+              enabled: true
+              autoSleep:
+                afterInactivity: 30m
+              timeZone: America/New_York
+              autoWakeup:
+                schedule: 11 7-17 * * 1-5
+            external:
+              platform:
+                autoDelete:
+                  afterInactivity: 1800000
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+                secrets:
+                  all: true
+                customResources:
+                  innodbclusters.mysql.oracle.com:
+                    enabled: true
+            controlPlane:
+              statefulSet:
+                labels:
+                  env: '{{ .Values.env }}'
+                  team: '{{ .Values.loft.project }}'
+                resources:
+                  limits:
+                    ephemeral-storage: 8Gi
+                    memory: 2Gi
+                    cpu: 1
+              # Use a Platform database connector instead of using the default SQLite backend
+              backingStore:
+                database:
+                  external:
+                    enabled: true
+                    connector: mysql-database-connector
+              distro:
+                k8s:
+                  version: "{{ .Values.k8sVersion }}"
+              coredns:
+                embedded: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      parameters:
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.33.0
+            - v1.32.4
+            - v1.31.8
+            - v1.30.12
+          defaultValue: v1.32.4
+          section: Kubernetes Environment
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+          section: Deployment Environment
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}

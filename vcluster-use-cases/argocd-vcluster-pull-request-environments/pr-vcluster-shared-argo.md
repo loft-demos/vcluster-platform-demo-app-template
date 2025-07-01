@@ -1,11 +1,29 @@
-# PR vCluster with Shared Argo CD
+# Ephemeral Pull Request vCluster with Shared Argo CD
 
-Both the PR vClsuter and the PR preview app are deployed by a shared Argo CD instance. The only thing deployed into the vCluster is the PR preview app itself.
+The **Ephemeral Pull Request vCluster with Shared Argo CD** pattern leverages the power of vCluster Platform to provide dynamic, isolated preview environments for GitHub Pull Requests using a GitOps-driven workflow with Argo CD. This approach uses two Argo CD `ApplicationSets`: one to spin up an ephemeral virtual cluster from a **vCluster Platform template**, and another to deploy the PR preview application into that ephemeral vCluster. The vCluster Platform automatically registers the new virtual cluster as an Argo CD app destination, injecting Argo CD cluster secrets with the correct labels to trigger the second `ApplicationSet` and associating them with the appropriate vCluster Platform Project.
 
-## Flow 
+By integrating SSO, both developers and reviewers can be granted secure, scoped access to the preview cluster and its workloads through the Argo CD UI using their existing identity provider. This model delivers full environment isolation per PR, mirrors production topology without impacting shared clusters, and avoids infrastructure bloat by reusing a single Argo CD instance and host cluster. The vCluster Platform orchestrates the entire lifecycle—provisioning, cluster registration, access management, and teardown—making ephemeral environments repeatable, secure, and scalable.
+
+## Features Used
+
+- vCluster Platform Project Integration with Argo CD
+- vCluster Platform SSO Integration with Argo CD
+- vCluster Platform Argo CD Cluster Secret Label Injection
+- vCluster Platform Virtual Cluster Templates
+
+## Overview
+
+For the Pull Request vCluster with a shared Argo CD instance, both the PR vCluster and the PR preview app are deployed by a shared Argo CD instance using two [Argo CD `ApplicationSets`](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/) that automate the creation and management of multiple Argo CD `Applications` from a single template using [dynamic generators](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators/).
+
+1. **vCluster ApplicationSet**: The first `ApplicationSet` uses the Pull Request generator to create the ephemeral PR vCluster.
+2. **PR App Deployment ApplicationSet**: The second `ApplicationSet` uses the Matrix generator to combine two Argo CD `ApplicationSet` Generators - the Pull Request generator and the Cluster generator.
+
+The only thing deployed into the vCluster is the PR preview app itself as other required dependencies, like an ingress controller, are shared from the host cluster in which the vCluster is deployed.
+
+## PR vCluster Flow
 
 1. A specific GitHub label is added to the Pull Request (this example uses `create-pr-vcluster-external-argocd`)
-2. An Argo CD `ApplicationSet`, configured with the Pull Request generator, is triggered and generates an Argo CD `Application` specific to the given Pull Request and uses Kustomize to deploy a PR specific `VirtualClusterInstance` custom resource that leverages a `VitualClusterTemplate` custom resource for most of its configuration:
+2. An Argo CD `ApplicationSet`, configured with the Pull Request generator, is triggered and generates an Argo CD `Application` specific to the given Pull Request and uses Kustomize to deploy a PR specific `VirtualClusterInstance` custom resource that leverages a `VirtualClusterTemplate` custom resource for most of its configuration:
 
     - The Argo CD `ApplicationSet` allows using Pull Requests specific parameters with patches to kustomize the `VirtualClusterInstance` resource and is used to add the following `labels` for use with the PR preview app `ApplicationSet` to uniquely identify and target the PR vCluster:
 
@@ -13,28 +31,31 @@ Both the PR vClsuter and the PR preview app are deployed by a shared Argo CD ins
       - `prLabel` has to match `create-pr-vcluster-external-argocd` 
       - `prNumber` is the GitHub Pull Request number
 
-5. As the vCluster is being created based on the `ApplicationSet` modified `VirutalClusterInstance`, the vCluster Platform integration triggers the creation of an Argo CD cluster `Secret` with the same `metadata.labels` that had been added to the PR vCluster `VirtualClusterInstance` custom resource
-6. Once the Argo CD cluster `secret` is created with the necessary `metadata.labels`, it, along with the properly labeled Pull Request trigger the second Argo CD `ApplicationSet` that uses the Merge generator to merge the template parameters from the Clusters and Pull Request generators to generate an `Application` that will deploy the PR preview application into the PR vCluster
-7. Additional commits to the Pull Request head branch will automatically update the second `Application` and depoy the updated container image with a tag based on the short commit sha of the last commit to the Pull Request head branch
-8. If the Pull Request is merged or closed, or if the `create-pr-vcluster-external-argocd` label is removed, both `Applications` will be deleted resulting in the PR vCluster being deleted.
+3. As the vCluster is being created based on the `ApplicationSet` modified `VirutalClusterInstance`, the vCluster Platform integration triggers the creation of an Argo CD cluster `Secret` with the same `metadata.labels` that had been added to the PR vCluster `VirtualClusterInstance` custom resource
+4. Once the Argo CD cluster `secret` is created with the necessary `metadata.labels`, it, along with the properly labeled Pull Request trigger the second Argo CD `ApplicationSet` that uses the Merge generator to merge the template parameters from the Clusters and Pull Request generators to generate an `Application` that will deploy the PR preview application into the PR vCluster
+5. Additional commits to the Pull Request head branch will automatically update the second `Application` and depoy the updated container image with a tag based on the short commit sha of the last commit to the Pull Request head branch
+6. If the Pull Request is merged or closed, or if the `create-pr-vcluster-external-argocd` label is removed, both `Applications` will be deleted resulting in the PR vCluster being deleted.
 
 This example leverages the vCluster Platform Argo CD integration that automatically adds a vCluster instance to an Argo CD instance as an Application deployment server target to create dynamic ephemeral Kubernetes clusters for GitHub Pull Requests. This requires that the [Argo CD instance has been integrated with a vCluster Platform Project](https://www.vcluster.com/docs/platform/integrations/argocd#enable-argo-cd-integration-per-project). The vCluster Platform will then create an Argo CD Cluster `Secret` when a vCluster instance in the vCluster Platform Project is either manually or automatically added to the integrated Argo CD instance. This integration also includes the syncing of the `VirtualClusterInstance` Kubernetes custom resource definition (CRD) `metadata.labels` to the Argo CD Cluster `Secret`. These `labels` can then be used with the [Argo CD Application Set Cluster Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/#pass-additional-key-value-pairs-via-values-field) as they are in this example.
 
-This example also leverages two Argo CD ApplicationSets to dynamically create a virtual Kubernetes cluster (or vCluster) per Pull Request and deploy the Pull Request associated application to that vCluster. This example leverages two different Argo CD ApplicationSets: 
+This example also leverages two Argo CD ApplicationSets to dynamically create a virtual Kubernetes cluster (or vCluster) per Pull Request and deploy the Pull Request associated application to that vCluster. This example leverages two different Argo CD ApplicationSets:
+
 1. The first ApplicationSet is responsible for triggering the creation of the vCluster, that is automatically added to Argo CD as a cluster `destingation`, for the Pull Request.
 2. The second ApplicationSet is responsible for deploying the example application to that vCluster.
 
 > [!NOTE]
 > The Argo CD ApplicationSet that creates the vCluster instance **does not** have to be deployed to an Argo CD instance that has been integrated with a vCluster Platform Project. However, the Argo CD instance where this ApplicationSet is added, does require the permission to create Kubernetes resources in the Kubernetes cluster where the vCluster Platform is installed - more specifically, it must be able to create the `VirtualClusterInstance` resources in a vCluster Platform Project `Namespace`. For this example, the `VirtualClusterInstance` will be created in the `p-auth-core` namespace which corresponds to the *Auth Core* Project and is the `metadata.namespace` value of the [example `VirtualClusterInstance` CRD](./kustomize/vcluster.yaml).
 >
-> The second Argo CD ApplicationSet must be applied to the same Argo CD instance that is integrated with the vCluster Platform Project where the Pull Request `VirtualClusterInstance` is created, as that resulting vCluster must be available as the destination cluster for the example application that is deployed by the Argo CD Appication generated by this ApplicationSet. This Argo CD instance could be the same as the one used for the first ApplicationSet, but it could also be a different Argo CD instance; just as long as it has been integrated with the vCluster Platform Project where the Pull Request vCluster is created.
+> The second Argo CD ApplicationSet must be applied to the same Argo CD instance that is integrated with the vCluster Platform Project where the Pull Request `VirtualClusterInstance` is created, as that resulting vCluster must be available as the destination cluster for the example application that is deployed by the Argo CD Application generated by this ApplicationSet. This Argo CD instance could be the same as the one used for the first ApplicationSet, but it could also be a different Argo CD instance; just as long as it has been integrated with the vCluster Platform Project where the Pull Request vCluster is created.
 
-### Components:
+### Components
+
 - vCluster Platform: leverages the `VirtualClusterInstance` CRD - [vcluster.yaml](./kustomize/vcluster.yaml), `VirtualClusterTemplate` CRD - the [Default Virtual Cluster Template](../../virtual-cluster-templates/vcluster-templates.yaml#L30), and `Project` CRD - [projects.yaml](../../projects/projects.yaml#L70-L131)
-- vCluster instances: the `VirtualClusterInstance` created via the Argo CD Appication generated by this Application Set triggers the creation of a vCluster instance that is managed by the vCluster Platform and automatically added to Argo CD (by utilizing the `loft.sh/import-argocd` label) as an available Kubernetes cluster destination for deployments.
-- Argo CD: One Argo CD instance is used in this example, and it is deployed to the same Kubernetes cluster where the vCluster Platform is deployed. The Argo CD instance is also [integrated with the *Auth Core* vCluster Platform Project](../../projects/projects.yaml#L120-L131). The example leverages [Argo CD ApplicationSets}(https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/) that use the [Pull Request Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/) and the [Cluster Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/) to dynamically generate an Argo CD Application to deploy the demo application to the dynamic and ephemeral vCluster for any repostiory Pull Requests with the `create-pr-vcluster-external-argocd` label.
+- vCluster instances: the `VirtualClusterInstance` created via the Argo CD Application generated by this Application Set triggers the creation of a vCluster instance that is managed by the vCluster Platform and automatically added to Argo CD (by utilizing the `loft.sh/import-argocd` label) as an available Kubernetes cluster destination for deployments.
+- Argo CD: One Argo CD instance is used in this example, and it is deployed to the same Kubernetes cluster where the vCluster Platform is deployed. The Argo CD instance is also [integrated with the *Auth Core* vCluster Platform Project](../../projects/projects.yaml#L120-L131). The example leverages [Argo CD ApplicationSets}(https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/) that use the [Pull Request Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/) and the [Cluster Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/) to dynamically generate an Argo CD Application to deploy the demo application to the dynamic and ephemeral vCluster for any repository Pull Requests with the `create-pr-vcluster-external-argocd` label.
   
-#### Argo CD ApplicationSets:
+#### Argo CD ApplicationSets
+
 - **Pull Request Generator based ApplicationSet** ([pr-vcluster-external-argocd.yaml](./apps/pr-vcluster-external-argocd.yaml)) creates the vCluster instances via a Kustomize app that is automatically added as a server to an Argo CD instances that is intergrated with a vCluster Platform Project
   - A Pull Request label, `create-pr-vcluster-external-argocd` is used to filter Pull Requests and make the ephermeral preview environment opt in, instead of created for every repostiory pull request. This is optional.
   - **Kustomize App:** A Kustomize app is used to create the `VirtualClusterInstance` so that the *Pull Request Generator based ApplicationSet* may add dynamic labels that will then be applied to the Argo CD cluster `Secret` via the vCluster Platform integration, and eventually utilized by the *Cluster Generator based ApplicationSet*.
