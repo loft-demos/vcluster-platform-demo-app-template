@@ -1,0 +1,25 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: database-connector-vcluster
+  namespace: p-default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    env: dev
+    team: default
+spec:
+  displayName: database-connector-vcluster
+  owner:
+    team: loft-admins
+  templateRef:
+    name: db-connector-vcluster
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+    namespace: loft-default-v-database-connector-vcluster
+    virtualCluster: database-connector-vcluster
+  parameters: |
+    k8sVersion: v1.31.6
+    env: dev
+  networkPeer: true

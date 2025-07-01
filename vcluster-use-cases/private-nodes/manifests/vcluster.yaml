@@ -1,0 +1,21 @@
+controlPlane:
+  backingStore:
+    etcd:
+      embedded:
+        enabled: true
+  distro:
+    k8s:
+      image:
+        tag: v1.32.5
+  service:
+    spec:
+      type: LoadBalancer
+
+privateNodes:
+  enabled: true
+  joinNode:
+    # Might be useful to configure ec2 machine for private ecr
+    preJoinCommands:
+      - echo "Starting Pre-join commands"
+      - sudo apt update && sudo apt install -y iptables iproute2
+      - echo "Pre-join commands complete"

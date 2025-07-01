@@ -1,0 +1,72 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: shirts.stable.example.com
+spec:
+  group: stable.example.com
+  scope: Namespaced
+  names:
+    plural: shirts
+    singular: shirt
+    kind: Shirt
+  versions:
+    - name: v1
+      served: true
+      storage: false  # This version is served but not the storage version
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                color:
+                  type: string
+                size:
+                  type: string
+      additionalPrinterColumns:
+        - name: Color
+          type: string
+          jsonPath: .spec.color
+        - name: Size
+          type: string
+          jsonPath: .spec.size
+      selectableFields:
+        - jsonPath: .spec.color
+        - jsonPath: .spec.size
+
+    - name: v1beta1
+      served: true
+      storage: true  # This is the version used for persistence
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                color:
+                  type: string
+                size:
+                  type: string
+                style:
+                  type: string
+                  enum:
+                    - tshirt
+                    - polo
+                    - dress
+                    - sweater
+      additionalPrinterColumns:
+        - name: Color
+          type: string
+          jsonPath: .spec.color
+        - name: Size
+          type: string
+          jsonPath: .spec.size
+        - name: Style
+          type: string
+          jsonPath: .spec.style
+      selectableFields:
+        - jsonPath: .spec.color
+        - jsonPath: .spec.size
+        - jsonPath: .spec.style
