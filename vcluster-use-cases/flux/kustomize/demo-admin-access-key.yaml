@@ -26,3 +26,42 @@ metadata:
     loft.sh/project-secret-name: loft-demo-org-cred
 data:
 ---
+apiVersion: actions.github.upbound.io/v1alpha1
+kind: ActionsSecret
+metadata:
+  labels:
+    testing.upbound.io/example-name: VCLUSTER_PLATFORM_ACCESS_KEY
+  name: alpha-apps-access-key
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    plaintextValueSecretRef:
+      key: accessKey
+      name: demo-admin-access-key
+      namespace: p-vcluster-flux-demo
+    repository: {REPLACE_REPO_NAME}-app
+    secretName: VCLUSTER_PLATFORM_ACCESS_KEY
+  initProvider: {}
+  managementPolicies:
+    - '*'
+  providerConfigRef:
+    name: github-provider-config
+---
+apiVersion: actions.github.upbound.io/v1alpha1
+kind: ActionsVariable
+metadata:
+  labels:
+    testing.upbound.io/example-name: VCLUSTER_PLATFORM_URL
+  name: alpha-apps-vcluster-platform-url
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    value: https://{REPLACE_REPO_NAME}.us.demo.dev
+    repository: {REPLACE_REPO_NAME}-app
+    variableName: VCLUSTER_PLATFORM_URL
+  initProvider: {}
+  managementPolicies:
+    - '*'
+  providerConfigRef:
+    name: github-provider-config
+---
