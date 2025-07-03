@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vcluster-labeler
+  namespace: p-auth-core
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vcluster-labeler
+  namespace: p-auth-core
+rules:
+  - apiGroups: ["management.loft.sh"]
+    resources: ["virtualclusterinstances"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vcluster-labeler
+  namespace: p-auth-core
+subjects:
+  - kind: ServiceAccount
+    name: vcluster-labeler
+    namespace: p-auth-core
+roleRef:
+  kind: Role
+  name: vcluster-labeler
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vcluster-ready-labeler
+  namespace: p-auth-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vcluster-ready-labeler
+  template:
+    metadata:
+      labels:
+        app: vcluster-ready-labeler
+    spec:
+      serviceAccountName: vcluster-labeler
+      containers:
+        - name: labeler
+          image: bitnami/kubectl:1.30
+          command:
+            - /bin/sh
+            - -c
+            - |
+              while true; do
+                for name in $(kubectl get virtualclusterinstances.management.loft.sh -n p-auth-core -o jsonpath="{.items[*].metadata.name}"); do
+                  status=$(kubectl get virtualclusterinstance.management.loft.sh "$name" -n p-auth-core -o jsonpath="{.status.conditions[?(@.type=='VirtualClusterOnline')].status}")
+                  if [ "$status" = "True" ]; then
+                    kubectl label virtualclusterinstance.management.loft.sh "$name" -n p-auth-core vcluster.loft.sh/ready=true --overwrite
+                  #elif [ "$status" = "False" ]; then
+                  #  kubectl label virtualclusterinstance.management.loft.sh "$name" -n p-auth-core vcluster.loft.sh/ready=false --overwrite
+                  fi
+                done
+                sleep 10
+              done
