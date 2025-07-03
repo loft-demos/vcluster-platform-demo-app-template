@@ -1,0 +1,74 @@
+kind: Project
+apiVersion: management.loft.sh/v1
+metadata:
+  name: auth-core
+spec:
+  displayName: Auth Core
+  description: AuthN and AuthZ core components built on top of the API Framework.
+  argoCD:
+    enabled: true
+    cluster: loft-cluster
+    namespace: argocd
+    sso:
+      enabled: true
+      host: https://argocd-REPLACE_BASE_DOMAIN/
+      assignedRoles:
+        - role:admin
+    project:
+      enabled: true
+      metadata:
+        extraLabels:
+          use-global-project-settings: 'true'
+  owner:
+    team: loft-admins
+  quotas:
+    project:
+      count/virtualclusterinstances.active: '20'
+  allowedClusters:
+    - name: '*'
+  allowedTemplates:
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: default-template
+      isDefault: true
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: vcluster-flux-template
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: vcluster-pro-template
+  requireTemplate: {}
+  members:
+    - kind: Team
+      group: storage.loft.sh
+      name: auth-core
+      clusterRole: loft-management-project-user
+    - kind: Team
+      group: storage.loft.sh
+      clusterRole: loft-management-project-admin
+      name: loft-admins
+  access:
+    - name: loft-admin-access
+      verbs:
+        - get
+        - update
+        - patch
+        - delete
+      subresources:
+        - '*'
+      teams:
+        - loft-admins
+    - name: loft-access
+      verbs:
+        - get
+      subresources:
+        - members
+        - clusters
+        - templates
+        - chartinfo
+        - charts
+        - runners
+      teams:
+        - auth-core
+        - loft-admins
+---

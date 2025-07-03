@@ -1,0 +1,57 @@
+kind: Project
+apiVersion: management.loft.sh/v1
+metadata:
+  name: default
+  annotations:
+    loft.sh/project-namespace: p-default
+spec:
+  displayName: Default Project
+  description: This is the default project
+  quotas: {}
+  allowedClusters:
+    - name: '*'
+  allowedRunners:
+    - name: '*'
+  allowedTemplates:
+    - kind: SpaceTemplate
+      group: storage.loft.sh
+      name: '*'
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: '*'
+    - kind: DevPodWorkspaceTemplate
+      group: storage.loft.sh
+      name: '*'
+  requireTemplate:
+    disabled: true
+  members:
+    - kind: User
+      group: storage.loft.sh
+      name: '*'
+      clusterRole: loft-management-project-user
+    - kind: Team
+      group: storage.loft.sh
+      clusterRole: loft-management-project-admin
+      name: loft-admins
+  access:
+    - name: loft-access
+      verbs:
+        - get
+      subresources:
+        - members
+        - clusters
+        - templates
+        - chartinfo
+        - charts
+        - runners
+      users:
+        - '*'
+  argoCD:
+    cluster: loft-cluster
+    namespace: argocd
+    enabled: true
+    sso:
+      enabled: true
+      host: https://argocd-REPLACE_BASE_DOMAIN/
+      assignedRoles:
+        - role:admin

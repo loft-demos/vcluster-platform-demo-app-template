@@ -1,0 +1,72 @@
+kind: Project
+apiVersion: management.loft.sh/v1
+metadata:
+  name: api-framework
+spec:
+  displayName: API Framework
+  owner:
+    team: loft-admins
+  quotas:
+    project:
+      count/virtualclusterinstances.active: '15'
+      requests.nvidia.com/gpu: '10'
+    user:
+      count/virtualclusterinstances: '4'
+  allowedClusters:
+    - name: loft-cluster
+  allowedTemplates:
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: default-template
+      isDefault: true
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: pull-request-vcluster
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: kuberay-volcano
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: argo-cd-vcluster
+  requireTemplate: {}
+  members:
+    - kind: Team
+      group: storage.loft.sh
+      name: api-framework
+      clusterRole: loft-management-project-user-with-vcluster-logs
+    - kind: Team
+      group: storage.loft.sh
+      clusterRole: loft-management-project-admin
+      name: loft-admins
+  access:
+    - name: loft-admin-access
+      verbs:
+        - get
+        - update
+        - patch
+        - delete
+      subresources:
+        - '*'
+      teams:
+        - loft-admins
+    - name: loft-access
+      verbs:
+        - get
+      subresources:
+        - members
+        - clusters
+        - templates
+        - chartinfo
+        - charts
+        - runners
+      teams:
+        - api-framework
+  argoCD:
+    virtualClusterInstance: argocd
+    namespace: argocd
+    sso:
+      host: https://argocd-REPLACE_BASE_DOMAIN
+      assignedRoles:
+        - role:admin
+  namespacePattern:
+    virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'
