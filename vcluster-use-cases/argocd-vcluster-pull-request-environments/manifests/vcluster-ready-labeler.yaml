@@ -53,13 +53,16 @@ spec:
             - -c
             - |
               while true; do
-                for name in $(kubectl get virtualclusterinstances.management.loft.sh -n p-auth-core -o jsonpath="{.items[*].metadata.name}"); do
-                  status=$(kubectl get virtualclusterinstance.management.loft.sh "$name" -n p-auth-core -o jsonpath="{.status.conditions[?(@.type=='VirtualClusterOnline')].status}")
-                  if [ "$status" = "True" ]; then
-                    kubectl label virtualclusterinstance.management.loft.sh "$name" -n p-auth-core vcluster.loft.sh/ready=true --overwrite
-                  #elif [ "$status" = "False" ]; then
-                  #  kubectl label virtualclusterinstance.management.loft.sh "$name" -n p-auth-core vcluster.loft.sh/ready=false --overwrite
-                  fi
+                for name in $(kubectl get virtualclusterinstances.management.loft.sh \
+                  -n p-auth-core \
+                  -l prLabel=create-pr-vcluster-external-argocd \
+                  -o jsonpath="{.items[*].metadata.name}"); do
+                    status=$(kubectl get virtualclusterinstance.management.loft.sh "$name" -n p-auth-core -o jsonpath="{.status.conditions[?(@.type=='VirtualClusterOnline')].status}")
+                    if [ "$status" = "True" ]; then
+                      kubectl label virtualclusterinstance.management.loft.sh "$name" -n p-auth-core vcluster.loft.sh/ready=true --overwrite
+                    #elif [ "$status" = "False" ]; then
+                    #  kubectl label virtualclusterinstance.management.loft.sh "$name" -n p-auth-core vcluster.loft.sh/ready=false --overwrite
+                    fi
                 done
                 sleep 10
               done
