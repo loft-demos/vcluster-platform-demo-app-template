@@ -6,19 +6,22 @@ metadata:
 data:
   context: |
     argocdUrl: https://argocd-{REPLACE_VCLUSTER_NAME}.us.demo.dev
+  # Define the webhook service for vCluster Platform
   service.webhook.vcluster-platform: |
     url: https://{REPLACE_VCLUSTER_NAME}.us.demo.dev
     headers:
     - name: Authorization
       value: "Bearer $accessKey"
     - name: User-Agent
-      value: "vCluster Platform"
+      value: "vcluster-wakeup"
+  # Template for waking up the vCluster via vCluster Platform API
   template.wakeup-vcluster: |
     webhook:
       vcluster-platform:
         method: POST
         path: /kubernetes/project/{{ index .app.metadata.labels "vclusterProjectId" }}/virtualcluster/{{ index .app.metadata.labels "vclusterName" }}
+  # Trigger wake-up when app becomes OutOfSync
   trigger.wakeup-vcluster: |
-    - description: "Notify when an application becomes OutOfSync"
+    - description: "Wake vCluster when app is OutOfSync"
       when: app.status.sync.status == 'OutOfSync'
       send: [wakeup-vcluster]
