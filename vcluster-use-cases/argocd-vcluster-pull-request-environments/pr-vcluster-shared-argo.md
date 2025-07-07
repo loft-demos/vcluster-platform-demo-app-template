@@ -44,25 +44,7 @@ The only thing deployed into the vCluster is the PR preview app itself as other 
 
 ### Sleep Mode
 
-PR vCluster instances are configured with sleep mode enabled to reduce resource consumption during long-running pull requests, idle periods, or while awaiting manual troubleshooting. Sleep mode preserves the vCluster without deprovisioning it, but scales down all replica sets, including both the vCluster control plane and any workload pods.
-
-By default, Argo CD performs health checks every three minutes. If these probes weren't excluded, they would continually wake the vCluster, defeating the purpose of sleep mode. To prevent this, the PR vCluster instances are configured to ignore any requests with a User-Agent matching `argo*`, ensuring the vCluster remains dormant until explicitly reactivated.
-
-To support automated wake-ups when new commits are pushed, a custom mechanism is used:
-
-1. **Argo CD Notification Webhook**
-An Argo CD Notification is configured to send an HTTP POST to the PR vCluster’s Kubernetes API server whenever a new commit is pushed to the pull request branch.
-
-2. **Custom User-Agent**
-The webhook includes a unique User-Agent header (e.g., `vcluster-wakeup`) that does not match the ignored pattern.
-
-3. **Wake-Up Trigger**
-The vCluster Platform detects the custom request and scales all replica sets back up to their previous values, effectively "waking" the vCluster.
-
-4. **Reconciliation Resumes**
-Once awake, Argo CD resumes reconciliation and deploys the updated (new PR commit) application code.
-
-This approach ensures that the PR vCluster remains lightweight and cost-effective while still supporting immediate deployment updates and on-demand debugging.
+Sleep mode is enabled for the PR vCluster to prevent long-running pull requests from consuming unnecessary resources. It also allows developers to pause and resume debugging sessions without incurring ongoing infrastructure costs — the vCluster remains dormant until it’s explicitly reactivated to troubleshoot problematic changes. To avoid unintentionally waking the vCluster during routine health checks, the vCluster is configured to ignore requests from the `argo*` user agent. This prevents Argo CD’s cluster polling from keeping the vCluster perpetually online, preserving the benefits of sleep mode. However, it also means another mechanism is required to wake the vCluster when a relevant update occurs — specifically, when a new commit is pushed to the PR head branch. In this setup, an Argo CD Notification is configured to send an HTTP POST to the vCluster’s Kubernetes API server whenever such a commit is detected. The request includes a custom user agent (not ignored by the sleep proxy), which triggers the vCluster Platform to wake the vCluster so Argo CD can synchronize the latest application state and deploy the updated code commit to the PR vCluster.
 
 ### Components
 
@@ -85,13 +67,11 @@ This approach ensures that the PR vCluster remains lightweight and cost-effectiv
     - `headShortSha`: The short, 8 character, version of the commit SHA of the Pull Request head branch. This is only used in the output of the example app.
 - **Cluster Generator based ApplicationSet** ([pr-preview-app-cluster-operator.yaml](./apps/pr-preview-app-cluster-operator.yaml)) uses labels, dynamically added to the `VirtualClusterInstance` created with the Pull Request Generator based ApplicationSet, to deploy the actual application code associated with the head commit of the Pull Request (in this example it is a [Helm based application](../../../helm-chart/)
 
-ideal PR-preview workflow for vClusters with sleep mode.
-
-🔍 What You’ve Done Right:
+Ideal PR-preview workflow for vCluster with sleep mode.
 
 ✅ Matrix generator using PR x Cluster
-✅ Label-based cluster filtering (only deploy to matching vcluster)
-✅ Argo CD Notification subscription for wake-up only when OutOfSync
+✅ Label-based cluster filtering (only deploy to matching vCluster)
+✅ Argo CD Notification subscription for wake-up only when OutOfSync (new commit to PR head branch)
 ✅ Non-intrusive wake-up trigger (via subscribe.*)
 ✅ Precise per-vCluster labeling for webhook templating (vclusterName, vclusterProjectId)
 ✅ TLS + ingress config per preview
