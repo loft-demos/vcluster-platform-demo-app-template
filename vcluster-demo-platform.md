@@ -23,7 +23,7 @@ Whether you're part of LoftLabs or just a vCluster power user, this platform str
 
 | Deployment Style    | Description                                                                 |
 |---------------------|-----------------------------------------------------------------------------|
-| **Managed Mode**      | Demo Generator runs inside a vCluster managed by another vCluster Platform.  Demo environments are created as child vCluster instances (vCluster inception) |
+| **Managed Mode**      | The vCluster Platform Demo Generator runs inside a vCluster managed by another vCluster Platform.  Demo environments are created as child vCluster instances (vCluster inception) |
 | **Self-managed Mode** | Deploy and configure the vCluster Platform yourself directly on a self-managed host cluster.  |
 
 > **vCluster inception is completely optional.** You can bring your own cluster and skip the nesting — it just takes a little more setup (e.g., Crossplane, Argo CD, secrets).
@@ -33,10 +33,12 @@ Whether you're part of LoftLabs or just a vCluster power user, this platform str
 The **vCluster Demo Platform** managed mode includes the following features that will need to be manually configured in the self-managed mode:
 
 - vCluster Platform non-trial license - integrated via a _Project Secret_ in the Demo Generator parent vCluster Platform
-- Ingess Nginx ingress controller integrated with a wildcard domain and HTTPS certificate; the domain for a generated vCluster Demo environment is based on the name of the vCluster
-- A static vCluster Platform Access Key that will be _injected_ (via a Project Secret) in every generated demo environment and integrated with Argo CD Notifications
-- Argo CD installed via a vCluster Platform App that is part of the _vCluster Platform Demo_ virtual cluster template
-- Crossplane installed via a vCluster Platform App that is part of the _vCluster Platform Demo_ virtual cluster template
+- Ingess Nginx ingress controller integrated with a wildcard domain and HTTPS certificate; the domain for a generated vCluster Platform Demo environment is based on the name of the vCluster
+- Crossplane based creation of a copy of this template repository based on the vCluster name that is also automatically deleted from GitHub when the generated vCluster Platform Demo environment is deleted
+- A dynamically generated vCluster Platform Access Key that will be _injected_ (via a Project Secret) in every generated demo environment and integrated with Argo CD Notifications
+- Argo CD installed via a vCluster Platform App that is part of the _vCluster Platform Demo_ virtual cluster template, along with Crossplane creation of GitHub webhooks for the generated repository (copy of this repository)
+- Crossplane installed via a vCluster Platform App that is part of the _vCluster Platform Demo_ virtual cluster template (used to create GitHub webhooks and configure repo level GitHub Actions secrete and environment variables)
+- A dynamically generated Argo CD cluster `Secret` that controls what vCluster use case examples get installed into the vCluster Platform Demo environment
 
 ---
 
