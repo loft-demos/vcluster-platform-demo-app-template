@@ -21,10 +21,10 @@ Whether you're part of LoftLabs or just a vCluster power user, this platform str
 
 ## Deployment Modes
 
-| Deployment Style    | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| **Managed Mode**      | The vCluster Platform Demo Generator runs inside a vCluster managed by another vCluster Platform.  Demo environments are created as child vCluster instances (vCluster inception) |
-| **Self-managed Mode** | Deploy and configure the vCluster Platform yourself directly on a self-managed host cluster.  |
+| Deployment Style       | Description                                                                 |
+|------------------------|-----------------------------------------------------------------------------|
+| **Managed Mode**       | The vCluster Platform Demo Generator runs inside a vCluster managed by another vCluster Platform.  Demo environments are created as child vCluster instances (vCluster inception) |
+| **Self-managed Mode**  | Deploy and configure the vCluster Platform yourself directly on a self-managed host cluster.  |
 
 > **vCluster inception is completely optional.** You can bring your own cluster and skip the nesting — it just takes a little more setup (e.g., Crossplane, Argo CD, secrets).
 
@@ -56,17 +56,18 @@ Inception Mode uses a **Demo Generator vCluster**, itself running in a host clus
 
 You can also deploy this Demo Generator on any Kubernetes cluster, with or without the vCluster Platform.
 
-### Demo Generator includes:
+### Demo Generator includes
 
 - vCluster Platform
 - Argo CD (App of Apps)
 - Crossplane (GitHub + Kubernetes Providers)
 - GitHub repo for GitOps:  
-  [`loft-demos/loft-demo-base`](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator)
+  [`loft-demos/vcluster-platform-demo-generator`](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator)
 
 Each generated demo environment is:
 
 - A vCluster provisioned via a `VirtualClusterTemplate` provisioned as part of the **Demo Generator vCluster** vCluster Platform via GitOps
+- The `VirtualClusterTemplate` includes the Argo CD and Crossplane bootstrap vCluster Platform Apps (Platform packaged applications and scripts that may be included as part of a `VirtualClusterTemplate`)
 - Backed by a dedicated GitHub repo created via Crossplane from  
   [`vcluster-platform-demo-app-template`](https://github.com/loft-demos/vcluster-platform-demo-app-template)
 
@@ -90,6 +91,21 @@ Each generated demo environment is:
 - Optional External Secrets Operator support
 - Demo environment scoping via vCluster Platform Projects and Templates
 
+
+
+### Use Cases
+
+- Custom Resource Sync with Postgres Operator
+- Database Connector with fully managed MySQL Operator install
+- Resolve DNS
+- Kyverno policies & Central Admission Control  
+- External Secrets Operator integration
+- vNode Integration with vCluster
+- Virtual Schedulers
+- Argo CD Add-ons for vCluster
+- Flux integration for vCluster
+- Dynamic Pull Request Environments with vCluster and Argo CD
+
 ---
 
 ## In Progress / Wishlist
@@ -97,25 +113,15 @@ Each generated demo environment is:
 ### Improvements
 
 - Replace secret hacks with [External Secrets Operator](https://external-secrets.io/)
-  - Label secrets with: `loft.sh/project-secret: 'true'`
-- Add a second host/connected cluster
-- Improve Rancher demo
-
-### Use Cases
-
-- External Secrets Operator integration  
-- DNS resolution in vCluster  
-- Operator-based app install  
-- Kyverno policies & Central Admission Control  
-- External Secrets Operator integration
+- Add a second host/connected cluster (currently must be done manually)
 
 ---
 
-## ❓ FAQs
+## FAQs
 
 ### Can I use this without running a vCluster inside a vCluster?
 
-Yes! Bring your own cluster and deploy the Demo Generator directly.
+Yes! Bring your own cluster and deploy the necessary _bootstrap apps_ - Argo CD, Crossplane.
 
 ### Is this just for vCluster Platform demos?
 
@@ -132,4 +138,4 @@ Not all. Known limitations:
 
 ## Contributing
 
-This project is maintained by the team at LoftLabs. Feel free to open issues, suggest improvements, or fork and adapt for your own demos!
+This project is maintained by the team at LoftLabs. Feel free to open issues, suggest improvements, or create a copy and adapt for your own demos!
