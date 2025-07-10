@@ -1,0 +1,84 @@
+---
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: namespace-sync-template
+  annotations:
+    argocd.argoproj.io/sync-options: Validate=false
+spec:
+  displayName: Namespace Sync vCluster Template
+  description: This template deploys a virtual cluster with namespace sync enabled.
+  template:
+    metadata:
+      annotations:
+        sleepmode.loft.sh/ignore-user-agents: argo*
+      labels:
+        loft.sh/import-argocd: 'true'
+    instanceTemplate:
+      metadata: {}
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        name: vcluster
+        version: 0.26.0
+      values: |
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+            customResources:
+              applications.argoproj.io:
+                enabled: true
+                patches:
+                  - path: spec.destination
+                    expression: "({ name: `loft-{{ .Values.loft.project }}-vcluster-{{ .Values.loft.virtualClusterName }}`, namespace: value?.namespace })"
+            namespaces:
+              enabled: true
+              mappings:
+                byName:
+                  "argo-apps-{{ .Values.loft.project }}-{{ .Values.loft.virtualClusterName }}": "argo-apps-{{ .Values.loft.project }}-{{ .Values.loft.virtualClusterName }}"
+
+        controlPlane:
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          coredns:
+            embedded: true
+          distro:
+            k8s:
+              image:
+                tag: "{{ .Values.k8sVersion }}"
+        sleepMode:
+          enabled: true
+          autoSleep:
+            afterInactivity: "{{ .Values.sleepAfter }}m"
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  parameters:
+    - variable: sleepAfter
+      label: Sleep After Inactivity (minutes)
+      type: number
+      options:
+        - '30'
+        - '45'
+        - '60'
+        - '120'
+      defaultValue: '45'
+    - variable: k8sVersion
+      label: k8sVersion
+      description: Please select Kubernetes version
+      options:
+        - v1.33.2
+        - v1.32.6
+        - v1.31.10
+        - v1.30.14
+      defaultValue: v1.32.6
+  access:
+    - verbs:
+        - get
+      users:
+        - '*'
