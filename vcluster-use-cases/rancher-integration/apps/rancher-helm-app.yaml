@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eso-helm-app
+  namespace: argocd
+  labels:
+    eso.demos.loft.sh: eso
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    # server is the url of the cluster as selected by the spec above
+    server: '{{server}}'
+    namespace: cattle-system
+  project: default
+  source:
+    chart: rancher
+    repoURL: https://releases.rancher.com/server-charts/stable
+    targetRevision: 2.11.2
+    helm:
+      valuesObject:
+        hostname: rancher-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+        agentTLSMode: "system-store"
+        tls: "ingress"
+        ingress:
+          enabled: true
+          ingressClassName: "nginx"
+          tls:
+            source: 'secret'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - Replace=true
+    retry:
+      limit: 5 # number of failed sync attempt retries; unlimited number of attempts if less than 0
+      backoff:
+        duration: 20s # the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")
+        factor: 2 # a factor to multiply the base duration after each failed retry
+        maxDuration: 3m

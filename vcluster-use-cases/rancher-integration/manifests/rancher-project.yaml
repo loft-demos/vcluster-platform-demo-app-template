@@ -1,0 +1,8 @@
+apiVersion: management.cattle.io/v3
+kind: Project
+metadata:
+  name: p-lwz8x9t3  # <-- this is the UID and MUST be unique
+  namespace: local  # Rancher stores global resources here
+spec:
+  displayName: "API Framework"
+  clusterId: local

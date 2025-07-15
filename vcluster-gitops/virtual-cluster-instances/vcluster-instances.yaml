@@ -1,0 +1,16 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: api-framework-qa
+  namespace: p-api-framework
+spec:
+  owner:
+    team: api-framework
+  templateRef:
+    name: default-template
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+  parameters: |
+    k8sVersion: v1.31.6
+    env: 'qa'

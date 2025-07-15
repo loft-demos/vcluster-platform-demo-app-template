@@ -1,0 +1,12 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: argocd
+  namespace: p-api-framework
+spec:
+  owner:
+    team: loft-admins
+  templateRef:
+    name: argo-cd-vcluster
+  clusterRef:
+    cluster: loft-cluster
