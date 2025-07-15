@@ -44,8 +44,6 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            name: vcluster
-            repo: https://loft-demos.github.io/vcluster-charts
             version: 0.23.0
           values: |
             exportKubeConfig:
@@ -70,10 +68,6 @@ spec:
                   enabled: true
 
             controlPlane:
-              statefulSet:
-                image:
-                  repository: "loft-demos/vcluster-pro"
-                  tag: "0.23.0-k8s.v1.32.1"
               # Use an embedded managed etcd server instead of using the default SQLite backend
               backingStore:
                 etcd:
@@ -195,7 +189,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   interval: 5m0s
-  url: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
+  url: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
   ref:
     branch: main
 ---

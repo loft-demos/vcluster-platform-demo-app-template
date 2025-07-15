@@ -32,7 +32,7 @@ spec:
       enabled: true
       ingressClassName: nginx
       hosts:
-        - host: headlamp-{REPLACE_VCLUSTER_NAME}.us.demo.dev
+        - host: headlamp-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
           paths:
             - path: /
               type: ImplementationSpecific

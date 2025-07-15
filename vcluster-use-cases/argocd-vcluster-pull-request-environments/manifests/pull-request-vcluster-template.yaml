@@ -28,7 +28,8 @@ spec:
     spaceTemplate:
       metadata: {}
   versions:
-    - template:
+    - version: 1.0.0
+      template:
         metadata:
           annotations:
             sleepmode.loft.sh/ignore-user-agents: argo*
@@ -189,7 +190,8 @@ spec:
                     enabled: true
               distro:
                 k8s:
-                  version: "{{ .Values.k8sVersion }}"
+                  image:
+                    tag: "{{ .Values.k8sVersion }}"
               coredns:
                 embedded: true
         accessPoint:
@@ -214,5 +216,3 @@ spec:
           label: Repo Name
           type: string
           defaultValue: hello-app
-      version: 1.0.0
-status: {}

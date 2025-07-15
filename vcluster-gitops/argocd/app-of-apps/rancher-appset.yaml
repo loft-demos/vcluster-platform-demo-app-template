@@ -19,22 +19,12 @@ spec:
       destination:
         # server is the url of the cluster as selected by the spec above
         server: '{{server}}'
-        namespace: cattle-system
+        namespace: argocd
       project: default
       source:
-        chart: rancher
-        repoURL: https://releases.rancher.com/server-charts/stable
-        targetRevision: 2.11.2
-        helm:
-          valuesObject:
-            hostname: rancher-{{metadata.labels.loftDemoDomain}}
-            agentTLSMode: "system-store"
-            tls: "ingress"
-            ingress:
-              enabled: true
-              ingressClassName: "nginx"
-              tls:
-                source: 'secret'
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+        targetRevision: HEAD
+        path: vcluster-use-cases/rancher-integration/apps
       syncPolicy:
         automated:
           prune: true
