@@ -10,7 +10,7 @@ spec:
           appSecretName: loft-demo-org-cred
           labels:
             - create-pr-vcluster-external-argocd
-          owner: loft-demos
+          owner: {REPLACE_ORG_NAME}
           repo: {REPLACE_REPO_NAME}
         requeueAfterSeconds: 30
         template:
@@ -27,9 +27,9 @@ spec:
         namespace: p-auth-core
       info:
         - name: PR vCluster Argo CD URL
-          value: https://argocd-{REPLACE_VCLUSTER_NAME}.us.demo.dev
+          value: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
         - name: GitHub PR
-          value: https://github.com/loft-demos/{REPLACE_REPO_NAME}/pull/{{number}}
+          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
       project: loft-auth-core
       source:
         kustomize:
@@ -64,7 +64,7 @@ spec:
                 kind: VirtualClusterInstance
                 name: vcluster
         path: vcluster-use-cases/argocd-vcluster-pull-request-environments/kustomize
-        repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
         targetRevision: '{{branch}}'
       syncPolicy:
         automated:

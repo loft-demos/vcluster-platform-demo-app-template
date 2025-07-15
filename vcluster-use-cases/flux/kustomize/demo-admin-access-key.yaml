@@ -39,7 +39,7 @@ spec:
       key: accessKey
       name: demo-admin-access-key
       namespace: p-vcluster-flux-demo
-    repository: {REPLACE_REPO_NAME}-app
+    repository: {REPLACE_REPO_NAME}
     secretName: VCLUSTER_PLATFORM_ACCESS_KEY
   initProvider: {}
   managementPolicies:
@@ -56,8 +56,8 @@ metadata:
 spec:
   deletionPolicy: Delete
   forProvider:
-    value: https://{REPLACE_REPO_NAME}.us.demo.dev
-    repository: {REPLACE_REPO_NAME}-app
+    value: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+    repository: {REPLACE_REPO_NAME}
     variableName: VCLUSTER_PLATFORM_URL
   initProvider: {}
   managementPolicies:

@@ -10,7 +10,7 @@ spec:
           appSecretName: loft-demo-org-cred
           labels:
             - create-prvcluster
-          owner: loft-demos
+          owner: {REPLACE_ORG_NAME}
           repo: {REPLACE_REPO_NAME}
         requeueAfterSeconds: 30
         template:
@@ -27,9 +27,9 @@ spec:
         namespace: p-api-framework
       info:
         - name: PRvCluster Argo CD URL
-          value: https://argocd-{REPLACE_REPO_NAME}-pr-{{number}}.us.demo.dev
+          value: https://argocd-{REPLACE_REPO_NAME}-pr-{{number}}.{REPLACE_BASE_DOMAIN}
         - name: GitHub PR
-          value: https://github.com/loft-demos/{REPLACE_REPO_NAME}/pull/{{number}}
+          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
       project: default
       source:
         kustomize:
@@ -43,7 +43,7 @@ spec:
                 kind: PullRequestEnvironment
                 name: vcluster
         path: vcluster-use-cases/argocd-vcluster-pull-request-environments/internal/kustomize
-        repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
         targetRevision: '{{head_sha}}'
       syncPolicy:
         automated:

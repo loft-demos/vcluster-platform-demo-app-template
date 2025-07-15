@@ -21,8 +21,6 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        name: vcluster
-        repo: https://loft-demos.github.io/vcluster-charts
         version: 0.24.0
       values: |
         sync:
@@ -44,10 +42,6 @@ spec:
             etcd:
               embedded:
                 enabled: true
-          statefulSet:
-            image:
-              repository: "loft-demos/vcluster-pro"
-              tag: "0.24.1-k8s.v1.32.3"
     accessPoint:
       ingress: {}
     spaceTemplate:
@@ -103,7 +97,7 @@ spec:
                   value:
                     enabled: true
                     hosts:
-                      - host: podinfo-vcluster-deployed-with-flux-tango.us.demo.dev
+                      - host: podinfo-vcluster-deployed-with-flux-tango.{REPLACE_BASE_DOMAIN}
                         paths:
                           - path: /
                             pathType: ImplementationSpecific

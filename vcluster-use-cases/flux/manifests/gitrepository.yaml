@@ -5,7 +5,7 @@ metadata:
   namespace: p-auth-core
 spec:
   interval: 5m0s
-  url: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
+  url: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
   ref:
     branch: main
 ---
@@ -16,7 +16,7 @@ metadata:
   namespace: p-auth-core
 spec:
   type: githubdispatch
-  address: https://github.com/loft-demos/{REPLACE_REPO_NAME}
+  address: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
   secretRef:
-    name: loft-demos-pat
+    name: {REPLACE_ORG_NAME}-pat
 ---

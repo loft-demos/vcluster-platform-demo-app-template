@@ -93,7 +93,7 @@ spec:
           - pullRequest:
               github:
                 # The GitHub organization or user.
-                owner: loft-demos
+                owner: {REPLACE_ORG_NAME}
                 # The Github repository
                 repo: {{ .Values.repoName }}
                 # (optional) use a GitHub App to access the API instead of a PAT.
@@ -115,13 +115,13 @@ spec:
                 syncOptions:
                   - CreateNamespace=true
               source:
-                repoURL: 'https://github.com/loft-demos/{{ .Values.repoName }}.git'
+                repoURL: 'https://github.com/{REPLACE_ORG_NAME}/{{ .Values.repoName }}.git'
                 targetRevision: '{{`{{head_sha}}`}}'
                 path: helm-chart/
                 helm:
                   parameters:
                   - name: "image.repository"
-                    value: ghcr.io/loft-demos/{{ .Values.repoName }}
+                    value: ghcr.io/{REPLACE_ORG_NAME}/{{ .Values.repoName }}
                   - name: "image.tag"
                     value: "{{`{{head_short_sha}}`}}"
                   - name: "image.args.text"
@@ -148,7 +148,7 @@ spec:
                     https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
                 - name: GitHub PR
                   value: >-
-                    https://github.com/loft-demos/{{ .Values.repoName }}/pull/{{`{{number}}`}}
+                    https://github.com/{REPLACE_ORG_NAME}/{{ .Values.repoName }}/pull/{{`{{number}}`}}
         EOF
   parameters:
     - variable: vClusterName

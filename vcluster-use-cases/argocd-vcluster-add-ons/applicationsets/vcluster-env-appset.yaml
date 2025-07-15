@@ -26,11 +26,11 @@ spec:
         server: '{{server}}'
       info:
         - name: GitHub Repo
-          value: https://github.com/loft-demos/{REPLACE_REPO_NAME}/
+          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/
       project: 'loft-{{metadata.labels.team}}'
       source:
         path: vcluster-use-cases/argocd-vcluster-add-ons/manifests/{{metadata.labels.env}}/
-        repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}.git
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
         targetRevision: main
       syncPolicy:
         automated:

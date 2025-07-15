@@ -53,11 +53,11 @@ spec:
               namespace: '{{ .Values.loft.clusterAnnotations.domainPrefix }}-app-{{`{{metadata.labels.env}}`}}'
             info:
               - name: GitHub Repo
-                value: https://github.com/loft-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
+                value: https://github.com/{REPLACE_ORG_NAME}/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
             project: default
             source:
               path: 'k8s-manifests/{{`{{metadata.labels.env}}`}}/'
-              repoURL: https://github.com/loft-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app.git
+              repoURL: https://github.com/{REPLACE_ORG_NAME}/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app.git
               targetRevision: main
             syncPolicy:
               automated:

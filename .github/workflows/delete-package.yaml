@@ -18,4 +18,4 @@ jobs:
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            /orgs/loft-demos/packages/container/${{ github.event.repository.name }}
+            /orgs/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}

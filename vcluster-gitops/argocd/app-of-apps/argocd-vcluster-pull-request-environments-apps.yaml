@@ -12,7 +12,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
+    repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
     targetRevision: HEAD
     path: vcluster-use-cases/argocd-vcluster-pull-request-environments/apps
   destination:

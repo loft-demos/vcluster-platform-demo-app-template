@@ -22,7 +22,7 @@ spec:
         namespace: argocd
       project: default
       source:
-        repoURL: https://github.com/loft-demos/{REPLACE_REPO_NAME}
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
         targetRevision: HEAD
         path: vcluster-use-cases/vnode-with-vcluster/apps
       syncPolicy:
