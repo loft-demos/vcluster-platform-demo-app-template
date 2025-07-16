@@ -28,7 +28,7 @@ The only thing deployed into the vCluster is the PR preview app itself as other 
     - The Argo CD `ApplicationSet` allows using Pull Requests specific parameters, like PR number, with Kustomize patches to modify `VirtualClusterInstance` resource with the following `labels` that are then added to the vCluster Platform auto-generated Argo CD cluster `Secret` that will be used to trigger the second PR preview app `ApplicationSet`. The labels are used by the Argo CD Cluster generator to uniquely identify and target the PR vCluster for the preview app generated Argo CD `Application`:
 
       - `repo` the Pull Request GitHub repository
-      - `prLabel` has to match `create-pr-vcluster-external-argocd` 
+      - `prLabel` has to match `create-pr-vcluster-external-argocd`
       - `prNumber` is the GitHub Pull Request number
       - `headBranch` is the head branch of the Pull Request
 
@@ -77,4 +77,3 @@ Ideal PR-preview workflow for vCluster with sleep mode.
 ✅ TLS + ingress config per preview
 ✅ Retries and self-heal enabled for robustness
 ✅ Namespace auto-creation via sync option
-
