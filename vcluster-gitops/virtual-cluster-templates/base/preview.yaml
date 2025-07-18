@@ -2,6 +2,8 @@ kind: VirtualClusterTemplate
 apiVersion: management.loft.sh/v1
 metadata:
   name: preview-template
+  labels:
+    patchType: non-versioned
 spec:
   displayName: vCluster Preview Template
   template:
@@ -38,7 +40,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.22.4
+        version: 0.24.0
       values: |-
         external:
           platform:

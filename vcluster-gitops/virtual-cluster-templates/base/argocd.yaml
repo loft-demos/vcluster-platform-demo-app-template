@@ -2,6 +2,8 @@ apiVersion: management.loft.sh/v1
 kind: VirtualClusterTemplate
 metadata:
   name: argo-cd-vcluster
+  labels:
+    patchType: non-versioned
 spec:
   displayName: Argo CD vCluster
   description: >-
@@ -16,7 +18,7 @@ spec:
         annotations:
           loft.sh/custom-links: |-
             Argo-CD=https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
-            GitOps-Repo=https://github.com/{REPLACE_ORG_NAME}/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
+            GitOps-Repo=https://github.com/loft-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
     apps:
       - name: argocd
         version: 2.14.10
@@ -88,7 +90,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.24.1
+        version: 0.23.0
       values: |
         sleepMode:
           enabled: true
@@ -138,3 +140,22 @@ spec:
         type: Opaque
         stringData:
           url: "https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}-appset.{{ .Values.loft.clusterAnnotations.domain }}/api/webhook"
+  parameters:
+    - variable: sleepAfter
+      label: Sleep After Inactivity (minutes)
+      type: number
+      options:
+        - '30'
+        - '45'
+        - '60'
+        - '120'
+      defaultValue: '45'
+    - variable: k8sVersion
+      label: k8sVersion
+      description: Please select Kubernetes version
+      options:
+        - v1.33.2
+        - v1.32.7
+        - v1.31.11
+        - v1.30.14
+      defaultValue: v1.32.7

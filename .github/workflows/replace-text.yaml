@@ -43,10 +43,13 @@ jobs:
       - uses: flcdrg/replace-multiple-action@v2.0.148
         with:
           files: '**/*.yaml'
-          find: '[{ "find": "{REPLACE_REPO_NAME}", "replace": "${{ env.REPO_NAME }}" }, \
-            { "find": "{REPLACE_ORG_NAME}", "replace": "${{ env.ORG_NAME }}" }, \
-            { "find": "{REPLACE_VCLUSTER_NAME}", "replace": "${{ env.VCLUSTER_NAME }}" }, \
-            { "find": "{REPLACE_BASE_DOMAIN}", "replace": "${{ env.BASE_DOMAIN }} }]'
+          find:  |
+            [
+              { "find": "{REPLACE_REPO_NAME}", "replace": "${{ env.REPO_NAME }}" },
+              { "find": "{REPLACE_ORG_NAME}", "replace": "${{ env.ORG_NAME }}" },
+              { "find": "{REPLACE_VCLUSTER_NAME}", "replace": "${{ env.VCLUSTER_NAME }}" },
+              { "find": "{REPLACE_BASE_DOMAIN}", "replace": "${{ env.BASE_DOMAIN }}" }
+            ]
           prefix: ''
           suffix: ''
       - uses: stefanzweifel/git-auto-commit-action@v5

@@ -16,7 +16,7 @@ spec:
     helmRelease:
       chart:
         version: 0.24.0-rc.4
-      values: >-
+      values: |
         controlPlane:
           coredns:
             embedded: true
