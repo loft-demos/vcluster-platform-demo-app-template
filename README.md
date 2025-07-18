@@ -20,6 +20,36 @@ Although originally designed and optimized for a hierarchical vCluster Platform 
 - vCluster [Virtual Scheduler](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/control-plane/other/advanced/virtual-scheduler) with Volcano Scheduler and KubeRay
 - vCluster Rancher integration showcases using the [vCluster Rancher Operator](https://github.com/loft-sh/vcluster-rancher-operator) with vCluster Platform managed vCluster instances
 
+## GitHub Actions Automations
+
+There are a number of GitHub Actions workflows included as part of this template repository. Some are used to automate the configuration and modification the contents of the repository, while others are used to demo the use of vCluster Platform and vCluster.
+
+### Automation Workflows
+
+### replace-text Workflow – Overview
+
+This GitHub Actions workflow automatically customizes template values in YAML files based on the current repository name and/or user-defined inputs. It’s designed to help scaffold new vCluster Platform demo applications with minimal manual edits.
+
+#### What It Does
+
+- **Triggers** on:
+  - A push to the `main` branch that modifies `helm-chart/Chart.yaml` that is pushed to the repository by a vCluster Platform Demo Generator Crossplane integration
+  - A manual run via the "Run workflow" button in the GitHub UI
+
+- **Replaces placeholders** in all `*.yaml` files using the [`flcdrg/replace-multiple-action`](https://github.com/flcdrg/replace-multiple-action) GitHub Action:
+  - `{REPLACE_REPO_NAME}` → current GitHub repo name
+  - `{REPLACE_ORG_NAME}` → GitHub org that owns the repo
+  - `{REPLACE_VCLUSTER_NAME}` → user-supplied name or repo name with `-app` removed
+  - `{REPLACE_BASE_DOMAIN}` → user-supplied base domain (defaults to `us.demo.dev`)
+
+- **Commits changes** automatically using [`git-auto-commit-action`](https://github.com/stefanzweifel/git-auto-commit-action)
+
+- **Deletes** any associated container image (e.g., GitHub Container Registry package) for the repo under the org, using a GitHub PAT
+
+- **Disables itself** after running, so it’s only used once per repo initialization
+
+## Integration Details
+
 ### Argo CD Integrations
 
 vCluster Platform includes an Argo CD integration that will automatically add a vCluster instance, created with a [virtual cluster template](https://www.vcluster.com/pro/docs/virtual-clusters/templates), to Argo CD as a target cluster of an Argo CD `Application` `destination`.

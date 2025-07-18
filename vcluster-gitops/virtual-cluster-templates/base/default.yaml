@@ -2,6 +2,8 @@ kind: VirtualClusterTemplate
 apiVersion: management.loft.sh/v1
 metadata:
   name: default-template
+  labels:
+    patchType: versioned
 spec:
   displayName: Default Virtual Cluster Template
   description: This virtual cluster template deploys a vCluster with embedded etcd and integrated CoreDNS.
@@ -48,8 +50,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            name: vcluster
-            version: 0.26.0
+            version: 0.24.0
           values: |
             sleepMode:
               enabled: true
@@ -139,7 +140,7 @@ spec:
             - v1.33.2
             - v1.32.6
             - v1.31.10
-            - v1.30.14
+            - v1.30.13
           defaultValue: v1.32.6
           section: Kubernetes Environment
         - variable: env
@@ -161,7 +162,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.24.0
+            version: 0.26.0
           values: |-
             sync:
               toHost:

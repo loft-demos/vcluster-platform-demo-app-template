@@ -3,6 +3,8 @@ apiVersion: management.loft.sh/v1
 kind: VirtualClusterTemplate
 metadata:
   name: sleepy-vcluster-template
+  labels:
+    patchType: non-versioned
   annotations:
     argocd.argoproj.io/sync-options: Validate=false
 spec:
@@ -16,8 +18,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        name: vcluster
-        version: 0.25.1
+        version: 0.25.0
       values: |
         sync:
           toHost:
@@ -57,11 +58,11 @@ spec:
       label: k8sVersion
       description: Please select Kubernetes version
       options:
-        - v1.33.1
-        - v1.32.5
-        - v1.31.9
+        - v1.33.2
+        - v1.32.6
+        - v1.31.10
         - v1.30.13
-      defaultValue: v1.32.5
+      defaultValue: v1.32.6
   access:
     - verbs:
         - get
