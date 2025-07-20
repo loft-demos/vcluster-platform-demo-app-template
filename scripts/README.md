@@ -1,6 +1,6 @@
 # vCluster Template Version & Parameter Updater
 
-**This script automates updates to Kubernetes and vCluster Helm chart versions across a set of [Loft vCluster Platform](https://www.vcluster.com) `VirtualClusterTemplate` manifests.**
+**The `update-templates.sh` script automates updates to Kubernetes and vCluster Helm chart versions across a set of [vCluster Platform](https://www.vcluster.com) `VirtualClusterTemplate` manifests.**
 
 It ensures that default Kubernetes versions and chart versions stay current, and injects shared parameters like `k8sVersion` and `sleepAfter` in a consistent way.
 
@@ -45,7 +45,7 @@ This script is automated by a GitHub Actions workflow (`.github/workflows/update
 - Selects the latest 4 minor versions (e.g., `v1.33.x`, `v1.32.x`, ...)
 - Updates:
   - The `options` list in [`patch-k8s-versions.yaml`](../vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-version.yaml) and replaces `patch-k8s-versioned.json`
-  - The default version (`defaultValue`) in that list
+  - The default Kubernetes version (`defaultValue`)
 
 ### vCluster Helm Chart Version
 
