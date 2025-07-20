@@ -8,8 +8,8 @@ It ensures that default Kubernetes versions and chart versions stay current, and
 
 ## Features
 
-- Fetches the latest stable Kubernetes versions (no alpha, beta, or rc)
-- Updates the default Kubernetes version in shared configuration
+- Fetches the latest 4 stable Kubernetes versions (no alpha, beta, or rc)
+- Updates the default Kubernetes version to second newest stable version in shared configuration
 - Retrieves the latest stable `vcluster` Helm chart version
 - Replaces or patches relevant fields in both versioned and unversioned `VirtualClusterTemplate` manifests
 - Injects consistent parameters like `k8sVersion`, `sleepAfter`, and `env`
@@ -44,7 +44,7 @@ This script is automated by a GitHub Actions workflow (`.github/workflows/update
 - Filters out pre-releases
 - Selects the latest 4 minor versions (e.g., `v1.33.x`, `v1.32.x`, ...)
 - Updates:
-  - The `options` list in `shared/parameters.yaml`
+  - The `options` list in [`patch-k8s-versions.yaml`](../vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-version.yaml) and replaces `patch-k8s-versioned.json`
   - The default version (`defaultValue`) in that list
 
 ### vCluster Helm Chart Version
