@@ -10,11 +10,11 @@
 
 The **vCluster Platform Demo Generator** is a specially configured vCluster Platform that runs in a vCluster and is used to create dynamically customized vCluster Platform demo environments that themselves run in child vCluster instances - often referred to as vCluster inception.
 
-The **vCluster Platform Demo Generator's** main purpose is not to showcase vCluster inception. Sure, running a vCluster inside a vCluster inside a vCluster is cool — however, the core purpose of the **vCluster Platform Demo Generator** is to provide easy to create vCluster Platform (and vCluster) demo environments that cover the majority of common customer-centric use cases. Running the **vCluster Platform Demo Generator** vCluster Platform allows installing applications without effecting its host GKE cluster directly and is [repeatable via GitOps](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator).
+The **vCluster Platform Demo Generator's** main purpose is not to showcase vCluster inception. Sure, running a vCluster inside a vCluster inside a vCluster is cool — however, the core purpose of the **vCluster Platform Demo Generator** is to provide easy to create vCluster Platform (and vCluster) demo environments that cover the majority of common customer-centric use cases. Running the **vCluster Platform Demo Generator** vCluster Platform in a vCluster allows installing applications without effecting its host GKE cluster directly and is [easy to manage and repeatable via GitOps](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator).
 
 The **vCluster Platform Demo Generator** provides a flexible and cost-efficient way to provision **ephemeral**, **self-service** demo environments that can be used to showcase both:
 
-- **vCluster Platform** features (Projects, Templates, SSO, CRDs, etc.)
+- **vCluster Platform** features (Projects, Templates, SSO, integrations, etc.)
 - **Standalone vCluster** capabilities (control plane isolation, multi-tenancy, integrations)
 
 Whether you're part of LoftLabs or just a vCluster power user, the **vCluster Platform Demo Generator** streamlines and scales demo creation — with or without vCluster inception.
@@ -25,7 +25,7 @@ Whether you're part of LoftLabs or just a vCluster power user, the **vCluster Pl
 
 | Deployment Style       | Description                                                                 |
 |------------------------|-----------------------------------------------------------------------------|
-| **Managed Mode**       | The vCluster Platform Demo Generator runs inside a vCluster managed by [another vCluster Platform - itself managed with GitOps](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator).  Demo environments, with vCluster Platform and use case examples pre-installed, are created as child vCluster instances (vCluster inception) |
+| **Managed Mode**       | The vCluster Platform demo vCluster runs inside a vCluster managed by [another vCluster Platform - itself managed with GitOps](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator), that runs in another vCluster Platform running on GKE.  Demo environments, with vCluster Platform and use case examples pre-installed, are created as child vCluster instances (vCluster inception) |
 | **Self-managed Mode**  | Deploy and configure the vCluster Platform yourself directly on a self-managed host cluster and [follow the self-managed instructions](./self-managed-demo-cluster/README.md).  |
 
 > **vCluster inception is completely optional.** You can bring your own cluster and skip the nesting — it just takes a little more setup (e.g., Crossplane, Argo CD, secrets).
