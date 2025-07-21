@@ -105,15 +105,17 @@ find vcluster-use-cases -type f -name "*.yaml" | while read -r file; do
 
   has_versions=$(yq e '.spec.versions | type == "!!seq"' "$file")
 
+  # sed function used below
+  sed_inplace() {
+    if sed --version >/dev/null 2>&1; then
+      sed -i -E "$@"
+    else
+      sed -i '' -E "$@"
+    fi
+  }
+
   if [[ "$has_versions" == "true" ]]; then
     echo "  ↳ Found versioned template"
-    sed_inplace() {
-      if sed --version >/dev/null 2>&1; then
-        sed -i -E "$@"
-      else
-        sed -i '' -E "$@"
-      fi
-    }
 
     chart_version=$(yq e '.spec.versions[] | select(.version == "1.0.0") | .template.helmRelease.chart.version' "$file" | head -n1)
     if [[ "$chart_version" != "$LATEST_VCLUSTER" ]]; then
