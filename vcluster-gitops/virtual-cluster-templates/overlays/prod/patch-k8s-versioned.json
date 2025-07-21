@@ -12,6 +12,7 @@
         "variable": "k8sVersion",
         "label": "k8sVersion",
         "description": "Please select Kubernetes version",
+        "type": "string",
         "options": [
           "v1.33.3",
           "v1.32.7",
@@ -36,15 +37,14 @@
       {
         "variable": "sleepAfter",
         "label": "Sleep After Inactivity (minutes)",
-        "type": "number",
+        "type": "string",
         "options": [
           "30",
           "45",
           "60",
           "120"
         ],
-        "defaultValue": "45",
-        "section": "Deployment Environment"
+        "defaultValue": "45"
       }
     ]
   }
