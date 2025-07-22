@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: rancher-helm-app
+  name: crossplane-helm-app
   namespace: argocd
   labels:
-    demos.loft.sh: rancher
+    demos.loft.sh: crossplane
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   finalizers:
@@ -13,22 +13,12 @@ spec:
   destination:
     # server is the url of the cluster as selected by the spec above
     server: '{{server}}'
-    namespace: cattle-system
+    namespace: crossplane-system
   project: default
   source:
-    chart: rancher
-    repoURL: https://releases.rancher.com/server-charts/stable
-    targetRevision: 2.11.2
-    helm:
-      valuesObject:
-        hostname: rancher-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
-        agentTLSMode: "system-store"
-        tls: "ingress"
-        ingress:
-          enabled: true
-          ingressClassName: "nginx"
-          tls:
-            source: 'secret'
+    chart: crossplane
+    repoURL: https://charts.crossplane.io/stable
+    targetRevision: 1.17.4
   syncPolicy:
     automated:
       prune: true

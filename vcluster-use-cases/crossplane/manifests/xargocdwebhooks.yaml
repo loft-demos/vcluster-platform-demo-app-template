@@ -1,0 +1,36 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xargocdwebhooks.demo.loft.sh
+spec:
+  claimNames:
+    kind: ArgoCDWebhook
+    plural: argocdwebhooks
+  defaultCompositeDeletePolicy: Background
+  defaultCompositionUpdatePolicy: Automatic
+  group: demo.loft.sh
+  names:
+    kind: XArgoCDWebhook
+    plural: xargocdwebhooks
+  versions:
+    - name: v1alpha1
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: >-
+            Creates webhooks for an Argo CD Application server and ApplicationSet server.
+          properties:
+            spec:
+              properties:
+                repoName:
+                  description: Repo name
+                  type: string
+                virtualClusterNamespace:
+                  description: Namespace for vCluster instance
+                  type: string
+              required:
+                - repoName
+                - virtualClusterNamespace
+              type: object
+          type: object
+      served: true
