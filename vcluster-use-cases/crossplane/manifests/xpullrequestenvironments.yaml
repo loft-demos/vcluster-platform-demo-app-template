@@ -1,0 +1,45 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xpullrequestenvironments.virtualcluster.demo.loft.sh
+spec:
+  claimNames:
+    kind: PullRequestEnvironment
+    plural: pullrequestenvironments
+  defaultCompositeDeletePolicy: Background
+  defaultCompositionUpdatePolicy: Automatic
+  group: virtualcluster.demo.loft.sh
+  names:
+    kind: XPullRequestEnvironment
+    plural: xpullrequestenvironments
+  versions:
+    - name: v1alpha1
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: >-
+            A PullRequestEnvironment for virtual clusters is a composite
+            resource that represents a vCluster with ArgoCD installed and
+            configured with an ApplicationSet for a GitHub Pull Request.
+          properties:
+            spec:
+              properties:
+                k8sVersion:
+                  description: The Kubernetes version of the vCluster instance
+                  type: string
+                prNumber:
+                  description: Pull Request number
+                  type: string
+                project:
+                  description: vCluster Platform project
+                  type: string
+                repo:
+                  description: Application repository name
+                  type: string
+              required:
+                - repo
+                - project
+                - k8sVersion
+              type: object
+          type: object
+      served: true

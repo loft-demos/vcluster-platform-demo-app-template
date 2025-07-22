@@ -1,0 +1,100 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  labels:
+    crossplane.io/xrd: xargocdwebhooks.demo.loft.sh
+  name: argocdwebhook
+spec:
+  compositeTypeRef:
+    apiVersion: demo.loft.sh/v1alpha1
+    kind: XArgoCDWebhook
+  mode: Resources
+  publishConnectionDetailsWithStoreConfigRef:
+    name: default
+  resources:
+    - base:
+        apiVersion: repo.github.upbound.io/v1alpha1
+        kind: RepositoryWebhook
+        metadata:
+          name: argo-webhook
+        spec:
+          forProvider:
+            active: true
+            configuration:
+              - contentType: json
+                insecureSsl: false
+                urlSecretRef:
+                  key: url
+                  name: argo-webhook-url
+            events:
+              - push
+              - pull_request
+          managementPolicies:
+            - Create
+            - Observe
+          providerConfigRef:
+            name: github-provider-config
+      name: argo-webhook
+      patches:
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - string:
+                fmt: '%s-webhook'
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.repoName
+          toFieldPath: spec.forProvider.repository
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.virtualClusterNamespace
+          toFieldPath: spec.forProvider.configuration[0].urlSecretRef.namespace
+          type: FromCompositeFieldPath
+      readinessChecks:
+        - matchCondition:
+            status: 'True'
+            type: Ready
+          type: MatchCondition
+    - base:
+        apiVersion: repo.github.upbound.io/v1alpha1
+        kind: RepositoryWebhook
+        metadata:
+          name: argo-appset-webhook
+        spec:
+          forProvider:
+            active: true
+            configuration:
+              - contentType: json
+                insecureSsl: false
+                urlSecretRef:
+                  key: url
+                  name: argo-appset-webhook-url
+            events:
+              - push
+              - pull_request
+          managementPolicies:
+            - Create
+            - Observe
+          providerConfigRef:
+            name: github-provider-config
+      name: argo-appset-webhook
+      patches:
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - string:
+                fmt: '%s-appset-webhook'
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.repoName
+          toFieldPath: spec.forProvider.repository
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.virtualClusterNamespace
+          toFieldPath: spec.forProvider.configuration[0].urlSecretRef.namespace
+          type: FromCompositeFieldPath
+      readinessChecks:
+        - matchCondition:
+            status: 'True'
+            type: Ready
+          type: MatchCondition
