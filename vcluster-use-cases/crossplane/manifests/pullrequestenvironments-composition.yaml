@@ -1,0 +1,131 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  labels:
+    crossplane.io/xrd: xpullrequestenvironments.virtualcluster.demo.loft.sh
+  name: pullrequestenvironments
+spec:
+  compositeTypeRef:
+    apiVersion: virtualcluster.demo.loft.sh/v1alpha1
+    kind: XPullRequestEnvironment
+  mode: Pipeline
+  pipeline:
+    - functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: management.loft.sh/v1
+                    kind: VirtualClusterInstance
+                    metadata: {}
+                    spec:
+                      clusterRef:
+                        cluster: loft-cluster
+                      owner:
+                        team: api-framework
+                      templateRef:
+                        name: pull-request-vcluster
+                        version: 1.0.x
+                providerConfigRef:
+                  name: kubernetes-provider
+                readiness:
+                  policy: DeriveFromObject
+            name: vcluster
+            patches:
+              - fromFieldPath: metadata.name
+                toFieldPath: spec.forProvider.manifest.metadata.name
+              - fromFieldPath: spec.project
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+                transforms:
+                  - string:
+                      fmt: p-%s
+                      type: Format
+                    type: string
+                type: FromCompositeFieldPath
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: |
+                      k8sVersion: '%s'
+                      prnumber: '%s'
+                      reponame: '%s'
+                  variables:
+                    - fromFieldPath: spec.k8sVersion
+                    - fromFieldPath: spec.prNumber
+                    - fromFieldPath: spec.repo
+                toFieldPath: spec.forProvider.manifest.spec.parameters
+                type: CombineFromComposite
+            readinessChecks:
+              - fieldPath: status.atProvider.manifest.status.phase
+                matchString: Ready
+                type: MatchString
+          - base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: Secret
+                    metadata:
+                      annotations:
+                        argoHost: PATCHED
+                      labels:
+                        clientID: PATCHED
+                        component: oidcServer
+                      name: loft-argocd-oidc-secret
+                      namespace: vcluster-platform
+                    stringData:
+                      clientID: PATCHED
+                      clientSecret: '$OIDC_CLIENT_SECRET'
+                      name: 'Loft'
+                      redirectURIs: PATCHED
+                providerConfigRef:
+                  name: kubernetes-provider
+            name: loft-argocd-oidc-secret
+            patches:
+              - fromFieldPath: metadata.name
+                toFieldPath: spec.forProvider.manifest.metadata.name
+                transforms:
+                  - string:
+                      fmt: argocd-oidc-%s
+                      type: Format
+                    type: string
+              - fromFieldPath: metadata.name
+                toFieldPath: spec.forProvider.manifest.metadata.labels["clientID"]
+                transforms:
+                  - string:
+                      fmt: argocd-%s
+                      type: Format
+                    type: string
+              - fromFieldPath: metadata.name
+                toFieldPath: spec.forProvider.manifest.metadata.annotations["argoHost"]
+                transforms:
+                  - string:
+                      fmt: https://argocd-%s.{REPLACE_BASE_DOMAIN}
+                      type: Format
+                    type: string
+              - fromFieldPath: metadata.name
+                toFieldPath: spec.forProvider.manifest.stringData.clientID
+                transforms:
+                  - string:
+                      fmt: argocd-%s
+                      type: Format
+                    type: string
+              - fromFieldPath: metadata.name
+                toFieldPath: spec.forProvider.manifest.stringData.redirectURIs
+                transforms:
+                  - string:
+                      fmt: https://argocd-%s.{REPLACE_BASE_DOMAIN}/auth/callback
+                      type: Format
+                    type: string
+      step: patch-and-transform
+  publishConnectionDetailsWithStoreConfigRef:
+    name: default
