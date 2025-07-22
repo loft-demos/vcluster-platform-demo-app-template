@@ -8,7 +8,7 @@ spec:
     - clusters:
         selector:
           matchLabels:
-            flux: 'true'
+            crossplane: 'true'
   template:
     metadata:
       # name is the name of the kubernetes cluster as selected by the spec above
@@ -24,7 +24,7 @@ spec:
       source:
         repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
         targetRevision: HEAD
-        path: vcluster-use-cases//crossplane/apps
+        path: vcluster-use-cases/crossplane/apps
       syncPolicy:
         automated:
           prune: true
