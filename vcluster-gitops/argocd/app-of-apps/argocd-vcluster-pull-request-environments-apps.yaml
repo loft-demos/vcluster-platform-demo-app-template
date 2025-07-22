@@ -5,6 +5,8 @@ kind: Application
 metadata:
   name: pr-apps-bootstrap
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
   labels:
     pr.argocd.demos.loft.sh: bootstrap
   finalizers:

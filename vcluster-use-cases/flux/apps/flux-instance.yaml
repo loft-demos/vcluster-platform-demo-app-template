@@ -4,7 +4,7 @@ metadata:
   name: flux
   namespace: flux-system
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "-1"
     fluxcd.controlplane.io/reconcile: "enabled"
     fluxcd.controlplane.io/reconcileEvery: "1h"
     fluxcd.controlplane.io/reconcileTimeout: "3m"
