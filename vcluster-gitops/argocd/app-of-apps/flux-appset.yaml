@@ -3,6 +3,8 @@ kind: ApplicationSet
 metadata:
   name: flux-cluster
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   generators:
     - clusters:
@@ -24,7 +26,7 @@ spec:
       source:
         repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
         targetRevision: HEAD
-        path: vcluster-use-cases//flux/apps
+        path: vcluster-use-cases/flux/apps
       syncPolicy:
         automated:
           prune: true
