@@ -2,7 +2,8 @@ apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-github
-  namespace: crossplane-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   ignoreCrossplaneConstraints: false
   package: crossplane-contrib/provider-upjet-github:v0.18.0
@@ -10,16 +11,3 @@ spec:
   revisionActivationPolicy: Automatic
   revisionHistoryLimit: 1
   skipDependencyResolution: false
----
-apiVersion: github.upbound.io/v1beta1
-kind: ProviderConfig
-metadata:
-  name: github-provider-config
-  namespace: crossplane-system
-spec:
-  credentials:
-    secretRef:
-      key: credentials
-      name: github-provider-secret
-      namespace: crossplane-system
-    source: Secret
