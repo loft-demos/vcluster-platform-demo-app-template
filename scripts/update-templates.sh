@@ -32,7 +32,7 @@ CHART_NAME="vcluster"
 
 LATEST_VCLUSTER=$(curl -s "$REPO_URL/index.yaml" \
   | yq e ".entries.$CHART_NAME[].version" - \
-  | grep -v '\-alpha' | grep -v '\-beta' | grep -v '\-rc' \
+  | grep -v '\-alpha' | grep -v '\-beta' | grep -v '\-rc' | grep -v '\-next' \
   | sort -Vr \
   | head -n1)
 
@@ -45,48 +45,31 @@ yq e -i '
   .spec.template.helmRelease.chart.version = "'"$LATEST_VCLUSTER"'"
 ' vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-version.yaml
 
-# Generate versioned patch (JSON)
-jq -n \
-  --arg default "$DEFAULT_K8S" \
-  --argjson options "$K8S_OPTIONS" \
+# Update existing patch file instead of generating from scratch
+TMP_PATCH="/tmp/patch-updated.json"
+
+jq \
   --arg chartVersion "$LATEST_VCLUSTER" \
-  '[
-    {
-      "op": "replace",
-      "path": "/spec/versions/0/template/helmRelease/chart/version",
-      "value": $chartVersion
-    },
-    {
-      op: "replace",
-      path: "/spec/versions/0/parameters",
-      value: [
-        {
-          variable: "k8sVersion",
-          label: "k8sVersion",
-          description: "Please select Kubernetes version",
-          type: "string",
-          options: $options,
-          defaultValue: $default,
-          section: "Kubernetes Environment"
-        },
-        {
-          variable: "env",
-          label: "Deployment Environment",
-          description: "Environment for deployments used as cluster label",
-          options: ["dev", "qa", "prod"],
-          defaultValue: "dev",
-          section: "Deployment Environment"
-        },
-        {
-          variable: "sleepAfter",
-          label: "Sleep After Inactivity (minutes)",
-          type: "string",
-          options: ["30", "45", "60", "120"],
-          defaultValue: "45"
-        }
-      ]
-    }
-  ]' > "$PATCH_JSON"
+  --argjson k8sOptions "$K8S_OPTIONS" \
+  --arg defaultK8s "$DEFAULT_K8S" '
+  map(
+    if .path == "/spec/versions/0/template/helmRelease/chart/version" then
+      .value = $chartVersion
+    elif .path == "/spec/versions/0/parameters" then
+      .value |= map(
+        if .variable == "k8sVersion" then
+          .options = $k8sOptions | .defaultValue = $defaultK8s
+        else
+          .
+        end
+      )
+    else
+      .
+    end
+  )
+  ' "$PATCH_JSON" > "$TMP_PATCH"
+
+mv "$TMP_PATCH" "$PATCH_JSON"
 
 echo "[✔] JSON patch written to $PATCH_JSON"
 
