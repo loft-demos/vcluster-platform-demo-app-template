@@ -2,7 +2,7 @@
   {
     "op": "replace",
     "path": "/spec/versions/0/template/helmRelease/chart/version",
-    "value": "0.26.0"
+    "value": "0.28.0-next.0"
   },
   {
     "op": "replace",
@@ -12,6 +12,7 @@
         "variable": "k8sVersion",
         "label": "k8sVersion",
         "description": "Please select Kubernetes version",
+        "type": "string",
         "options": [
           "v1.33.3",
           "v1.32.7",
@@ -36,15 +37,14 @@
       {
         "variable": "sleepAfter",
         "label": "Sleep After Inactivity (minutes)",
-        "type": "number",
+        "type": "string",
         "options": [
           "30",
           "45",
           "60",
           "120"
         ],
-        "defaultValue": "45",
-        "section": "Deployment Environment"
+        "defaultValue": "45"
       }
     ]
   }

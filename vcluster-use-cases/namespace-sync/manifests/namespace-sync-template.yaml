@@ -20,7 +20,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.26.0
+        version: 0.28.0-next.0
       values: |
         sync:
           toHost:
