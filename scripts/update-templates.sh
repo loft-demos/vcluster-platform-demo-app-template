@@ -9,7 +9,7 @@ PATCH_JSON="vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-ve
 
 curl -s "$K8S_API_URL" | jq -r '.[] | select(.prerelease == false) | .tag_name' \
   | grep -E '^v1\.[0-9]+\.[0-9]+$' \
-  | grep -v '\-alpha' | grep -v '\-beta' | grep -v '\-rc' \
+  | grep -v '\-alpha' | grep -v '\-beta' | grep -v '\-rc' | grep -v '\-next' \
   | sort -Vr > "$TMP_VERSIONS.all"
 
 awk -F. '

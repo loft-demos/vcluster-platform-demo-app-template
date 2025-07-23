@@ -19,6 +19,20 @@ spec:
     chart: komoplane
     repoURL: https://helm-charts.komodor.io
     targetRevision: 0.1.6
+    helm:
+      valuesObject:
+        ingress:
+          enabled: true
+          className: "nginx"
+          annotations: {}
+          hosts:
+            - host: komoplane-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+              paths:
+                - path: /
+                  pathType: ImplementationSpecific
+          tls:
+            - hosts:
+                - komoplane-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
   syncPolicy:
     automated:
       prune: true
