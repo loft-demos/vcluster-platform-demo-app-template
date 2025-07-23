@@ -97,7 +97,7 @@ spec:
                   value:
                     enabled: true
                     hosts:
-                      - host: podinfo-vcluster-deployed-with-flux-tango.{REPLACE_BASE_DOMAIN}
+                      - host: podinfo-vcluster-deployed-with-flux-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
                         paths:
                           - path: /
                             pathType: ImplementationSpecific
