@@ -43,7 +43,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.23.0
+            version: 0.26.0
           values: |
             exportKubeConfig:
               context: loft
