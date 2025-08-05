@@ -6,6 +6,13 @@ metadata:
   namespace: p-auth-core
 spec:
   inputsFrom:
+    - k8sVersion:
+        nameValue: 1-33-3
+        paramValue: v1.33.3
+    - k8sVersion:
+        nameValue: 1-32-7
+        paramValue: v1.32.7
+  inputsFrom:
     - apiVersion: fluxcd.controlplane.io/v1
       kind: ResourceSetInputProvider
       name: preview-pull-requests
@@ -13,25 +20,25 @@ spec:
     - apiVersion: notification.toolkit.fluxcd.io/v1beta3
       kind: Provider
       metadata:
-        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
         namespace: p-auth-core
       spec:
         type: generic
         timeout: 2m
         # address is specific to the vCluster create for a given pull request id
-        address: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/kubernetes/project/auth-core/virtualcluster/{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+        address: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/kubernetes/project/auth-core/virtualcluster/{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
         secretRef:
           name: vcluster-platform-provider-headers
     - apiVersion: notification.toolkit.fluxcd.io/v1beta3
       kind: Alert
       metadata:
-        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
         namespace: p-auth-core
       spec:
         eventMetadata:
           summary: "PR Updated, wakeup vCluster"
         providerRef:
-          name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
+          name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
         eventSeverity: info
         inclusionList:
           - ".*commit.*"
@@ -56,11 +63,11 @@ spec:
       kind: Kustomization
       metadata:
         # repo name with PR number and part PR label is enough to make the Virtual Cluster Instance name unique
-        name: {REPLACE_REPO_NAME}-preview-vcluster-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-preview-vcluster-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
         namespace: p-auth-core
       spec:
         interval: 48h
-        # the vCluster Platfrom Auth Core project namespace
+        # the vCluster Platform Auth Core project namespace
         targetNamespace: p-auth-core
         sourceRef:
           kind: GitRepository
@@ -73,8 +80,8 @@ spec:
         healthCheckExprs:
           - apiVersion: management.loft.sh/v1
             kind: VirtualClusterInstance
-            failed: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'False')"
-            current: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'True')"
+            failed: "status.conditions.filter(e, e.type == 'VirtualClusterOnline').all(e, e.status == 'False')"
+            current: "status.conditions.filter(e, e.type == 'VirtualClusterOnline').all(e, e.status == 'True')"
         patches:
           - target:
               kind: VirtualClusterInstance
@@ -82,7 +89,12 @@ spec:
               - op: add
                 path: /metadata/name
                 value:
-                  {REPLACE_REPO_NAME}-preview-flux-<< inputs.id >>
+                  {REPLACE_REPO_NAME}-preview-flux-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
+              - op: replace
+                path: /spec/parameters
+                value: |
+                  k8sVersion: "<< inputs.k8sVersion.paramValue >>"
+                  env: "qa"
     # two GitRepistories are used as the one for the vCluster only needs to be updated per PR
     # this one, for the PR app deployment into the vCluster, needs to be updated for every PR commit
     - apiVersion: source.toolkit.fluxcd.io/v1
@@ -102,7 +114,7 @@ spec:
     - apiVersion: notification.toolkit.fluxcd.io/v1beta3
       kind: Alert
       metadata:
-        name: github-pr-comment-{REPLACE_REPO_NAME}-preview-<< inputs.id >>
+        name: github-pr-comment-{REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
         namespace: p-auth-core
       spec:
         providerRef:
@@ -112,17 +124,17 @@ spec:
         eventSources:
           - kind: HelmRelease
             name: '*'
-            namespace: "loft-auth-core-v-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>"
+            namespace: "loft-auth-core-v-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>"
     # Kustomization wrapper for HelmRelease to allow use of dependsOn
     - apiVersion: kustomize.toolkit.fluxcd.io/v1
       kind: Kustomization
       metadata:
-        name: {REPLACE_REPO_NAME}-preview-app-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-preview-app-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
         namespace: p-auth-core
       spec:
         dependsOn:
           # this dependsOn allows for vCluster to be up and running before Flux deploys HelmRelease
-          - name: {REPLACE_REPO_NAME}-preview-vcluster-<< inputs.id >>
+          - name: {REPLACE_REPO_NAME}-preview-vcluster-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
             namespace: p-auth-core
         interval: 48h
         retryInterval: 3m
@@ -141,7 +153,7 @@ spec:
               - op: add
                 path: /metadata/namespace
                 value: # based on Auth Core vCluster Platform project pattern for vCluster namespaces
-                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
           - target:
               kind: HelmRelease
             patch: |
@@ -149,12 +161,12 @@ spec:
                 path: /metadata/namespace
                 # the HelmRelease must be in the same namespace as the kubeConfig.secretRef for the vCluster
                 value: 
-                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>
+                  loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>
               - op: add
                 path: /metadata/annotations
                 # the following annotations are used to populate notifications
                 value:
-                  event.toolkit.fluxcd.io/preview-url: "https://podinfo-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>.{REPLACE_BASE_DOMAIN}"
+                  event.toolkit.fluxcd.io/preview-url: "https://podinfo-{REPLACE_REPO_NAME}-flux-vcluster-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>.{REPLACE_BASE_DOMAIN}"
                   event.toolkit.fluxcd.io/pr-number: "<< inputs.id >>"
                   event.toolkit.fluxcd.io/sha: "<< inputs.sha >>"
               - op: add
@@ -175,13 +187,13 @@ spec:
                 path: /spec/values
                 value:
                   ui:
-                    message: "deployed to {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >> << inputs.sha >>" # use of sha here to simulate dynamic app deployment
+                    message: "deployed to {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >> << inputs.sha >>" # use of sha here to simulate dynamic app deployment
               - op: add
                 path: /spec/values/ingress
                 value:
                   enabled: true
                   hosts:
-                    - host: podinfo-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>.{REPLACE_BASE_DOMAIN}
+                    - host: podinfo-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< inputs.k8sVersion.nameValue >>.{REPLACE_BASE_DOMAIN}
                       paths:
                         - path: /
                           pathType: ImplementationSpecific
