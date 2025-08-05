@@ -40,14 +40,14 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.24.0
+        version: 0.26.0
       values: |-
+        sleepMode:
+          enabled: true
+          autoSleep:
+            afterInactivity: "{{ .Values.sleepAfter }}m"
         external:
           platform:
-            autoSleep:
-              afterInactivity: 10800
-              autoWakeup:
-                schedule: 11 8-16 * * 1-5
             autoDelete:
               afterInactivity: 120000
         sync:
@@ -75,6 +75,26 @@ spec:
       ingress: {}
     spaceTemplate:
       metadata: {}
+  parameters:
+    - variable: sleepAfter
+      label: Sleep After Inactivity (minutes)
+      type: number
+      options:
+        - '30'
+        - '45'
+        - '60'
+        - '120'
+      defaultValue: '45'
+    - variable: k8sVersion
+      label: k8sVersion
+      description: Please select Kubernetes version
+      type: string
+      options:
+        - v1.33.2
+        - v1.32.6
+        - v1.31.10
+        - v1.30.13
+      defaultValue: v1.32.6
   access:
     - verbs:
         - '*'

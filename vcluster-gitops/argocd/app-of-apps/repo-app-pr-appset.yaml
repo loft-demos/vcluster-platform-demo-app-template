@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: {REPLACE_REPO_NAME}-pr
+  namespace: argocd
+spec:
+  generators:
+  - pullRequest:
+      github:
+        appSecretName: loft-demo-org-cred
+        # The GitHub organization or user.
+        owner: loft-demos
+        # The Github repository
+        repo: {REPLACE_REPO_NAME}
+        # (optional) use a GitHub App to access the API instead of a PAT.
+        #appSecretName: github-app-repo-creds
+        # Labels is used to filter the PRs that you want to target. (optional)
+        labels:
+        - preview-cluster-ready
+      requeueAfterSeconds: 30
+  template:
+    metadata:
+      name: '{REPLACE_REPO_NAME}-{{branch}}-pr{{number}}'
+    spec:
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+      source:
+        repoURL: 'https://github.com/loft-demos/{REPLACE_REPO_NAME}.git'
+        targetRevision: '{{head_sha}}'
+        path: helm-chart/
+        helm:
+          parameters:
+          - name: "image.repository"
+            value: ghcr.io/loft-demos/{REPLACE_REPO_NAME}
+          - name: "image.tag"
+            value: "{{head_short_sha}}"
+          - name: "image.args.text"
+            value: "Hello from {REPLACE_REPO_NAME} pr-{{number}} commit {{head_short_sha}}"
+          - name: "ingress.hosts[0].host"
+            value: {REPLACE_REPO_NAME}-pr-{{number}}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+          - name: ingress.hosts[0].paths[0].backend.service.name
+            value: juliet-app
+          - name: ingress.hosts[0].paths[0].backend.service.port.name
+            value: http
+          - name: ingress.hosts[0].paths[0].path
+            value: /
+          - name: ingress.hosts[0].paths[0].pathType
+            value: prefix
+          - name: "ingress.tls[0].hosts[0]"
+            value: {REPLACE_REPO_NAME}-pr-{{number}}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+      project: "default"
+      destination:
+        server: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/kubernetes/project/default/virtualcluster/{REPLACE_REPO_NAME}-pr-{{number}}
+        namespace: preview-hello-world-app
+      info:
+        - name: Preview App Link
+          value: >-
+            https://{REPLACE_REPO_NAME}-pr-{{number}}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+        - name: GitHub PR
+          value: >-
+            https://github.com/loft-demos/{REPLACE_REPO_NAME}/pull/{{number}}

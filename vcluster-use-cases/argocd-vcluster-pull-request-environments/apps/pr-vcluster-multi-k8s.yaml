@@ -1,0 +1,88 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-vcluster-multi-k8s
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - k8sVersion: v1.33.3
+                  k8sVersionDNSLabel: 1-33-3
+                - k8sVersion: v1.32.7
+                  k8sVersionDNSLabel: 1-32-7
+          - pullRequest:
+              github:
+                appSecretName: loft-demo-org-cred
+                labels:
+                  - preview-multi-k8s
+                owner: {REPLACE_ORG_NAME}
+                repo: {REPLACE_REPO_NAME}
+              requeueAfterSeconds: 30
+              template:
+                metadata: {}
+                spec:
+                  destination: {}
+                  project: ''
+  template:
+    metadata:
+      name: {REPLACE_REPO_NAME}-pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-vcluster
+    spec:
+      destination:
+        name: in-cluster
+        namespace: p-auth-core
+      info:
+        - name: PR vCluster Argo CD URL
+          value: https://argocd-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}
+        - name: GitHub PR
+          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
+      project: loft-auth-core
+      source:
+        kustomize:
+          namePrefix: {REPLACE_REPO_NAME}-pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-
+          patches:
+            - patch: |-
+                - op: add
+                  path: /metadata/labels/vclusterProjectId
+                  value: auth-core
+                - op: add
+                  path: /metadata/labels/vclusterName
+                  value: {REPLACE_REPO_NAME}-pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-vcluster
+                - op: add
+                  path: /metadata/labels/repo
+                  value: {REPLACE_REPO_NAME}
+                - op: add
+                  path: /metadata/labels/prLabel
+                  value: 'preview-multi-k8s'
+                - op: add
+                  path: /metadata/labels/prNumber
+                  value: '{{number}}'
+                - op: add
+                  path: /metadata/labels/k8sVersionDNSLabel
+                  value: {{k8sVersionDNSLabel}}
+                - op: add
+                  path: /metadata/labels/targetRevision
+                  value: '{{head_sha}}'
+                - op: add
+                  path: /metadata/labels/headShortSha
+                  value: '{{head_short_sha}}'
+                - op: add
+                  path: /metadata/labels/headBranch
+                  value: '{{branch}}'
+                - op: replace
+                  path: /spec/parameters
+                  value: |
+                    k8sVersion: "{{k8sVersion}}"
+                    env: "qa"
+                    sleepAfter: "30"
+              target:
+                kind: VirtualClusterInstance
+                name: vcluster
+        path: vcluster-use-cases/argocd-vcluster-pull-request-environments/kustomize
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        targetRevision: '{{branch}}'
+      syncPolicy:
+        automated:
+          selfHeal: true

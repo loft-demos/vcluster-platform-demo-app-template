@@ -23,19 +23,20 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
-      - id: Install vCluster CLI
+      - name: Install vCluster CLI
         uses: loft-sh/setup-vcluster@main
       - name: Show vCluster Version
         run: vcluster --version
       - name: Login to vCluster Platform instance
         env:
-          VCLUSTER_PLATFORM_URL: ${{ secrets.VCLUSTER_PLATFORM_URL }}
+          VCLUSTER_PLATFORM_URL: ${{ vars.VCLUSTER_PLATFORM_URL }}
           ACCESS_KEY: ${{ secrets.VCLUSTER_PLATFORM_ACCESS_KEY }}
-        run: vcluster platform login $VCLUSTER_PLATFORM_URL --access-key $ACCESS_KEY
+        run: vcluster platform login "$VCLUSTER_PLATFORM_URL" --access-key "$ACCESS_KEY"
       - id: create-preview-vcluster
         run: |
-          vcluster platform create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework \
+          vcluster platform create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project default \
             --template preview-template \
+            --set-parameters 'k8sVersion=v1.33.3' \
             --link "GitHub PR=$PR_LINK" \
             --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/" \
             --link "Argo CD=https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree"
@@ -55,5 +56,5 @@ jobs:
             
             [Argo CD App](https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree)
             
-            [Preview vcluster pods](https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/projects/api-framework/vclusters/$REPO_NAME-pr-${{ github.event.pull_request.number }}/pods)
+            [Preview vcluster pods](https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/projects/default/vclusters/$REPO_NAME-pr-${{ github.event.pull_request.number }}/pods)
             
