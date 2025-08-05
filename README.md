@@ -22,13 +22,13 @@ Although originally designed and optimized for a hierarchical vCluster Platform 
 
 ## GitHub Actions Automations
 
-There are a number of GitHub Actions workflows included as part of this template repository. Some are used to automate the configuration and modification the contents of the repository, while others are used to demo the use of vCluster Platform and vCluster.
+There are a number of GitHub Actions workflows included as part of this template repository. Some are used to automate the configuration and modification of the contents of the repository, while others are used to demonstrate the features and capabilities of vCluster Platform and vCluster.
 
 ### Automation Workflows
 
 ### _replace-text_
 
-This GitHub Actions workflow automatically customizes template values in YAML files based on the current repository name and/or user-defined inputs. It’s designed to help scaffold new vCluster Platform demo applications with minimal manual edits.
+This GitHub Actions workflow replaces template values in YAML files based on the current repository name, default values and/or user-defined inputs. It’s designed to help scaffold new vCluster Platform demo repositories created from this template repository.
 
 #### What It Does
 
@@ -50,7 +50,7 @@ This GitHub Actions workflow automatically customizes template values in YAML fi
 
 ### _Auto-Update vCluster Templates + K8s Versions_
 
-This GitHub Actions workflow runs the script and creates a pull request if there are any changes.
+This GitHub Actions workflow runs the [**update_templates.sh**](./scripts/update-templates.sh) script and creates a pull request if there are any changes.
 
 ## Integration Details
 
