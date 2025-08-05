@@ -1,0 +1,82 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: vcluster-pr-preview-app
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - pullRequest:
+              github:
+                appSecretName: loft-demo-org-cred
+                labels:
+                  - preview-multi-k8s
+                owner: {REPLACE_ORG_NAME}
+                repo: {REPLACE_REPO_NAME}
+              requeueAfterSeconds: 30
+          - clusters:
+              selector:
+                matchExpressions:
+                  - key: prNumber
+                    operator: In
+                    values:
+                      - '{{number}}'
+                matchLabels:
+                  prLabel: preview-multi-k8s
+                  repo: {REPLACE_REPO_NAME}
+                  vcluster.loft.sh/ready: 'true'
+  template:
+    metadata:
+      annotations:
+        notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
+      labels:
+        vclusterName: '{{metadata.labels.vclusterName}}'
+        vclusterProjectId: '{{metadata.labels.vclusterProjectId}}'
+      name: >-
+        {REPLACE_REPO_NAME}-pr-{{number}}-k8s-{{metadata.labels.k8sVersionDNSLabel}}-preview-app
+    spec:
+      destination:
+        namespace: preview-hello-world-app
+        server: '{{server}}'
+      info:
+        - name: GitHub Repo
+          value: https://github.com/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/
+      project: loft-auth-core
+      source:
+        helm:
+          parameters:
+            - name: image.repository
+              value: ghcr.io/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}
+            - name: image.tag
+              value: '{{head_short_sha}}'
+            - name: image.args.text
+              value: >-
+                Hello from {{metadata.labels.vclusterName}} commit
+                {{head_short_sha}}
+            - name: ingress.hosts[0].host
+              value: '{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}'
+            - name: ingress.hosts[0].paths[0].backend.service.name
+              value: '{{metadata.labels.repo}}'
+            - name: ingress.hosts[0].paths[0].backend.service.port.name
+              value: http
+            - name: ingress.hosts[0].paths[0].path
+              value: /
+            - name: ingress.hosts[0].paths[0].pathType
+              value: prefix
+            - name: ingress.tls[0].hosts[0]
+              value: '{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}'
+        path: helm-chart/
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git
+        targetRevision: '{{head_sha}}'
+      syncPolicy:
+        automated:
+          selfHeal: true
+        retry:
+          backoff:
+            duration: 40s
+            factor: 1
+            maxDuration: 2m
+          limit: 5
+        syncOptions:
+          - CreateNamespace=true
