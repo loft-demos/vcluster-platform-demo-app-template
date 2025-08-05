@@ -37,8 +37,8 @@ jobs:
           vcluster platform create vcluster $REPO_NAME-pr-${{ github.event.pull_request.number }} --project api-framework \
             --template preview-template \
             --link "GitHub PR=$PR_LINK" \
-            --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN/" \
-            --link "Argo CD=https://argocd-REPLACE_LOFT_DEMO_DOMAIN/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree"
+            --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/" \
+            --link "Argo CD=https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree"
 
       - id: trigger-argocd-appset
         env:
@@ -51,9 +51,9 @@ jobs:
           number: ${{ github.event.pull_request.number }}
           header: release
           message: |
-            [Preview environment app link](https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-REPLACE_LOFT_DEMO_DOMAIN)
+            [Preview environment app link](https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN})
             
-            [Argo CD App](https://argocd-REPLACE_LOFT_DEMO_DOMAIN/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree)
+            [Argo CD App](https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree)
             
-            [Preview vcluster pods](https://REPLACE_LOFT_DEMO_DOMAIN/projects/api-framework/vclusters/$REPO_NAME-pr-${{ github.event.pull_request.number }}/pods)
+            [Preview vcluster pods](https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/projects/api-framework/vclusters/$REPO_NAME-pr-${{ github.event.pull_request.number }}/pods)
             
