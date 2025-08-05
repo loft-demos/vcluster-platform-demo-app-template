@@ -55,7 +55,7 @@ spec:
               while true; do
                 for name in $(kubectl get virtualclusterinstances.management.loft.sh \
                   -n p-auth-core \
-                  -l prLabel=create-pr-vcluster-external-argocd \
+                  -l 'prLabel in (create-pr-vcluster-external-argocd,preview-multi-k8s)' \
                   -o jsonpath="{.items[*].metadata.name}"); do
                     status=$(kubectl get virtualclusterinstance.management.loft.sh "$name" -n p-auth-core -o jsonpath="{.status.conditions[?(@.type=='VirtualClusterOnline')].status}")
                     if [ "$status" = "True" ]; then
