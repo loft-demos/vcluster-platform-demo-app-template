@@ -5,7 +5,7 @@ metadata:
   # the vCluster Platfrom Auth Core project namespace
   namespace: p-auth-core
 spec:
-  inputsFrom:
+  inputs:
     - k8sVersion:
         nameValue: 1-33-3
         paramValue: v1.33.3
