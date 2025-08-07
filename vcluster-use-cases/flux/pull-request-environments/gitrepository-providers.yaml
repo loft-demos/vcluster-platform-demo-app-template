@@ -18,5 +18,16 @@ spec:
   type: githubdispatch
   address: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
   secretRef:
-    name: {REPLACE_ORG_NAME}-pat
+    name: loft-demo-org-cred
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: github-status
+  namespace: p-auth-core
+spec:
+  type: github
+  address: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+  secretRef:
+    name: loft-demo-org-cred
 ---

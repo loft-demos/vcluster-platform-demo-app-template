@@ -1,0 +1,34 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: flux-pr-git-repo
+  namespace: p-auth-core
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  interval: 5m0s
+  url: https://github.com/REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+  ref:
+    branch: main
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: flux-pr-secrets-kustomize
+  namespace: p-auth-core
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  interval: 1m
+  targetNamespace: p-auth-core
+  sourceRef:
+    kind: GitRepository
+    name: flux-pr-git-repo
+  path: "./vcluster-use-cases/flux/pull-request-environments/pr-secrets-kustomize"
+  prune: true
+  timeout: 2m
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: demo-admin-access-key
