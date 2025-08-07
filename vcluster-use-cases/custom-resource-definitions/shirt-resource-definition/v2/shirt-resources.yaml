@@ -1,0 +1,12 @@
+apiVersion: stable.demos.vcluster.com/v2
+kind: Shirt
+metadata:
+  name: v2-full
+  namespace: demo
+spec:
+  color: heather-gray
+  size: M                 # must be one of XS,S,M,L,XL
+  sleeveLength: long      # enum: short|long|3/4
+  logo: true
+  tags: ["conference", "swag"]
+  fabric: cotton          # enum: cotton|linen|wool|synthetic|blend

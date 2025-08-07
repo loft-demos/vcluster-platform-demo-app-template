@@ -15,3 +15,8 @@ spec:
       - "deploy/flux-vcluster-preview"
   defaultValues:
     chart: "helm-chart"
+    k8sVersions:
+      - name: "1-33-3"
+        value: "v1.33.3"
+      - name: "1-32-7"
+        value: "v1.32.7"

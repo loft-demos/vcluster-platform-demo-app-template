@@ -25,3 +25,36 @@ data:
     - description: "Wake vCluster when app is OutOfSync"
       when: app.status.sync.status == 'OutOfSync'
       send: [wakeup-vcluster]
+  service.github: |
+    appID: $githubAppID
+    installationID: $githubAppInstallationID
+    privateKey: $githubAppPrivateKey
+  template.app-deployed: |
+    message: |
+      Application {{.app.metadata.name}} is now running new version of deployments manifests.
+    github:
+      repoURLPath: "https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}"
+      revisionPath: "{{.app.spec.source.targetRevision}}"
+      status:
+        state: success
+        label: "argo-cd/{{.app.metadata.name}}"
+        targetURL: "{{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true"
+      pullRequestComment:
+        content: |
+          {{- $labels := .app.metadata.labels | default dict -}}
+          {{- $projectId := get $labels "vclusterProjectId" | default "unknown-project" -}}
+          {{- $vclusterName := get $labels "vclusterName" | default "unknown-vcluster" -}}
+          {{- $k8sVersion := get $labels "k8sVersion" | default "unknown-k8s-version" -}}
+      
+          **Kubernetes Version:** {{$k8sVersion}}
+          **vCluster:** pull request [vCluster pods](https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/projects/{{$projectId}}/vclusters/{{$vclusterName}}/pods)  
+          **Argo CD:** pull request specific [Argo CD instance]({{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true)  
+          **Deployed App:** application for this pull request has been deployed at: [{{.app.metadata.name}}](https://{{$vclusterName}}.{REPLACE_BASE_DOMAIN}/)
+  trigger.on-deployed: |
+    - description: Application is synced and healthy. Triggered once per commit.
+      oncePer: app.status.operationState?.syncResult?.revision
+      send:
+      - app-deployed
+      when: app.status.operationState != nil
+        and app.status.operationState.phase == 'Succeeded'
+        and app.status.health.status == 'Healthy'

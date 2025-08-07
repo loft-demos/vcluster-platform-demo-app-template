@@ -1,0 +1,8 @@
+apiVersion: stable.demos.vcluster.com/v1
+kind: Shirt
+metadata:
+  name: v1-accepts-xxl
+  namespace: demo
+spec:
+  color: navy
+  size: XXL   # valid in v1, invalid in v2

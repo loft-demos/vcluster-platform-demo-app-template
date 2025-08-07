@@ -1,30 +1,80 @@
 name: flux-preview-comment
 on:
   repository_dispatch:
+
 jobs:
   comment:
     if: github.event.client_payload.metadata.pr-number != ''
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+    env:
+      GITHUB_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.client_payload.metadata.pr-number }}
+      K8S_VERSION: ${{ github.event.client_payload.metadata['k8s-version'] }}
     steps:
-      - name: Compose Comment
-        run: |
-          tee comment.md <<'EOF'
-          Flux deployment ${{ github.event.client_payload.severity }}:
-          - Preview URL: ${{ github.event.client_payload.metadata.preview-url }}
-          - Revision: ${{ github.event.client_payload.metadata.revision }}
-          - Status: ${{ github.event.client_payload.message }}
-          - Commit: ${{ github.event.client_payload.metadata.sha }}
-          EOF
-      - name: Post Comment
+      - name: Post Commit Status
+        if: github.event.client_payload.metadata.sha != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.client_payload.metadata.pr-number }}
+          COMMIT_SHA: ${{ github.event.client_payload.metadata.sha }}
         run: |
-          gh pr comment $PR_NUMBER \
-          --repo $GITHUB_REPO \
-          --body-file comment.md \
-          --create-if-none \
-          --edit-last
+          set -euo pipefail
+
+          STATE="${{ github.event.client_payload.severity == 'error' && 'failure' || 'success' }}"
+          CONTEXT="flux-deploy/${{ env.K8S_VERSION }}"
+          TARGET_URL="${{ github.event.client_payload.metadata.preview-url }}"
+          DESCRIPTION="${{ github.event.client_payload.message }}"
+
+          echo "Posting commit status to ${COMMIT_SHA}"
+
+          curl -s -X POST "https://api.github.com/repos/${GITHUB_REPO}/statuses/${COMMIT_SHA}" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -d @- <<EOF
+          {
+            "state": "${STATE}",
+            "context": "${CONTEXT}",
+            "target_url": "${TARGET_URL}",
+            "description": "${DESCRIPTION}"
+          }
+      - name: Compose Comment
+        run: |
+          set -euo pipefail
+          {
+            echo "<!-- k8s-version: ${K8S_VERSION} -->"
+            echo "Flux deployment ${{ github.event.client_payload.severity }}:"
+            echo "- Preview URL: ${{ github.event.client_payload.metadata.preview-url }}"
+            echo "- K8s Version: ${K8S_VERSION}"
+            echo "- Revision: ${{ github.event.client_payload.metadata.revision }}"
+            echo "- Status: ${{ github.event.client_payload.message }}"
+            echo "- Commit: ${{ github.event.client_payload.metadata.sha }}"
+          } > comment.md
+
+      - name: Create or Update Version-Specific Comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+        
+          # 1) Look up an existing issue comment on the PR with our version marker
+          COMMENT_ID=$(
+            gh api "repos/${GITHUB_REPO}/issues/${PR_NUMBER}/comments" --paginate \
+              --jq '.[] | select(.body | contains("<!-- k8s-version: '"$K8S_VERSION"' -->")) | .id' \
+              | head -n1 || true
+          )
+        
+          # 2) Edit or create
+          if [ -n "${COMMENT_ID:-}" ]; then
+            # Build JSON: { "body": "<contents of comment.md>" }
+            BODY_JSON=$(jq -n --arg body "$(< comment.md)" '{body:$body}')
+            gh api "repos/${GITHUB_REPO}/issues/comments/${COMMENT_ID}" \
+              -X PATCH -H "Accept: application/vnd.github+json" \
+              --input - <<<"$BODY_JSON"
+          else
+            BODY_JSON=$(jq -n --arg body "$(< comment.md)" '{body:$body}')
+            gh api "repos/${GITHUB_REPO}/issues/${PR_NUMBER}/comments" \
+              -X POST -H "Accept: application/vnd.github+json" \
+              --input - <<<"$BODY_JSON"
+          fi
