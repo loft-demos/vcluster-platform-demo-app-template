@@ -96,8 +96,8 @@ spec:
       healthCheckExprs:
         - apiVersion: management.loft.sh/v1
           kind: VirtualClusterInstance
-          failed: "status.conditions.filter(e, e.type == 'VirtualClusterOnline').all(e, e.status == 'False')"
-          current: "status.conditions.filter(e, e.type == 'VirtualClusterOnline').all(e, e.status == 'True')"
+          failed: "status.conditions.filter(e, e.type == 'VirtualClusterSynced').all(e, e.status == 'False')"
+          current: "status.conditions.filter(e, e.type == 'VirtualClusterSynced').all(e, e.status == 'True')"
       patches:
         - target:
             kind: VirtualClusterInstance
@@ -111,6 +111,21 @@ spec:
               value: |
                 k8sVersion: "<< $v.value >>"
                 sleepAfter: "15"
+    ---
+    # Alert used to add commit statuses
+    # It is created in the p-auth-core namespace because injecting the GitHub PAT Secret into the vCluster namespace takes too long
+    apiVersion: notification.toolkit.fluxcd.io/v1beta3
+    kind: Alert
+    metadata:
+      name: github-status-{REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< $v.name >>
+      namespace: p-auth-core
+    spec:
+      providerRef:
+        name: github-status
+      eventSources:
+        - kind: HelmRelease
+          name: '*'
+          namespace: "loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>"
     ---
     # Alert used to add comment to pull request
     # It is created in the p-auth-core namespace because injecting the GitHub PAT Secret into the vCluster namespace takes too long
