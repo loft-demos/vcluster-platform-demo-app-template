@@ -60,6 +60,9 @@ spec:
                   path: /metadata/labels/prNumber
                   value: '{{number}}'
                 - op: add
+                  path: /metadata/labels/k8sVersion
+                  value: {{k8sVersion}}
+                - op: add
                   path: /metadata/labels/k8sVersionDNSLabel
                   value: {{k8sVersionDNSLabel}}
                 - op: add

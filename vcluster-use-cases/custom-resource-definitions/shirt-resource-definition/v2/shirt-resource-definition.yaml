@@ -1,0 +1,110 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: shirts.stable.demos.vcluster.com
+spec:
+  group: stable.demos.vcluster.com
+  scope: Namespaced
+  names:
+    plural: shirts
+    singular: shirt
+    kind: Shirt
+    shortNames:
+      - tee
+  conversion:
+    strategy: None
+  versions:
+    - name: v1
+      served: true
+      storage: false
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: Shirt v1 — basic color and size fields
+          properties:
+            spec:
+              type: object
+              required: ["color", "size"]
+              properties:
+                color:
+                  type: string
+                  description: Primary color (free‐form)
+                size:
+                  type: string
+                  description: Shirt size (free‐form in v1)
+            status:
+              type: object
+              properties:
+                ready:
+                  type: boolean
+                message:
+                  type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Color
+          type: string
+          jsonPath: .spec.color
+        - name: Size
+          type: string
+          jsonPath: .spec.size
+
+    - name: v2
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: Shirt v2 — adds sleeveLength, logo, tags, fabric and enum size
+          properties:
+            spec:
+              type: object
+              required: ["color", "size"]
+              properties:
+                color:
+                  type: string
+                  description: Primary color (free‐form)
+                size:
+                  type: string
+                  description: Shirt size (enum in v2)
+                  enum: ["XS", "S", "M", "L", "XL"]
+                sleeveLength:
+                  type: string
+                  description: New in v2 — sleeve style
+                  enum: ["short", "long", "3/4"]
+                logo:
+                  type: boolean
+                  description: New in v2 — whether the shirt has a printed logo
+                  default: false
+                tags:
+                  type: array
+                  description: New in v2 — optional labels for search/filter
+                  maxItems: 10
+                  items:
+                    type: string
+                fabric:
+                  type: string
+                  description: New in v2 — fabric type
+                  enum: ["cotton", "linen", "wool", "synthetic", "blend"]
+            status:
+              type: object
+              properties:
+                ready:
+                  type: boolean
+                message:
+                  type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Color
+          type: string
+          jsonPath: .spec.color
+        - name: Size
+          type: string
+          jsonPath: .spec.size
+        - name: Sleeve
+          type: string
+          jsonPath: .spec.sleeveLength
+        - name: Logo
+          type: string
+          jsonPath: .spec.logo

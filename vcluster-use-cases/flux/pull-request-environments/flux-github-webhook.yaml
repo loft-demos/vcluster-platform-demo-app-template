@@ -1,0 +1,24 @@
+apiVersion: repo.github.upbound.io/v1alpha1
+kind: RepositoryWebhook
+metadata:
+  name: flux-github-webhook
+spec:
+  forProvider:
+    repository: {REPLACE_REPO_NAME}
+    active: true
+    configuration:
+    - contentType: json
+      insecureSsl: false
+      secretSecretRef:
+        key: token
+        name: pr-github-receiver-token
+        namespace: p-auth-core
+      urlSecretRef:
+        key: url
+        name: flux-webhook-url
+        namespace: p-auth-core
+    events:
+    - push
+    - pull_request
+  providerConfigRef:
+    name: github-provider-config
