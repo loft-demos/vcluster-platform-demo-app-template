@@ -1,0 +1,57 @@
+kind: Project
+apiVersion: management.loft.sh/v1
+metadata:
+  name: vcluster-flux-demo
+spec:
+  displayName: vCluster Flux Demo
+  owner:
+    team: loft-admins
+  quotas:
+    project:
+      count/virtualclusterinstances.active: '15'
+      requests.nvidia.com/gpu: '10'
+    user:
+      count/virtualclusterinstances: '4'
+  allowedClusters:
+    - name: loft-cluster
+  allowedTemplates:
+    - kind: VirtualClusterTemplate
+      group: storage.loft.sh
+      name: vcluster-flux-template
+      isDefault: true
+  requireTemplate: {}
+  members:
+    - kind: Team
+      group: storage.loft.sh
+      name: api-framework
+      clusterRole: loft-management-project-user-with-vcluster-logs
+    - kind: Team
+      group: storage.loft.sh
+      clusterRole: loft-management-project-admin
+      name: loft-admins
+  access:
+    - name: loft-admin-access
+      verbs:
+        - get
+        - update
+        - patch
+        - delete
+      subresources:
+        - '*'
+      teams:
+        - loft-admins
+    - name: loft-access
+      verbs:
+        - get
+      subresources:
+        - members
+        - clusters
+        - templates
+        - chartinfo
+        - charts
+        - runners
+      teams:
+        - api-framework
+        - loft-admins
+  namespacePattern:
+    virtualCluster: '{{.Values.loft.project}}-v-{{.Values.loft.name}}'

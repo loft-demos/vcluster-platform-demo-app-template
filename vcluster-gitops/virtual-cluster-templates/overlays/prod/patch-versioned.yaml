@@ -1,0 +1,30 @@
+- op: replace
+  path: /spec/versions/0/template/helmRelease/chart/version
+  value: "0.26.0"
+- op: replace
+  path: /spec/versions/0/parameters
+  value:
+    - variable: k8sVersion
+      label: k8sVersion
+      description: Please select Kubernetes version
+      type: string
+      options:
+        - v1.33.3
+        - v1.32.7
+        - v1.31.11
+        - v1.30.14
+      defaultValue: v1.32.7
+      section: Kubernetes Environment
+    - variable: env
+      label: Deployment Environment
+      description: Environment for deployments used as cluster label
+      type: string
+      options: [dev, qa, prod]
+      defaultValue: dev
+      section: Deployment Environment
+    - variable: sleepAfter
+      label: Sleep After Inactivity (minutes)
+      type: string
+      options: ["5", "15", "30", "45", "60", "120"]
+      defaultValue: "30"
+      section: Deployment Environment
