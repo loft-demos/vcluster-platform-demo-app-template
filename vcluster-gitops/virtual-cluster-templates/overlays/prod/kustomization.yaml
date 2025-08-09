@@ -4,15 +4,14 @@ resources:
   - ../../base/
 
 patches:
-  - path: patch-k8s-version.yaml
+  - path: patch-non-versioned.yaml
     target:
       kind: VirtualClusterTemplate
       version: v1
       labelSelector: patchType=non-versioned
-patchesJson6902:
   - target:
       group: management.loft.sh
       version: v1
       kind: VirtualClusterTemplate
-      name: default-template
-    path: patch-k8s-versioned.json
+      labelSelector: patchType=versioned
+    path: patch-versioned.yaml

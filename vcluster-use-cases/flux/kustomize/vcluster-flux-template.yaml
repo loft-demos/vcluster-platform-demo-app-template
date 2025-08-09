@@ -2,8 +2,8 @@ kind: VirtualClusterTemplate
 apiVersion: management.loft.sh/v1
 metadata:
   name: vcluster-flux-template
-  annotations:
-    argocd.argoproj.io/sync-options: Validate=false
+  labels:
+    patchType: versioned
 spec:
   displayName: Virtual Cluster Flux Template
   description: This virtual cluster template is configured to integrate the resulting vCluster with Flux by creating a Flux KubeConfig Secret and then automatically using Flux to deploy a `HelmRelease` based application into the vCluster.
@@ -43,21 +43,24 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.23.0
+            version: 0.26.0
           values: |
-            exportKubeConfig:
-              context: loft
-              server: https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.virtualClusterNamespace }}:443
-              secret:
-                name: 'flux-kubeconfig'
-                
+            # Instead of exporting the Kube Config, a Bash App is used below
+            # exportKubeConfig:
+            #   context: loft
+            #   server: https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.virtualClusterNamespace }}:443
+            #   secret:
+            #     name: 'flux-kubeconfig'
+            
+            sleepMode:
+              enabled: true
+              autoSleep:
+                afterInactivity: "{{ .Values.sleepAfter }}m"
+              timeZone: America/New_York
+              autoWakeup:
+                schedule: 11 7-17 * * 1-5
             external:
               platform:
-                autoSleep:
-                  afterInactivity: 330
-                  autoWakeup:
-                    schedule: 11 7-17 * * 1-5
-                  timezone: "America/New_York"
                 autoDelete:
                   afterInactivity: 1800000
                   
@@ -74,12 +77,35 @@ spec:
                     enabled: true
               coredns:
                 embedded: true
+              distro:
+                k8s:
+                  image:
+                    tag: "{{ .Values.k8sVersion }}"
         accessPoint:
           ingress: {}
         spaceTemplate:
           metadata: {}
-          #apps: 
-            #- name: generate-vcluster-kubeconfig
+          apps: # this bash app will create a Kube Config for Flux that uses the vCluster Platform proxied URL
+            - name: generate-vcluster-kubeconfig
+      parameters:
+        - variable: k8sVersion
+          label: k8sVersion
+          description: Please select Kubernetes version
+          options:
+            - v1.33.3
+            - v1.32.7
+            - v1.31.10
+            - v1.30.13
+          defaultValue: v1.32.7
+        - variable: sleepAfter
+          label: Sleep After Inactivity (minutes)
+          type: string
+          options:
+            - '15'
+            - '30'
+            - '45'
+            - '60'
+          defaultValue: '15'
     - version: 0.0.0
       template:
         metadata: {}
@@ -106,4 +132,3 @@ spec:
         - '*'
       users:
         - admin
-status: {}

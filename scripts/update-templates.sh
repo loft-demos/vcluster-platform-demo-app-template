@@ -5,7 +5,8 @@ echo "[INFO] Fetching latest Kubernetes versions..."
 K8S_API_URL="https://api.github.com/repos/kubernetes/kubernetes/releases?per_page=100"
 TMP_VERSIONS="/tmp/k8s-versions.txt"
 TMP_YAML="/tmp/k8s-versions.yaml"
-PATCH_JSON="vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-versioned.json"
+NON_VERSIONED_PATCH_YAML="vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-non-versioned.yaml"
+VERSIONED_PATCH_YAML="vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-versioned.yaml"
 
 curl -s "$K8S_API_URL" | jq -r '.[] | select(.prerelease == false) | .tag_name' \
   | grep -E '^v1\.[0-9]+\.[0-9]+$' \
@@ -43,37 +44,36 @@ yq e -i '
   (.spec.parameters[] | select(.variable == "k8sVersion")).options = load("'"$TMP_YAML"'") |
   (.spec.parameters[] | select(.variable == "k8sVersion")).defaultValue = "'"$DEFAULT_K8S"'" |
   .spec.template.helmRelease.chart.version = "'"$LATEST_VCLUSTER"'"
-' vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-version.yaml
+' "$NON_VERSIONED_PATCH_YAML"
 
-# Update existing patch file instead of generating from scratch
-TMP_PATCH="/tmp/patch-updated.json"
+echo "[✔] YAML patch for non-versioned templates updated at $NON_VERSIONED_PATCH_YAML"
 
-jq \
-  --arg chartVersion "$LATEST_VCLUSTER" \
-  --argjson k8sOptions "$K8S_OPTIONS" \
-  --arg defaultK8s "$DEFAULT_K8S" '
-  map(
-    if .path == "/spec/versions/0/template/helmRelease/chart/version" then
-      .value = $chartVersion
-    elif .path == "/spec/versions/0/parameters" then
-      .value |= map(
-        if .variable == "k8sVersion" then
-          .options = $k8sOptions | .defaultValue = $defaultK8s
-        else
-          .
-        end
-      )
-    else
-      .
-    end
-  )
-  ' "$PATCH_JSON" > "$TMP_PATCH"
+# Update existing YAML 6902 patch (only k8sVersion + chart version)
+export TMP_YAML
+export DEFAULT_K8S
+export LATEST_VCLUSTER
+# 1) Bump chart version op
+yq e -i '
+  (.[] | select(.path == "/spec/versions/0/template/helmRelease/chart/version").value)
+  = strenv(LATEST_VCLUSTER)
+' "$VERSIONED_PATCH_YAML"
 
-mv "$TMP_PATCH" "$PATCH_JSON"
+# 2) Update k8sVersion options + default inside the parameters op
+yq e -i '
+  # options list
+  (.[] | select(.path == "/spec/versions/0/parameters").value[]
+      | select(.variable == "k8sVersion").options)
+    = load(strenv(TMP_YAML))
+  |
+  # default value
+  (.[] | select(.path == "/spec/versions/0/parameters").value[]
+      | select(.variable == "k8sVersion").defaultValue)
+    = strenv(DEFAULT_K8S)
+' "$VERSIONED_PATCH_YAML"
 
-echo "[✔] JSON patch written to $PATCH_JSON"
+echo "[✔] YAML 6902 patch for versioned templates updated at $VERSIONED_PATCH_YAML"
 
-echo "[INFO] Updating templates..."
+echo "[INFO] Updating use case templates..."
 
 find vcluster-use-cases -type f -name "*.yaml" | while read -r file; do
   kind=$(yq e 'select(documentIndex == 0) | .kind' "$file" 2>/dev/null || echo "")
