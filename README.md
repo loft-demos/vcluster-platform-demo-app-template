@@ -4,7 +4,7 @@
 
 This repository template is configured to automatically integrate with fully managed and fully automated [**vCluster Platform Demo Generator**](./vcluster-platform-demo-generator.md), and provides a GitOps approach for managing vCluster Platform (`vcluster-gitops` directory) and selectable demo-use-cases-as-code for self-service vCluster Platform demo environments (`vcluster-use-cases` directory).
 
-Although originally designed and optimized for a hierarchical vCluster Platform  with the fully managed [**vCluster Platform Demo Generator**] -leveraging vCluster inception- the _vCluster Platform Demo Repository_ may also be used for _standalone_ vCluster Platform demo environments where the host cluster, along with the vCluster Platform and Argo CD installations (bootstrap applications), are self-managed.
+Although originally designed and optimized for a hierarchical vCluster Platform  with the fully managed [**vCluster Platform Demo Generator**] -leveraging vCluster inception- the _vCluster Platform Demo Repository_ may also be used for _standalone_ vCluster Platform demo environments where the host cluster, along with the vCluster Platform and Argo CD installations (bootstrap applications), are self-managed. See the [instructions for self managed vCluster Platform installs](./self-managed-demo-cluster/README.md).
 
 ## vCluster Platform Integration Examples
 
