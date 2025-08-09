@@ -1,0 +1,27 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: dummy-name-to-be-overridden
+spec:
+  template:
+    helmRelease:
+      chart:
+        version: 0.26.0
+  parameters:
+    - variable: sleepAfter
+      label: Sleep After Inactivity (minutes)
+      options:
+        - '30'
+        - '45'
+        - '60'
+        - '120'
+      defaultValue: '45'
+    - variable: k8sVersion
+      label: k8sVersion
+      description: Please select Kubernetes version
+      options:
+        - v1.33.3
+        - v1.32.7
+        - v1.31.11
+        - v1.30.14
+      defaultValue: v1.32.7
