@@ -1,0 +1,10 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: vcluster-flux-demo
+  namespace: p-vcluster-flux-demo
+spec:
+  interval: 5m0s
+  url: https://github.com/loft-demos/quebec-app.git
+  ref:
+    branch: main
