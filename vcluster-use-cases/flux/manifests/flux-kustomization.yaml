@@ -46,11 +46,12 @@ spec:
           chart:
             version: 0.26.0
           values: |
-            exportKubeConfig:
-              context: loft
-              server: https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.virtualClusterNamespace }}:443
-              secret:
-                name: 'flux-kubeconfig'
+            # Instead of exporting the Kube Config, a Bash App is used below
+            # exportKubeConfig:
+            #   context: loft
+            #   server: https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.virtualClusterNamespace }}:443
+            #   secret:
+            #     name: 'flux-kubeconfig'
             
             sleepMode:
               enabled: true
@@ -85,6 +86,8 @@ spec:
           ingress: {}
         spaceTemplate:
           metadata: {}
+          apps: # this bash app will create a Kube Config for Flux that uses the vCluster Platform proxied URL
+            - name: generate-vcluster-kubeconfig
       parameters:
         - variable: k8sVersion
           label: k8sVersion

@@ -30,3 +30,11 @@ Example of dynamic provisioning of vCluster instances for ephemeral Pull Request
   - A `Kustomization` Flux resource to wrap a `HelmRelease` to provide a dependsOn` for the PR `VirtualClusterInstance` so Flux will not attempt to deploy the Helm app until the vCluster is ready
   - Two Flux `GitRepository` resources. One associated with the `VirtualClusterInstance` `Kustomization` and scoped to the PR head branch so new PR commits won't trigger updates. And the other associated with the PR `HelmRelease` deployed into the vCluster and scoped to PR head branch commits, so every commit will result in an udpated app deployment in the matching vCluster.
   - A Flux generic notifications `Provider` and `Alert` that is triggered whenever there is a new commit push the PR head branch and will trigger the wake-up from sleep mode for any sleeping PR vCluster instances. This allows utilizing vCluster sleep mode while still ensuring that all new commits are promptly updated and available.
+
+NOTE: For using the bash App script to create a Flux vCluster kubeconfig:
+
+- To create the `kubeconfig` secret in another cluster you can use the vcluster CLI to connect to that cluster and set the appropriate namespace for the generated `kubeconfig` secret
+- For example, using `-n p-{{ .Values.loft.project }}` will create the secret in the Platform Project of the vCluster instance
+- Then use the CLI to connect to vCluster Platform: vcluster platform login https://tango.us.demo.dev --access-key $ACCESS_KEY
+- Then connect to the Platform host cluster where Flux will retrieve the `kubeconfig` secret: vcluster platform connect cluster loft-cluster
+- You will also need to ensure that all Flux resources that require that vCluster `kubeconfig` are also deployed to that same namespace
