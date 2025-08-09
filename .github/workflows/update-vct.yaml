@@ -18,6 +18,15 @@ jobs:
           sudo apt-get install -y jq
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
+    
+      - name: Ensure label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LABEL="auto-update-templates"
+          if ! gh label list --search "$LABEL" --limit 1 | grep -q "^$LABEL\b"; then
+            gh label create "$LABEL" --color 0366d6 --description "Automated vCluster/K8s template updates" || true
+          fi
 
       - name: Create PR branch
         id: prepare_branch
@@ -64,11 +73,30 @@ jobs:
             echo "skip_pr=false" >> $GITHUB_OUTPUT
           fi
 
+      # Close any existing PRs with the label before creating a new one
+      - name: Close existing auto-update PRs (by label)
+        if: steps.commit_push_changes.outputs.skip_pr != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LABEL="auto-update-templates"
+          echo "Looking for open PRs labeled '$LABEL'..."
+          PRS=$(gh pr list --state open --label "$LABEL" --json number --jq '.[].number')
+          if [ -n "$PRS" ]; then
+            for PR in $PRS; do
+              echo "Closing PR #$PR"
+              gh pr close "$PR" --delete-branch || gh pr close "$PR"
+            done
+          else
+            echo "No labeled auto-update PRs found."
+          fi
+
       - name: Create Pull Request
         if: steps.commit_push_changes.outputs.skip_pr != 'true'
         run: |
           gh pr create \
             --title "Auto-update vCluster Templates Kubernetes version parameters" \
+            --label "auto-update-templates" \
             --body "This PR was automatically generated to update Kubernetes version options in vCluster Templates." \
             --head "${{ steps.prepare_branch.outputs.branch_name }}" \
             --base main
