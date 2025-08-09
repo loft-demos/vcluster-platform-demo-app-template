@@ -57,12 +57,14 @@ spec:
       secretRef:
         name: vcluster-platform-provider-headers
     ---
+    # this Alert is only needed if not using a vCluster Platform URL for the vCluster K8s API server
     apiVersion: notification.toolkit.fluxcd.io/v1beta3
     kind: Alert
     metadata:
       name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< $v.name >>
       namespace: p-auth-core
     spec:
+      suspend: true
       eventMetadata:
         summary: "PR Updated, wakeup vCluster"
       providerRef:
@@ -156,7 +158,7 @@ spec:
           namespace: p-auth-core
       interval: 48h
       retryInterval: 30s
-      timeout: 5m
+      timeout: 4m
       prune: true
       wait: true
       path: ./vcluster-use-cases/flux/flux-deploy-apps
