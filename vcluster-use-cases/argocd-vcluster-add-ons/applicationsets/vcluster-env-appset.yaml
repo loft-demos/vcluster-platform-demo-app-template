@@ -4,6 +4,8 @@ metadata:
   name: vcluster-env-config
   namespace: argocd
 spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   generators:
     - clusters:
         selector:
@@ -19,17 +21,17 @@ spec:
             env: prod
   template:
     metadata:
-      name: {REPLACE_REPO_NAME}-{{name}}
+      name: {REPLACE_REPO_NAME}-{{.name}}
     spec:
       destination:
-        namespace: {REPLACE_REPO_NAME}-{{metadata.labels.env}}
-        server: '{{server}}'
+        namespace: {REPLACE_REPO_NAME}-{{.metadata.labels.env}}
+        server: '{{.server}}'
       info:
         - name: GitHub Repo
           value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/
-      project: 'loft-{{metadata.labels.team}}'
+      project: 'loft-{{ index .metadata.labels "demos.loft.sh/project" }}'
       source:
-        path: vcluster-use-cases/argocd-vcluster-add-ons/manifests/{{metadata.labels.env}}/
+        path: vcluster-use-cases/argocd-vcluster-add-ons/manifests/{{.metadata.labels.env}}/
         repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
         targetRevision: main
       syncPolicy:

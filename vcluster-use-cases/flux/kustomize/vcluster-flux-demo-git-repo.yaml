@@ -5,6 +5,6 @@ metadata:
   namespace: p-vcluster-flux-demo
 spec:
   interval: 5m0s
-  url: https://github.com/loft-demos/quebec-app.git
+  url: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
   ref:
     branch: main
