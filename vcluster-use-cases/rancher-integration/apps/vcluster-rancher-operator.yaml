@@ -18,7 +18,7 @@ spec:
   source:
     chart: vcluster-rancher-operator
     repoURL: https://charts.loft.sh
-    targetRevision: 0.3
+    targetRevision: "0.3"
   syncPolicy:
     automated:
       prune: true
