@@ -88,24 +88,16 @@ spec:
           apps: # this bash app will create a Kube Config for Flux that uses the vCluster Platform proxied URL
             - name: generate-vcluster-kubeconfig
       parameters:
-        - variable: k8sVersion
-          label: k8sVersion
-          description: Please select Kubernetes version
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used with defaultValues of Flux ResourceSetInputProvider
           options:
-            - v1.33.3
-            - v1.32.7
-            - v1.31.10
-            - v1.30.13
-          defaultValue: v1.32.7
-        - variable: sleepAfter
-          label: Sleep After Inactivity (minutes)
-          type: string
-          options:
-            - '15'
-            - '30'
-            - '45'
-            - '60'
-          defaultValue: '15'
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+          section: Deployment Environment
     - version: 0.0.0
       template:
         metadata: {}

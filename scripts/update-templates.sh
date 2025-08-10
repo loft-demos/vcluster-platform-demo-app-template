@@ -60,15 +60,13 @@ yq e -i '
 
 # 2) Update k8sVersion options + default inside the parameters op
 yq e -i '
-  # options list
-  (.[] | select(.path == "/spec/versions/0/parameters").value[]
-      | select(.variable == "k8sVersion").options)
-    = load(strenv(TMP_YAML))
+  # k8sVersion options
+  (.[] | select(.path == "/spec/versions/0/parameters/0").value.options)
+    = load("'"$TMP_YAML"'")
   |
-  # default value
-  (.[] | select(.path == "/spec/versions/0/parameters").value[]
-      | select(.variable == "k8sVersion").defaultValue)
-    = strenv(DEFAULT_K8S)
+  # k8sVersion default
+  (.[] | select(.path == "/spec/versions/0/parameters/0").value.defaultValue)
+    = "'"$DEFAULT_K8S"'"
 ' "$VERSIONED_PATCH_YAML"
 
 echo "[✔] YAML 6902 patch for versioned templates updated at $VERSIONED_PATCH_YAML"
