@@ -59,7 +59,7 @@ spec:
                   value: {REPLACE_REPO_NAME}
                 - op: add
                   path: /metadata/labels/prLabel
-                  value: 'preview-multi-k8s'
+                  value: 'deploy-argocd-vcluster-preview'
                 - op: add
                   path: /metadata/labels/prNumber
                   value: '{{number}}'
@@ -85,8 +85,9 @@ spec:
                     env: "qa"
                     sleepAfter: "30"
               target:
+                group: management.loft.sh
+                version: v1
                 kind: VirtualClusterInstance
-                name: vcluster
         path: vcluster-use-cases/argocd-vcluster-pull-request-environments/kustomize
         repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
         targetRevision: '{{branch}}'

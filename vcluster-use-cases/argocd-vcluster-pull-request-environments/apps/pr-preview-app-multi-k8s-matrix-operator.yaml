@@ -11,7 +11,7 @@ spec:
               github:
                 appSecretName: loft-demo-org-cred
                 labels:
-                  - preview-multi-k8s
+                  - 'deploy/argocd-vcluster-preview'
                 owner: {REPLACE_ORG_NAME}
                 repo: {REPLACE_REPO_NAME}
               requeueAfterSeconds: 30
@@ -23,7 +23,7 @@ spec:
                     values:
                       - '{{number}}'
                 matchLabels:
-                  prLabel: preview-multi-k8s
+                  prLabel: deploy-argocd-vcluster-preview
                   repo: {REPLACE_REPO_NAME}
                   vcluster.loft.sh/ready: 'true'
   template:
