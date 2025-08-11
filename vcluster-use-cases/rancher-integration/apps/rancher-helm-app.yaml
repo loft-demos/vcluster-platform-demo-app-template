@@ -17,7 +17,7 @@ spec:
   source:
     chart: rancher
     repoURL: https://releases.rancher.com/server-charts/stable
-    targetRevision: 2.11.2
+    targetRevision: 2.11.3
     helm:
       valuesObject:
         hostname: rancher-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}

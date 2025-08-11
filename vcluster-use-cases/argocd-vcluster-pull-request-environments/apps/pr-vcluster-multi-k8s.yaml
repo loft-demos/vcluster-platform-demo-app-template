@@ -21,7 +21,7 @@ spec:
               github:
                 appSecretName: loft-demo-org-cred
                 labels:
-                  - deploy/argocd-vcluster-preview
+                  - 'deploy/argocd-vcluster-preview'
                 owner: {REPLACE_ORG_NAME}
                 repo: {REPLACE_REPO_NAME}
               requeueAfterSeconds: 30

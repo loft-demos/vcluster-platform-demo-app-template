@@ -5,4 +5,4 @@ metadata:
   namespace: local  # Rancher stores global resources here
 spec:
   displayName: "API Framework"
-  clusterId: local
+  clusterName: local
