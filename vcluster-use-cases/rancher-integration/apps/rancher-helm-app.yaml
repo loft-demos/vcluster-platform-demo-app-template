@@ -19,6 +19,7 @@ spec:
     repoURL: https://releases.rancher.com/server-charts/stable
     targetRevision: 2.11.3
     helm:
+      releaseName: rancher
       valuesObject:
         hostname: rancher-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
         agentTLSMode: "system-store"
