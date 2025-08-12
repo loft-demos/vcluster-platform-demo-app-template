@@ -1,0 +1,36 @@
+---
+apiVersion: repo.github.upbound.io/v1alpha1
+kind: IssueLabels
+metadata:
+  name: {REPLACE_REPO_NAME}-repo-labels
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    label:
+      - name: create-pr-vcluster-external-argocd
+        color: ee7d3b
+        description: Triggers the creation of a vCluster for a Pull Request via Argo CD
+      - name: preview
+        color: ee7d3b
+        description: Creates vCluster preview environment for a Pull Request with a GitHub Action and Argo CD AppSet
+      - name: 'deploy/argocd-vcluster-preview'
+        color: ee7d3b
+        description: Triggers the Argo CD creation of a matrix of PR preview vCluster instances for different Kubernetes versions
+      - name: preview-cluster-ready
+        color: ee7d3b
+        description: Triggers Argo CD application set for PR
+      - name: 'deploy/flux-vcluster-preview'
+        color: c5def5
+        description: Triggers the Flux creation of a matrix of PR preview vCluster instances for different Kubernetes versions
+      - name: e2e
+        color: ee7d3b
+        description: Run e2e tests on PR with vCluster
+    repository: {REPLACE_REPO_NAME}-app
+  initProvider: {}
+  managementPolicies:
+    - '*'
+  providerConfigRef:
+    name: github-provider-config
+---
