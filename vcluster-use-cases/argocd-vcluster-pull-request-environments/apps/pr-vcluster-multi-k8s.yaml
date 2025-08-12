@@ -32,7 +32,9 @@ spec:
                   project: ''
   template:
     metadata:
-      name: {REPLACE_REPO_NAME}-pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-vcluster
+      name: pr-{{number}}-vcluster-k8s-{{k8sVersionDNSLabel}}
+      labels:
+        k8sVersion: '{{k8sVersion}}'
     spec:
       destination:
         name: in-cluster
@@ -45,15 +47,17 @@ spec:
       project: loft-auth-core
       source:
         kustomize:
-          namePrefix: {REPLACE_REPO_NAME}-pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-
           patches:
             - patch: |-
+                - op: replace
+                  path: /metadata/name
+                  value: pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-romeo-app
                 - op: add
                   path: /metadata/labels/vclusterProjectId
                   value: auth-core
                 - op: add
                   path: /metadata/labels/vclusterName
-                  value: {REPLACE_REPO_NAME}-pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-vcluster
+                  value: pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-romeo-app
                 - op: add
                   path: /metadata/labels/repo
                   value: {REPLACE_REPO_NAME}
