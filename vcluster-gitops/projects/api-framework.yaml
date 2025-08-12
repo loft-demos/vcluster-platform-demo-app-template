@@ -61,6 +61,7 @@ spec:
         - runners
       teams:
         - api-framework
+        - loft-admins
   argoCD:
     virtualClusterInstance: argocd
     namespace: argocd
