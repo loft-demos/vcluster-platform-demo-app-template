@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: vcluster-pr-preview-app
+  name: vcluster-pr-preview-app-multi-k8s
   namespace: argocd
 spec:
   generators:
@@ -73,6 +73,7 @@ spec:
         repoURL: https://github.com/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git
         targetRevision: '{{head_sha}}'
       syncPolicy:
+        preserveResourcesOnDeletion: true
         automated:
           selfHeal: true
         retry:
