@@ -24,6 +24,7 @@ spec:
         - clusters
         - profile
         - permissions
+        - object-permissions
       users:
         - anna-smith
 ---
@@ -53,5 +54,6 @@ spec:
         - clusters
         - profile
         - permissions
+        - object-permissions
       users:
         - eric-jones
