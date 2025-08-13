@@ -47,13 +47,13 @@ spec:
     apiVersion: notification.toolkit.fluxcd.io/v1beta3
     kind: Provider
     metadata:
-      name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< $v.name >>
+      name: pr-<< inputs.id >>-k8s-<< $v.name >>-wakeup
       namespace: p-auth-core
     spec:
       type: generic
       timeout: 2m
       # address is specific to the vCluster create for a given pull request id
-      address: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/kubernetes/project/auth-core/virtualcluster/{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>
+      address: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/kubernetes/project/auth-core/virtualcluster/pr-<< inputs.id >>-k8s-<< $v.name >>-flux
       secretRef:
         name: vcluster-platform-provider-headers
     ---
@@ -61,14 +61,14 @@ spec:
     apiVersion: notification.toolkit.fluxcd.io/v1beta3
     kind: Alert
     metadata:
-      name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< $v.name >>
+      name: pr-<< inputs.id >>-k8s-<< $v.name >>-wakeup
       namespace: p-auth-core
     spec:
       suspend: true
       eventMetadata:
         summary: "PR Updated, wakeup vCluster"
       providerRef:
-        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< $v.name >>
+        name: pr-<< inputs.id >>-k8s-<< $v.name >>-wakeup
       eventSeverity: info
       inclusionList:
         - ".*commit.*"
@@ -80,7 +80,7 @@ spec:
     kind: Kustomization
     metadata:
       # repo name with PR number and part PR label is enough to make the Virtual Cluster Instance name unique
-      name: {REPLACE_REPO_NAME}-flux-preview-vcluster-<< inputs.id >>-k8s-<< $v.name >>
+      name: pr-<< inputs.id >>-k8s-<< $v.name >>-flux-vcluster
       namespace: p-auth-core
     spec:
       interval: 48h
@@ -107,20 +107,19 @@ spec:
           patch: |
             - op: add
               path: /metadata/name
-              value:
-                {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>
+              value: pr-<< inputs.id >>-k8s-<< $v.name >>-flux
             - op: replace
               path: /spec/parameters
               value: |
                 k8sVersion: "<< $v.value >>"
-                sleepAfter: "7"
+                sleepAfter: "4"
     ---
     # Alert used to add commit statuses
     # It is created in the p-auth-core namespace because injecting the GitHub PAT Secret into the vCluster namespace takes too long
     apiVersion: notification.toolkit.fluxcd.io/v1beta3
     kind: Alert
     metadata:
-      name: github-status-{REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< $v.name >>
+      name: github-status-{REPLACE_REPO_NAME}-pr-<< inputs.id >>-k8s-<< $v.name >>
       namespace: p-auth-core
     spec:
       providerRef:
@@ -128,7 +127,7 @@ spec:
       eventSources:
         - kind: HelmRelease
           name: '*'
-          namespace: "loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>"
+          namespace: "auth-core-v-pr-<< inputs.id >>-k8s-<< $v.name >>-flux"
     ---
     # Alert used to add comment to pull request
     # It is created in the p-auth-core namespace because injecting the GitHub PAT Secret into the vCluster namespace takes too long
@@ -149,12 +148,12 @@ spec:
     apiVersion: kustomize.toolkit.fluxcd.io/v1
     kind: Kustomization
     metadata:
-      name: {REPLACE_REPO_NAME}-flux-preview-app-<< inputs.id >>-k8s-<< $v.name >>
+      name: pr-<< inputs.id >>-k8s-<< $v.name >>-flux-app
       namespace: p-auth-core
     spec:
       dependsOn:
         # this dependsOn allows for vCluster to be up and running before Flux deploys HelmRelease
-        - name: {REPLACE_REPO_NAME}-flux-preview-vcluster-<< inputs.id >>-k8s-<< $v.name >>
+        - name: pr-<< inputs.id >>-k8s-<< $v.name >>-flux-vcluster
           namespace: p-auth-core
       interval: 48h
       retryInterval: 30s
@@ -173,7 +172,7 @@ spec:
             - op: add
               path: /metadata/namespace
               value: # based on Auth Core vCluster Platform project pattern for vCluster namespaces
-                loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>
+                loft-auth-core-v-pr-<< inputs.id >>-k8s-<< $v.name >>-flux
         - target:
             kind: HelmRelease
           patch: |
@@ -181,12 +180,12 @@ spec:
               path: /metadata/namespace
               # the HelmRelease must be in the same namespace as the kubeConfig.secretRef for the vCluster
               value: 
-                loft-auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>
+                loft-auth-core-v-pr-<< inputs.id >>-k8s-<< $v.name >>-flux
             - op: add
               path: /metadata/annotations
               # the following annotations are used to populate notifications
               value:
-                event.toolkit.fluxcd.io/preview-url: "https://podinfo-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>.{REPLACE_BASE_DOMAIN}"
+                event.toolkit.fluxcd.io/preview-url: "https://podinfo-pr-<< inputs.id >>-k8s-<< $v.name >>-flux.{REPLACE_BASE_DOMAIN}"
                 event.toolkit.fluxcd.io/pr-number: "<< inputs.id >>"
                 event.toolkit.fluxcd.io/sha: "<< inputs.sha >>"
                 event.toolkit.fluxcd.io/k8s-version: "<< $v.value >>"
@@ -208,13 +207,13 @@ spec:
               path: /spec/values
               value:
                 ui:
-                  message: "deployed to {REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >> << inputs.sha >>" # use of sha here to simulate dynamic app deployment
+                  message: "deployed to pr-<< inputs.id >>-k8s-<< $v.name >>-flux << inputs.sha >>" # use of sha here to simulate dynamic app deployment
             - op: add
               path: /spec/values/ingress
               value:
                 enabled: true
                 hosts:
-                  - host: "podinfo-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>.{REPLACE_BASE_DOMAIN}"
+                  - host: "podinfo-pr-<< inputs.id >>-k8s-<< $v.name >>-flux.{REPLACE_BASE_DOMAIN}"
                     paths:
                       - path: /
                         pathType: ImplementationSpecific

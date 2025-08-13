@@ -8,7 +8,7 @@ data:
     argocdUrl: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
   # Define the webhook service for vCluster Platform
   service.webhook.vcluster-platform: |
-    url: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+    url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local
     headers:
     - name: Authorization
       value: "Bearer $accessKey"
@@ -35,17 +35,15 @@ data:
     github:
       repoURLPath: "https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}"
       revisionPath: "{{.app.spec.source.targetRevision}}"
-      status:
-        state: success
-        label: "argo-cd/{{.app.metadata.name}}"
-        targetURL: "{{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true"
       pullRequestComment:
         content: |
           {{- $labels := .app.metadata.labels | default dict -}}
+          {{- $shortSha := get $labels "shortSha" | default "unknown-commit" -}}
           {{- $projectId := get $labels "vclusterProjectId" | default "unknown-project" -}}
           {{- $vclusterName := get $labels "vclusterName" | default "unknown-vcluster" -}}
           {{- $k8sVersion := get $labels "k8sVersion" | default "unknown-k8s-version" -}}
-      
+
+          commit {{$shortSha}}
           **Kubernetes Version:** {{$k8sVersion}}
           **vCluster:** pull request [vCluster pods](https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/projects/{{$projectId}}/vclusters/{{$vclusterName}}/pods)  
           **Argo CD:** pull request specific [Argo CD instance]({{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true)  

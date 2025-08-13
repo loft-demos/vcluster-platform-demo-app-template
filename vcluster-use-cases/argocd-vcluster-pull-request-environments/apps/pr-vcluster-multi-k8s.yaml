@@ -51,13 +51,13 @@ spec:
             - patch: |-
                 - op: replace
                   path: /metadata/name
-                  value: pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-romeo-app
+                  value: pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-{REPLACE_REPO_NAME}
                 - op: add
                   path: /metadata/labels/vclusterProjectId
                   value: auth-core
                 - op: add
                   path: /metadata/labels/vclusterName
-                  value: pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-romeo-app
+                  value: pr-{{number}}-k8s-{{k8sVersionDNSLabel}}-{REPLACE_REPO_NAME}
                 - op: add
                   path: /metadata/labels/repo
                   value: {REPLACE_REPO_NAME}
@@ -86,8 +86,7 @@ spec:
                   path: /spec/parameters
                   value: |
                     k8sVersion: "{{k8sVersion}}"
-                    env: "qa"
-                    sleepAfter: "30"
+                    sleepAfter: "5"
               target:
                 group: management.loft.sh
                 version: v1
