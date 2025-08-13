@@ -4,6 +4,8 @@ metadata:
   name: vcluster-env-config
   namespace: argocd
 spec:
+  syncPolicy:
+    preserveResourcesOnDeletion: true
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
