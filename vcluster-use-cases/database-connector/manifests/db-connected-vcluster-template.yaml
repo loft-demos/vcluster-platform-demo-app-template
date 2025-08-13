@@ -43,7 +43,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.24.1
+            version: v0.27.0
           values: |+
             sleepMode:
               enabled: true

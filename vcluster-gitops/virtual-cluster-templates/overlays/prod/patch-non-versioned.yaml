@@ -6,7 +6,7 @@ spec:
   template:
     helmRelease:
       chart:
-        version: 0.26.0
+        version: v0.27.0
   parameters:
     - variable: sleepAfter
       label: Sleep After Inactivity (minutes)
