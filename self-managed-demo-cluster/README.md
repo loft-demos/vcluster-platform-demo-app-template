@@ -1,6 +1,6 @@
 # Using this Repository with a Self-Managed vCluster Platform Cluster
 
-Although the configuration and use case examples in this repository are intended to be used with the fully automated and fully managed vCluster Platform Demo Generator vCluster Platform environments, it is also possible to use this repository with self-managed (non-inception) vCluster Platform environments by following these steps:
+Although the configuration and use case examples in this repository are intended to be used with the fully automated and fully managed [vCluster Platform Demo Generator](../vcluster-platform-demo-generator.md) vCluster Platform demo environments, it is also possible to use this repository with self-managed (non-inception) vCluster Platform environments by following these steps:
 
 - Install Argo CD into the same cluster where vCluster Platform is installed.
 - Install Bootstrap Argo CD `Application`
