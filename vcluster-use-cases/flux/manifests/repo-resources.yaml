@@ -2,7 +2,7 @@
 apiVersion: repo.github.upbound.io/v1alpha1
 kind: IssueLabels
 metadata:
-  name: {REPLACE_REPO_NAME}-repo-labels
+  name: {REPLACE_REPO_NAME}-labels
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
@@ -27,7 +27,7 @@ spec:
       - name: e2e vCluster
         color: ee7d3b
         description: Run e2e tests on PR with vCluster
-    repository: {REPLACE_REPO_NAME}-app
+    repository: {REPLACE_REPO_NAME}
   initProvider: {}
   managementPolicies:
     - '*'
