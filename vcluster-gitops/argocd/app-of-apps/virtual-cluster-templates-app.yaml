@@ -9,8 +9,6 @@ spec:
     repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
     targetRevision: main
     path: vcluster-gitops/virtual-cluster-templates/overlays/prod
-    kustomize:
-      forceCommonAnnotations: false
   destination:
     server: https://kubernetes.default.svc
     namespace: loft

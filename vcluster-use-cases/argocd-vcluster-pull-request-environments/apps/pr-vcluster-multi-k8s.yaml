@@ -85,7 +85,7 @@ spec:
                 - op: replace
                   path: /spec/parameters
                   value: |
-                    k8sVersion: "{{k8sVersion}}"
+                    k8sVersion: {{k8sVersion}}
                     sleepAfter: "5"
               target:
                 group: management.loft.sh
