@@ -37,7 +37,7 @@ spec:
       labels:
         vclusterName: '{{metadata.labels.vclusterName}}'
         vclusterProjectId: '{{metadata.labels.vclusterProjectId}}'
-        shortSha: '{{metadata.labels.headShortSha}}'
+        shortSha: '{{head_short_sha}}'
         k8sVersion: '{{metadata.labels.k8sVersion}}'
       name: pr-{{number}}-app-k8s-{{metadata.labels.k8sVersionDNSLabel}}
     spec:
