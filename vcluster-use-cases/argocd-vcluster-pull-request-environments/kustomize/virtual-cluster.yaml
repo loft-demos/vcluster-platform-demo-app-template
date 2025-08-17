@@ -1,0 +1,18 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: vc
+  namespace: p-auth-core
+  labels:
+    loft.sh/import-argocd: 'true'
+spec:
+  owner:
+    team: auth-core
+  templateRef:
+    name: default-template
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+  parameters: |
+    k8sVersion: v1.31.6
+    env: 'qa'
