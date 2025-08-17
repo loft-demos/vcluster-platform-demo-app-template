@@ -13,8 +13,8 @@ spec:
                   k8sVersionDNSLabel: 1-33-3
                 - k8sVersion: v1.32.7
                   k8sVersionDNSLabel: 1-32-7
-                - k8sVersion: v1.31.11
-                  k8sVersionDNSLabel: 1-31-11
+                # - k8sVersion: v1.31.11
+                #   k8sVersionDNSLabel: 1-31-11
                 # - k8sVersion: v1.30.14
                 #   k8sVersionDNSLabel: 1-30-14
           - pullRequest:
