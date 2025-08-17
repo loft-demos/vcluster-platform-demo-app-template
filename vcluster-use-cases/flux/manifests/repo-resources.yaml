@@ -9,24 +9,24 @@ spec:
   deletionPolicy: Delete
   forProvider:
     label:
-      - name: create-pr-vcluster-external-argocd
-        color: ee7d3b
-        description: Triggers the creation of a vCluster for a Pull Request via Argo CD
-      - name: preview
-        color: ee7d3b
-        description: Creates vCluster preview environment for a Pull Request with Argo CD
       - name: 'deploy/argocd-vcluster-preview'
         color: ee7d3b
         description: Creates PR preview vCluster instances with matrix of Kubernetes versions via Argo CD
-      - name: preview-cluster-ready
-        color: ee7d3b
-        description: Triggers Argo CD application set for PR
       - name: 'deploy/flux-vcluster-preview'
         color: c5def5
         description: PR preview vCluster instances with a matrix of Kubernetes versions via Flux
       - name: e2e vCluster
         color: ee7d3b
         description: Run e2e tests on PR with vCluster
+      - name: create-pr-vcluster-external-argocd
+        color: ee7d3b
+        description: Triggers the creation of a vCluster for a Pull Request via Argo CD
+      - name: preview
+        color: ee7d3b
+        description: Creates vCluster preview environment for a Pull Request with Argo CD
+      - name: preview-cluster-ready
+        color: ee7d3b
+        description: Triggers Argo CD application set for PR
     repository: {REPLACE_REPO_NAME}
   initProvider: {}
   managementPolicies:
