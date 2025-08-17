@@ -46,7 +46,7 @@ data:
           commit {{$shortSha}}
           **Kubernetes Version:** {{$k8sVersion}}
           **vCluster:** pull request [vCluster pods](https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/projects/{{$projectId}}/vclusters/{{$vclusterName}}/pods)  
-          **Argo CD:** pull request specific [Argo CD instance]({{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true)  
+          **Argo CD:** pull request [Argo CD PR deployment Application]({{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true)  
           **Deployed App:** application for this pull request has been deployed at: [{{.app.metadata.name}}](https://{{$vclusterName}}.{REPLACE_BASE_DOMAIN}/)
   trigger.on-deployed: |
     - description: Application is synced and healthy. Triggered once per commit.
