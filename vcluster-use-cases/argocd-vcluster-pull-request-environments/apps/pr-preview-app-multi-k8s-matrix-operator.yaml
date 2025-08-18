@@ -75,7 +75,6 @@ spec:
         repoURL: https://github.com/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git
         targetRevision: '{{head_sha}}'
       syncPolicy:
-        preserveResourcesOnDeletion: true
         automated:
           selfHeal: true
         retry:
