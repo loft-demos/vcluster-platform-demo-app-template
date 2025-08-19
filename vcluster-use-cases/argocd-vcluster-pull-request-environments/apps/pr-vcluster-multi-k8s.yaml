@@ -86,7 +86,7 @@ spec:
                   path: /spec/parameters
                   value: |
                     k8sVersion: {{k8sVersion}}
-                    sleepAfter: "5"
+                    sleepAfter: "4"
               target:
                 group: management.loft.sh
                 version: v1
