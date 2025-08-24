@@ -1,0 +1,63 @@
+name: ghcr-retention-snapshots
+on:
+  registry_package:
+    types: [published, updated]
+  workflow_dispatch:
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compute versions to delete (keep 2 newest matching)
+        id: calc
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: {REPLACE_ORG_NAME}            # org or username that owns the package
+          PKG: {REPLACE_REPO_NAME}             # package name only (no ghcr.io prefix)
+          TAG_REGEX: '^[a-z0-9-]+-\d{14}$'
+        run: |
+          set -euo pipefail
+      
+          # 1) Flatten paginated arrays to newline-delimited version objects
+          gh api --paginate "/orgs/${OWNER}/packages/container/${PKG}/versions" -q '.[]' > objects.ndjson
+
+          # Debug first few objects
+          head -n 5 objects.ndjson | jq '{id, name, created_at, updated_at, tags: .metadata.container.tags}'
+      
+          # 2) Normalize tags to an array of strings; also capture .name as fallback
+          jq --arg re "$TAG_REGEX" -s '
+            map({
+              id,
+              ts: (.created_at // .updated_at),
+              name: (.name // ""),
+              tags: ((.metadata.container.tags // []) | flatten | map(tostring))
+            })
+            # Match if ANY tag matches, OR the version .name matches
+            | map(select( ([.tags[]? | test($re)] | any) or (.name | test($re)) ))
+            | sort_by(.ts) | reverse
+          ' objects.ndjson > matched.json
+      
+          # 3) Keep newest 4, delete the rest
+          DEL_IDS=$(jq -r '.[4:] | map(.id) | join(",")' matched.json)
+          echo "ids=$DEL_IDS" >> "$GITHUB_OUTPUT"
+      
+          echo "Matched versions (newest first):"
+          jq -r '.[] | "\(.id)\t\(.ts)\t\(.name)\t\((.tags // [])|join(","))"' matched.json
+          echo "To delete: ${DEL_IDS:-<none>}"
+
+      - uses: actions/delete-package-versions@v5
+        if: ${{ steps.calc.outputs.ids != '' }}
+        with:
+          owner: {REPLACE_ORG_NAME}
+          package-name: {REPLACE_REPO_NAME} 
+          package-type: container
+          package-version-ids: ${{ steps.calc.outputs.ids }}
+          token: ${{ github.token }}
+
+      - name: Nothing to delete
+        if: ${{ steps.calc.outputs.ids == '' }}
+        run: echo "No versions matched deletion criteria."
