@@ -187,7 +187,7 @@ spec:
                 autoDelete:
                   afterInactivity: 1800000
                 autoSnapshot:
-                  schedule: "15 7-17 * * 1-"
+                  schedule: "15 7-17 * * 1-5"
                   enabled: true
                   retention:
                     period: 5
