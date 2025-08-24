@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: vcluster-pr-preview-app
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - pullRequest:
+              github:
+                appSecretName: loft-demo-org-cred
+                labels:
+                  - create-pr-vcluster-external-argocd
+                owner: {REPLACE_ORG_NAME}
+                repo: {REPLACE_REPO_NAME}
+              requeueAfterSeconds: 30
+          - clusters:
+              selector:
+                matchExpressions:
+                  - key: prNumber
+                    operator: In
+                    values:
+                      - "{{number}}" 
+                matchLabels:
+                  repo: {REPLACE_REPO_NAME}
+                  prLabel: 'create-pr-vcluster-external-argocd'
+                  vcluster.loft.sh/ready: 'true'
+  template:
+    metadata:
+      name: {REPLACE_REPO_NAME}-pr-{{number}}-preview-app
+      annotations:
+        notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ""
+      labels:
+        vclusterName: "{{metadata.labels.vclusterName}}"
+        vclusterProjectId: "{{metadata.labels.vclusterProjectId}}"
+    spec:
+      destination:
+        namespace: preview-hello-world-app
+        server: '{{server}}'
+      info:
+        - name: GitHub Repo
+          value: https://github.com/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/
+      project: loft-auth-core
+      source:
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git
+        targetRevision: '{{head_sha}}'
+        path: helm-chart/
+        helm:
+          parameters:
+          - name: "image.repository"
+            value: "ghcr.io/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}"
+          - name: "image.tag"
+            value: "{{head_short_sha}}"
+          - name: "image.args.text"
+            value: "Hello from {{metadata.labels.vclusterName}} commit {{head_short_sha}}"
+          - name: "ingress.hosts[0].host"
+            value: "{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}"
+          - name: ingress.hosts[0].paths[0].backend.service.name
+            value: "{{metadata.labels.repo}}"
+          - name: ingress.hosts[0].paths[0].backend.service.port.name
+            value: http
+          - name: ingress.hosts[0].paths[0].path
+            value: /
+          - name: ingress.hosts[0].paths[0].pathType
+            value: prefix
+          - name: "ingress.tls[0].hosts[0]"
+            value: "{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}"
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 5 # number of failed sync attempt retries; unlimited number of attempts if less than 0
+          backoff:
+            duration: 40s # the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")
+            factor: 1 # a factor to multiply the base duration after each failed retry
+            maxDuration: 2m
