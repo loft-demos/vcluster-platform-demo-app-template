@@ -1,0 +1,22 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: {REPLACE_REPO_NAME}
+  namespace: p-auth-core
+spec:
+  interval: 5m0s
+  url: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+  ref:
+    branch: main
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: github-dispatch
+  namespace: p-auth-core
+spec:
+  type: githubdispatch
+  address: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+  secretRef:
+    name: {REPLACE_ORG_NAME}-pat
+---

@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-vcluster-internal-argocd
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          appSecretName: loft-demo-org-cred
+          labels:
+            - create-prvcluster
+          owner: {REPLACE_ORG_NAME}
+          repo: {REPLACE_REPO_NAME}
+        requeueAfterSeconds: 30
+        template:
+          metadata: {}
+          spec:
+            destination: {}
+            project: ''
+  template:
+    metadata:
+      name: {REPLACE_REPO_NAME}-pr-{{number}}
+    spec:
+      destination:
+        name: in-cluster
+        namespace: p-api-framework
+      info:
+        - name: PRvCluster Argo CD URL
+          value: https://argocd-{REPLACE_REPO_NAME}-pr-{{number}}.{REPLACE_BASE_DOMAIN}
+        - name: GitHub PR
+          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
+      project: default
+      source:
+        kustomize:
+          namePrefix: {REPLACE_REPO_NAME}-pr-{{number}}-
+          patches:
+            - patch: |-
+                - op: replace
+                  path: /spec/prNumber
+                  value: '{{number}}'
+              target:
+                kind: PullRequestEnvironment
+                name: vcluster
+        path: vcluster-use-cases/argocd-vcluster-pull-request-environments/internal/kustomize
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        targetRevision: '{{head_sha}}'
+      syncPolicy:
+        automated:
+          selfHeal: true

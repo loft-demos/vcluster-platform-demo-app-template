@@ -41,8 +41,8 @@ spec:
                 Helm-Dashboard=https://helm-dashboard-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             labels:
               env: '{{ .Values.env }}'
-              demos.loft.sh/project: '{{ .Values.loft.project }}'
-              demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
+              demos.vcluster.com/project: '{{ .Values.loft.project }}'
+              demos.vcluster.com/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
         apps:
           - name: helm-dashboard
             namespace: helm-dashboard
@@ -69,9 +69,9 @@ spec:
                 pods:
                   patches:
                     - path: metadata.annotations
-                      expression: 'value["demos.loft.sh/project"]="{{ .Values.loft.project }}";value'
+                      expression: 'value["demos.vcluster.com/project"]="{{ .Values.loft.project }}";value'
                     - path: metadata.labels
-                      expression: 'value["demos.loft.sh/owner"]="{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}";value'
+                      expression: 'value["demos.vcluster.com/owner"]="{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}";value'
                 ingresses:
                   enabled: true
                 secrets:
@@ -89,20 +89,20 @@ spec:
               service:
                 labels:
                   env: '{{ .Values.env }}'
-                  demos.loft.sh/project: '{{ .Values.loft.project }}'
-                  demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
+                  demos.vcluster.com/project: '{{ .Values.loft.project }}'
+                  demos.vcluster.com/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
               statefulSet:
                 annotations:
-                  demos.loft.sh/pvClaimName: '{{ .Values.pvClaimName }}'
+                  demos.vcluster.com/pvClaimName: '{{ .Values.pvClaimName }}'
                 labels:
                   env: '{{ .Values.env }}'
-                  demos.loft.sh/project: '{{ .Values.loft.project }}'
-                  demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
+                  demos.vcluster.com/project: '{{ .Values.loft.project }}'
+                  demos.vcluster.com/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
                 pods:
                   labels:
                     env: '{{ .Values.env }}'
-                    demos.loft.sh/project: '{{ .Values.loft.project }}'
-                    demos.loft.sh/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
+                    demos.vcluster.com/project: '{{ .Values.loft.project }}'
+                    demos.vcluster.com/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
                 resources:
                   # Limits are resource limits for the container
                   limits:

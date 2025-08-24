@@ -1,0 +1,18 @@
+---
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: snappy
+  namespace: p-default
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  owner:
+    team: loft-admins
+  templateRef:
+    name: auto-snapshot-vcluster
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+  parameters: |
+    env: 'prod'

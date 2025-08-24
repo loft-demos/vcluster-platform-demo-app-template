@@ -1,0 +1,254 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: auto-snapshot-vcluster
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  displayName: Automatic Snapshots Virtual Cluster
+  description: This virtual cluster template enables automatic snapshots.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.27.0
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+          labels:
+            loft.sh/import-argocd: 'true'
+        instanceTemplate:
+          metadata:
+            labels:
+              env: '{{ .Values.env }}'
+              team: '{{ .Values.loft.project }}'
+        objects: |-
+          ---
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: demo-web
+          ---
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: demo-web-content
+            namespace: demo-web
+          data:
+            index.html: |
+              <!doctype html>
+              <html lang="en">
+              <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <title>vCluster Demo App</title>
+                <style>
+                  body { font-family: system-ui, sans-serif; margin: 3rem; line-height: 1.4; }
+                  .card { padding: 1.25rem 1.5rem; border-radius: 12px; box-shadow: 0 2px 18px rgba(0,0,0,.08); }
+                  .muted { color: #666; font-size: .95rem; }
+                  code { background: #f6f8fa; padding: .15rem .35rem; border-radius: 6px; }
+                </style>
+              </head>
+              <body>
+                <h1>🚀 vCluster Demo App</h1>
+                <p class="muted">This page is served by NGINX running as an unprivileged user.</p>
+                <div class="card">
+                  <p>Pod: <code>${HOSTNAME}</code></p>
+                  <p>Time: <code>$(date)</code></p>
+                </div>
+                <p class="muted">Image: <code>ghcr.io/nginxinc/nginx-unprivileged:stable-alpine</code></p>
+              </body>
+              </html>
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: demo-web
+            namespace: demo-web
+            labels:
+              app: demo-web
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: demo-web
+            template:
+              metadata:
+                labels:
+                  app: demo-web
+              spec:
+                containers:
+                  - name: web
+                    image: ghcr.io/nginxinc/nginx-unprivileged:stable-alpine
+                    imagePullPolicy: IfNotPresent
+                    ports:
+                      - name: http
+                        containerPort: 8080
+                    volumeMounts:
+                      - name: web-content
+                        mountPath: /usr/share/nginx/html
+                        readOnly: true
+                    env:
+                      - name: TZ
+                        value: America/New_York
+                    readinessProbe:
+                      httpGet:
+                        path: /
+                        port: http
+                    livenessProbe:
+                      httpGet:
+                        path: /
+                        port: http
+                      initialDelaySeconds: 10
+                    resources:
+                      requests:
+                        cpu: 20m
+                        memory: 64Mi
+                      limits:
+                        cpu: 200m
+                        memory: 256Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      runAsNonRoot: true
+                      runAsUser: 101
+                      runAsGroup: 101
+                      seccompProfile:
+                        type: RuntimeDefault
+                      capabilities:
+                        drop: ["ALL"]
+                volumes:
+                  - name: web-content
+                    configMap:
+                      name: demo-web-content
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: demo-web
+            namespace: demo-web
+            labels:
+              app: demo-web
+          spec:
+            selector:
+              app: demo-web
+            ports:
+              - name: http
+                port: 80
+                targetPort: http
+                protocol: TCP
+            type: ClusterIP
+          ---
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: demo-web
+            namespace: demo-web
+            annotations:
+              kubernetes.io/ingress.class: nginx
+          spec:
+            rules:
+              - host: demo-web-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+                http:
+                  paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: demo-web
+                          port:
+                            number: 80
+
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.28.0-alpha.8
+          values: |+
+            external:
+              platform:
+                autoDelete:
+                  afterInactivity: 1800000
+                autoSnapshot:
+                  schedule: "15 7-17 * * 1-"
+                  enabled: true
+                  retention:
+                    period: 5
+                    maxSnapshots: 4
+                  timezone: America/New_York
+                  storage:
+                    type: oci
+                    oci:
+                      credential:
+                        secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
+                        secretNamespace: p-default
+                      repository: oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+            sleepMode:
+              enabled: true
+              autoSleep:
+                afterInactivity: 35m
+              timeZone: America/New_York
+              autoWakeup:
+                schedule: 11 7-17 * * 1-5
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            controlPlane:
+              statefulSet:
+                labels:
+                  env: '{{ .Values.env }}'
+                  team: '{{ .Values.loft.project }}'
+                resources:
+                  limits:
+                    ephemeral-storage: 8Gi
+                    memory: 2Gi
+                    cpu: 1
+              # Use a Platform database connector instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      parameters:
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+          section: Deployment Environment
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}

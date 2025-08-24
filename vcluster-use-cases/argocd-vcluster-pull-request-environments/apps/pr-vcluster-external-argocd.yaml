@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-vcluster-external-argocd
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          appSecretName: loft-demo-org-cred
+          labels:
+            - create-pr-vcluster-external-argocd
+          owner: {REPLACE_ORG_NAME}
+          repo: {REPLACE_REPO_NAME}
+        requeueAfterSeconds: 30
+        template:
+          metadata: {}
+          spec:
+            destination: {}
+            project: ''
+  template:
+    metadata:
+      name: {REPLACE_REPO_NAME}-pr-{{number}}-vcluster
+    spec:
+      destination:
+        name: in-cluster
+        namespace: p-auth-core
+      info:
+        - name: PR vCluster Argo CD URL
+          value: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+        - name: GitHub PR
+          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
+      project: loft-auth-core
+      source:
+        kustomize:
+          namePrefix: {REPLACE_REPO_NAME}-pr-{{number}}-
+          patches:
+            - patch: |-
+                - op: add
+                  path: /metadata/labels/vclusterProjectId
+                  value: auth-core
+                - op: add
+                  path: /metadata/labels/vclusterName
+                  value: {REPLACE_REPO_NAME}-pr-{{number}}-vcluster
+                - op: add
+                  path: /metadata/labels/repo
+                  value: {REPLACE_REPO_NAME}
+                - op: add
+                  path: /metadata/labels/prLabel
+                  value: 'create-pr-vcluster-external-argocd'
+                - op: add
+                  path: /metadata/labels/prNumber
+                  value: '{{number}}'
+                - op: add
+                  path: /metadata/labels/targetRevision
+                  value: '{{head_sha}}'
+                - op: add
+                  path: /metadata/labels/headShortSha
+                  value: '{{head_short_sha}}'
+                - op: add
+                  path: /metadata/labels/headBranch
+                  value: '{{branch}}'
+              target:
+                kind: VirtualClusterInstance
+                name: vcluster
+        path: vcluster-use-cases/argocd-vcluster-pull-request-environments/kustomize
+        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        targetRevision: '{{branch}}'
+      syncPolicy:
+        automated:
+          selfHeal: true
