@@ -222,7 +222,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.28.0-alpha.8
+            version: 0.28.0-alpha.9
           values: |+
             external:
               platform:
@@ -240,7 +240,7 @@ spec:
                     oci:
                       credential:
                         secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
-                        secretNamespace: p-default
+                        secretNamespace: {{ .Values.loft.virtualClusterNamespace }}
                       repository: oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
             sleepMode:
               enabled: true
@@ -274,6 +274,16 @@ spec:
           ingress: {}
         spaceTemplate:
           metadata: {}
+          objects: |
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: {REPLACE_ORG_NAME}-ghcr-write-pat
+              labels:
+                loft.sh/project-secret-name: {REPLACE_ORG_NAME}-ghcr-write
+                org: {REPLACE_ORG_NAME}
+                repo: {REPLACE_REPO_NAME}
+            type: Opaque
       parameters:
         - variable: env
           label: Deployment Environment
