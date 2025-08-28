@@ -29,6 +29,7 @@ jobs:
     if: ${{ !github.event.repository.is_template }}
     runs-on: ubuntu-22.04
     permissions:
+      packages: write
       contents: write
       actions: write
     steps:
