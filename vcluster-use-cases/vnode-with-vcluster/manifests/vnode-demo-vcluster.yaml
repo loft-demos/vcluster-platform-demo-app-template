@@ -1,0 +1,16 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: vnode-demo
+  namespace: p-default
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  displayName: vnode-demo
+  owner:
+    teams: loft-admins
+  templateRef:
+    name: vnode-demo-template
+  clusterRef:
+    cluster: loft-cluster
+  networkPeer: true

@@ -5,6 +5,7 @@
 Enabling this use case for the demo environment will create:
 
 - The *vnode-demo-template* `VirtualClusterTemplate` that deploys the `vnode` `RuntimeClass` into the vCluster along with two highly privileged `Deployments` deployed to the same `node`, one using the `vnode` `RuntimeClass` and the other not using it. This allows you to easily **breakout** of the non-vnode workload and have root access to the underlying node, whereas the same is not possible with the **vnode enabled** workload.
+- Deploy a vCluster instances using the *vnode-demo-template* in the Default project
 - The *vcluster-pss-baseline-vnode-config* `VirtualClusterTemplate` that provides a configuration with Pod Security Standards configured for the vCluster control plane Kubernetes API server Pod Security Admission Controller. The configuration is passed to the vCluster Kubernetes kube-apiserver via the *pod-security-admission-config* `ConfigMap` configured as part of the template. The passed in Kubernetes API Server `AdmissionConfiguration`, for the `PodSecurity` plugin `PodSecurityConfiguration`, enforces the **Baseline Pod Security Standards** policy with an exception for vCluster workloads using the `vnode` `runtimeClass`.
 - The *vnode-runtime-class-sync-with-vnode-launcher* `VirtualClusterTemplate` deploys the `vnode` `RuntimeClass` into the vCluster created with this template. Additionally, this templates creates a `vnode-launcher` `pod` in the host namespace of the vCluster that will allow sharing a single vNode runtime across multiple vCluster workload pods.
 
@@ -14,9 +15,9 @@ This demo shows how easy it is to breakout of a privileged container while also 
 
 ### Prerequisites
 
-A Kubernetes cluster with [vNode installed](https://www.vnode.com/docs/#before-you-begin) that is connected to your vCluster Platform demo environment.
+A Kubernetes cluster with [vNode installed](https://www.vnode.com/docs/#before-you-begin) that is connected to your vCluster Platform demo environment - the vCluster Demo Generator cluster has vNode installed in the root GKE host cluster.
 
-If you don't have a Kubernetes cluster with vNode installed already available, it is probably easiest to use a KinD cluster - [KinD Quickstart](https://kind.sigs.k8s.io/docs/user/quick-start/).
+If you aren't using the vCluster Demo Generator cluster and don't have a Kubernetes cluster with vNode installed already available, it is probably easiest to use a KinD cluster - [KinD Quickstart](https://kind.sigs.k8s.io/docs/user/quick-start/).
 
 Once you have a KinD cluster up and running, [connect it to your vCluster Platform](https://www.vcluster.com/docs/platform/administer/clusters/connect-cluster?x0=3) demo environment.
 
@@ -26,7 +27,7 @@ In vCluster Platform create a vCluster in the Default project from the vNode Dem
 
 ### Show that the breakout test container without vNode is able to see the node's full process tree
 
-- shell in the  `breakout-test` (non-vnode) `pod`
+- shell in the  `breakout-test` (non-vnode) `pod` (recommend using K9s if you have it installed)
 - run `whoami` and run `pstree -p` to show the full `node` process tree
 - get the process id of the vnode `pod` lowest level `vnode-container` - it would be **3096** in the example below
 
