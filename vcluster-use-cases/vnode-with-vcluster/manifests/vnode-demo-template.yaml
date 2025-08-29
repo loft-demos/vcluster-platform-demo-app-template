@@ -2,6 +2,8 @@ apiVersion: management.loft.sh/v1
 kind: VirtualClusterTemplate
 metadata:
   name: vnode-demo-template
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   displayName: vNode Demo Template
   description: >-
@@ -28,6 +30,7 @@ spec:
         labels:
           app: breakout-test
       spec:
+        replicas: 1
         selector:
           matchLabels:
             app: breakout-test
@@ -35,6 +38,8 @@ spec:
           metadata:
             labels:
               app: breakout-test
+              app.kubernetes.io/part-of: {{ .Values.loft.clusterAnnotations.domainPrefix }}-breakout-stack
+              app.kubernetes.io/component: {{ .Values.loft.clusterAnnotations.domainPrefix }}-anchor
           spec:
             containers:
               - name: breakout
@@ -46,8 +51,6 @@ spec:
                   - sleep 10000
                 securityContext:
                   privileged: true
-            nodeSelector:
-              kubernetes.io/hostname: '{{ .Values.nodeSelectorHostName }}'
             hostNetwork: true
             hostPID: true
       ---
@@ -66,8 +69,17 @@ spec:
           metadata:
             labels:
               app: breakout-test-vnode
+              app.kubernetes.io/part-of: {{ .Values.loft.clusterAnnotations.domainPrefix }}-breakout-stack
           spec:
             runtimeClassName: vnode
+            affinity:
+              podAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/part-of: {{ .Values.loft.clusterAnnotations.domainPrefix }}-breakout-stack
+                      app.kubernetes.io/component: {{ .Values.loft.clusterAnnotations.domainPrefix }}-anchor
+                  topologyKey: kubernetes.io/hostname
             containers:
               - name: breakout
                 image: busybox
@@ -78,8 +90,6 @@ spec:
                   - sleep 10000
                 securityContext:
                   privileged: true
-            nodeSelector:
-              kubernetes.io/hostname: '{{ .Values.nodeSelectorHostName }}'
             hostNetwork: true
             hostPID: true
       ---
@@ -96,10 +106,17 @@ spec:
           metadata:
             labels:
               app: dind-vnode
+              app.kubernetes.io/part-of: {{ .Values.loft.clusterAnnotations.domainPrefix }}-breakout-stack 
           spec:
             runtimeClassName: vnode
-            nodeSelector:
-              kubernetes.io/hostname: '{{ .Values.nodeSelectorHostName }}'
+            affinity:
+              podAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/part-of: {{ .Values.loft.clusterAnnotations.domainPrefix }}-breakout-stack
+                      app.kubernetes.io/component: {{ .Values.loft.clusterAnnotations.domainPrefix }}-anchor
+                  topologyKey: kubernetes.io/hostname
             containers:
             - name: dind
               image: docker:24.0.2-dind
@@ -124,6 +141,17 @@ spec:
       chart:
         version: 0.27.0
       values: |
+        sleepMode:
+          enabled: true
+          autoSleep:
+            afterInactivity: "50m"
+          timeZone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+          autoWakeup:
+            schedule: 5 7-17 * * 1-5
+        external:
+          platform:
+            autoDelete:
+              afterInactivity: 1800000
         sync:
           toHost:
             ingresses:
