@@ -17,7 +17,7 @@ spec:
     path: vcluster-use-cases/connected-host-cluster/manifests
   destination:
     server: https://kubernetes.default.svc
-    namespace: p-default
+    namespace: p-vcluster-flux-demo
   syncPolicy:
     automated:
       prune: true
