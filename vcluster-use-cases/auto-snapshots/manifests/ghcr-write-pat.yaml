@@ -9,4 +9,3 @@ metadata:
     loft.sh/project-secret-name: {REPLACE_ORG_NAME}-ghcr-write
     org: {REPLACE_ORG_NAME}
     repo: {REPLACE_REPO_NAME}
-type: Opaque

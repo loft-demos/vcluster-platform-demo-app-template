@@ -1,7 +1,7 @@
 apiVersion: management.loft.sh/v1
 kind: Cluster
 metadata:
-  name: dev
+  name: dev-cluster
 spec:
   displayName: Dev Cluster
   description: Host cluster for dev, preview, pr vCluster instances.
