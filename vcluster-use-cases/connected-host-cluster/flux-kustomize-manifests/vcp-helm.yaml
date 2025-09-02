@@ -25,7 +25,7 @@ spec:
         kind: HelmRepository
         name: vcluster-platform
         namespace: p-vcluster-flux-demo
-  exportKubeConfig:
+  kubeConfig:
     secretRef:
       name: dev-cluster-kube-config
       key: config
