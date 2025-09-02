@@ -1,0 +1,12 @@
+apiVersion: management.loft.sh/v1
+kind: Cluster
+metadata:
+  name: dev
+spec:
+  displayName: Dev Cluster
+  description: Host cluster for dev, preview, pr vCluster instances.
+  owner:
+    team: loft-admins
+  config: {}
+  networkPeer: true
+  managementNamespace: vcluster-platform

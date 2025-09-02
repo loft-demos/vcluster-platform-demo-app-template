@@ -1,0 +1,41 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: vcluster-platform
+spec:
+  interval: 12h
+  url: https://charts.loft.sh/ 
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: vcluster-platform
+spec:
+  targetNamespace: vcluster-platform
+  storageNamespace: vcluster-platform
+  releaseName: vcluster-platform
+  chart:
+    spec:
+      chart: vcluster-platform
+      version: 4.4.0-alpha.31
+      sourceRef:
+        kind: HelmRepository
+        name: vcluster-platform
+  interval: 50m
+  driftDetection:
+    mode: enabled
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  uninstall:
+    timeout: 1s
+    deletionPropagation: orphan
+  # Default values
+  # 
+  values:
+    agentOnly: true
+    url: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+    token: "${connectedHostClusterAccessKey}"
+    insecureSkipVerify: true
