@@ -280,7 +280,7 @@ spec:
             metadata:
               name: {REPLACE_ORG_NAME}-ghcr-write-pat
               labels:
-                loft.sh/project-secret-name: {REPLACE_ORG_NAME}-ghcr-write
+                loft.sh/project-secret-name: {REPLACE_ORG_NAME}-ghcr-write-pat
                 org: {REPLACE_ORG_NAME}
                 repo: {REPLACE_REPO_NAME}
             type: Opaque

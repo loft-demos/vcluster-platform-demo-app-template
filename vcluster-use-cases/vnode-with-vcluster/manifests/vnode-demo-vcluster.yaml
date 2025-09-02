@@ -8,7 +8,7 @@ metadata:
 spec:
   displayName: vnode-demo
   owner:
-    teams: loft-admins
+    team: loft-admins
   templateRef:
     name: vnode-demo-template
   clusterRef:
