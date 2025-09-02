@@ -1,0 +1,16 @@
+apiVersion: storage.loft.sh/v1
+kind: AccessKey
+metadata:
+  labels:
+    loft.sh/cluster: dev-cluster
+  name: loft-agent-dev-cluster
+spec:
+  groups:
+    - loft:cluster:dev-cluster
+    - loft:system:clusters
+  key: "${connectedHostClusterAccessKey}"
+  scope:
+    roles:
+      - role: agent
+  subject: loft:cluster:dev-cluster
+  type: Other

@@ -1,0 +1,22 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: connected-host-cluster-flux-kustomization
+spec:
+  interval: 1h
+  retryInterval: 3m
+  timeout: 5m
+  prune: true
+  wait: true
+  dependsOn:
+    - name: vcluster-flux-kustomize
+      namespace: p-vcluster-flux-demo
+  path: ./vcluster-use-cases/connected-host-cluster/flux-kustomize-manifests
+  sourceRef:
+    kind: GitRepository
+    name: vcluster-flux-demo
+    namespace: p-vcluster-flux-demo
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: demo-admin-access-key

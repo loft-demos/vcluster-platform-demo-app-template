@@ -229,12 +229,12 @@ spec:
                 autoDelete:
                   afterInactivity: 1800000
                 autoSnapshot:
-                  schedule: "15 7-17 * * 1-5"
+                  schedule: "15 7-17/9 * * 1-5"
                   enabled: true
                   retention:
                     period: 5
                     maxSnapshots: 4
-                  timezone: America/New_York
+                  timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
                   storage:
                     type: oci
                     oci:
@@ -246,7 +246,7 @@ spec:
               enabled: true
               autoSleep:
                 afterInactivity: 35m
-              timeZone: America/New_York
+              timeZone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
               autoWakeup:
                 schedule: 11 7-17 * * 1-5
             sync:
