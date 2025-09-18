@@ -2,6 +2,8 @@ kind: VirtualClusterTemplate
 apiVersion: management.loft.sh/v1
 metadata:
   name: default-template
+  annotations:
+    vcluster.com/template-icon: vcluster-box.svg
   labels:
     patchType: versioned
 spec:

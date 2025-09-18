@@ -4,6 +4,7 @@ metadata:
   name: vnode-demo-template
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    vcluster.com/template-icon: shield.svg
 spec:
   displayName: vNode Demo Template
   description: >-

@@ -5,6 +5,7 @@ metadata:
   name: namespace-sync-template
   annotations:
     argocd.argoproj.io/sync-options: Validate=false
+    vcluster.com/template-icon: vcluster-box.svg
 spec:
   displayName: Namespace Sync vCluster Template
   description: This template deploys a virtual cluster with namespace sync enabled.
@@ -36,7 +37,7 @@ spec:
               enabled: true
               mappings:
                 byName:
-                  "argo-apps-{{ .Values.loft.project }}-{{ .Values.loft.virtualClusterName }}": "argo-apps-{{ .Values.loft.project }}-{{ .Values.loft.virtualClusterName }}"
+                  "argo-apps": "argo-apps-{{ .Values.loft.project }}-{{ .Values.loft.virtualClusterName }}"
         controlPlane:
           backingStore:
             etcd:

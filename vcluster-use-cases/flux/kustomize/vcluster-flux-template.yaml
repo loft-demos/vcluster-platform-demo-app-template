@@ -4,6 +4,8 @@ metadata:
   name: vcluster-flux-template
   labels:
     patchType: versioned
+  annotations:
+    vcluster.com/template-icon: server.svg
 spec:
   displayName: Virtual Cluster Flux Template
   description: This virtual cluster template is configured to integrate the resulting vCluster with Flux by creating a Flux KubeConfig Secret and then automatically using Flux to deploy a `HelmRelease` based application into the vCluster.
