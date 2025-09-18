@@ -1,0 +1,61 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: cloud-burst
+  namespace: p-default
+  labels:
+    vcluster.com/import-fluxcd: 'true'
+    flux-app/podinfo-tailscale: 'true'
+    flux-app/tailscale-operator: 'true'
+spec:
+  displayName: Cloud Burst vCluster
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.28.0
+      values: |
+        controlPlane:
+        # Disable the cloudControllerManager (CCM) if using Cloud Nodes (AWS EC2)
+        # and you want to use a cloud specific CCM like cloud-provider-aws (https://github.com/kubernetes/cloud-provider-aws)
+        # advanced:
+        #   cloudControllerManager:
+        #     enabled: false
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          distro:
+            k8s:
+              image:
+                tag: v1.33.4
+        privateNodes:
+          enabled: true
+        joinNode:
+          # Might be useful to configure ec2 machine for private ecr
+          preJoinCommands:
+            - echo "Starting Pre-join commands"
+            - echo "Pre-join commands complete"
+          vpn:
+            enabled: true
+            nodeToNode:
+              enabled: true
+          autoNodes:
+            dynamic:
+              - name: gcp-{REPLACE_VCLUSTER_NAME}-node-pool
+                provider: gcp-compute-{REPLACE_VCLUSTER_NAME}-node-provider
+                limits:
+                  cpu: '30'
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  clusterRef:
+    cluster: loft-cluster
+  networkPeer: true

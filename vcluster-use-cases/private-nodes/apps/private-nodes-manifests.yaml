@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: private-nodes-manifests
+  namespace: argocd
+  labels:
+    feature.demos.vcluster.com: private-nodes
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/loft-demos/beta-app
+    targetRevision: HEAD
+    path: vcluster-use-cases/private-nodes/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: p-default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true    
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s 
+        factor: 2 
+        maxDuration: 1m

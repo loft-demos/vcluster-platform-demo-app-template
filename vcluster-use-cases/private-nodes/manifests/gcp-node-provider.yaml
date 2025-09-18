@@ -1,0 +1,139 @@
+apiVersion: management.loft.sh/v1
+kind: NodeProvider
+metadata:
+  name: gcp-compute-{REPLACE_VCLUSTER_NAME}-node-provider
+spec:
+  terraform:
+    nodeTemplate:
+      git:
+        repository: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        subPath: vcluster-use-cases/private-nodes/auto-nodes/gcp-terraform/node
+    nodeEnvironmentTemplate:
+      git:
+        repository: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        subPath: vcluster-use-cases/private-nodes/auto-nodes/gcp-terraform/environment
+    nodeTypes:
+      - properties:
+          instance-type: e2-small
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+          spot: 'true'
+        resources:
+          cpu: '2'
+          memory: 2Gi
+        cost: 12
+        name: e2-small-spot
+        maxCapacity: 20
+      - properties:
+          instance-type: e2-medium
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+          spot: 'true'
+        resources:
+          cpu: '2'
+          memory: 4Gi
+        cost: 14
+        name: e2-medium-spot
+      - properties:
+          instance-type: e2-standard-2
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+          spot: 'true'
+        resources:
+          cpu: '2'
+          memory: 8Gi
+        cost: 18
+        name: e2-standard-2-spot
+      - properties:
+          instance-type: e2-standard-8
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+          spot: 'true'
+        resources:
+          cpu: '8'
+          memory: 32Gi
+        cost: 72
+        name: e2-standard-8-spot
+      - properties:
+          instance-type: e2-standard-16
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+          spot: 'true'
+        resources:
+          cpu: '16'
+          memory: 64Gi
+        cost: 144
+        name: e2-standard-16-spot
+      - properties:
+          instance-type: e2-small
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+        resources:
+          cpu: '2'
+          memory: 2Gi
+        cost: 24
+        name: e2-small
+        maxCapacity: 20
+      - properties:
+          instance-type: e2-medium
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+        resources:
+          cpu: '2'
+          memory: 4Gi
+        name: e2-medium
+      - properties:
+          instance-type: e2-standard-2
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+        resources:
+          cpu: '2'
+          memory: 8Gi
+        name: e2-standard-2
+      - properties:
+          instance-type: e2-standard-4
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+        resources:
+          cpu: '4'
+          memory: 16Gi
+        name: e2-standard-4
+      - properties:
+          instance-type: e2-standard-8
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+        resources:
+          cpu: '8'
+          memory: 32Gi
+        name: e2-standard-8
+      - properties:
+          instance-type: e2-standard-16
+          project: third-pad-462018-e8
+          region: us-central1
+          terraform.vcluster.com/credentials: '*'
+          zone: us-central1-a
+        resources:
+          cpu: '16'
+          memory: 64Gi
+        name: e2-standard-16
+  displayName: GCP Compute Node Provider

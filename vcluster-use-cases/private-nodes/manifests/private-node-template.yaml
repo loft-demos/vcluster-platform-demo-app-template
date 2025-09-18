@@ -1,0 +1,57 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: private-node-demo-template
+spec:
+  displayName: Private Nodes Demo Template
+  description: This virtual cluster template deploys a virtual cluster with private nodes, configured node pool and has a param to control whether to use spot instances or not.
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.28.0
+      values: |-
+        controlPlane:
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          distro:
+            k8s:
+              image:
+                tag: v1.33.4
+        privateNodes:
+          enabled: true
+          vpn:
+            enabled: true
+            nodeToNode:
+              enabled: true
+          autoNodes:
+            dynamic:
+              - name: gcp-{REPLACE_VCLUSTER_NAME}-node-pool
+                provider: gcp-compute-{REPLACE_VCLUSTER_NAME}-node-provider
+                limits:
+                  cpu: '30'
+                {{if .Values.disableSpot}}
+                requirements:
+                  - property: spot
+                    operator: NotIn
+                    values:
+                      - 'true'
+                {{end}}
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  parameters:
+    - variable: disableSpot
+      label: Disable Spot Instances
+      description: >-
+        By default, this template is configured to use GCP compute spot instances for private nodes. Set this to true to disable the use of spot instances for private nodes.
+      type: boolean
+      defaultValue: 'false'
+      section: Auto Node Config
