@@ -47,7 +47,7 @@ spec:
       serviceAccountName: vcluster-labeler
       containers:
         - name: labeler
-          image: bitnami/kubectl:1.30
+          image: alpine/kubectl:1.33.4
           command:
             - /bin/sh
             - -c
