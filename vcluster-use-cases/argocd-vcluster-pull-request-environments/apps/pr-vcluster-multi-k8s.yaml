@@ -86,6 +86,7 @@ spec:
                   path: /spec/parameters
                   value: |
                     k8sVersion: {{k8sVersion}}
+                    disableControlPlaneSleep: true
                     sleepAfter: "4"
               target:
                 group: management.loft.sh
