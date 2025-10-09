@@ -94,8 +94,10 @@ spec:
                   demos.vcluster.com/project: '{{ .Values.loft.project }}'
                   demos.vcluster.com/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
               statefulSet:
+                {{if .Values.disableControlPlaneSleep}}
                 annotations:
-                  demos.vcluster.com/pvClaimName: '{{ .Values.pvClaimName }}'
+                  sleepmode.loft.sh/exclude: 'true'
+                {{end}}
                 labels:
                   env: '{{ .Values.env }}'
                   demos.vcluster.com/project: '{{ .Values.loft.project }}'
@@ -135,6 +137,12 @@ spec:
               .dockerconfigjson: e30K
             type: kubernetes.io/dockerconfigjson
       parameters:
+        - variable: disableControlPlaneSleep
+          label: Disable vCluster Control Plane Sleep
+          description: Adds an annotation to the vCluster control plane StatefulSet so the control plane pods don't sleep.
+          type: boolean
+          defaultValue: 'false'
+          section: Deployment Environment
         - variable: env
           label: Deployment Environment
           description: >-
