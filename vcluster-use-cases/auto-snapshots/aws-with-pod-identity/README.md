@@ -252,7 +252,7 @@ You can visualize the automation chain with a Mermaid diagram:
 flowchart TD;
   A[Cluster Annotations] --> B[VirtualClusterTemplate];
   B --> C[Helm Values Injection];
-  C --> D[PodIdentityAssociation (ACK EKS)];
+  C --> D[PodIdentityAssociation ACK EKS];
   D --> E[EKS Pod Identity Role Binding];
   E --> F[vCluster Auto Snapshot Job];
   F --> G[S3 Bucket Storage];
