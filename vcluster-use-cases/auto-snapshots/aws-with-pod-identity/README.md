@@ -2,8 +2,6 @@
 
 > **Goal:** Scale vCluster **Auto Snapshots** to a large number of virtual cluster instances while securely using EKS Pod Identity for access to AWS S3 storage.
 
-AWS EKS Pod Identity is the [recommended authentication method](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/snapshots#authenticate-with-aws-pod-identity) when storing vCluster snapshots in S3 via vCluster Platform's Auto Snapshot feature. However, managing EKS Pod Identity across a larger number of virtual cluster instances is tedious.
-
 ## Background
 
 vCluster Platform supports [automatic snapshots](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/snapshots) that periodically back up virtual clusters for restore and disaster recovery.
