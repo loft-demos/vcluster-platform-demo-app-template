@@ -4,8 +4,6 @@
 
 AWS EKS Pod Identity is the [recommended authentication method](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/snapshots#authenticate-with-aws-pod-identity) when storing vCluster snapshots in S3 via vCluster Platform's Auto Snapshot feature. However, managing EKS Pod Identity across a larger number of virtual cluster instances is tedious.
 
----
-
 ## Background
 
 vCluster Platform supports [automatic snapshots](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/snapshots) that periodically back up virtual clusters for restore and disaster recovery.
@@ -19,8 +17,6 @@ However, as the number of virtual clusters increases, managing Pod Identity Asso
 - Each vCluster must also be configured with the correct S3 bucket URL and region
 
 Without automation, this quickly becomes a bottleneck when managing **dozens or hundreds of virtual clusters**.
-
----
 
 ## Approach
 
@@ -36,8 +32,6 @@ This approach enables:
 - Fully declarative Pod Identity and snapshot setup for every vCluster  
 - Centralized management of cluster-specific S3 and IAM configuration  
 - Seamless GitOps integration with Argo CD or Flux  
-
----
 
 ## Cluster Configuration Example
 
@@ -69,9 +63,7 @@ Each annotation maps to a reusable configuration field consumed by the Virtual C
 | `demos.vcluster.com/timezone` | Default timezone for snapshot and sleep scheduling (e.g., `America/New_York`) |
 | `demos.vcluster.com/vcluster-snapshots-arn` | IAM role ARN used by Pod Identity to access the S3 bucket |
 
----
-
-## 🧩 Template Overview
+## Template Overview
 
 The `VirtualClusterTemplate` enables:
 - Automatic S3 snapshot configuration  
@@ -79,7 +71,7 @@ The `VirtualClusterTemplate` enables:
 - Creation of a `PodIdentityAssociation` per vCluster  
 - Adjustable retention parameters  
 
-This lets hundreds of vClusters share the same template logic, while still targeting the correct AWS S3 bucket and IAM role for the host cluster.
+This lets hundreds of virtual cluster instances share the same template logic, while still targeting the correct AWS S3 bucket and IAM role for the host cluster.
 
 ```yaml
 kind: VirtualClusterTemplate
@@ -175,8 +167,6 @@ spec:
 5. **Sleep Mode Alignment**  
    Sleep and wakeup schedules share the same timezone for consistent scheduling behavior.
 
----
-
 ## Benefits
 
 - **Scales cleanly:** Handles hundreds of virtual cluster instances without manual IAM or Pod Identity management.  
@@ -185,8 +175,6 @@ spec:
 - **Consistent:** Schedules, retention, and timezone come from centralized cluster annotations.  
 - **Reusable:** A single Virtual Cluster Template supports many tenants, clusters, and environments.
 
----
-
 ## Operational Notes
 
 - **EKS ACK dependency:** The ACK EKS controller that provides the `PodIdentityAssociation` CRD must be installed and healthy in the host cluster.  
@@ -194,8 +182,6 @@ spec:
   Adjust the template if you use a different name.  
 - **S3 pathing:** You can use a shared S3 bucket with per-vCluster folder prefixes or separate buckets per tenant.  
 - **Timezone default:** If the `demos.vcluster.com/timezone` annotation is missing, the template falls back to `"America/New_York"`.
-
----
 
 ## IAM & S3 Permissions Example
 
@@ -221,8 +207,6 @@ Attach a minimal IAM policy to the `vcluster-s3-snapshots` role (tighten as need
 
 Ensure the IAM trust policy for this role includes the EKS Pod Identity service principal.
 
----
-
 ## Validation Steps
 
 1. **Create a vCluster instance** using this template.  
@@ -240,8 +224,6 @@ kubectl -n <vcluster-host-namespace> get podidentityassociations.eks.services.k8
 
 4. **Confirm S3 uploads:**  
    Verify new objects appear in your S3 bucket under vcluster/<vcluster-name>/.
-
----
 
 ## Troubleshooting
 
