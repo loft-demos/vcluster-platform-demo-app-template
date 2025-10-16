@@ -20,7 +20,7 @@ Without automation, this quickly becomes a bottleneck when managing **dozens or 
 
 To make EKS Pod Identity scale efficiently across many virtual cluster instances, we combine:
 
-1. **EKS ACK (AWS Controllers for Kubernetes)**  
+1. **EKS ACK ([AWS Controllers for Kubernetes](https://aws-controllers-k8s.github.io/community/docs/community/overview/))**  
    Deployed to the host cluster where the virtual cluster instance is deployed, EKS ACK provides the `PodIdentityAssociation` CRD, allowing Pod Identity configuration to be managed declaratively in Kubernetes.
 
 2. **vCluster Platform Virtual Cluster Templates**  
