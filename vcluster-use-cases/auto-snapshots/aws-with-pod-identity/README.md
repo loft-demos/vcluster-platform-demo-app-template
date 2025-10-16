@@ -24,7 +24,7 @@ To make EKS Pod Identity scale efficiently across many virtual cluster instances
    Deployed to the host cluster where the virtual cluster instance is deployed, EKS ACK provides the `PodIdentityAssociation` CRD, allowing Pod Identity configuration to be managed declaratively in Kubernetes.
 
 2. **vCluster Platform Virtual Cluster Templates**  
-   Used to dynamically inject configuration (like IAM roles, S3 bucket URLs, and timezones) from the host [vCluster Platform `Cluster` resource](https://www.vcluster.com/docs/platform/api/resources/clusters/) annotations directly into each vCluster’s configuration and associated `PodIdentityAssociation`. The EKS ACK `PodIdentityAssociation` resource is created in the virtual cluster host namespace via the `spec.template.spaceTemplate.objects` field.
+   Used to dynamically inject configuration (like IAM roles, S3 bucket URLs, and timezones) from the host [vCluster Platform `Cluster` resource](https://www.vcluster.com/docs/platform/api/resources/clusters/) annotations, along with [platform-specific parameter values](https://www.vcluster.com/docs/platform/administer/templates/parameters#platform-specific-parameter-values), directly into each vCluster’s configuration and associated `PodIdentityAssociation`. The EKS ACK `PodIdentityAssociation` resource is created in the virtual cluster host namespace via the `spec.template.spaceTemplate.objects` field.
 
 This approach enables:
 - Fully declarative Pod Identity and snapshot setup for every vCluster  
