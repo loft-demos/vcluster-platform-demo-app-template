@@ -1,0 +1,88 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: pod-identity-sync
+spec:
+  displayName: Pod Identity Syncer
+  description: This virtual cluster template enables automatic syncing of PodIdentityAssociation resources from inside the vCluster to the vCluster host namespace.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.28.0
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.29.1
+          values: |+
+            sleepMode:
+              enabled: true
+              autoSleep:
+                afterInactivity: 35m
+              timeZone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
+              autoWakeup:
+                schedule: 10 7-17 * * 1-5
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+                serviceAccounts:
+                  enabled: true
+                customResources:
+                  podidentityassociations.eks.services.k8s.aws/v1alpha1:
+                    enabled: true
+                    patches:
+                      # 1. Rewrite spec.serviceAccount -> translated host SA name
+                      - path: spec.serviceAccount
+                        reference:
+                          apiVersion: v1
+                          kind: ServiceAccount
+
+                      # 2. Keep spec.namespace aligned with the vCluster namespace
+                      - path: spec.namespace
+                        expression: "context.vcluster.namespace"
+
+                      # 3. Cluster name comes from cluster annotation
+                      - path: spec.clusterName
+                        expression: "'{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/eks-cluster-name" }}'"
+            controlPlane:
+              # Use a Platform database connector instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin
+status: {}
