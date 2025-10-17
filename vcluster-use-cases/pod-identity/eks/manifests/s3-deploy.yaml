@@ -1,0 +1,108 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-app
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: writer-sa
+  namespace: my-app
+---
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: PodIdentityAssociation
+metadata:
+  name: writer-sa
+  namespace: my-app
+spec:
+  # Will be overwritten by your vCluster patch to a constant (e.g., "vcp-eks")
+  clusterName: placeholder-will-be-patched
+  # These are what your patches operate on:
+  namespace: my-app           # will be set to context.vcluster.namespace during sync
+  serviceAccount: writer-sa   # will be translated to the host SA name during sync
+  roleARN: arn:aws:iam::<AWS_ACCOUNT_ID>:role/vcluster-s3-snapshots   # <-- replace with your role
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3-podidentity
+  namespace: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s3-podidentity
+  template:
+    metadata:
+      labels:
+        app: s3-podidentity
+    spec:
+      serviceAccountName: writer-sa
+      initContainers:
+        - name: s3-wait-and-smoke
+          image: amazon/aws-cli:2.15.32
+          env:
+            - name: AWS_REGION
+              value: us-east-2                # <-- your region
+            - name: BUCKET
+              value: my-vcluster-snapshots-19990    # <-- your bucket
+            - name: PREFIX
+              value: vcluster
+            - name: EXPECTED_ROLE_ARN
+              value: arn:aws:iam::<AWS_ACCOUNT_ID>:role/vcluster-s3-snapshots   # <-- same as PIA
+            - name: MAX_WAIT_SECS
+              value: "900"
+            - name: SLEEP_SECS
+              value: "10"
+            # Prevent fallback to node IMDS creds:
+            - name: AWS_EC2_METADATA_DISABLED
+              value: "true"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -euo pipefail
+              end=$(( $(date +%s) + ${MAX_WAIT_SECS} ))
+              echo "Waiting for Pod Identity credentials (and correct role)..."
+              # Retry until STS uses EXPECTED_ROLE_ARN
+              while true; do
+                if out="$(aws sts get-caller-identity 2>/dev/null)"; then
+                  arn="$(echo "$out" | awk -F\" '/Arn/ {print $4}')"
+                  echo "Current caller: $arn"
+                  if [ "$arn" = "${EXPECTED_ROLE_ARN}" ] || echo "$arn" | grep -q "${EXPECTED_ROLE_ARN##*/}"; then
+                    echo "Pod Identity role confirmed."
+                    break
+                  fi
+                fi
+                if [ "$(date +%s)" -ge "$end" ]; then
+                  echo "Timed out waiting for Pod Identity role ${EXPECTED_ROLE_ARN}"; exit 1
+                fi
+                echo "Not ready yet; retrying in ${SLEEP_SECS}s..."
+                sleep "${SLEEP_SECS}"
+              done
+
+              ts="$(date +%s)"
+              key="${PREFIX}/${ts}/smoke.txt"
+              echo "hello from vCluster at $ts" > /tmp/smoke.txt
+
+              echo "Uploading to s3://$BUCKET/$key"
+              aws s3api put-object --bucket "$BUCKET" --key "$key" --body /tmp/smoke.txt
+
+              echo "Head object:"
+              aws s3api head-object --bucket "$BUCKET" --key "$key"
+
+              echo "Read back:"
+              aws s3 cp "s3://$BUCKET/$key" - || true
+
+              echo "Success."
+      containers:
+        - name: awscli
+          image: amazon/aws-cli:2.15.32
+          env:
+            - name: AWS_REGION
+              value: us-east-2
+            - name: AWS_EC2_METADATA_DISABLED
+              value: "true"
+          command: ["/bin/sh","-c"]
+          args: ["echo 'PodIdentity test pod running. Exec and use aws ...'; tail -f /dev/null"]
