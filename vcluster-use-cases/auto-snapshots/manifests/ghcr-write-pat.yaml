@@ -6,6 +6,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   labels:
-    loft.sh/project-secret-name: {REPLACE_ORG_NAME}-ghcr-write
+    loft.sh/project-secret-name: {REPLACE_ORG_NAME}-ghcr-write-pat
     org: {REPLACE_ORG_NAME}
     repo: {REPLACE_REPO_NAME}
