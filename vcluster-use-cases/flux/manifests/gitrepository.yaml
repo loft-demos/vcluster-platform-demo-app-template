@@ -18,5 +18,5 @@ spec:
   type: githubdispatch
   address: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
   secretRef:
-    name: {REPLACE_ORG_NAME}-pat
+    name: loft-demo-org-cred
 ---
