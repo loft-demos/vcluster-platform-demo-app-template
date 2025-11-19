@@ -193,7 +193,7 @@ spec:
               path: /spec/kubeConfig
               value:
                 secretRef:
-                  name: flux-kubeconfig
+                  name: vc-flux-kubeconfig
                   key: config
             - op: add
               # the uninstall config is needed to ensure the HelmRelease is deleted when a PR is closed or the Flux preview label is removed while the PR vCluster is sleeping
