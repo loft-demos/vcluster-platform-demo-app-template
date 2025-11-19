@@ -14,6 +14,6 @@ spec:
   clusterRef:
     cluster: loft-cluster
   parameters: |
-    k8sVersion: v1.31.6
+    k8sVersion: v1.34.1
     disableControlPlaneSleep: true
     env: 'qa'
