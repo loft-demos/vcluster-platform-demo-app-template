@@ -45,7 +45,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.30.0
+            version: 0.30.1
           values: |
             # Instead of exporting the Kube Config, a Bash App is used below
             # exportKubeConfig:
