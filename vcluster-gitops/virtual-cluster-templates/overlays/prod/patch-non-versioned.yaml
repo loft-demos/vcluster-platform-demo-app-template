@@ -6,7 +6,7 @@ spec:
   template:
     helmRelease:
       chart:
-        version: 0.30.0
+        version: 0.30.2
   parameters:
     - variable: sleepAfter
       label: Sleep After Inactivity (minutes)
@@ -20,8 +20,8 @@ spec:
       label: k8sVersion
       description: Please select Kubernetes version
       options:
-        - v1.34.1
-        - v1.33.5
-        - v1.32.9
-        - v1.31.13
-      defaultValue: v1.33.5
+        - v1.34.2
+        - v1.33.6
+        - v1.32.10
+        - v1.31.14
+      defaultValue: v1.33.6
