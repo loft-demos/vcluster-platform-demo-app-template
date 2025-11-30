@@ -26,7 +26,7 @@ spec:
         sleepMode:
           enabled: true
           autoSleep:
-            afterInactivity: "{{ .Values.sleepAfter }}m"
+            afterInactivity: "45m"
           timeZone: America/New_York
           autoWakeup:
             schedule: 11 7-17 * * 1-5

@@ -12,5 +12,5 @@ spec:
   clusterRef:
     cluster: loft-cluster
   parameters: |
-    k8sVersion: v1.31.5
+    k8sVersion: v1.34.2
     env: 'dev'
