@@ -21,8 +21,16 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.24.0
+        version: 0.30.2
       values: |
+        sleepMode:
+          enabled: true
+          autoSleep:
+            afterInactivity: "{{ .Values.sleepAfter }}m"
+          timeZone: America/New_York
+          autoWakeup:
+            schedule: 11 7-17 * * 1-5
+        
         sync:
           toHost:
             ingresses:
