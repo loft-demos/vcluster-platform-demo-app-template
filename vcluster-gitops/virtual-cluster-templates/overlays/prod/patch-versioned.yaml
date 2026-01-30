@@ -1,6 +1,6 @@
 - op: replace
   path: /spec/versions/0/template/helmRelease/chart/version
-  value: "0.30.3"
+  value: "0.31.0"
   # insert k8sVersion at index 0
 - op: add
   path: /spec/versions/0/parameters/0
@@ -10,11 +10,11 @@
     description: Please select Kubernetes version
     type: string
     options:
+      - v1.35.0
       - v1.34.3
       - v1.33.7
-      - v1.32.10
-      - v1.31.14
-    defaultValue: v1.33.7
+      - v1.32.11
+    defaultValue: v1.34.3
     section: Kubernetes Environment
 # insert sleepAfter at index 1
 - op: add
