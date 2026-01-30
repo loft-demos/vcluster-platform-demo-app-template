@@ -56,6 +56,7 @@ spec:
         - members
         - clusters
         - templates
+        - nodetypes
         - chartinfo
         - charts
         - runners
