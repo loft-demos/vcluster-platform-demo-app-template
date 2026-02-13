@@ -10,11 +10,7 @@
     description: Please select Kubernetes version
     type: string
     options:
-      - v1.35.0
-      - v1.34.3
-      - v1.33.7
-      - v1.32.11
-    defaultValue: v1.34.3
+    defaultValue: ""
     section: Kubernetes Environment
 # insert sleepAfter at index 1
 - op: add
