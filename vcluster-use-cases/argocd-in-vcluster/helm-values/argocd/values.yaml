@@ -1,0 +1,16 @@
+global:
+  domain: 'DYNAMIC FROM APPSET'
+configs:
+  cm:
+    url: 'DYNAMIC FROM APPSET'
+server:
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    ingressClassName: "nginx"
+    hostname: 'DYNAMIC FROM APPSET'
+    tls: true
+  ingressGrpc:
+    enabled: false

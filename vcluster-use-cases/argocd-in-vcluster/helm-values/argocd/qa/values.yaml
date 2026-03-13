@@ -1,0 +1,4 @@
+configs:
+  cm:
+    timeout.reconciliation: 120s
+    timeout.reconciliation.jitter: 60s
