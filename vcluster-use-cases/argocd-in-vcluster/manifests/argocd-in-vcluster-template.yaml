@@ -1,0 +1,133 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: argocd-in-vcluster-template
+  annotations:
+    vcluster.com/template-icon: vcluster-box.svg
+spec:
+  displayName: Argo CD in Virtual Cluster Template
+  description: This virtual cluster template deploys a vCluster with embedded etcd and integrated CoreDNS.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.32.1
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+
+        # Checkout https://vcluster.com/pro/docs/ for more config options
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+          labels:
+            loft.sh/import-argocd: 'true'
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: >-
+                ArgoCD=https://argocd-{{ .Values.loft.virtualClusterNamespace }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+            labels:
+              addons.vcluster.demo/argocd: '{{ .Values.installArgoCD }}'
+              vcluster.demo/deployment-env: '{{ .Values.env }}'
+              vcluster.demo/project: '{{ .Values.loft.project }}'
+              vcluster.demo/namespace: '{{ .Values.loft.virtualClusterNamespace }}'
+              vcluster.demo/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
+              vcluster.demo/argocd-hostname: 'argocd-{{ .Values.loft.virtualClusterNamespace }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}'
+        apps:
+          - name: helm-dashboard
+            namespace: helm-dashboard
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.32.1
+          values: |
+            sleep:
+              auto:
+                afterInactivity: "60m"
+                timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+                wakeup:
+                  schedule: 11 7-17 * * 1-5
+            deletion:
+              auto:
+                afterInactivity: 90h
+                  
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            controlPlane:
+              # Use an embedded managed etcd server instead of using the default SQLite backend
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      parameters:
+        - variable: installArgoCD
+          label: Install Argo CD
+          description: >-
+            Triggers deployment of Argo CD into the vCluster using an Argo CD ApplicationSet Cluster Generator
+          type: boolean
+          defaultValue: 'false'
+          section: Application Add-ons
+        - variable: env
+          label: Deployment Environment
+          description: >-
+            Environment for deployments for this vCluster used as cluster label
+            for Argo CD ApplicationSet Cluster Generator
+          options:
+            - dev
+            - qa
+            - prod
+          defaultValue: dev
+          section: Deployment Environment
+    - template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.32.0
+          values: |-
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+      version: 0.0.0
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin

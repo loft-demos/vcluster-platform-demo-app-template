@@ -1,0 +1,15 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: argocd-in-vc-instance
+  namespace: p-default
+spec:
+  owner:
+    team: api-framework
+  templateRef:
+    name: argocd-in-vcluster-template
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+  parameters: |
+    installArgoCD: true

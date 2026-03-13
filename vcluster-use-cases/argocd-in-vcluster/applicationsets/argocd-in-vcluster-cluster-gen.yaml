@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: argocd-in-vc-instance-appset
+  namespace: argocd
+spec:
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            addons.vcluster.demo/argocd: "true"
+  template:
+    metadata:
+      name: 'argocd-{{.name}}'
+    spec:
+      destination:
+        namespace: argocd
+        server: '{{.server}}'
+      project: 'argocd-in-vcluster'
+      sources:
+        - repoURL: ghcr.io/argoproj/argo-helm
+          chart: argo-cd
+          targetRevision: 9.4.10
+          helm:
+            releaseName: argocd
+            valueFiles:
+              - $values/vcluster-use-cases/argocd-in-vcluster/helm-values/argocd/values.yaml
+              - '$values/vcluster-use-cases/argocd-in-vcluster/helm-values/argocd/{{ index .metadata.labels "vcluster.demo/deployment-env" }}/values.yaml'
+            parameters:
+            - name: "global.domain"
+              value: '{{ index .metadata.labels "vcluster.demo/argocd-hostname" }}'
+            - name: "configs.cm.url"
+              value: 'https://{{ index .metadata.labels "vcluster.demo/argocd-hostname" }}'
+            - name: "server.ingress.hostname"
+              value: '{{ index .metadata.labels "vcluster.demo/argocd-hostname" }}'
+        - repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+          targetRevision: main
+          ref: values
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
