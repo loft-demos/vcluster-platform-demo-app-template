@@ -40,14 +40,14 @@ spec:
           metadata:
             annotations:
               loft.sh/custom-links: >-
-                ArgoCD=https://argocd-{{ .Values.loft.virtualClusterNamespace }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+                ArgoCD=https://insideargo-{{ .Values.loft.virtualClusterNamespace }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             labels:
               addons.vcluster.demo/argocd: '{{ .Values.installArgoCD }}'
               vcluster.demo/deployment-env: '{{ .Values.env }}'
               vcluster.demo/project: '{{ .Values.loft.project }}'
               vcluster.demo/namespace: '{{ .Values.loft.virtualClusterNamespace }}'
               vcluster.demo/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
-              vcluster.demo/argocd-hostname: 'argocd-{{ .Values.loft.virtualClusterNamespace }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}'
+              vcluster.demo/argocd-hostname: 'insideargo-{{ .Values.loft.virtualClusterNamespace }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}'
         apps:
           - name: helm-dashboard
             namespace: helm-dashboard
