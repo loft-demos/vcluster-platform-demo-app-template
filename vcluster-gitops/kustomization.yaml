@@ -14,7 +14,6 @@ resources:
 - project-secrets/project-secrets.yaml
 - project-secrets/loft-demo-org-cred.yaml
 - project-secrets/argocd-notifications-secret.yaml
-- virtual-cluster-instances/argo-cd.yaml
 - virtual-cluster-instances/api-framework-qa.yaml
 - apps/argo-cd-pr-application-set.yaml
 - argocd/app-of-apps.yaml
