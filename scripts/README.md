@@ -100,3 +100,23 @@ You can run the script locally as well:
 ```bash
 bash scripts/update-templates.sh
 ```
+
+## Forgejo Bootstrap
+
+The repo also includes [`bootstrap-forgejo-repo.sh`](./bootstrap-forgejo-repo.sh)
+for the `vind` local-contained path.
+
+Use it to create a repo in Forgejo and push the current local git branches and
+tags into that repo:
+
+```bash
+bash scripts/bootstrap-forgejo-repo.sh \
+  --forgejo-url https://forgejo.vcp.local \
+  --username demo-admin \
+  --token "$FORGEJO_TOKEN" \
+  --owner loft-demos \
+  --repo vcluster-platform-demo-app-template
+```
+
+This script pushes committed git history only. Uncommitted local changes are
+not included.

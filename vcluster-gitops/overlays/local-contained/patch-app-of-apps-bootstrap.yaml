@@ -1,0 +1,8 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps-bootstrap
+  namespace: argocd
+spec:
+  source:
+    path: vcluster-gitops/argocd/app-of-apps/overlays/local-contained

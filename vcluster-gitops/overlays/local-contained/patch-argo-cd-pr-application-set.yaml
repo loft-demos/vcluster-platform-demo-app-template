@@ -1,0 +1,90 @@
+kind: App
+apiVersion: management.loft.sh/v1
+metadata:
+  name: argo-cd-pr-application-set
+spec:
+  config:
+    bash:
+      script: >
+        kubectl wait --for condition=established --timeout=60s
+        crd/applicationsets.argoproj.io
+
+
+        while ! kubectl get crd applicationsets.argoproj.io; do
+          echo "Waiting for argo cd applicationset crd...";
+          sleep 1;
+        done
+
+
+        POD=$(kubectl get pod -n argocd -l
+        app.kubernetes.io/component=applicationset-controller -o
+        jsonpath="{.items[0].metadata.name}")
+
+        kubectl delete pod -n argocd $POD
+
+
+        cat <<EOF | kubectl apply -f -
+
+        apiVersion: argoproj.io/v1alpha1
+
+        kind: ApplicationSet
+
+        metadata:
+          name: {{ .Values.repoName }}-pr
+          namespace: argocd
+        spec:
+          generators:
+          - pullRequest:
+              gitea:
+                owner: {REPLACE_ORG_NAME}
+                repo: {{ .Values.repoName }}
+                api: "{REPLACE_GIT_BASE_URL}"
+                tokenRef:
+                  secretName: loft-demo-org-cred
+                  key: token
+              requeueAfterSeconds: 30
+          template:
+            metadata:
+              name: '{{ .Values.loft.virtualClusterName }}'
+            spec:
+              syncPolicy:
+                automated:
+                  selfHeal: true
+                syncOptions:
+                  - CreateNamespace=true
+              source:
+                repoURL: "{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{ .Values.repoName }}.git"
+                targetRevision: '{{`{{head_sha}}`}}'
+                path: helm-chart/
+                helm:
+                  parameters:
+                  - name: "image.repository"
+                    value: "{REPLACE_IMAGE_REPOSITORY_PREFIX}/{{ .Values.repoName }}"
+                  - name: "image.tag"
+                    value: "{{`{{head_short_sha}}`}}"
+                  - name: "image.args.text"
+                    value: "Hello from {{ .Values.loft.virtualClusterName }} commit {{`{{head_short_sha}}`}}"
+                  - name: "ingress.hosts[0].host"
+                    value: {{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                  - name: ingress.hosts[0].paths[0].backend.service.name
+                    value: {{ .Values.repoName }}
+                  - name: ingress.hosts[0].paths[0].backend.service.port.name
+                    value: http
+                  - name: ingress.hosts[0].paths[0].path
+                    value: /
+                  - name: ingress.hosts[0].paths[0].pathType
+                    value: prefix
+                  - name: "ingress.tls[0].hosts[0]"
+                    value: {{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+              project: "default"
+              destination:
+                name: 'in-cluster'
+                namespace: preview-hello-world-app
+              info:
+                - name: Preview App Link
+                  value: >-
+                    https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
+                - name: Pull Request
+                  value: >-
+                    "{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{ .Values.repoName }}/pulls/{{`{{number}}`}}"
+        EOF

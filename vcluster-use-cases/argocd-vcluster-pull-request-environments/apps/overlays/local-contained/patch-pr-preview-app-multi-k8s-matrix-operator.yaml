@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-app-multi-k8s
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - pullRequest:
+              gitea:
+                owner: {REPLACE_ORG_NAME}
+                repo: {REPLACE_REPO_NAME}
+                api: "{REPLACE_GIT_BASE_URL}"
+                tokenRef:
+                  secretName: loft-demo-org-cred
+                  key: token
+              requeueAfterSeconds: 30
+          - clusters:
+              selector:
+                matchExpressions:
+                  - key: prNumber
+                    operator: In
+                    values:
+                      - '{{number}}'
+                matchLabels:
+                  prLabel: deploy-argocd-vcluster-preview
+                  repo: {REPLACE_REPO_NAME}
+                  vcluster.loft.sh/ready: 'true'
+  template:
+    metadata:
+      annotations:
+        $patch: replace
+        notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
+    spec:
+      info:
+        - name: Pull Request
+          value: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/pulls/{{number}}'
+      source:
+        helm:
+          parameters:
+            - name: image.repository
+              value: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{{metadata.labels.repo}}'
+            - name: image.tag
+              value: '{{head_short_sha}}'
+            - name: image.args.text
+              value: >-
+                Hello from {{metadata.labels.vclusterName}} commit
+                {{head_short_sha}}
+            - name: ingress.hosts[0].host
+              value: '{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}'
+            - name: ingress.hosts[0].paths[0].backend.service.name
+              value: '{{metadata.labels.repo}}'
+            - name: ingress.hosts[0].paths[0].backend.service.port.name
+              value: http
+            - name: ingress.hosts[0].paths[0].path
+              value: /
+            - name: ingress.hosts[0].paths[0].pathType
+              value: prefix
+            - name: ingress.tls[0].hosts[0]
+              value: '{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}'
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git'
+        targetRevision: '{{head_sha}}'

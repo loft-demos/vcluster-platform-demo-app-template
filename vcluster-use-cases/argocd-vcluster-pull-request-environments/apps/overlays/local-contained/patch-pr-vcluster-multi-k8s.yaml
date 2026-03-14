@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-vcluster-multi-k8s
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - k8sVersion: v1.33.3
+                  k8sVersionDNSLabel: 1-33-3
+                - k8sVersion: v1.32.7
+                  k8sVersionDNSLabel: 1-32-7
+          - pullRequest:
+              gitea:
+                owner: {REPLACE_ORG_NAME}
+                repo: {REPLACE_REPO_NAME}
+                api: "{REPLACE_GIT_BASE_URL}"
+                tokenRef:
+                  secretName: loft-demo-org-cred
+                  key: token
+              requeueAfterSeconds: 30
+              template:
+                metadata: {}
+                spec:
+                  destination: {}
+                  project: ''
+  template:
+    spec:
+      info:
+        - name: PR vCluster Argo CD URL
+          value: https://argocd-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}
+        - name: Pull Request
+          value: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pulls/{{number}}'
+      source:
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'

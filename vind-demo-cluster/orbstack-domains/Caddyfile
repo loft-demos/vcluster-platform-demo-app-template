@@ -1,0 +1,15 @@
+{
+  auto_https off
+}
+
+{$ARGOCD_HOST} {
+  reverse_proxy {$ARGOCD_UPSTREAM}
+}
+
+{$VCP_HOST} {
+  reverse_proxy {$VCP_UPSTREAM}
+}
+
+{$FORGEJO_HOST} {
+  reverse_proxy {$FORGEJO_UPSTREAM}
+}

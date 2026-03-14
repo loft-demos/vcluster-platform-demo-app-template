@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../argocd-notifications-cm.yaml
+  - ../../argocd-notifications-secret.yaml
+  - ../../pull-request-vcluster-template.yaml
+  - ../../vcluster-ready-labeler.yaml
+  - ../../vcluster-wakeup-proxy.yaml
+patches:
+  - path: patch-argocd-notifications-cm.yaml
