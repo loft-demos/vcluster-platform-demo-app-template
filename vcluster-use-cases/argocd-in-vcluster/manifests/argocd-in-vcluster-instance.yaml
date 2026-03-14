@@ -13,3 +13,4 @@ spec:
     cluster: loft-cluster
   parameters: |
     installArgoCD: true
+    env: dev
