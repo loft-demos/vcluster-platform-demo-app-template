@@ -7,11 +7,10 @@ self-hosted, self-contained demo environment built on
 The intended model is:
 
 1. start a `vind` cluster
-2. install Argo CD and External Secrets Operator directly from the `vind`
+2. install Argo CD, External Secrets Operator, and vCluster Platform directly from the `vind`
    `vcluster.yaml`
-3. install vCluster Platform into that same `vind` cluster
-4. bootstrap secrets from 1Password through ESO
-5. let Argo CD install `vcluster-gitops/` and selected use cases
+3. bootstrap secrets from 1Password through ESO
+4. let Argo CD install `vcluster-gitops/` and selected use cases
 
 This replaces the secret projection and bootstrap behavior normally supplied by
 the [vCluster Platform Demo Generator](https://github.com/loft-demos/loft-demo-base/blob/main/vcluster-platform-demo-generator/README.md).
@@ -58,10 +57,10 @@ This bootstrap path assumes:
 
 - Argo CD is installed by [`vcluster.yaml`](./vcluster.yaml)
 - ESO is installed by [`vcluster.yaml`](./vcluster.yaml)
-- vCluster Platform is installed manually or by a small bootstrap step after
-  `vind` is up
+- vCluster Platform is installed by [`vcluster.yaml`](./vcluster.yaml)
 - a coworker performing the setup has access to 1Password and can create the
   initial ESO service-account token secret
+- a coworker performing the setup has a valid vCluster Platform license token
 
 The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 
@@ -69,7 +68,9 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 - starts `vind` with embedded etcd and Kubernetes `v1.35.1`
 - installs Argo CD from the current `argo-cd` Helm chart release
 - installs ESO from the current `external-secrets` Helm chart release
+- installs vCluster Platform from chart version `4.7.1` by default
 - creates the namespaces and Argo CD cluster secret this repo expects
+- creates a dedicated `LoadBalancer` service for the vCluster Platform UI/API
 - enables only the `eso` app-of-apps label by default so the initial bootstrap
   stays small
 - exposes Argo CD as a `LoadBalancer` service for local access in `vind`
@@ -79,8 +80,8 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 ## Files In This Folder
 
 - [`vcluster.yaml`](./vcluster.yaml)
-  starts the `vind` management cluster with Argo CD, ESO, and the initial
-  in-cluster Argo CD cluster secret
+  template for starting the `vind` management cluster with Argo CD, ESO,
+  vCluster Platform, and the initial in-cluster Argo CD cluster secret
 - [`eso-cluster-store.yaml`](./eso-cluster-store.yaml)
   defines a 1Password-backed ESO `ClusterSecretStore` for the `vind` cluster
 - [`bootstrap-external-secrets.yaml`](./bootstrap-external-secrets.yaml)
@@ -88,7 +89,9 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
   materialize the first set of repo, image, notification, and Crossplane
   credentials
 - [`install-vind.sh`](./install-vind.sh)
-  helper for creating or upgrading the local `vind` cluster
+  helper for creating or upgrading the local `vind` cluster, including
+  rendering the vCluster Platform license token, version, and host into
+  `vcluster.yaml`
 - [`bootstrap-self-contained.sh`](./bootstrap-self-contained.sh)
   experimental all-in-one helper for the self-contained path
 - [`cloudflare-tunnel.yaml`](./cloudflare-tunnel.yaml)
@@ -101,30 +104,35 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 
 ## Bootstrap Sequence
 
-1. Start `vind` with [`vcluster.yaml`](./vcluster.yaml).
+1. Start `vind` with [`install-vind.sh`](./install-vind.sh).
 
-   Exact command:
+   Do not pass [`vcluster.yaml`](./vcluster.yaml) directly to `vcluster create`
+   unless you render its placeholders yourself first.
 
-   ```bash
-   vcluster create vcp --driver docker --upgrade --values vind-demo-cluster/vcluster.yaml
-   ```
-
-   Or use the helper script:
+   Recommended command:
 
    ```bash
-   bash vind-demo-cluster/install-vind.sh
+   LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh
    ```
 
-2. Install vCluster Platform into the `vind` cluster.
-3. Create the bootstrap secret `one-password-sa-token` in the `eso` namespace.
-4. Apply [`eso-cluster-store.yaml`](./eso-cluster-store.yaml).
-5. Apply [`bootstrap-external-secrets.yaml`](./bootstrap-external-secrets.yaml).
-6. Verify that the initial bootstrap secrets reconcile in:
+   Override the default vCluster Platform version or local host when needed:
+
+   ```bash
+   bash vind-demo-cluster/install-vind.sh \
+     --license-token "$TOKEN" \
+     --vcp-version 4.7.1 \
+     --vcp-host vcp.local
+   ```
+
+2. Create the bootstrap secret `one-password-sa-token` in the `eso` namespace.
+3. Apply [`eso-cluster-store.yaml`](./eso-cluster-store.yaml).
+4. Apply [`bootstrap-external-secrets.yaml`](./bootstrap-external-secrets.yaml).
+5. Verify that the initial bootstrap secrets reconcile in:
    - `argocd`
    - `vcluster-platform`
    - `crossplane-system`
-7. Apply the Argo CD bootstrap application for this repo.
-8. Enable additional use cases only after the base secret contract is working.
+6. Apply the Argo CD bootstrap application for this repo.
+7. Enable additional use cases only after the base secret contract is working.
 
 ### Comprehensive Helper Script
 
@@ -132,7 +140,7 @@ After you are comfortable with the step-by-step path, there is also an
 experimental convenience wrapper:
 
 ```bash
-bash vind-demo-cluster/bootstrap-self-contained.sh \
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --repo-name vcluster-platform-demo-app-template \
   --org-name loft-demos \
   --base-domain demo.example.com
@@ -141,6 +149,7 @@ bash vind-demo-cluster/bootstrap-self-contained.sh \
 That helper can:
 
 - create or upgrade `vind`
+- install vCluster Platform as part of that bootstrap
 - run local placeholder replacement
 - write the OrbStack local-domain `.env`
 - optionally bootstrap the repo into Forgejo
@@ -195,7 +204,7 @@ that are not present until Platform is installed.
 If you create `vind` with:
 
 ```bash
-vcluster create vcp --driver docker --upgrade --values vind-demo-cluster/vcluster.yaml
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh
 ```
 
 OrbStack will usually expose the control plane container at a domain like:
@@ -351,10 +360,22 @@ This repo includes a ready-to-adapt setup in
 
 - Argo CD is already configured as a `LoadBalancer` service in
   [`vcluster.yaml`](./vcluster.yaml).
+- vCluster Platform is configured through the chart's own `service` values in
+  [`vcluster.yaml`](./vcluster.yaml), with `service.type: LoadBalancer`.
 - For Forgejo, keep the service local to `vind` and expose it the same way when
   you enable the commented Helm block.
-- For vCluster Platform, confirm the actual service after install and expose
-  the UI/API service as `LoadBalancer` if you want a stable local upstream.
+
+If you change the default local UI hostname, make sure the vCluster Platform
+chart is rendered with the same host:
+
+```bash
+bash vind-demo-cluster/install-vind.sh \
+  --license-token "$TOKEN" \
+  --vcp-host team-a.vcp.local
+```
+
+That `--vcp-host` value is written into `config.loftHost` for the chart and
+should match the Caddy hostname you use in `orbstack-domains/.env`.
 
 This pattern is the easiest OrbStack-specific way to map nice local domains to
 `vind` services without requiring a public DNS zone.
@@ -406,10 +427,6 @@ This is a better public option than:
 4. Edit [`cloudflare-tunnel.yaml`](./cloudflare-tunnel.yaml):
    - set `{REPLACE_CLOUDFLARE_TUNNEL_ID}`
    - set `{REPLACE_PUBLIC_BASE_DOMAIN}`
-   - set the vCluster Platform service placeholders:
-     - `{REPLACE_VCP_SERVICE}`
-     - `{REPLACE_VCP_NAMESPACE}`
-     - `{REPLACE_VCP_PORT}`
 5. Apply the tunnel manifest:
 
    ```bash
@@ -432,12 +449,12 @@ already targets the service created by the `vind` bootstrap:
 
 - `http://argocd-server.argocd.svc.cluster.local:80`
 
-The vCluster Platform service name is left as a placeholder intentionally,
-because that depends on how you install Platform into the `vind` cluster. Do
-not guess that value; confirm the actual service after install with:
+The vCluster Platform route now points at the normal
+`vcluster-platform` service installed by the Helm chart. Confirm it exists
+after install with:
 
 ```bash
-kubectl -n vcluster-platform get svc
+kubectl -n vcluster-platform get svc vcluster-platform
 ```
 
 ### Practical Advice

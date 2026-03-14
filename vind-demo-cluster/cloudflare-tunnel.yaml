@@ -16,7 +16,7 @@ data:
       - hostname: argocd.{REPLACE_PUBLIC_BASE_DOMAIN}
         service: http://argocd-server.argocd.svc.cluster.local:80
       - hostname: vcp.{REPLACE_PUBLIC_BASE_DOMAIN}
-        service: http://{REPLACE_VCP_SERVICE}.{REPLACE_VCP_NAMESPACE}.svc.cluster.local:{REPLACE_VCP_PORT}
+        service: http://vcluster-platform.vcluster-platform.svc.cluster.local:80
       - service: http_status:404
 ---
 apiVersion: apps/v1

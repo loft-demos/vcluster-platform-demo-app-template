@@ -1,6 +1,12 @@
 # Use vCluster CLI 0.32.1 when creating or upgrading this vind cluster.
 # The vCluster version is determined by the CLI release, while this file pins
 # the Kubernetes distro and the bootstrap add-on chart versions.
+# Treat this file as a template. Use install-vind.sh or
+# bootstrap-self-contained.sh to render the placeholders before creating vind.
+# The install helper renders the placeholders below:
+# - __VCP_PLATFORM_VERSION__
+# - __VCP_LICENSE_TOKEN__
+# - __VCP_LOFT_HOST__
 controlPlane:
   backingStore:
     etcd:
@@ -46,7 +52,7 @@ experimental:
             eso: "true"
             flux: "false"
             kyverno: "false"
-            loftDemoDomain: vcp.local
+            loftDemoDomain: __VCP_LOFT_HOST__
             mysql: "false"
             postgres: "false"
             rancher: "false"
@@ -92,6 +98,27 @@ experimental:
           timeout: 10m
           values: |-
             installCRDs: true
+        - chart:
+            name: vcluster-platform
+            repo: https://charts.loft.sh/
+            version: __VCP_PLATFORM_VERSION__
+          release:
+            name: vcluster-platform
+            namespace: vcluster-platform
+          timeout: 15m
+          values: |-
+            env:
+              LICENSE_TOKEN: __VCP_LICENSE_TOKEN__
+            service:
+              type: LoadBalancer
+            ingress:
+              enabled: false
+            config:
+              loftHost: __VCP_LOFT_HOST__
+              costControl:
+                enabled: false
+              imageBuilder:
+                enabled: false
         # Optional: embedded Forgejo for a local-contained demo mode.
         # Keep this disabled by default. This repo is still GitHub-shaped in a
         # number of places, so enabling Forgejo should be paired with a
