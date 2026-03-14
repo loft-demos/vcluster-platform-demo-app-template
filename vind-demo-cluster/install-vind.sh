@@ -8,7 +8,7 @@ Create or upgrade the local vind cluster for this repo.
 This helper renders vind-demo-cluster/vcluster.yaml with the required
 vCluster Platform install settings, then runs:
 
-  vcluster create <cluster-name> --driver docker --upgrade --values <rendered-values>
+  vcluster create <cluster-name> --driver docker --upgrade --add=false --values <rendered-values>
 
 Usage:
   LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh
@@ -24,6 +24,12 @@ Options:
   --license-token TOKEN  Required unless LICENSE_TOKEN is already exported.
   --vcp-version VERSION  Optional. Defaults to 4.7.1.
   --vcp-host HOST        Optional. Defaults to vcp.local.
+  --argocd-host HOST     Optional. Defaults to argocd.<vcp-host>.
+  --forgejo-host HOST    Optional. Defaults to forgejo.<vcp-host>.
+  --orbstack-env-file PATH
+                         Optional. Defaults to orbstack-domains/.env.<cluster-name>.
+  --skip-orbstack-domains
+                         Optional. Skip automatic OrbStack domain setup.
   --help                 Show this message.
 EOF
 }
@@ -41,6 +47,10 @@ VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
 VCP_VERSION="${VCP_VERSION:-4.7.1}"
 VCP_HOST="${VCP_HOST:-vcp.local}"
+ARGOCD_HOST=""
+FORGEJO_HOST=""
+ORBSTACK_ENV_FILE=""
+SKIP_ORBSTACK_DOMAINS="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -64,6 +74,22 @@ while [[ $# -gt 0 ]]; do
       VCP_HOST="${2:-}"
       shift 2
       ;;
+    --argocd-host)
+      ARGOCD_HOST="${2:-}"
+      shift 2
+      ;;
+    --forgejo-host)
+      FORGEJO_HOST="${2:-}"
+      shift 2
+      ;;
+    --orbstack-env-file)
+      ORBSTACK_ENV_FILE="${2:-}"
+      shift 2
+      ;;
+    --skip-orbstack-domains)
+      SKIP_ORBSTACK_DOMAINS="true"
+      shift
+      ;;
     --help|-h)
       usage
       exit 0
@@ -86,7 +112,19 @@ if [[ -z "$LICENSE_TOKEN" ]]; then
   exit 1
 fi
 
-rendered_values="$(mktemp "${TMPDIR:-/tmp}/vind-values.XXXXXX.yaml")"
+if [[ -z "$ARGOCD_HOST" ]]; then
+  ARGOCD_HOST="argocd.${VCP_HOST}"
+fi
+
+if [[ -z "$FORGEJO_HOST" ]]; then
+  FORGEJO_HOST="forgejo.${VCP_HOST}"
+fi
+
+if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
+  ORBSTACK_ENV_FILE="vind-demo-cluster/orbstack-domains/.env.${CLUSTER_NAME}"
+fi
+
+rendered_values="$(mktemp "${TMPDIR:-/tmp}/vind-values.XXXXXX")"
 cleanup() {
   rm -f "$rendered_values"
 }
@@ -107,7 +145,19 @@ echo "[INFO] Rendered values file: $rendered_values"
 echo "[INFO] vCluster Platform version: $VCP_VERSION"
 echo "[INFO] vCluster Platform host: $VCP_HOST"
 
-vcluster create "$CLUSTER_NAME" --driver docker --upgrade --values "$rendered_values"
+vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
+
+if [[ "$SKIP_ORBSTACK_DOMAINS" != "true" ]]; then
+  if ! bash vind-demo-cluster/start-orbstack-domains.sh \
+    --cluster-name "$CLUSTER_NAME" \
+    --vcp-host "$VCP_HOST" \
+    --argocd-host "$ARGOCD_HOST" \
+    --forgejo-host "$FORGEJO_HOST" \
+    --env-file "$ORBSTACK_ENV_FILE"; then
+    echo "[WARN] Automatic OrbStack domain setup failed." >&2
+    echo "[WARN] You can rerun vind-demo-cluster/start-orbstack-domains.sh after the services are ready." >&2
+  fi
+fi
 
 cat <<EOF
 
@@ -123,11 +173,13 @@ Recommended next steps:
 1. Confirm Argo CD and vCluster Platform are healthy:
    kubectl -n argocd get pods
    kubectl -n vcluster-platform get pods
-2. Use vind-demo-cluster/orbstack-domains for friendly hostnames such as:
+2. Start vind-demo-cluster/orbstack-domains if you want friendly desktop browser hostnames:
    - https://$VCP_HOST
    - https://argocd.$VCP_HOST
    - https://forgejo.$VCP_HOST
    - Docker network: vcluster.$CLUSTER_NAME
+   - Env file: $ORBSTACK_ENV_FILE
+   This is started automatically unless --skip-orbstack-domains was used.
 3. Configure 1Password + ESO:
    - vind-demo-cluster/eso-cluster-store.yaml
    - vind-demo-cluster/bootstrap-external-secrets.yaml

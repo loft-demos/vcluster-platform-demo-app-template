@@ -12,7 +12,7 @@ What this script can do:
 1. create or upgrade a vind cluster
 2. install vCluster Platform as part of that vind bootstrap
 3. run local placeholder replacement for this repo
-4. write the OrbStack local-domain .env file
+4. start the OrbStack local-domain adapter automatically
 5. optionally bootstrap the repo into Forgejo
 
 What it does not do yet:
@@ -36,7 +36,7 @@ Optional OrbStack local domain overrides:
   --forgejo-host forgejo.team-a.vcp.local
   --vcp-version 4.7.1
   --vcp-upstream something.lb.vcluster-platform.vcluster-platform.orb.local:443
-  --argocd-upstream something.lb.argocd-server.argocd.orb.local:443
+  --argocd-upstream something.lb.argocd-server.argocd.orb.local:80
   --forgejo-upstream 127.0.0.1:3000
 EOF
 }
@@ -64,10 +64,10 @@ SKIP_FORGEJO="false"
 VCP_HOST="vcp.local"
 ARGOCD_HOST="argocd.vcp.local"
 FORGEJO_HOST="forgejo.vcp.local"
-VCP_UPSTREAM="127.0.0.1:8443"
-ARGOCD_UPSTREAM="127.0.0.1:8080"
+VCP_UPSTREAM=""
+ARGOCD_UPSTREAM=""
 FORGEJO_UPSTREAM="127.0.0.1:3000"
-ORBSTACK_ENV_FILE="vind-demo-cluster/orbstack-domains/.env"
+ORBSTACK_ENV_FILE=""
 
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
 VCP_VERSION="${VCP_VERSION:-4.7.1}"
@@ -209,13 +209,21 @@ if [[ -z "$BASE_DOMAIN" ]]; then
   BASE_DOMAIN="$VCP_HOST"
 fi
 
+if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
+  ORBSTACK_ENV_FILE="vind-demo-cluster/orbstack-domains/.env.${CLUSTER_NAME}"
+fi
+
 if [[ "$SKIP_VIND" != "true" ]]; then
   bash vind-demo-cluster/install-vind.sh \
     --cluster-name "$CLUSTER_NAME" \
     --values-file "$VALUES_FILE" \
     --license-token "$LICENSE_TOKEN" \
     --vcp-version "$VCP_VERSION" \
-    --vcp-host "$VCP_HOST"
+    --vcp-host "$VCP_HOST" \
+    --argocd-host "$ARGOCD_HOST" \
+    --forgejo-host "$FORGEJO_HOST" \
+    --orbstack-env-file "$ORBSTACK_ENV_FILE" \
+    --skip-orbstack-domains
 fi
 
 if [[ "$SKIP_REPLACE" != "true" ]]; then
@@ -228,17 +236,15 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
 fi
 
 if [[ "$SKIP_ORBSTACK_ENV" != "true" ]]; then
-  cat >"$ORBSTACK_ENV_FILE" <<EOF
-LOCAL_BASE_DOMAIN=${VCP_HOST#*.}
-VIND_DOCKER_NETWORK=vcluster.${CLUSTER_NAME}
-VCP_HOST=$VCP_HOST
-ARGOCD_HOST=$ARGOCD_HOST
-FORGEJO_HOST=$FORGEJO_HOST
-ARGOCD_UPSTREAM=$ARGOCD_UPSTREAM
-VCP_UPSTREAM=$VCP_UPSTREAM
-FORGEJO_UPSTREAM=$FORGEJO_UPSTREAM
-EOF
-  echo "[INFO] Wrote $ORBSTACK_ENV_FILE"
+  bash vind-demo-cluster/start-orbstack-domains.sh \
+    --cluster-name "$CLUSTER_NAME" \
+    --vcp-host "$VCP_HOST" \
+    --argocd-host "$ARGOCD_HOST" \
+    --forgejo-host "$FORGEJO_HOST" \
+    --vcp-upstream "$VCP_UPSTREAM" \
+    --argocd-upstream "$ARGOCD_UPSTREAM" \
+    --forgejo-upstream "$FORGEJO_UPSTREAM" \
+    --env-file "$ORBSTACK_ENV_FILE"
 fi
 
 if [[ "$SKIP_FORGEJO" != "true" ]]; then
@@ -263,8 +269,6 @@ Recommended next steps:
 1. Configure 1Password + ESO:
    - vind-demo-cluster/eso-cluster-store.yaml
    - vind-demo-cluster/bootstrap-external-secrets.yaml
-2. Start the OrbStack local-domain adapter:
-   cd vind-demo-cluster/orbstack-domains && docker compose up -d
-3. Continue with the step-by-step vind docs for validation.
+2. Continue with the step-by-step vind docs for validation.
 
 EOF

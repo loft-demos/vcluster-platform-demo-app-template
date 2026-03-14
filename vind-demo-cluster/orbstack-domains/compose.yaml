@@ -4,8 +4,13 @@ services:
     restart: unless-stopped
     labels:
       dev.orbstack.domains: ${ARGOCD_HOST},${VCP_HOST},${FORGEJO_HOST}
-    env_file:
-      - .env
+    environment:
+      VCP_HOST: ${VCP_HOST}
+      ARGOCD_HOST: ${ARGOCD_HOST}
+      FORGEJO_HOST: ${FORGEJO_HOST}
+      VCP_UPSTREAM: ${VCP_UPSTREAM}
+      ARGOCD_UPSTREAM: ${ARGOCD_UPSTREAM}
+      FORGEJO_UPSTREAM: ${FORGEJO_UPSTREAM}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     networks:

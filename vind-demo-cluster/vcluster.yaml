@@ -8,10 +8,6 @@
 # - __VCP_LICENSE_TOKEN__
 # - __VCP_LOFT_HOST__
 controlPlane:
-  backingStore:
-    etcd:
-      embedded:
-        enabled: true
   distro:
     k8s:
       image:
