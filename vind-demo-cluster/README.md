@@ -283,8 +283,10 @@ Docker-backed management cluster. For `vind`, the better OrbStack-specific
 pattern is:
 
 1. expose the relevant services from `vind` with `LoadBalancer` services
-2. identify the local upstream address for each service
-3. run a tiny OrbStack container with custom domains that reverse proxies to
+2. attach the OrbStack domain proxy container to the dedicated `vind` Docker
+   network, which is normally `vcluster.<cluster-name>`
+3. identify the local upstream address for each service
+4. run a tiny OrbStack container with custom domains that reverse proxies to
    those upstreams
 
 This repo includes a ready-to-adapt setup in
@@ -309,6 +311,7 @@ This repo includes a ready-to-adapt setup in
    Default values:
 
    ```dotenv
+   VIND_DOCKER_NETWORK=vcluster.vcp
    VCP_HOST=vcp.local
    ARGOCD_HOST=argocd.vcp.local
    FORGEJO_HOST=forgejo.vcp.local
@@ -318,10 +321,16 @@ This repo includes a ready-to-adapt setup in
    example:
 
    ```dotenv
+   VIND_DOCKER_NETWORK=vcluster.team-a
    VCP_HOST=team-a.vcp.local
    ARGOCD_HOST=argocd.team-a.vcp.local
    FORGEJO_HOST=forgejo.team-a.vcp.local
    ```
+
+   The Docker network should match the `vind` cluster name. For example:
+
+   - cluster `vcp` -> network `vcluster.vcp`
+   - cluster `team-a` -> network `vcluster.team-a`
 
 3. Find the local upstreams exposed by `vind`:
 
@@ -364,6 +373,8 @@ This repo includes a ready-to-adapt setup in
   [`vcluster.yaml`](./vcluster.yaml), with `service.type: LoadBalancer`.
 - For Forgejo, keep the service local to `vind` and expose it the same way when
   you enable the commented Helm block.
+- [`orbstack-domains/compose.yaml`](./orbstack-domains/compose.yaml) joins the
+  external Docker network named by `VIND_DOCKER_NETWORK`.
 
 If you change the default local UI hostname, make sure the vCluster Platform
 chart is rendered with the same host:
