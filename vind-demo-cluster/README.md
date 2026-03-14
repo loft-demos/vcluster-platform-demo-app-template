@@ -29,7 +29,7 @@ fallback when you specifically need GitHub webhooks or public demo URLs.
 
 ## Two Bootstrap Styles
 
-There are now two ways to approach the self-contained `vind` path:
+There are two ways to approach the self-contained `vind` path:
 
 - step-by-step
   recommended for the first run and for troubleshooting
@@ -127,7 +127,7 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
      --vcp-host vcp.local
    ```
 
-2. The step-by-step installer now starts the OrbStack domain adapter
+2. The step-by-step installer starts the OrbStack domain adapter
    automatically by default. That gives you friendly desktop browser hostnames
    such as:
    - `https://vcp.local`
@@ -169,7 +169,7 @@ That helper can:
 - start the OrbStack local-domain adapter automatically
 - optionally bootstrap the repo into Forgejo
 
-For the self-contained path, `--base-domain` now defaults to the chosen
+For the self-contained path, `--base-domain` defaults to the chosen
 `--vcp-host`, which defaults to `vcp.local`.
 
 It intentionally does not replace the step-by-step path yet.
@@ -264,7 +264,7 @@ Keep Forgejo disabled by default until the repo has a dedicated
 `local-contained` overlay, because the current PR automation, notifications,
 and some image flows are still GitHub-specific.
 
-The first pass of that overlay now exists at
+The first pass of that overlay exists at
 [`vcluster-gitops/overlays/local-contained`](../vcluster-gitops/overlays/local-contained/README.md).
 It converts the Argo CD pull request generators to `gitea`, switches the PR
 flows to generic Git and image registry placeholders, and removes
@@ -317,7 +317,7 @@ This repo includes a ready-to-adapt setup in
 
 ### OrbStack Setup
 
-Both self-contained install methods now start the OrbStack adapter
+Both self-contained install methods start the OrbStack adapter
 automatically by default:
 
 - [`install-vind.sh`](./install-vind.sh)
@@ -368,29 +368,38 @@ For manual reconfiguration, reruns, or troubleshooting, use
      --forgejo-host forgejo.team-a.vcp.local
    ```
 
-   This writes a per-cluster env file such as
-   `vind-demo-cluster/orbstack-domains/.env.vcp` and starts a per-cluster
-   compose project such as `vind-local-domains-vcp`.
+   For the default `vcp` cluster, this writes
+   `vind-demo-cluster/orbstack-domains/.env`. For additional clusters, it
+   writes per-cluster env files such as
+   `vind-demo-cluster/orbstack-domains/.env.team-a`.
+
+   The compose project name is also per cluster, for example
+   `vind-local-domains-vcp`.
 
 3. If you need to inspect or override the discovered upstreams, check the
-   current `LoadBalancer` services exposed by `vind`:
+   HAProxy container names created by `vind` for `LoadBalancer` services:
 
    ```bash
-   kubectl get svc -A
+   docker ps --format '{{.Names}}'
    ```
 
-   The helper auto-discovers the reachable `EXTERNAL-IP:PORT` values for Argo CD
-   and vCluster Platform, but you can override them with `--argocd-upstream`
-   and `--vcp-upstream`.
+   The helper targets the Docker-network DNS names directly. For the default
+   `vcp` cluster, that means:
+
+   - Argo CD: `vcluster.lb.vcp.argocd-server.argocd:80`
+   - vCluster Platform: `vcluster.lb.vcp.loft.vcluster-platform:80`
+
+   You can still override them with `--argocd-upstream` and
+   `--vcp-upstream`.
 
    In practice, these upstreams may be:
 
-   - a raw OrbStack load balancer hostname such as
-     `something.lb.<service>.<namespace>.orb.local:443`
-   - a local forwarded `host:port`
+   - the HAProxy container DNS names on the `vcluster.<cluster-name>` Docker
+     network, such as `vcluster.lb.vcp.loft.vcluster-platform:80`
+   - a custom override `host:port`
 
-   Both are acceptable as Caddy upstreams. The point of the adapter is to hide
-   those raw upstream names behind stable friendly domains.
+   The preferred path is the HAProxy container DNS names. The point of the
+   adapter is to hide those raw upstream names behind stable friendly domains.
 
 4. Open the local domains in your browser:
    - `https://vcp.local`
@@ -494,12 +503,12 @@ already targets the service created by the `vind` bootstrap:
 
 - `http://argocd-server.argocd.svc.cluster.local:80`
 
-The vCluster Platform route now points at the normal
-`vcluster-platform` service installed by the Helm chart. Confirm it exists
+The vCluster Platform route points at the normal
+`loft` service installed by the Helm chart. Confirm it exists
 after install with:
 
 ```bash
-kubectl -n vcluster-platform get svc vcluster-platform
+kubectl -n vcluster-platform get svc loft
 ```
 
 ### Practical Advice
