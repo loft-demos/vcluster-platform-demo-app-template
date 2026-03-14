@@ -158,14 +158,14 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.21.0-alpha.10
+            version: 0.32.1
           values: |-
-            external:
-              platform:
-                autoSleep:
-                  afterInactivity: 6000
-                autoDelete:
-                  afterInactivity: 150000
+            sleep:
+              auto:
+                afterInactivity: 1h40m
+            deletion:
+              auto:
+                afterInactivity: 41h40m
                   
             sync:
               toHost:

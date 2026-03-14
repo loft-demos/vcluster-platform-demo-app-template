@@ -142,17 +142,15 @@ spec:
       chart:
         version: 0.32.1
       values: |
-        sleepMode:
-          enabled: true
-          autoSleep:
+        sleep:
+          auto:
             afterInactivity: "50m"
-          timeZone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
-          autoWakeup:
-            schedule: 5 7-17 * * 1-5
-        external:
-          platform:
-            autoDelete:
-              afterInactivity: 1800000
+            timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+            wakeup:
+              schedule: 5 7-17 * * 1-5
+        deletion:
+          auto:
+            afterInactivity: 500h
         sync:
           toHost:
             ingresses:

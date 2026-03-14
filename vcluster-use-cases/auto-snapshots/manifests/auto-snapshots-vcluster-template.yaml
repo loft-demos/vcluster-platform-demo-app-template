@@ -226,8 +226,6 @@ spec:
           values: |+
             external:
               platform:
-                autoDelete:
-                  afterInactivity: 1800000
                 autoSnapshot:
                   schedule: "15 7-17/3 * * 1-5"
                   enabled: true
@@ -242,13 +240,15 @@ spec:
                         secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
                         secretNamespace: {{ .Values.loft.virtualClusterNamespace }}
                       repository: oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
-            sleepMode:
-              enabled: true
-              autoSleep:
+            sleep:
+              auto:
                 afterInactivity: 35m
-              timeZone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
-              autoWakeup:
-                schedule: 11 7-17 * * 1-5
+                timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+                wakeup:
+                  schedule: 11 7-17 * * 1-5
+            deletion:
+              auto:
+                afterInactivity: 500h
             sync:
               toHost:
                 ingresses:
