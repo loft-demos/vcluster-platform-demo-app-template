@@ -40,16 +40,14 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.26.0
+        version: 0.32.0
       values: |-
-        sleepMode:
-          enabled: true
-          autoSleep:
+        sleep:
+          auto:
             afterInactivity: "{{ .Values.sleepAfter }}m"
-        external:
-          platform:
-            autoDelete:
-              afterInactivity: 120000
+        deletion:
+          auto:
+            afterInactivity: 33h20m
         sync:
           toHost:
             ingresses:

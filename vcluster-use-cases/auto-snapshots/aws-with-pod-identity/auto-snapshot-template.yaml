@@ -219,8 +219,6 @@ spec:
           values: |+
             external:
               platform:
-                autoDelete:
-                  afterInactivity: 1800000
                 autoSnapshot:
                   schedule: "20 7-17/2 * * 1-5"
                   enabled: true
@@ -232,13 +230,15 @@ spec:
                     type: s3
                     s3:
                       url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
-            sleepMode:
-              enabled: true
-              autoSleep:
+            sleep:
+              auto:
                 afterInactivity: 35m
-              timeZone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
-              autoWakeup:
-                schedule: 10 7-17 * * 1-5
+                timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
+                wakeup:
+                  schedule: 10 7-17 * * 1-5
+            deletion:
+              auto:
+                afterInactivity: 500h
             sync:
               toHost:
                 ingresses:

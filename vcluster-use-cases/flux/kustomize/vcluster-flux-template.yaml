@@ -54,17 +54,15 @@ spec:
             #   secret:
             #     name: 'flux-kubeconfig'
             
-            sleepMode:
-              enabled: true
-              autoSleep:
+            sleep:
+              auto:
                 afterInactivity: "{{ .Values.sleepAfter }}m"
-              timeZone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
-              autoWakeup:
-                schedule: 11 7-17 * * 1-5
-            external:
-              platform:
-                autoDelete:
-                  afterInactivity: 1800000
+                timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+                wakeup:
+                  schedule: 11 7-17 * * 1-5
+            deletion:
+              auto:
+                afterInactivity: 500h
                   
             sync:
               toHost:

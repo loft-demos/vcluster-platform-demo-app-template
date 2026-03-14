@@ -21,15 +21,17 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.30.2
+        version: 0.32.1
       values: |
-        sleepMode:
-          enabled: true
-          autoSleep:
+        sleep:
+          auto:
             afterInactivity: "45m"
-          timeZone: America/New_York
-          autoWakeup:
-            schedule: 11 7-17 * * 1-5
+            timezone: America/New_York
+            wakeup:
+              schedule: 11 7-17 * * 1-5
+        deletion:
+          auto:
+            afterInactivity: 500h
         
         sync:
           toHost:

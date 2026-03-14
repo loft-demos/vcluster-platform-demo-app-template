@@ -33,7 +33,7 @@ spec:
     helmRelease:
       chart:
         name: vcluster
-        version: 0.22.4
+        version: 0.32.1
       values: |
         networking:
           resolveDNS:
@@ -52,13 +52,15 @@ spec:
           coredns:
             enabled: true
             embedded: true
-        external:
-          platform:
-            autoSleep:
-              afterInactivity: 34800
-              autoWakeup:
-                schedule: 30 7 * * 1-5
-              schedule: 0 19 * * 1-5
+        sleep:
+          auto:
+            afterInactivity: 9h40m
+            wakeup:
+              schedule: 30 7 * * 1-5
+            schedule: 0 19 * * 1-5
+        deletion:
+          auto:
+            afterInactivity: 500h
     accessPoint:
       ingress: {}
     spaceTemplate:

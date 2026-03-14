@@ -90,19 +90,17 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.23.0
+        version: 0.32.0
       values: |
-        sleepMode:
-          enabled: true
-          autoSleep:
+        sleep:
+          auto:
             schedule: 0 22 * * *
-          timeZone: America/New_York
-          autoWakeup:
-            schedule: 0 6 * * 1-5
-        external:
-          platform:
-            autoDelete:
-              afterInactivity: 18000000
+            timezone: America/New_York
+            wakeup:
+              schedule: 0 6 * * 1-5
+        deletion:
+          auto:
+            afterInactivity: 5000h
         sync:
           toHost:
             ingresses:

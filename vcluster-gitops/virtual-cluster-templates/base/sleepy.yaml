@@ -18,7 +18,7 @@ spec:
       enabled: true
     helmRelease:
       chart:
-        version: 0.25.0
+        version: 0.32.0
       values: |
         sync:
           toHost:
@@ -36,10 +36,10 @@ spec:
             k8s:
               image:
                 tag: "{{ .Values.k8sVersion }}"
-        sleepMode:
-          enabled: true
-          autoSleep:
+        sleep:
+          auto:
             afterInactivity: "{{ .Values.sleepAfter }}m"
+            timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
     accessPoint:
       ingress: {}
     spaceTemplate:

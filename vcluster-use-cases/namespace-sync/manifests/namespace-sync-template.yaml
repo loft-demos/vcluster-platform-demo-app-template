@@ -45,9 +45,8 @@ spec:
                 enabled: true
           coredns:
             embedded: true
-        sleepMode:
-          enabled: true
-          autoSleep:
+        sleep:
+          auto:
             afterInactivity: "{{ .Values.sleepAfter }}m"
     accessPoint:
       ingress: {}

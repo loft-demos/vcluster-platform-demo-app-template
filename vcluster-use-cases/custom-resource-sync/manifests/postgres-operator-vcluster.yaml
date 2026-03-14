@@ -40,12 +40,12 @@ spec:
       chart:
         version: 0.32.1
       values: |-
-        external:
-          platform:
-            autoSleep:
-              afterInactivity: 10800
-            autoDelete:
-              afterInactivity: 120000
+        sleep:
+          auto:
+            afterInactivity: 3h
+        deletion:
+          auto:
+            afterInactivity: 33h20m
         sync:
           toHost:
             ingresses:
