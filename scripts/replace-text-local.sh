@@ -18,13 +18,13 @@ Usage:
   bash scripts/replace-text-local.sh \
     --repo-name vcluster-platform-demo-app-template \
     --org-name loft-demos \
-    --base-domain demo.example.com
+    --base-domain vcp.local
 
 Options:
   --repo-name NAME        Required. Target repo name.
   --org-name NAME         Required. Target org or owner name.
   --vcluster-name NAME    Optional. Defaults to repo name with trailing -app removed.
-  --base-domain DOMAIN    Required. Base domain for example public URLs.
+  --base-domain DOMAIN    Optional. Defaults to VCP_HOST or vcp.local.
   --include-md            Also replace in Markdown files.
   --dry-run               Print matching files but do not modify them.
   --help                  Show this message.
@@ -87,10 +87,14 @@ done
 require_cmd rg
 require_cmd perl
 
-if [[ -z "$REPO_NAME" || -z "$ORG_NAME" || -z "$BASE_DOMAIN" ]]; then
-  echo "[ERROR] --repo-name, --org-name, and --base-domain are required." >&2
+if [[ -z "$REPO_NAME" || -z "$ORG_NAME" ]]; then
+  echo "[ERROR] --repo-name and --org-name are required." >&2
   usage >&2
   exit 1
+fi
+
+if [[ -z "$BASE_DOMAIN" ]]; then
+  BASE_DOMAIN="${VCP_HOST:-vcp.local}"
 fi
 
 if [[ -z "$VCLUSTER_NAME" ]]; then

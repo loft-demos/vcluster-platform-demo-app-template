@@ -142,8 +142,7 @@ experimental convenience wrapper:
 ```bash
 LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --repo-name vcluster-platform-demo-app-template \
-  --org-name loft-demos \
-  --base-domain demo.example.com
+  --org-name loft-demos
 ```
 
 That helper can:
@@ -153,6 +152,9 @@ That helper can:
 - run local placeholder replacement
 - write the OrbStack local-domain `.env`
 - optionally bootstrap the repo into Forgejo
+
+For the self-contained path, `--base-domain` now defaults to the chosen
+`--vcp-host`, which defaults to `vcp.local`.
 
 It intentionally does not replace the step-by-step path yet.
 
@@ -178,9 +180,10 @@ The local replacement script is:
 bash scripts/replace-text-local.sh \
   --repo-name your-demo-repo \
   --org-name your-org \
-  --base-domain demo.example.com \
   --include-md
 ```
+
+If you omit `--base-domain`, it defaults to `VCP_HOST` or `vcp.local`.
 
 This mirrors the main placeholder replacement behavior from
 [`.github/workflows/replace-text.yaml`](../.github/workflows/replace-text.yaml)

@@ -22,8 +22,7 @@ What it does not do yet:
 Usage:
   LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
     --repo-name my-demo-app \
-    --org-name loft-demos \
-    --base-domain demo.example.com
+    --org-name loft-demos
 
 Optional Forgejo bootstrap:
   --forgejo-url https://forgejo.vcp.local
@@ -196,14 +195,18 @@ if [[ "$SKIP_VIND" != "true" && -z "$LICENSE_TOKEN" ]]; then
 fi
 
 if [[ "$SKIP_REPLACE" != "true" ]]; then
-  if [[ -z "$REPO_NAME" || -z "$ORG_NAME" || -z "$BASE_DOMAIN" ]]; then
-    echo "[ERROR] --repo-name, --org-name, and --base-domain are required unless --skip-replace is used." >&2
+  if [[ -z "$REPO_NAME" || -z "$ORG_NAME" ]]; then
+    echo "[ERROR] --repo-name and --org-name are required unless --skip-replace is used." >&2
     exit 1
   fi
 fi
 
 if [[ -z "$VCLUSTER_NAME" && -n "$REPO_NAME" ]]; then
   VCLUSTER_NAME="${REPO_NAME%-app}"
+fi
+
+if [[ -z "$BASE_DOMAIN" ]]; then
+  BASE_DOMAIN="$VCP_HOST"
 fi
 
 if [[ "$SKIP_VIND" != "true" ]]; then
