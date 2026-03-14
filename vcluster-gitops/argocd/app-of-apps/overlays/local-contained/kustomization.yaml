@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../argocd-in-vcluster-appset.yaml
+  - ../../argocd-vcluster-add-ons-app.yaml
+  - ../../argocd-vcluster-pull-request-environments-apps.yaml
+  - ../../autosnapshots-appset.yaml
+  - ../../connected-host-cluster-appset.yaml
+  - ../../crossplane-appset.yaml
+  - ../../eso-appset.yaml
+  - ../../flux-appset.yaml
+  - ../../flux-operator-helm-app.yaml
+  - ../../global-project.yaml
+  - ../../kyverno-appset.yaml
+  - ../../mysql-appset.yaml
+  - ../../namespace-sync-appset.yaml
+  - ../../postgres-appset.yaml
+  - ../../rancher-appset.yaml
+  - repo-app-pr-appset.yaml
+  - ../../resolve-dns-appset.yaml
+  - ../../virtual-cluster-templates-app.yaml
+  - ../../virtual-scheduler-appset.yaml
+  - ../../vnode-with-vcluster-appset.yaml
+patches:
+  - path: patch-pr-apps-bootstrap.yaml

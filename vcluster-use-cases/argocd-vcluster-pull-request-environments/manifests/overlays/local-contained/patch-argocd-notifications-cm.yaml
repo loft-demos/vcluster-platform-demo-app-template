@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  $patch: replace
+  context: |
+    argocdUrl: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+  service.webhook.vcluster-platform: |
+    url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local
+    headers:
+    - name: Authorization
+      value: "Bearer $accessKey"
+    - name: User-Agent
+      value: "vcluster-wakeup"
+  template.wakeup-vcluster: |
+    webhook:
+      vcluster-platform:
+        method: POST
+        path: /kubernetes/project/{{ index .app.metadata.labels "vclusterProjectId" }}/virtualcluster/{{ index .app.metadata.labels "vclusterName" }}
+  trigger.wakeup-vcluster: |
+    - description: "Wake vCluster when app is OutOfSync"
+      when: app.status.sync.status == 'OutOfSync'
+      send: [wakeup-vcluster]

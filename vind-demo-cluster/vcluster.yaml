@@ -46,7 +46,7 @@ experimental:
             eso: "true"
             flux: "false"
             kyverno: "false"
-            loftDemoDomain: vind.local
+            loftDemoDomain: vcp.local
             mysql: "false"
             postgres: "false"
             rancher: "false"
@@ -81,7 +81,7 @@ experimental:
               ingress:
                 enabled: false
               service:
-                type: ClusterIP
+                type: LoadBalancer
         - chart:
             name: external-secrets
             repo: https://charts.external-secrets.io

@@ -16,6 +16,18 @@ The intended model is:
 This replaces the secret projection and bootstrap behavior normally supplied by
 the [vCluster Platform Demo Generator](https://github.com/loft-demos/loft-demo-base/blob/main/vcluster-platform-demo-generator/README.md).
 
+## Default Pattern
+
+The default target pattern for `vind` in this repo is now:
+
+- local-contained Git hosting with Forgejo
+- local polling and Gitea-compatible Argo CD generators
+- local hostnames on OrbStack
+- no required public domain
+
+The public GitHub-backed path still exists, but it should be treated as the
+fallback when you specifically need GitHub webhooks or public demo URLs.
+
 ## Why This Path Exists
 
 The Demo Generator path works well for centrally managed demo environments, but
@@ -49,6 +61,7 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 - creates the namespaces and Argo CD cluster secret this repo expects
 - enables only the `eso` app-of-apps label by default so the initial bootstrap
   stays small
+- exposes Argo CD as a `LoadBalancer` service for local access in `vind`
 - includes a commented-out Forgejo install block for a future local-contained
   mode
 
@@ -63,6 +76,13 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
   defines the initial management-cluster `ExternalSecret` resources that
   materialize the first set of repo, image, notification, and Crossplane
   credentials
+- [`cloudflare-tunnel.yaml`](./cloudflare-tunnel.yaml)
+  provides a named-tunnel `cloudflared` template for exposing Argo CD and
+  vCluster Platform through Cloudflare Tunnel
+- [`orbstack-domains/`](./orbstack-domains)
+  provides an OrbStack-specific Caddy proxy setup for mapping local `vind`
+  endpoints to a default `vcp.local` local domain set, with easy overrides for
+  custom domains
 
 ## Bootstrap Sequence
 
@@ -85,7 +105,7 @@ that are not present until Platform is installed.
 ## Optional Forgejo Mode
 
 [`vcluster.yaml`](./vcluster.yaml) includes a commented-out Forgejo Helm block.
-This is the preferred direction for a self-contained demo mode where:
+This is the preferred default direction for a self-contained demo mode where:
 
 - Git is hosted inside the `vind` cluster
 - OCI images can be pushed to the Forgejo package registry
@@ -95,6 +115,209 @@ This is the preferred direction for a self-contained demo mode where:
 Keep Forgejo disabled by default until the repo has a dedicated
 `local-contained` overlay, because the current PR automation, notifications,
 and some image flows are still GitHub-specific.
+
+The first pass of that overlay now exists at
+[`vcluster-gitops/overlays/local-contained`](../vcluster-gitops/overlays/local-contained/README.md).
+It converts the Argo CD pull request generators to `gitea`, switches the PR
+flows to generic Git and image registry placeholders, and removes
+GitHub-specific notification hooks from the local-contained PR path.
+
+The recommended repo bootstrap step for this mode is now:
+
+```bash
+bash scripts/bootstrap-forgejo-repo.sh \
+  --forgejo-url https://forgejo.vcp.local \
+  --username demo-admin \
+  --token "$FORGEJO_TOKEN" \
+  --owner loft-demos \
+  --repo vcluster-platform-demo-app-template
+```
+
+That script creates the target repo through the Forgejo API if needed, then
+pushes the current local branches and tags into Forgejo.
+
+## OrbStack Local Domains
+
+For SE laptops running `vind` on OrbStack, the default local hostname pattern
+is:
+
+- `vcp.local`
+- `argocd.vcp.local`
+- `forgejo.vcp.local`
+
+This should be treated as the default, not the only option. The setup is
+designed so you can override the hostnames easily per environment.
+
+Do not try to use the OrbStack Kubernetes `*.k8s.orb.local` path for `vind`.
+That path is for OrbStack's own Kubernetes integration, while `vind` is a
+Docker-backed management cluster. For `vind`, the better OrbStack-specific
+pattern is:
+
+1. expose the relevant services from `vind` with `LoadBalancer` services
+2. identify the local upstream address for each service
+3. run a tiny OrbStack container with custom domains that reverse proxies to
+   those upstreams
+
+This repo includes a ready-to-adapt setup in
+[`orbstack-domains/`](./orbstack-domains):
+
+- [`compose.yaml`](./orbstack-domains/compose.yaml)
+- [`Caddyfile`](./orbstack-domains/Caddyfile)
+- [`.env.example`](./orbstack-domains/.env.example)
+
+### OrbStack Setup
+
+1. Copy the example environment file:
+
+   ```bash
+   cp vind-demo-cluster/orbstack-domains/.env.example \
+     vind-demo-cluster/orbstack-domains/.env
+   ```
+
+2. Edit `vind-demo-cluster/orbstack-domains/.env` and choose your local
+   hostnames.
+
+   Default values:
+
+   ```dotenv
+   VCP_HOST=vcp.local
+   ARGOCD_HOST=argocd.vcp.local
+   FORGEJO_HOST=forgejo.vcp.local
+   ```
+
+   For multiple `vind` environments, pick unique hostnames per environment. For
+   example:
+
+   ```dotenv
+   VCP_HOST=team-a.vcp.local
+   ARGOCD_HOST=argocd.team-a.vcp.local
+   FORGEJO_HOST=forgejo.team-a.vcp.local
+   ```
+
+3. Find the local upstreams exposed by `vind`:
+
+   ```bash
+   kubectl get svc -A
+   ```
+
+   For each service you want to front locally, record the reachable
+   `EXTERNAL-IP:PORT` or local `host:port` and place those values in
+   `vind-demo-cluster/orbstack-domains/.env`.
+
+4. Start the OrbStack domain proxy:
+
+   ```bash
+   cd vind-demo-cluster/orbstack-domains
+   docker compose up -d
+   ```
+
+5. Open the local domains in your browser:
+   - `https://vcp.local`
+   - `https://argocd.vcp.local`
+   - `https://forgejo.vcp.local`
+
+   Or use your custom values from `.env`.
+
+### Upstream Advice
+
+- Argo CD is already configured as a `LoadBalancer` service in
+  [`vcluster.yaml`](./vcluster.yaml).
+- For Forgejo, keep the service local to `vind` and expose it the same way when
+  you enable the commented Helm block.
+- For vCluster Platform, confirm the actual service after install and expose
+  the UI/API service as `LoadBalancer` if you want a stable local upstream.
+
+This pattern is the easiest OrbStack-specific way to map nice local domains to
+`vind` services without requiring a public DNS zone.
+
+## Public GitHub Fallback
+
+For a GitHub-backed demo environment that needs public webhooks and
+publicly-accessible URLs, Cloudflare Tunnel is the recommended fallback.
+
+Why this is the best public fallback for this repo:
+
+- it gives you stable public hostnames on a domain you control
+- it works well for GitHub webhooks without exposing a home or coworker network
+- it is simpler operationally than adding the Tailscale Kubernetes Operator
+  just to make a few HTTP endpoints public
+- it avoids depending on a vendor-hosted demo domain for DNS and public entry
+  points
+
+### Recommendation
+
+Use Cloudflare Tunnel for the GitHub-backed mode when you need public ingress:
+
+- `vcp.{your-domain}` for the vCluster Platform UI and API
+- `argocd.{your-domain}` for the shared Argo CD instance
+
+This is a better public option than:
+
+- vCluster Labs hosted domains
+  because those are fast to start with but depend on hosted domain plumbing you
+  do not control
+- Tailscale Operator
+  because that is better for private network access than for a simple public
+  webhook and demo URL story, and it adds more moving parts and account setup
+
+### Cloudflare Tunnel Setup
+
+1. In Cloudflare, create a named tunnel and public hostnames for:
+   - `argocd.{your-domain}`
+   - `vcp.{your-domain}`
+2. Download the tunnel credentials JSON.
+3. Create the Kubernetes secret in the `vind` cluster:
+
+   ```bash
+   kubectl create namespace cloudflare-tunnel
+   kubectl -n cloudflare-tunnel create secret generic cloudflared-tunnel-credentials \
+     --from-file=credentials.json=./credentials.json
+   ```
+
+4. Edit [`cloudflare-tunnel.yaml`](./cloudflare-tunnel.yaml):
+   - set `{REPLACE_CLOUDFLARE_TUNNEL_ID}`
+   - set `{REPLACE_PUBLIC_BASE_DOMAIN}`
+   - set the vCluster Platform service placeholders:
+     - `{REPLACE_VCP_SERVICE}`
+     - `{REPLACE_VCP_NAMESPACE}`
+     - `{REPLACE_VCP_PORT}`
+5. Apply the tunnel manifest:
+
+   ```bash
+   kubectl apply -f vind-demo-cluster/cloudflare-tunnel.yaml
+   ```
+
+6. Verify the tunnel pod:
+
+   ```bash
+   kubectl -n cloudflare-tunnel get pods
+   kubectl -n cloudflare-tunnel logs deploy/cloudflared
+   ```
+
+7. Point GitHub webhooks and GitHub App callback URLs at the public hostnames.
+
+### Service Targets
+
+The Argo CD route in [`cloudflare-tunnel.yaml`](./cloudflare-tunnel.yaml)
+already targets the service created by the `vind` bootstrap:
+
+- `http://argocd-server.argocd.svc.cluster.local:80`
+
+The vCluster Platform service name is left as a placeholder intentionally,
+because that depends on how you install Platform into the `vind` cluster. Do
+not guess that value; confirm the actual service after install with:
+
+```bash
+kubectl -n vcluster-platform get svc
+```
+
+### Practical Advice
+
+- Use the local-contained Forgejo path as the default `vind` pattern.
+- Use Cloudflare Tunnel only when the repo clone stays GitHub-backed and needs
+  webhook-driven refresh or public preview links.
+- Keep Tailscale as an optional private-access mode, not the default hostname
+  or public-access pattern for this repo.
 
 ## Same-Org vs Different-Org
 

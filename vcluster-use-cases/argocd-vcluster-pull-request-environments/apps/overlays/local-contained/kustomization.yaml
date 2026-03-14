@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../pr-preview-app-multi-k8s-matrix-operator.yaml
+  - ../../pr-preview-manifests.yaml
+  - ../../pr-vcluster-multi-k8s.yaml
+patches:
+  - path: patch-pr-preview-app-multi-k8s-matrix-operator.yaml
+  - path: patch-pr-preview-manifests.yaml
+  - path: patch-pr-vcluster-multi-k8s.yaml
