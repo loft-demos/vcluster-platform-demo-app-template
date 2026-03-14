@@ -120,3 +120,22 @@ bash scripts/bootstrap-forgejo-repo.sh \
 
 This script pushes committed git history only. Uncommitted local changes are
 not included.
+
+## Local Template Replacement
+
+The repo also includes [`replace-text-local.sh`](./replace-text-local.sh), which
+is the local equivalent of [`.github/workflows/replace-text.yaml`](../.github/workflows/replace-text.yaml).
+
+Use it when you are following the self-contained `vind` path and do not want to
+depend on GitHub Actions to rename placeholders in the repo:
+
+```bash
+bash scripts/replace-text-local.sh \
+  --repo-name vcluster-platform-demo-app-template \
+  --org-name loft-demos \
+  --base-domain demo.example.com \
+  --include-md
+```
+
+This script only updates the local working tree. It does not create or rename
+any remote GitHub or Forgejo repo.
