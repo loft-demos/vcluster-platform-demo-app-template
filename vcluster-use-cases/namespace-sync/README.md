@@ -7,7 +7,7 @@ This template demonstrates how to enable [vCluster's namespace syncing feature](
 - **Namespace syncing**: Syncs specific virtual namespaces into matching host namespaces.
 - **Custom Resource Sync**: Automatically syncs `applications.argoproj.io` resources to the host cluster.
 - **Resource patching**: Ensures synced Argo CD `Application` resources target the vCluster control plane via the correct `destination.server` field.
-- **Sleep mode**: Configurable auto-sleep for unused vClusters.
+- **Sleep mode**: Configurable auto-sleep for unused vCluster instances.
 
 ## Demo Use Case
 

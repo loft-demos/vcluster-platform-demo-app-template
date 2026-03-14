@@ -1,8 +1,8 @@
 # Argo CD vCluster Add-ons
 
 This folder contains a small Argo CD `ApplicationSet` example that deploys
-environment-specific add-on manifests to vClusters created through vCluster
-Platform and imported into Argo CD with cluster labels.
+environment-specific add-on manifests to vCluster instances created through
+vCluster Platform and imported into Argo CD with cluster labels.
 
 The setup assumes the imported Argo CD cluster `Secret` for each vCluster has
 an `env` label such as `dev`, `qa`, or `prod`. The `ApplicationSet` uses that
@@ -89,12 +89,12 @@ defined in
 [`vcluster-gitops/argocd/app-of-apps/argocd-vcluster-add-ons-app.yaml`](../../vcluster-gitops/argocd/app-of-apps/argocd-vcluster-add-ons-app.yaml).
 That `Application` points Argo CD at the `applicationsets/` folder, which then
 creates the environment-specific child `Application` resources for matching
-vClusters.
+vCluster instances.
 
 ## Notes
 
-- This example depends on vCluster Platform importing vClusters into Argo CD as
-  clusters with labels.
+- This example depends on vCluster Platform importing vCluster instances into
+  Argo CD as clusters with labels.
 - The `env` label is the routing key that maps a cluster to the `dev`, `qa`,
   or `prod` sub-folder.
 - The `project` field in the generated `Application` uses the imported cluster

@@ -154,7 +154,7 @@ No — it works equally well for standalone vCluster demos too.
 
 Not all. Known limitations:
 
-- Ingress-based wakeup doesn’t currently work in nested vClusters.
+- Ingress-based wakeup doesn’t currently work in nested vCluster instances.
 - Central Admission Control works only if policy engines (e.g., Kyverno) run in the child vCluster.
 
 ---
