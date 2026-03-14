@@ -35,6 +35,7 @@ That path is started, but not fully complete yet. The current status is:
 - repo-specific `vind` bootstrap: [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
 - step-by-step `vind` installer with license-token and Platform-version overrides: [vind-demo-cluster/install-vind.sh](./vind-demo-cluster/install-vind.sh)
 - OrbStack adapter helper for automatic local browser access: [vind-demo-cluster/start-orbstack-domains.sh](./vind-demo-cluster/start-orbstack-domains.sh)
+- `vind` delete helper that cleans up the OrbStack adapter first: [vind-demo-cluster/delete-vind.sh](./vind-demo-cluster/delete-vind.sh)
 - 1Password + ESO bootstrap model: [docs/secret-contract.md](./docs/secret-contract.md)
 - first-pass local-contained overlay: [vcluster-gitops/overlays/local-contained/README.md](./vcluster-gitops/overlays/local-contained/README.md)
 - Forgejo repo bootstrap script: [scripts/bootstrap-forgejo-repo.sh](./scripts/bootstrap-forgejo-repo.sh)
