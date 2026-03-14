@@ -2,258 +2,188 @@
 
 ![Supports vCluster Inception](https://img.shields.io/badge/vCluster-Inception%20Ready-blueviolet?style=flat-square&logo=kubernetes)
 
-This repository template is configured to automatically integrate with fully managed and fully automated [**vCluster Platform Demo Generator**](./vcluster-platform-demo-generator.md), and provides a GitOps approach for managing vCluster Platform (`vcluster-gitops` directory) and selectable demo-use-cases-as-code for self-service vCluster Platform demo environments (`vcluster-use-cases` directory).
+This repository is the GitOps and use-case template for vCluster Platform demo
+environments. It can be used in three ways:
 
-Although originally designed and optimized for a hierarchical vCluster Platform  with the fully managed [**vCluster Platform Demo Generator**] -leveraging vCluster inception- the _vCluster Platform Demo Repository_ may also be used for _standalone_ vCluster Platform demo environments where the host cluster, along with the vCluster Platform and Argo CD installations (bootstrap applications), are self-managed. See the [instructions for self managed vCluster Platform installs](./self-managed-demo-cluster/README.md).
+- with the managed [vCluster Platform Demo Generator](./vcluster-platform-demo-generator.md)
+- on a self-managed host cluster via [self-managed-demo-cluster/README.md](./self-managed-demo-cluster/README.md)
+- on a self-contained `vind` management cluster via [vind-demo-cluster/README.md](./vind-demo-cluster/README.md)
 
-## vCluster Platform Integration Examples
+The repo was originally optimized for the Demo Generator path, but it now also
+includes a real `vind` bootstrap path, a first-pass local-contained Git flow
+using Forgejo, and an OrbStack-specific local domain pattern for SE laptops.
 
-- vCluster Platform GitOps: Mainly used to create and update vCluster Platform custom resources to pre-configure the vCluster Platform Demo environment. The resources are deployed to the vCluster Platform Demo vCluster via Argo CD and Flux.
-- Argo CD: Argo CD is used for vCluster Platform Demo GitOps and to install additional template selectable demo use cases as code using the [App of Apps pattern](https://argo-cd.readthedocs.io/en/latest/operator-manual/cluster-bootstrapping/#app-of-apps-pattern). Argo CD is also used to showcase vCluster Platform integrations like ephmeral virtual cluster for GitHub Pull Requests. 
-- vNode: Using vNode with vCluster and vCluster Platform
-- Crossplane: Crossplane highlights custom resource syncing and is used to create _ephemeral_ GitHub resources that are automatically cleaned up when a VCP demo environment vCluster is deleted.
-- External Secrets Operator showcases [vCluster integration with ESO](https://www.vcluster.com/docs/vcluster/integrations/external-secrets/guide).
-- vCluster [Central Admission Control](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/policies/admission-control) with Kyverno
-- Flux: Showcases vCluster integration with Flux.
-- MySQL Operator example that showcases using the [vCluster Platform database connector](https://www.vcluster.com/docs/platform/administer/connector/database) to provide backing stores for Platform managed vCluster instances.
-- Postgres Operator showcases custom resource syncing.
-- vCluster [Virtual Scheduler](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/control-plane/other/advanced/virtual-scheduler) with Volcano Scheduler and KubeRay
-- vCluster Rancher integration showcases using the [vCluster Rancher Operator](https://github.com/loft-sh/vcluster-rancher-operator) with vCluster Platform managed vCluster instances
+## Deployment Modes
 
-## GitHub Actions Automations
+| Mode | Best Fit | Entry Point |
+|------|----------|-------------|
+| Managed Demo Generator | centrally managed demo environments with automated repo creation, webhook setup, and pre-wired secrets | [vcluster-platform-demo-generator.md](./vcluster-platform-demo-generator.md) |
+| Self-managed | bring-your-own cluster with manually bootstrapped vCluster Platform and Argo CD | [self-managed-demo-cluster/README.md](./self-managed-demo-cluster/README.md) |
+| `vind` | self-contained demos on a laptop or local machine | [vind-demo-cluster/README.md](./vind-demo-cluster/README.md) |
 
-There are a number of GitHub Actions workflows included as part of this template repository. Some are used to automate the configuration and modification of the contents of the repository, while others are used to demonstrate the features and capabilities of vCluster Platform and vCluster.
+## Current `vind` Direction
 
-### Automation Workflows
+The intended default pattern for `vind` is:
 
-### _replace-text_
+- embedded or local-contained Forgejo for Git hosting
+- Argo CD pull request generators switched to `gitea`
+- OrbStack local domains such as `vcp.local`, `argocd.vcp.local`, and `forgejo.vcp.local`
+- no required public domain
 
-This GitHub Actions workflow replaces template values in YAML files based on the current repository name, default values and/or user-defined inputs. It’s designed to help scaffold new vCluster Platform demo repositories created from this template repository.
+That path is started, but not fully complete yet. The current status is:
 
-#### What It Does
+- repo-specific `vind` bootstrap: [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
+- 1Password + ESO bootstrap model: [docs/secret-contract.md](./docs/secret-contract.md)
+- first-pass local-contained overlay: [vcluster-gitops/overlays/local-contained/README.md](./vcluster-gitops/overlays/local-contained/README.md)
+- Forgejo repo bootstrap script: [scripts/bootstrap-forgejo-repo.sh](./scripts/bootstrap-forgejo-repo.sh)
+- OrbStack local domain adapter: [vind-demo-cluster/orbstack-domains](./vind-demo-cluster/orbstack-domains)
 
-- **Triggers** on:
-  - A push to the `main` branch that modifies `helm-chart/Chart.yaml` that is pushed to the repository by a vCluster Platform Demo Generator Crossplane integration
-  - A manual run via the "Run workflow" button in the GitHub UI
+When you need public GitHub webhooks or public demo URLs instead, the fallback
+path is Cloudflare Tunnel:
 
-- **Replaces placeholders** in all `*.yaml` files using the [`flcdrg/replace-multiple-action`](https://github.com/flcdrg/replace-multiple-action) GitHub Action:
-  - `{REPLACE_REPO_NAME}` → current GitHub repo name
-  - `{REPLACE_ORG_NAME}` → GitHub org that owns the repo
-  - `{REPLACE_VCLUSTER_NAME}` → user-supplied name or repo name with `-app` removed
-  - `{REPLACE_BASE_DOMAIN}` → user-supplied base domain (defaults to `us.demo.dev`)
+- [vind-demo-cluster/cloudflare-tunnel.yaml](./vind-demo-cluster/cloudflare-tunnel.yaml)
 
-- **Commits changes** automatically using [`git-auto-commit-action`](https://github.com/stefanzweifel/git-auto-commit-action)
+## Repository Layout
 
-- **Deletes** any associated container image (e.g., GitHub Container Registry package) for the repo under the org, using a GitHub PAT
+- [vcluster-gitops/](./vcluster-gitops)
+  vCluster Platform GitOps resources, Argo CD bootstrap content, projects,
+  project secrets, teams, users, virtual cluster templates, and example
+  virtual cluster instances
+- [vcluster-use-cases/](./vcluster-use-cases)
+  selectable demo use cases, each documented in its own folder when applicable
+- [vind-demo-cluster/](./vind-demo-cluster)
+  `vind` bootstrap manifests, docs, Cloudflare Tunnel template, and OrbStack
+  local domain setup
+- [self-managed-demo-cluster/](./self-managed-demo-cluster)
+  self-managed bootstrap guidance for a traditional host cluster
+- [scripts/](./scripts)
+  repo maintenance and local bootstrap automation
+- [helm-chart/](./helm-chart)
+  demo application Helm chart used by several GitOps and pull request examples
+- [src/](./src)
+  demo application source
 
-- **Disables itself** after running, so it’s only used once per repo initialization
+## Key Flows
 
-### _Auto-Update vCluster Templates + K8s Versions_
+### vCluster Platform GitOps
 
-This GitHub Actions workflow runs the [**update_templates.sh**](./scripts/update-templates.sh) script and creates a pull request if there are any changes.
+The main management cluster GitOps content is in [vcluster-gitops/](./vcluster-gitops).
+This includes:
 
-## Integration Details
+- Argo CD bootstrap applications and ApplicationSets
+- vCluster Platform projects, roles, teams, users, and project secrets
+- base and overlay `VirtualClusterTemplate` manifests
+- demo-use-case installation triggers driven by Argo CD cluster secret labels
 
-### Argo CD Integrations
+### Use Cases
 
-vCluster Platform includes an Argo CD integration that will automatically add a vCluster instance, created with a [virtual cluster template](https://www.vcluster.com/pro/docs/virtual-clusters/templates), to Argo CD as a target cluster of an Argo CD `Application` `destination`.
+The repo includes examples for:
 
-*Example `management.loft.sh/v1` `VirtualClusterTemplate` manifest (with unrelated configuration execluded - [full version here](https://github.com/loft-demos/loft-demo-base/blob/main/loft/vcluster-templates.yaml)) that enables the automatic syncing of the vCluster instance created with the template to Argo CD:*
+- Argo CD in virtual clusters
+- Argo CD add-ons for virtual clusters
+- pull request preview environments
+- External Secrets Operator
+- Crossplane
+- Flux
+- database connector
+- custom resource sync
+- namespace sync
+- resolve DNS
+- virtual scheduler
+- vNode with vCluster
+- auto snapshots
+- connected host cluster
+- Rancher integration
+- central admission control
 
-```yaml
-kind: VirtualClusterTemplate
-apiVersion: management.loft.sh/v1
-metadata:
-  name: preview-template
-spec:
-  displayName: vCluster.Pro Preview Template
-  template:
-    metadata:
-      labels:
-        loft.sh/import-argocd: 'true'
-...
+The catalog lives under [vcluster-use-cases/](./vcluster-use-cases).
+
+### Local-Contained PR Flow
+
+The new first-pass `local-contained` path converts the PR-oriented Argo CD flows
+from `github` to `gitea` in an overlay rather than rewriting the base manifests:
+
+- [vcluster-gitops/overlays/local-contained/README.md](./vcluster-gitops/overlays/local-contained/README.md)
+
+This path is intentionally scoped. It does not yet replace all GitHub-specific
+or GHCR-specific automation across the repo.
+
+## Automation
+
+### Template and Version Updates
+
+[scripts/update-templates.sh](./scripts/update-templates.sh) updates Kubernetes
+version options and vCluster chart versions across template manifests. It is
+also used by the repo automation workflow.
+
+### Forgejo Bootstrap
+
+[scripts/bootstrap-forgejo-repo.sh](./scripts/bootstrap-forgejo-repo.sh)
+creates a repo in Forgejo and pushes the current local branches and tags into
+it. This is the best current automation for the local-contained `vind` path.
+
+Example:
+
+```bash
+bash scripts/bootstrap-forgejo-repo.sh \
+  --forgejo-url https://forgejo.vcp.local \
+  --username demo-admin \
+  --token "$FORGEJO_TOKEN" \
+  --owner loft-demos \
+  --repo vcluster-platform-demo-app-template
 ```
 
-The virtual cluster template integration requires the [vCluster Platform Project](https://www.vcluster.com/docs/platform/administer/projects/create), where the vCluster instance is created from said template, to have the [Argo CD integration for Projects](https://www.vcluster.com/docs/platform/integrations/argocd#project-integration) enabled.
+## Argo CD and vCluster Platform Integration
 
-*Example `management.loft.sh/v1` `Project` manifest (with unrelated configuration execluded - [full version here](https://github.com/loft-demos/loft-demo-base/blob/main/loft/projects.yaml)) that enables the syncing of vCluster instances to Argo CD:*
+This repo relies heavily on the vCluster Platform Argo CD integration:
 
-```yaml
-kind: Project
-apiVersion: management.loft.sh/v1
-metadata:
-  name: api-framework
-spec:
-  displayName: API Framework
-...
-  argoCD:
-    enabled: true
-    cluster: loft-cluster
-    namespace: argocd
-    project:
-      enabled: true
-```
+- virtual clusters can be imported into Argo CD automatically
+- `instanceTemplate.metadata.labels` from `VirtualClusterTemplate` manifests
+  can become selectors on generated Argo CD cluster secrets
+- those labels are then used by Argo CD `ApplicationSet` cluster generators to
+  install optional demo content
 
->[!IMPORTANT]
->The Argo CD instance must be in a [vCluster Platform connected cluster](https://www.vcluster.com/docs/platform/administer/clusters/connect-cluster) or in a vCluster instance that is managed by vCluster Platform. More info is available [here](https://www.vcluster.com/docs/platform/integrations/argocd).
+The main examples for that pattern are in:
 
-<details>
-<summary><b>Example: ApplicationSet Cluster Generator</b></summary>
->[!IMPORTANT]
->The vCluster Platform Argo CD integration, as described above, must be enabled on the vCluster Platform project the vCluster instance is created in, for the vCluster instance to be automatically added to Argo CD as an available `Application` `destination` cluster.
+- [vcluster-gitops/argocd/README.md](./vcluster-gitops/argocd/README.md)
+- [vcluster-use-cases/argocd-in-vcluster/README.md](./vcluster-use-cases/argocd-in-vcluster/README.md)
+- [vcluster-use-cases/argocd-vcluster-add-ons/README.md](./vcluster-use-cases/argocd-vcluster-add-ons/README.md)
 
-In addition to automatically adding/syncing vCluster instances to Argo CD, the vCluster Platform integration also syncs `instanceTemplate` `labels` of a virtual cluster template to the Argo CD cluster `Secret` generated by the integration discussed above. This integration allows the use of the `labels` as `selectors` with the [Argo CD Cluster Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/) for `ApplciationSets`.
+## Recommended Starting Points
 
-*Example `management.loft.sh/v1` `VirtualClusterTemplate` manifest (with unrelated configuration execluded - [full version here](https://github.com/loft-demos/loft-demo-base/blob/main/loft/vcluster-templates.yaml)) that enables the automatic syncing of vCluster instances created with this template to Argo CD and adds the `spec.versions.template.metadata.labels` to the generate Argo CD Cluster `Secret`:*
+- If you want the fully managed path: start with [vcluster-platform-demo-generator.md](./vcluster-platform-demo-generator.md)
+- If you want a traditional cluster you manage yourself: start with [self-managed-demo-cluster/README.md](./self-managed-demo-cluster/README.md)
+- If you want the laptop-friendly self-contained path: start with [vind-demo-cluster/README.md](./vind-demo-cluster/README.md)
 
-```yaml
-apiVersion: management.loft.sh/v1
-kind: VirtualClusterTemplate
-metadata:
-  name: vcluster-pro-template
-  labels:
-    app.kubernetes.io/instance: loft-configuration
-spec:
-  displayName: Virtual Cluster Pro Template
-...
-  template:
-...
-  versions:
-    - template:
-        metadata:
-          labels:
-            loft.sh/import-argocd: 'true'
-        instanceTemplate:
-          metadata:
-            labels:
-              env: '{{ .Values.env }}'
-              team: '{{ .Values.loft.project }}'
-        pro:
-          enabled: true
-...
-      parameters:
-      ...
-        - variable: env
-          label: Deployment Environment
-          description: Environment for deployments for this vCluster used as cluster label for Argo CD ApplicationSet Cluster Generator
-          options:
-            - dev
-            - qa
-            - prod
-          defaultValue: dev
-      version: 1.0.0
-    - template:
-        metadata: {}
-        instanceTemplate:
-          metadata: {}
-      version: 0.0.0
-...
-```
+For `vind`, use this sequence:
 
-In this example the value for the `instanceTemplate.metadata.labels.env` label is populated with the selected `env` parameter value, but the value also be hardcoded so that every vCluster instance created from this template had the same `env` label value. The `team` label is populated with the `project` vCluster Platform Parameter values as documented [here](https://www.vcluster.com/docs/platform/administer/templates/advanced/parameters).
+1. start with [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
+2. configure ESO and 1Password using [docs/secret-contract.md](./docs/secret-contract.md)
+3. choose either:
+   - OrbStack local-contained mode with [vind-demo-cluster/orbstack-domains](./vind-demo-cluster/orbstack-domains)
+   - Cloudflare Tunnel fallback with [vind-demo-cluster/cloudflare-tunnel.yaml](./vind-demo-cluster/cloudflare-tunnel.yaml)
+4. bootstrap the repo into Forgejo if you are following the local-contained path
+5. apply the GitOps bootstrap for this repo
 
-The generated Argo CD Cluster `Secret` for a vCluster instance created in the `api-framework` project and using the above template:
+## Known Gaps
 
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: loft-api-framework-vcluster-api-framework-dev
-  namespace: argocd
-  labels:
-    argocd.argoproj.io/secret-type: cluster
-    env: dev
-    loft.sh/vcluster-instance-name: api-framework-dev
-    loft.sh/vcluster-instance-namespace: loft-p-api-framework
-    team: api-framework
-  annotations:
-    co-managed-by: loft.sh
-    managed-by: argocd.argoproj.io
-data:
-  config: >-
-    ...
-  name: bG9mdC1hcGktZnJhbWV3b3JrLXZjbHVzdGVyLWFwaS1mcmFtZXdvcmstZGV2
-  server: >-
-    ...
-type: Opaque
-```
+The repo now has a credible `vind` path, but the following are still incomplete
+for a fully local-contained default:
 
-With all of that in place, you would then be able to create an Argo CD `ApplicationSet` that used the Cluster Generator as below (replacing necessary values with those for your Git repository):
+- Forgejo is still commented out in [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
+- Crossplane GitHub provider flows are not converted to Forgejo
+- some GHCR-specific image flows still assume GitHub Container Registry
+- the root Argo CD bootstrap application for `vind` is not added yet
+- some docs and examples still describe the older Generator-first assumptions
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: REPO_NAME-env-config
-  namespace: argocd
-spec:
-  generators:
-    - clusters:
-        selector:
-          matchLabels:
-            env: "dev"
-    - clusters:
-        selector:
-          matchLabels:
-            env: "qa"
-    - clusters:
-        selector:
-          matchLabels:
-            env: "prod"
-  template:
-    metadata:
-      # {{name}} is the name of the kubernetes cluster as selected by the spec above
-      name: REPO_NAME-{{name}}
-    spec:
-      destination:
-        # {{server}} is the url of the 
-        server: '{{server}}'
-        # {{metadata.labels.env}} is the value of the env label that is being used to select kubernetes clusters 
-        # and used as sub-folder in the target git repository
-        namespace: hello-world-app-{{metadata.labels.env}}
-      info:
-        - name: GitHub Repo
-          value: https://github.com/loft-demos/REPO_NAME/
-      project: default
-      source:
-        path: k8s-manifests/{{metadata.labels.env}}/
-        repoURL: https://github.com/loft-demos/REPO_NAME.git
-        targetRevision: main
-      syncPolicy:
-        automated:
-          selfHeal: true
-        syncOptions:
-          - CreateNamespace=true
-```
+## Notes
 
->[!NOTE]
->The use of the `env` label as part of the `spec.template.spec.source.path` allowing vCluster instances with different `env` values to target different subdirectories in the GitHub repository for the Argo CD generated `Application`.
+- Use `vCluster instances` or `virtual clusters` in public-facing wording.
+- For modern `0.32.0+` templates in this repo, sleep and deletion config has
+  already been updated to the newer shape and Go duration format.
+- The `vind` bootstrap currently targets vCluster CLI `0.32.1`.
 
-The resulting Argo CD `Application` for the `hello-app-a1` repository:
+## Contributing
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: hello-app-a1-config
-  namespace: argocd
-spec:
-  destination:
-    namespace: hello-world-app
-    server: >-
-      https://a1.us.demo.dev/kubernetes/project/api-framework/virtualcluster/api-framework-dev
-  info:
-    - name: GitHub Repo
-      value: https://github.com/loft-demos/hello-app-a1/
-  project: default
-  source:
-    path: k8s-manifests/dev/
-    repoURL: https://github.com/loft-demos/hello-app-a1.git
-    targetRevision: main
-  syncPolicy:
-    automated:
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-```
-</details>
+This repo is maintained for demo and solution-engineering workflows. Copy it,
+adapt it, and tune the use cases to the environment you actually need.
