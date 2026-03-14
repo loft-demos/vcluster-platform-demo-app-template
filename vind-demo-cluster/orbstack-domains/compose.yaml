@@ -8,3 +8,10 @@ services:
       - .env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - vind
+
+networks:
+  vind:
+    external: true
+    name: ${VIND_DOCKER_NETWORK}

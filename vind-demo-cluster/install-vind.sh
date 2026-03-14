@@ -127,6 +127,7 @@ Recommended next steps:
    - https://$VCP_HOST
    - https://argocd.$VCP_HOST
    - https://forgejo.$VCP_HOST
+   - Docker network: vcluster.$CLUSTER_NAME
 3. Configure 1Password + ESO:
    - vind-demo-cluster/eso-cluster-store.yaml
    - vind-demo-cluster/bootstrap-external-secrets.yaml
