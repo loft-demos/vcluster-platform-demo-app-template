@@ -232,7 +232,7 @@ spec:
                   retention:
                     period: 5
                     maxSnapshots: 4
-                  timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+                  timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
                   storage:
                     type: oci
                     oci:
@@ -243,7 +243,7 @@ spec:
             sleep:
               auto:
                 afterInactivity: 35m
-                timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+                timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
                 wakeup:
                   schedule: 11 7-17 * * 1-5
             deletion:

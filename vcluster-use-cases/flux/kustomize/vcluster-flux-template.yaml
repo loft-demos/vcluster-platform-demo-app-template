@@ -57,7 +57,7 @@ spec:
             sleep:
               auto:
                 afterInactivity: "{{ .Values.sleepAfter }}m"
-                timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+                timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
                 wakeup:
                   schedule: 11 7-17 * * 1-5
             deletion:

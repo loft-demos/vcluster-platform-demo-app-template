@@ -39,7 +39,7 @@ spec:
         sleep:
           auto:
             afterInactivity: "{{ .Values.sleepAfter }}m"
-            timezone: '{{ .Values.loft.clusterAnnotations.sleepTimeZone }}'
+            timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
     accessPoint:
       ingress: {}
     spaceTemplate:
