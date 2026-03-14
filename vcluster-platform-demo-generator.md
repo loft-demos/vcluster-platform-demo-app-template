@@ -50,7 +50,8 @@ that does not depend on the Demo Generator parent platform.
 
 The current `vind` implementation in this repo provides:
 
-- a repo-specific [`vind-demo-cluster/vcluster.yaml`](./vind-demo-cluster/vcluster.yaml) for bootstrapping Argo CD and External Secrets Operator
+- a repo-specific [`vind-demo-cluster/vcluster.yaml`](./vind-demo-cluster/vcluster.yaml) for bootstrapping Argo CD, External Secrets Operator, and vCluster Platform
+- a helper installer with license-token and Platform-version overrides at [`vind-demo-cluster/install-vind.sh`](./vind-demo-cluster/install-vind.sh)
 - a documented 1Password + ESO secret bootstrap model in [the `vind` guide](./vind-demo-cluster/README.md) and [secret contract](./docs/secret-contract.md)
 - a first-pass local-contained overlay for embedded Forgejo / Gitea-compatible Git hosting at [`vcluster-gitops/overlays/local-contained`](./vcluster-gitops/overlays/local-contained/README.md)
 - an OrbStack-specific local domain proxy setup at [`vind-demo-cluster/orbstack-domains`](./vind-demo-cluster/orbstack-domains)
@@ -59,11 +60,10 @@ The current `vind` implementation in this repo provides:
 In this mode, the main bootstrap sequence is:
 
 1. start `vind`
-   - example: `vcluster create vcp --driver docker --upgrade --values vind-demo-cluster/vcluster.yaml`
-2. install Argo CD and ESO from `vind-demo-cluster/vcluster.yaml`
-3. install vCluster Platform into the `vind` cluster
-4. bootstrap secrets with ESO
-5. bootstrap the repo into Forgejo and apply GitOps from this repo
+   - example: `LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh`
+2. install Argo CD, ESO, and vCluster Platform from `vind-demo-cluster/vcluster.yaml`
+3. bootstrap secrets with ESO
+4. bootstrap the repo into Forgejo and apply GitOps from this repo
 
 What the `vind` path does not currently replace end to end:
 

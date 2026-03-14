@@ -33,6 +33,7 @@ The intended default pattern for `vind` is:
 That path is started, but not fully complete yet. The current status is:
 
 - repo-specific `vind` bootstrap: [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
+- step-by-step `vind` installer with license-token and Platform-version overrides: [vind-demo-cluster/install-vind.sh](./vind-demo-cluster/install-vind.sh)
 - 1Password + ESO bootstrap model: [docs/secret-contract.md](./docs/secret-contract.md)
 - first-pass local-contained overlay: [vcluster-gitops/overlays/local-contained/README.md](./vcluster-gitops/overlays/local-contained/README.md)
 - Forgejo repo bootstrap script: [scripts/bootstrap-forgejo-repo.sh](./scripts/bootstrap-forgejo-repo.sh)
@@ -159,8 +160,9 @@ The main examples for that pattern are in:
 For `vind`, use this sequence:
 
 1. start `vind`
-   - example: `vcluster create vcp --driver docker --upgrade --values vind-demo-cluster/vcluster.yaml`
-   - helper: [vind-demo-cluster/install-vind.sh](./vind-demo-cluster/install-vind.sh)
+   - recommended: `LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh`
+   - override the default Platform version when needed: `bash vind-demo-cluster/install-vind.sh --license-token "$TOKEN" --vcp-version 4.7.1`
+   - `vind-demo-cluster/vcluster.yaml` is now a rendered template, so do not pass it directly to `vcluster create` unless you render its placeholders yourself
 2. clone this repo directly and initialize it locally with [scripts/replace-text-local.sh](./scripts/replace-text-local.sh)
    - a GitHub template copy is not required for the self-contained path
 3. configure ESO and 1Password using [docs/secret-contract.md](./docs/secret-contract.md)
