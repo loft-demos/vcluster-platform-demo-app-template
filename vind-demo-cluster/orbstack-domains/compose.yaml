@@ -4,6 +4,7 @@ services:
     restart: unless-stopped
     labels:
       dev.orbstack.domains: ${ARGOCD_HOST},${VCP_HOST},${FORGEJO_HOST}
+      dev.orbstack.http-port: "80"
     environment:
       VCP_HOST: ${VCP_HOST}
       ARGOCD_HOST: ${ARGOCD_HOST}
