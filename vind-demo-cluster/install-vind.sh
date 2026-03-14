@@ -121,7 +121,11 @@ if [[ -z "$FORGEJO_HOST" ]]; then
 fi
 
 if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
-  ORBSTACK_ENV_FILE="vind-demo-cluster/orbstack-domains/.env.${CLUSTER_NAME}"
+  if [[ "$CLUSTER_NAME" == "vcp" ]]; then
+    ORBSTACK_ENV_FILE="vind-demo-cluster/orbstack-domains/.env"
+  else
+    ORBSTACK_ENV_FILE="vind-demo-cluster/orbstack-domains/.env.${CLUSTER_NAME}"
+  fi
 fi
 
 rendered_values="$(mktemp "${TMPDIR:-/tmp}/vind-values.XXXXXX")"

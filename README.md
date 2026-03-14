@@ -9,7 +9,7 @@ environments. It can be used in three ways:
 - on a self-managed host cluster via [self-managed-demo-cluster/README.md](./self-managed-demo-cluster/README.md)
 - on a self-contained `vind` management cluster via [vind-demo-cluster/README.md](./vind-demo-cluster/README.md)
 
-The repo was originally optimized for the Demo Generator path, but it now also
+The repo was originally optimized for the Demo Generator path, but it also
 includes a real `vind` bootstrap path, a first-pass local-contained Git flow
 using Forgejo, and an OrbStack-specific local domain pattern for SE laptops.
 
@@ -163,7 +163,7 @@ For `vind`, use this sequence:
 1. start `vind`
    - recommended: `LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh`
    - override the default Platform version when needed: `bash vind-demo-cluster/install-vind.sh --license-token "$TOKEN" --vcp-version 4.7.1`
-   - `vind-demo-cluster/vcluster.yaml` is now a rendered template, so do not pass it directly to `vcluster create` unless you render its placeholders yourself
+   - `vind-demo-cluster/vcluster.yaml` is a rendered template, so do not pass it directly to `vcluster create` unless you render its placeholders yourself
 2. clone this repo directly and initialize it locally with [scripts/replace-text-local.sh](./scripts/replace-text-local.sh)
    - a GitHub template copy is not required for the self-contained path
    - for self-contained `vind`, the default base domain is `vcp.local`
@@ -177,7 +177,7 @@ For `vind`, use this sequence:
 
 ## Known Gaps
 
-The repo now has a credible `vind` path, but the following are still incomplete
+The repo has a credible `vind` path, but the following are still incomplete
 for a fully local-contained default:
 
 - Forgejo is still commented out in [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
@@ -191,7 +191,7 @@ for a fully local-contained default:
 - Use `vCluster instances` or `virtual clusters` in public-facing wording.
 - For modern `0.32.0+` templates in this repo, sleep and deletion config has
   already been updated to the newer shape and Go duration format.
-- The `vind` bootstrap currently targets vCluster CLI `0.32.1`.
+- The `vind` bootstrap targets vCluster CLI `0.32.1`.
 
 ## Contributing
 

@@ -6,7 +6,8 @@ usage() {
 Start or update the OrbStack local-domain adapter for a vind environment.
 
 This helper:
-1. discovers the current LoadBalancer upstreams for Argo CD and vCluster Platform
+1. derives the HAProxy LoadBalancer upstreams for Argo CD and vCluster Platform
+   on the `vind` Docker network
 2. writes a per-cluster env file for the OrbStack adapter
 3. starts or updates the Caddy-based adapter with docker compose
 
@@ -24,9 +25,9 @@ Options:
   --vcp-host HOST           Optional. Defaults to vcp.local.
   --argocd-host HOST        Optional. Defaults to argocd.<vcp-host>.
   --forgejo-host HOST       Optional. Defaults to forgejo.<vcp-host>.
-  --vcp-upstream HOST:PORT  Optional. Skip auto-discovery for vCP.
+  --vcp-upstream HOST:PORT  Optional. Override the default vCP HAProxy upstream.
   --argocd-upstream HOST:PORT
-                            Optional. Skip auto-discovery for Argo CD.
+                            Optional. Override the default Argo CD HAProxy upstream.
   --forgejo-upstream HOST:PORT
                             Optional. Defaults to 127.0.0.1:3000.
   --env-file PATH           Optional. Defaults to orbstack-domains/.env.<cluster-name>.
@@ -42,38 +43,6 @@ require_cmd() {
     echo "[ERROR] Required command not found: $cmd" >&2
     exit 1
   fi
-}
-
-discover_lb_upstream() {
-  local namespace="$1"
-  local service="$2"
-  local timeout_seconds="$3"
-  local started_at
-  started_at="$(date +%s)"
-
-  while true; do
-    local hostname ip port now
-    hostname="$(kubectl -n "$namespace" get svc "$service" -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)"
-    ip="$(kubectl -n "$namespace" get svc "$service" -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)"
-    port="$(kubectl -n "$namespace" get svc "$service" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || true)"
-
-    if [[ -n "$hostname" && -n "$port" ]]; then
-      printf '%s:%s\n' "$hostname" "$port"
-      return 0
-    fi
-
-    if [[ -n "$ip" && -n "$port" ]]; then
-      printf '%s:%s\n' "$ip" "$port"
-      return 0
-    fi
-
-    now="$(date +%s)"
-    if (( now - started_at >= timeout_seconds )); then
-      return 1
-    fi
-
-    sleep 2
-  done
 }
 
 CLUSTER_NAME="vcp"
@@ -142,7 +111,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-require_cmd kubectl
 require_cmd docker
 
 if [[ -z "$ARGOCD_HOST" ]]; then
@@ -158,7 +126,11 @@ if [[ -z "$VIND_DOCKER_NETWORK" ]]; then
 fi
 
 if [[ -z "$ENV_FILE" ]]; then
-  ENV_FILE="${COMPOSE_DIR}/.env.${CLUSTER_NAME}"
+  if [[ "$CLUSTER_NAME" == "vcp" ]]; then
+    ENV_FILE="${COMPOSE_DIR}/.env"
+  else
+    ENV_FILE="${COMPOSE_DIR}/.env.${CLUSTER_NAME}"
+  fi
 fi
 
 if ! docker network inspect "$VIND_DOCKER_NETWORK" >/dev/null 2>&1; then
@@ -168,19 +140,11 @@ if ! docker network inspect "$VIND_DOCKER_NETWORK" >/dev/null 2>&1; then
 fi
 
 if [[ -z "$ARGOCD_UPSTREAM" ]]; then
-  ARGOCD_UPSTREAM="$(discover_lb_upstream argocd argocd-server "$TIMEOUT_SECONDS")" || {
-    echo "[ERROR] Could not discover the Argo CD LoadBalancer hostname." >&2
-    echo "[ERROR] Override it with --argocd-upstream if needed." >&2
-    exit 1
-  }
+  ARGOCD_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.argocd-server.argocd:80"
 fi
 
 if [[ -z "$VCP_UPSTREAM" ]]; then
-  VCP_UPSTREAM="$(discover_lb_upstream vcluster-platform vcluster-platform "$TIMEOUT_SECONDS")" || {
-    echo "[ERROR] Could not discover the vCluster Platform LoadBalancer hostname." >&2
-    echo "[ERROR] Override it with --vcp-upstream if needed." >&2
-    exit 1
-  }
+  VCP_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.loft.vcluster-platform:80"
 fi
 
 mkdir -p "$(dirname "$ENV_FILE")"
