@@ -133,9 +133,10 @@ depend on GitHub Actions to rename placeholders in the repo:
 bash scripts/replace-text-local.sh \
   --repo-name vcluster-platform-demo-app-template \
   --org-name loft-demos \
-  --base-domain demo.example.com \
   --include-md
 ```
 
 This script only updates the local working tree. It does not create or rename
 any remote GitHub or Forgejo repo.
+
+If `--base-domain` is omitted, it defaults to `VCP_HOST` or `vcp.local`.

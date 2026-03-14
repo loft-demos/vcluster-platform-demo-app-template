@@ -165,6 +165,7 @@ For `vind`, use this sequence:
    - `vind-demo-cluster/vcluster.yaml` is now a rendered template, so do not pass it directly to `vcluster create` unless you render its placeholders yourself
 2. clone this repo directly and initialize it locally with [scripts/replace-text-local.sh](./scripts/replace-text-local.sh)
    - a GitHub template copy is not required for the self-contained path
+   - for self-contained `vind`, the default base domain is `vcp.local`
 3. configure ESO and 1Password using [docs/secret-contract.md](./docs/secret-contract.md)
 4. choose either:
    - OrbStack local-contained mode with [vind-demo-cluster/orbstack-domains](./vind-demo-cluster/orbstack-domains)
