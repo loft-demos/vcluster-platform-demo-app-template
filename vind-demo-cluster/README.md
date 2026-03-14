@@ -95,6 +95,9 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 - [`start-orbstack-domains.sh`](./start-orbstack-domains.sh)
   helper for discovering the current `vind` service upstreams and starting the
   OrbStack local-domain adapter
+- [`delete-vind.sh`](./delete-vind.sh)
+  helper for stopping the OrbStack local-domain adapter before deleting the
+  `vind` cluster
 - [`bootstrap-self-contained.sh`](./bootstrap-self-contained.sh)
   experimental all-in-one helper for the self-contained path
 - [`cloudflare-tunnel.yaml`](./cloudflare-tunnel.yaml)
@@ -149,6 +152,23 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
    - `crossplane-system`
 7. Apply the Argo CD bootstrap application for this repo.
 8. Enable additional use cases only after the base secret contract is working.
+
+### Teardown
+
+Use the delete helper instead of calling `vcluster delete` directly:
+
+```bash
+bash vind-demo-cluster/delete-vind.sh
+```
+
+That tears down the per-cluster OrbStack/Caddy adapter first, then deletes the
+`vind` cluster. Without that step, `vcluster delete <name>` can leave the
+`vcluster.<name>` Docker network in use by the adapter container.
+
+If you installed with a custom host such as `--vcp-host team-a.vcp.local`, the
+delete helper will reuse the generated OrbStack env file automatically as long
+as it still exists. If you removed that env file or used a custom env-file
+path, pass the same host or env-file override to `delete-vind.sh`.
 
 ### Comprehensive Helper Script
 
