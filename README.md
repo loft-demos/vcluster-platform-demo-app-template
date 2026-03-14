@@ -34,6 +34,7 @@ That path is started, but not fully complete yet. The current status is:
 
 - repo-specific `vind` bootstrap: [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
 - step-by-step `vind` installer with license-token and Platform-version overrides: [vind-demo-cluster/install-vind.sh](./vind-demo-cluster/install-vind.sh)
+- OrbStack adapter helper for automatic local browser access: [vind-demo-cluster/start-orbstack-domains.sh](./vind-demo-cluster/start-orbstack-domains.sh)
 - 1Password + ESO bootstrap model: [docs/secret-contract.md](./docs/secret-contract.md)
 - first-pass local-contained overlay: [vcluster-gitops/overlays/local-contained/README.md](./vcluster-gitops/overlays/local-contained/README.md)
 - Forgejo repo bootstrap script: [scripts/bootstrap-forgejo-repo.sh](./scripts/bootstrap-forgejo-repo.sh)
@@ -169,6 +170,7 @@ For `vind`, use this sequence:
 3. configure ESO and 1Password using [docs/secret-contract.md](./docs/secret-contract.md)
 4. choose either:
    - OrbStack local-contained mode with [vind-demo-cluster/orbstack-domains](./vind-demo-cluster/orbstack-domains)
+     - started automatically by the `vind` install helpers unless you opt out
    - Cloudflare Tunnel fallback with [vind-demo-cluster/cloudflare-tunnel.yaml](./vind-demo-cluster/cloudflare-tunnel.yaml)
 5. bootstrap the repo into Forgejo if you are following the local-contained path
 6. apply the GitOps bootstrap for this repo

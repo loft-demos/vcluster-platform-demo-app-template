@@ -65,7 +65,7 @@ This bootstrap path assumes:
 The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 
 - is intended to be applied with vCluster CLI `0.32.1`
-- starts `vind` with embedded etcd and Kubernetes `v1.35.1`
+- starts `vind` with the default standalone backing store and Kubernetes `v1.35.1`
 - installs Argo CD from the current `argo-cd` Helm chart release
 - installs ESO from the current `external-secrets` Helm chart release
 - installs vCluster Platform from chart version `4.7.1` by default
@@ -92,6 +92,9 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
   helper for creating or upgrading the local `vind` cluster, including
   rendering the vCluster Platform license token, version, and host into
   `vcluster.yaml`
+- [`start-orbstack-domains.sh`](./start-orbstack-domains.sh)
+  helper for discovering the current `vind` service upstreams and starting the
+  OrbStack local-domain adapter
 - [`bootstrap-self-contained.sh`](./bootstrap-self-contained.sh)
   experimental all-in-one helper for the self-contained path
 - [`cloudflare-tunnel.yaml`](./cloudflare-tunnel.yaml)
@@ -124,15 +127,28 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
      --vcp-host vcp.local
    ```
 
-2. Create the bootstrap secret `one-password-sa-token` in the `eso` namespace.
-3. Apply [`eso-cluster-store.yaml`](./eso-cluster-store.yaml).
-4. Apply [`bootstrap-external-secrets.yaml`](./bootstrap-external-secrets.yaml).
-5. Verify that the initial bootstrap secrets reconcile in:
+2. The step-by-step installer now starts the OrbStack domain adapter
+   automatically by default. That gives you friendly desktop browser hostnames
+   such as:
+   - `https://vcp.local`
+   - `https://argocd.vcp.local`
+   - `https://forgejo.vcp.local`
+
+   If you do not want that behavior, use `--skip-orbstack-domains`.
+
+   Without the adapter, you can still access the cluster through raw OrbStack
+   hostnames such as `https://vcluster.cp.vcp.orb.local` or the generated
+   `LoadBalancer` hostnames.
+
+3. Create the bootstrap secret `one-password-sa-token` in the `eso` namespace.
+4. Apply [`eso-cluster-store.yaml`](./eso-cluster-store.yaml).
+5. Apply [`bootstrap-external-secrets.yaml`](./bootstrap-external-secrets.yaml).
+6. Verify that the initial bootstrap secrets reconcile in:
    - `argocd`
    - `vcluster-platform`
    - `crossplane-system`
-6. Apply the Argo CD bootstrap application for this repo.
-7. Enable additional use cases only after the base secret contract is working.
+7. Apply the Argo CD bootstrap application for this repo.
+8. Enable additional use cases only after the base secret contract is working.
 
 ### Comprehensive Helper Script
 
@@ -150,7 +166,7 @@ That helper can:
 - create or upgrade `vind`
 - install vCluster Platform as part of that bootstrap
 - run local placeholder replacement
-- write the OrbStack local-domain `.env`
+- start the OrbStack local-domain adapter automatically
 - optionally bootstrap the repo into Forgejo
 
 For the self-contained path, `--base-domain` now defaults to the chosen
@@ -301,15 +317,16 @@ This repo includes a ready-to-adapt setup in
 
 ### OrbStack Setup
 
-1. Copy the example environment file:
+Both self-contained install methods now start the OrbStack adapter
+automatically by default:
 
-   ```bash
-   cp vind-demo-cluster/orbstack-domains/.env.example \
-     vind-demo-cluster/orbstack-domains/.env
-   ```
+- [`install-vind.sh`](./install-vind.sh)
+- [`bootstrap-self-contained.sh`](./bootstrap-self-contained.sh)
 
-2. Edit `vind-demo-cluster/orbstack-domains/.env` and choose your local
-   hostnames.
+For manual reconfiguration, reruns, or troubleshooting, use
+[`start-orbstack-domains.sh`](./start-orbstack-domains.sh).
+
+1. Choose your local hostnames.
 
    Default values:
 
@@ -335,15 +352,36 @@ This repo includes a ready-to-adapt setup in
    - cluster `vcp` -> network `vcluster.vcp`
    - cluster `team-a` -> network `vcluster.team-a`
 
-3. Find the local upstreams exposed by `vind`:
+2. Start or rerun the adapter:
+
+   ```bash
+   bash vind-demo-cluster/start-orbstack-domains.sh
+   ```
+
+   Or with custom hostnames:
+
+   ```bash
+   bash vind-demo-cluster/start-orbstack-domains.sh \
+     --cluster-name team-a \
+     --vcp-host team-a.vcp.local \
+     --argocd-host argocd.team-a.vcp.local \
+     --forgejo-host forgejo.team-a.vcp.local
+   ```
+
+   This writes a per-cluster env file such as
+   `vind-demo-cluster/orbstack-domains/.env.vcp` and starts a per-cluster
+   compose project such as `vind-local-domains-vcp`.
+
+3. If you need to inspect or override the discovered upstreams, check the
+   current `LoadBalancer` services exposed by `vind`:
 
    ```bash
    kubectl get svc -A
    ```
 
-   For each service you want to front locally, record the reachable
-   `EXTERNAL-IP:PORT` or local `host:port` and place those values in
-   `vind-demo-cluster/orbstack-domains/.env`.
+   The helper auto-discovers the reachable `EXTERNAL-IP:PORT` values for Argo CD
+   and vCluster Platform, but you can override them with `--argocd-upstream`
+   and `--vcp-upstream`.
 
    In practice, these upstreams may be:
 
@@ -354,19 +392,12 @@ This repo includes a ready-to-adapt setup in
    Both are acceptable as Caddy upstreams. The point of the adapter is to hide
    those raw upstream names behind stable friendly domains.
 
-4. Start the OrbStack domain proxy:
-
-   ```bash
-   cd vind-demo-cluster/orbstack-domains
-   docker compose up -d
-   ```
-
-5. Open the local domains in your browser:
+4. Open the local domains in your browser:
    - `https://vcp.local`
    - `https://argocd.vcp.local`
    - `https://forgejo.vcp.local`
 
-   Or use your custom values from `.env`.
+   Or use your custom values from the helper arguments.
 
 ### Upstream Advice
 
