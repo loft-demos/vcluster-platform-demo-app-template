@@ -1,0 +1,130 @@
+# Use vCluster CLI 0.32.1 when creating or upgrading this vind cluster.
+# The vCluster version is determined by the CLI release, while this file pins
+# the Kubernetes distro and the bootstrap add-on chart versions.
+controlPlane:
+  backingStore:
+    etcd:
+      embedded:
+        enabled: true
+  distro:
+    k8s:
+      image:
+        tag: v1.35.1
+
+experimental:
+  deploy:
+    vcluster:
+      manifests: |-
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: argocd
+        ---
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: eso
+        ---
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: vcluster-platform
+        ---
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: crossplane-system
+        ---
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: cluster-local
+          namespace: argocd
+          labels:
+            argocd.argoproj.io/secret-type: cluster
+            crossplane: "false"
+            eso: "true"
+            flux: "false"
+            kyverno: "false"
+            loftDemoDomain: vind.local
+            mysql: "false"
+            postgres: "false"
+            rancher: "false"
+            resolveDNS: "false"
+            virtualScheduler: "false"
+            vnode: "false"
+        type: Opaque
+        stringData:
+          config: '{"tlsClientConfig":{"insecure":false}}'
+          name: in-cluster
+          server: https://kubernetes.default.svc
+      helm:
+        - chart:
+            name: argo-cd
+            repo: https://argoproj.github.io/argo-helm
+            version: 9.4.7
+          release:
+            name: argocd
+            namespace: argocd
+          timeout: 10m
+          values: |-
+            crds:
+              install: true
+            configs:
+              cm:
+                application.resourceTrackingMethod: annotation
+              params:
+                server.insecure: true
+            server:
+              extraArgs:
+                - --insecure
+              ingress:
+                enabled: false
+              service:
+                type: ClusterIP
+        - chart:
+            name: external-secrets
+            repo: https://charts.external-secrets.io
+            version: 2.1.0
+          release:
+            name: eso
+            namespace: eso
+          timeout: 10m
+          values: |-
+            installCRDs: true
+        # Optional: embedded Forgejo for a local-contained demo mode.
+        # Keep this disabled by default. This repo is still GitHub-shaped in a
+        # number of places, so enabling Forgejo should be paired with a
+        # dedicated local-contained overlay or manifest pass.
+        #
+        # The official Forgejo Helm install path uses:
+        #   helm install forgejo oci://code.forgejo.org/forgejo-helm/forgejo
+        #
+        # Example block to adapt when you are ready to enable it:
+        #
+        # - chart:
+        #     name: forgejo
+        #     repo: oci://code.forgejo.org/forgejo-helm
+        #     version: 16.0.2
+        #   release:
+        #     name: forgejo
+        #     namespace: forgejo
+        #   timeout: 15m
+        #   values: |-
+        #     strategy:
+        #       type: Recreate
+        #     persistence:
+        #       enabled: true
+        #       size: 20Gi
+        #     ingress:
+        #       enabled: false
+        #     gitea:
+        #       admin:
+        #         existingSecret: forgejo-admin-secret
+        #       config:
+        #         server:
+        #           ROOT_URL: https://forgejo.example.com/
+        #         packages:
+        #           ENABLED: true
+        #         service:
+        #           DISABLE_REGISTRATION: true

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: eso
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: vind-demo-store
+spec:
+  provider:
+    onepasswordSDK:
+      vault: "{REPLACE_1PASSWORD_VAULT}"
+      auth:
+        serviceAccountSecretRef:
+          name: one-password-sa-token
+          namespace: eso
+          key: token
+      integrationInfo:
+        name: vind-demo-secrets
+        version: v1
