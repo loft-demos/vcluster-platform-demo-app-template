@@ -66,7 +66,7 @@ flowchart TD
 
 [`manifests/argocd-in-vcluster-template.yaml`](./manifests/argocd-in-vcluster-template.yaml) defines the `VirtualClusterTemplate`.
 
-- `loft.sh/import-argocd: 'true'` enables Argo CD cluster import for vClusters created from this template.
+- `loft.sh/import-argocd: 'true'` enables Argo CD cluster import for vCluster instances created from this template.
 - The template adds instance labels including:
   - `addons.vcluster.demo/argocd` (selector toggle)
   - `vcluster.demo/deployment-env` (derived from the `env` parameter)
@@ -105,7 +105,7 @@ The key mechanism is the label handoff between vCluster Platform and Argo CD:
 2. vCluster Platform creates or updates the Argo CD cluster secret for that vCluster.
 3. The `ApplicationSet` cluster generator filters those secrets by label (`addons.vcluster.demo/argocd`).
 4. The generated Argo CD `Application` reads chart values from Git using the deployment environment label.
-5. Matching vClusters automatically receive an Argo CD installation with environment-specific settings.
+5. Matching vCluster instances automatically receive an Argo CD installation with environment-specific settings.
 
 This makes Argo CD installation an opt-in add-on controlled by template parameters, while keeping Argo CD values centralized in Git and reusable across environments.
 

@@ -29,7 +29,7 @@ To set up ephemeral vCluster instances for pull requests, each containing an eph
   - Within that template:
     - Configure the values for the Argo CD `App` - see [vcluster-gitops/virtual-cluster-templates/pull-request-vcluster.yaml#L42-L116](../../virtual-cluster-templates/pull-request-vcluster.yaml#L42-L116)
     - Configure SSO via OIDC:
-      - Set up Single Sign-On (SSO) using OpenID Connect (OIDC) within the vCluster Platform for secure authentication to the ephemeral vClusters and Argo CD instances.
+      - Set up Single Sign-On (SSO) using OpenID Connect (OIDC) within the vCluster Platform for secure authentication to the ephemeral vCluster instances and Argo CD instances.
     - Add the *argo-cd-pr-application-set* `ApplicationSet` `App` to the *pull-request-vcluster* template - see [vcluster-gitops/virtual-cluster-templates/pull-request-vcluster.yaml#L117-L125](../../virtual-cluster-templates/pull-request-vcluster.yaml#L117-L125)
 
 **7. Install Crossplane into the same cluster where vCluster Platform is installed:**
@@ -51,4 +51,3 @@ To set up ephemeral vCluster instances for pull requests, each containing an eph
 
 **9. Create and Label a Pull Request:**
   - When creating a pull request that requires an ephemeral environment, add the pr-vcluster label to trigger the provisioning process.
-
