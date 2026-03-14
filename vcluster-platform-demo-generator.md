@@ -59,6 +59,7 @@ The current `vind` implementation in this repo provides:
 In this mode, the main bootstrap sequence is:
 
 1. start `vind`
+   - example: `vcluster create vcp --driver docker --upgrade --values vind-demo-cluster/vcluster.yaml`
 2. install Argo CD and ESO from `vind-demo-cluster/vcluster.yaml`
 3. install vCluster Platform into the `vind` cluster
 4. bootstrap secrets with ESO

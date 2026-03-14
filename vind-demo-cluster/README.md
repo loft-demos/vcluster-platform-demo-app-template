@@ -28,6 +28,17 @@ The default target pattern for `vind` in this repo is now:
 The public GitHub-backed path still exists, but it should be treated as the
 fallback when you specifically need GitHub webhooks or public demo URLs.
 
+## Two Bootstrap Styles
+
+There are now two ways to approach the self-contained `vind` path:
+
+- step-by-step
+  recommended for the first run and for troubleshooting
+- comprehensive helper script
+  useful after the step-by-step flow is understood
+
+The step-by-step path remains the primary documented path.
+
 ## Why This Path Exists
 
 The Demo Generator path works well for centrally managed demo environments, but
@@ -76,6 +87,10 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
   defines the initial management-cluster `ExternalSecret` resources that
   materialize the first set of repo, image, notification, and Crossplane
   credentials
+- [`install-vind.sh`](./install-vind.sh)
+  helper for creating or upgrading the local `vind` cluster
+- [`bootstrap-self-contained.sh`](./bootstrap-self-contained.sh)
+  experimental all-in-one helper for the self-contained path
 - [`cloudflare-tunnel.yaml`](./cloudflare-tunnel.yaml)
   provides a named-tunnel `cloudflared` template for exposing Argo CD and
   vCluster Platform through Cloudflare Tunnel
@@ -87,6 +102,19 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 ## Bootstrap Sequence
 
 1. Start `vind` with [`vcluster.yaml`](./vcluster.yaml).
+
+   Exact command:
+
+   ```bash
+   vcluster create vcp --driver docker --upgrade --values vind-demo-cluster/vcluster.yaml
+   ```
+
+   Or use the helper script:
+
+   ```bash
+   bash vind-demo-cluster/install-vind.sh
+   ```
+
 2. Install vCluster Platform into the `vind` cluster.
 3. Create the bootstrap secret `one-password-sa-token` in the `eso` namespace.
 4. Apply [`eso-cluster-store.yaml`](./eso-cluster-store.yaml).
@@ -98,9 +126,101 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 7. Apply the Argo CD bootstrap application for this repo.
 8. Enable additional use cases only after the base secret contract is working.
 
+### Comprehensive Helper Script
+
+After you are comfortable with the step-by-step path, there is also an
+experimental convenience wrapper:
+
+```bash
+bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --repo-name vcluster-platform-demo-app-template \
+  --org-name loft-demos \
+  --base-domain demo.example.com
+```
+
+That helper can:
+
+- create or upgrade `vind`
+- run local placeholder replacement
+- write the OrbStack local-domain `.env`
+- optionally bootstrap the repo into Forgejo
+
+It intentionally does not replace the step-by-step path yet.
+
+## Repo Initialization for Self-Contained `vind`
+
+For the self-contained `vind` path, you do not need to create a GitHub template
+copy just to make the repo usable.
+
+Recommended approach:
+
+1. clone this repo directly
+2. run the local replacement script
+3. if using Forgejo, bootstrap the repo into Forgejo after replacement
+
+This is the self-contained alternative to the GitHub template-copy workflow.
+It replaces the placeholder-renaming part of
+[`replace-text.yaml`](../.github/workflows/replace-text.yaml) locally, but it
+does not create or rename a GitHub repo for you.
+
+The local replacement script is:
+
+```bash
+bash scripts/replace-text-local.sh \
+  --repo-name your-demo-repo \
+  --org-name your-org \
+  --base-domain demo.example.com \
+  --include-md
+```
+
+This mirrors the main placeholder replacement behavior from
+[`.github/workflows/replace-text.yaml`](../.github/workflows/replace-text.yaml)
+for local use.
+
+Use the GitHub template-copy + GitHub Actions path only when you are following
+the GitHub-backed workflow and want the managed repo initialization behavior.
+
+If you later want a remote repo for the self-contained path, do that after the
+local replacement step:
+
+1. create a repo in Forgejo or GitHub
+2. push the already-customized local clone
+
 The `vcluster.yaml` intentionally does not bootstrap this repo's root Argo CD
 `Application`, because `vcluster-gitops/` depends on vCluster Platform CRDs
 that are not present until Platform is installed.
+
+### OrbStack Domain Note
+
+If you create `vind` with:
+
+```bash
+vcluster create vcp --driver docker --upgrade --values vind-demo-cluster/vcluster.yaml
+```
+
+OrbStack will usually expose the control plane container at a domain like:
+
+```text
+https://vcluster.cp.vcp.orb.local
+```
+
+That domain is useful as the raw control plane container endpoint, but it is
+not the best default hostname for Argo CD or the vCluster Platform UI.
+
+For this repo, treat it like this:
+
+- `vcluster.cp.vcp.orb.local`
+  the raw OrbStack control plane container domain created by `vind`
+- `*.lb....orb.local`
+  raw OrbStack-generated load balancer domains for Kubernetes `LoadBalancer`
+  services inside `vind`
+- `vcp.local`, `argocd.vcp.local`, `forgejo.vcp.local`
+  the friendly operator-facing domains we want to use for the self-contained
+  demo flow
+
+The OrbStack local-domain adapter under
+[`orbstack-domains/`](./orbstack-domains) exists to bridge those friendly
+domains to the actual `vind` service upstreams.
 
 ## Optional Forgejo Mode
 
@@ -203,6 +323,15 @@ This repo includes a ready-to-adapt setup in
    For each service you want to front locally, record the reachable
    `EXTERNAL-IP:PORT` or local `host:port` and place those values in
    `vind-demo-cluster/orbstack-domains/.env`.
+
+   In practice, these upstreams may be:
+
+   - a raw OrbStack load balancer hostname such as
+     `something.lb.<service>.<namespace>.orb.local:443`
+   - a local forwarded `host:port`
+
+   Both are acceptable as Caddy upstreams. The point of the adapter is to hide
+   those raw upstream names behind stable friendly domains.
 
 4. Start the OrbStack domain proxy:
 

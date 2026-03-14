@@ -36,6 +36,7 @@ That path is started, but not fully complete yet. The current status is:
 - 1Password + ESO bootstrap model: [docs/secret-contract.md](./docs/secret-contract.md)
 - first-pass local-contained overlay: [vcluster-gitops/overlays/local-contained/README.md](./vcluster-gitops/overlays/local-contained/README.md)
 - Forgejo repo bootstrap script: [scripts/bootstrap-forgejo-repo.sh](./scripts/bootstrap-forgejo-repo.sh)
+- local placeholder replacement script: [scripts/replace-text-local.sh](./scripts/replace-text-local.sh)
 - OrbStack local domain adapter: [vind-demo-cluster/orbstack-domains](./vind-demo-cluster/orbstack-domains)
 
 When you need public GitHub webhooks or public demo URLs instead, the fallback
@@ -157,13 +158,17 @@ The main examples for that pattern are in:
 
 For `vind`, use this sequence:
 
-1. start with [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
-2. configure ESO and 1Password using [docs/secret-contract.md](./docs/secret-contract.md)
-3. choose either:
+1. start `vind`
+   - example: `vcluster create vcp --driver docker --upgrade --values vind-demo-cluster/vcluster.yaml`
+   - helper: [vind-demo-cluster/install-vind.sh](./vind-demo-cluster/install-vind.sh)
+2. clone this repo directly and initialize it locally with [scripts/replace-text-local.sh](./scripts/replace-text-local.sh)
+   - a GitHub template copy is not required for the self-contained path
+3. configure ESO and 1Password using [docs/secret-contract.md](./docs/secret-contract.md)
+4. choose either:
    - OrbStack local-contained mode with [vind-demo-cluster/orbstack-domains](./vind-demo-cluster/orbstack-domains)
    - Cloudflare Tunnel fallback with [vind-demo-cluster/cloudflare-tunnel.yaml](./vind-demo-cluster/cloudflare-tunnel.yaml)
-4. bootstrap the repo into Forgejo if you are following the local-contained path
-5. apply the GitOps bootstrap for this repo
+5. bootstrap the repo into Forgejo if you are following the local-contained path
+6. apply the GitOps bootstrap for this repo
 
 ## Known Gaps
 
