@@ -130,9 +130,9 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 2. The step-by-step installer starts the OrbStack domain adapter
    automatically by default. That gives you friendly desktop browser hostnames
    such as:
-   - `https://vcp.local`
-   - `https://argocd.vcp.local`
-   - `https://forgejo.vcp.local`
+   - <https://vcp.local>
+   - <https://argocd.vcp.local>
+   - <https://forgejo.vcp.local>
 
    If you do not want that behavior, use `--skip-orbstack-domains`.
 
@@ -402,9 +402,9 @@ For manual reconfiguration, reruns, or troubleshooting, use
    adapter is to hide those raw upstream names behind stable friendly domains.
 
 4. Open the local domains in your browser:
-   - `https://vcp.local`
-   - `https://argocd.vcp.local`
-   - `https://forgejo.vcp.local`
+   - <https://vcp.local>
+   - <https://argocd.vcp.local>
+   - <https://forgejo.vcp.local>
 
    Or use your custom values from the helper arguments.
 
