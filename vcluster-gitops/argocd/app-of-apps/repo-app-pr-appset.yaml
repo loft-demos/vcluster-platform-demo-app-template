@@ -61,4 +61,4 @@ spec:
             https://{REPLACE_REPO_NAME}-pr-{{number}}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
         - name: GitHub PR
           value: >-
-            {REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
+            {REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}

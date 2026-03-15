@@ -35,7 +35,7 @@ spec:
     spec:
       info:
         - name: Pull Request
-          value: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/pulls/{{number}}'
+          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/pulls/{{number}}'
       source:
         helm:
           parameters:

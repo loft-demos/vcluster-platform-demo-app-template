@@ -78,6 +78,7 @@ FORGEJO_PASSWORD="${FORGEJO_PASSWORD:-${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-ad
 FORGEJO_OWNER="${FORGEJO_OWNER:-}"
 FORGEJO_OWNER_TYPE="${FORGEJO_OWNER_TYPE:-}"
 GIT_BASE_URL=""
+GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 SKIP_ARGOCD_BOOTSTRAP="false"
 
@@ -179,6 +180,10 @@ while [[ $# -gt 0 ]]; do
       GIT_BASE_URL="${2:-}"
       shift 2
       ;;
+    --git-public-url)
+      GIT_PUBLIC_URL="${2:-}"
+      shift 2
+      ;;
     --image-repository-prefix)
       IMAGE_REPOSITORY_PREFIX="${2:-}"
       shift 2
@@ -269,7 +274,11 @@ if [[ -z "$FORGEJO_OWNER_TYPE" ]]; then
 fi
 
 if [[ -z "$GIT_BASE_URL" ]]; then
-  GIT_BASE_URL="${FORGEJO_URL%/}"
+  GIT_BASE_URL="http://forgejo-http.forgejo.svc.cluster.local:3000"
+fi
+
+if [[ -z "$GIT_PUBLIC_URL" ]]; then
+  GIT_PUBLIC_URL="${FORGEJO_URL%/}"
 fi
 
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
@@ -300,6 +309,7 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --vcluster-name "$VCLUSTER_NAME" \
     --base-domain "$BASE_DOMAIN" \
     --git-base-url "$GIT_BASE_URL" \
+    --git-public-url "$GIT_PUBLIC_URL" \
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
     --include-md
 fi

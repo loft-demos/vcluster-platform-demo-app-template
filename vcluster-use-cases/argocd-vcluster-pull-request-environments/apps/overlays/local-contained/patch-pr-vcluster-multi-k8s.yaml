@@ -33,6 +33,6 @@ spec:
         - name: PR vCluster Argo CD URL
           value: https://argocd-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}
         - name: Pull Request
-          value: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pulls/{{number}}'
+          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pulls/{{number}}'
       source:
         repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
