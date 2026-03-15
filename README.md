@@ -25,7 +25,7 @@ using Forgejo, and an OrbStack-specific local domain pattern for SE laptops.
 
 The intended default pattern for `vind` is:
 
-- embedded or local-contained Forgejo for Git hosting
+- Forgejo for Git hosting and the local-contained path
 - Argo CD pull request generators switched to `gitea`
 - OrbStack local domains such as `vcp.local`, `argocd.vcp.local`, and `forgejo.vcp.local`
 - no required public domain
@@ -33,7 +33,8 @@ The intended default pattern for `vind` is:
 That path is started, but not fully complete yet. The current status is:
 
 - repo-specific `vind` bootstrap: [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
-- step-by-step `vind` installer with license-token and Platform-version overrides: [vind-demo-cluster/install-vind.sh](./vind-demo-cluster/install-vind.sh)
+- default self-contained bootstrap helper: [vind-demo-cluster/bootstrap-self-contained.sh](./vind-demo-cluster/bootstrap-self-contained.sh)
+- lower-level `vind` installer with license-token and Platform-version overrides: [vind-demo-cluster/install-vind.sh](./vind-demo-cluster/install-vind.sh)
 - OrbStack adapter helper for automatic local browser access: [vind-demo-cluster/start-orbstack-domains.sh](./vind-demo-cluster/start-orbstack-domains.sh)
 - `vind` delete helper that cleans up the OrbStack adapter first: [vind-demo-cluster/delete-vind.sh](./vind-demo-cluster/delete-vind.sh)
 - 1Password + ESO bootstrap model: [docs/secret-contract.md](./docs/secret-contract.md)
@@ -132,8 +133,9 @@ Example:
 bash scripts/bootstrap-forgejo-repo.sh \
   --forgejo-url https://forgejo.vcp.local \
   --username demo-admin \
-  --token "$FORGEJO_TOKEN" \
-  --owner loft-demos \
+  --password "$FORGEJO_ADMIN_PASSWORD" \
+  --owner demo-admin \
+  --owner-type user \
   --repo vcluster-platform-demo-app-template
 ```
 
@@ -161,27 +163,22 @@ The main examples for that pattern are in:
 
 For `vind`, use this sequence:
 
-1. start `vind`
-   - recommended: `LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh`
-   - override the default Platform version when needed: `bash vind-demo-cluster/install-vind.sh --license-token "$TOKEN" --vcp-version 4.7.1`
-   - `vind-demo-cluster/vcluster.yaml` is a rendered template, so do not pass it directly to `vcluster create` unless you render its placeholders yourself
-2. clone this repo directly and initialize it locally with [scripts/replace-text-local.sh](./scripts/replace-text-local.sh)
-   - a GitHub template copy is not required for the self-contained path
-   - for self-contained `vind`, the default base domain is `vcp.local`
+1. clone this repo directly
+2. run the default self-contained bootstrap:
+   - `LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh --repo-name your-demo-repo --org-name your-org`
+   - that creates `vind`, installs Forgejo, runs local placeholder replacement, starts the OrbStack adapter, and bootstraps the repo into Forgejo
 3. configure ESO and 1Password using [docs/secret-contract.md](./docs/secret-contract.md)
 4. choose either:
    - OrbStack local-contained mode with [vind-demo-cluster/orbstack-domains](./vind-demo-cluster/orbstack-domains)
      - started automatically by the `vind` install helpers unless you opt out
    - Cloudflare Tunnel fallback with [vind-demo-cluster/cloudflare-tunnel.yaml](./vind-demo-cluster/cloudflare-tunnel.yaml)
-5. bootstrap the repo into Forgejo if you are following the local-contained path
-6. apply the GitOps bootstrap for this repo
+5. apply the GitOps bootstrap for this repo
 
 ## Known Gaps
 
 The repo has a credible `vind` path, but the following are still incomplete
 for a fully local-contained default:
 
-- Forgejo is still commented out in [vind-demo-cluster/vcluster.yaml](./vind-demo-cluster/vcluster.yaml)
 - Crossplane GitHub provider flows are not converted to Forgejo
 - some GHCR-specific image flows still assume GitHub Container Registry
 - the root Argo CD bootstrap application for `vind` is not added yet

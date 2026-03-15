@@ -113,8 +113,9 @@ tags into that repo:
 bash scripts/bootstrap-forgejo-repo.sh \
   --forgejo-url https://forgejo.vcp.local \
   --username demo-admin \
-  --token "$FORGEJO_TOKEN" \
-  --owner loft-demos \
+  --password "$FORGEJO_ADMIN_PASSWORD" \
+  --owner demo-admin \
+  --owner-type user \
   --repo vcluster-platform-demo-app-template
 ```
 

@@ -13,7 +13,7 @@ What this script can do:
 2. install vCluster Platform as part of that vind bootstrap
 3. run local placeholder replacement for this repo
 4. start the OrbStack local-domain adapter automatically
-5. optionally bootstrap the repo into Forgejo
+5. bootstrap the repo into Forgejo by default
 
 What it does not do yet:
 - configure 1Password / ESO secrets automatically
@@ -24,11 +24,11 @@ Usage:
     --repo-name my-demo-app \
     --org-name loft-demos
 
-Optional Forgejo bootstrap:
+Default Forgejo bootstrap:
   --forgejo-url https://forgejo.vcp.local
   --forgejo-username demo-admin
-  --forgejo-token "$FORGEJO_TOKEN"
-  --forgejo-owner loft-demos
+  --forgejo-password "$FORGEJO_ADMIN_PASSWORD"
+  --forgejo-owner demo-admin
 
 Optional OrbStack local domain overrides:
   --vcp-host team-a.vcp.local
@@ -37,7 +37,7 @@ Optional OrbStack local domain overrides:
   --vcp-version 4.7.1
   --vcp-upstream something.lb.vcluster-platform.vcluster-platform.orb.local:443
   --argocd-upstream something.lb.argocd-server.argocd.orb.local:80
-  --forgejo-upstream 127.0.0.1:3000
+  --forgejo-upstream vcluster.lb.team-a.forgejo-http.forgejo:3000
 EOF
 }
 
@@ -66,16 +66,17 @@ ARGOCD_HOST="argocd.vcp.local"
 FORGEJO_HOST="forgejo.vcp.local"
 VCP_UPSTREAM=""
 ARGOCD_UPSTREAM=""
-FORGEJO_UPSTREAM="127.0.0.1:3000"
+FORGEJO_UPSTREAM=""
 ORBSTACK_ENV_FILE=""
 
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
 VCP_VERSION="${VCP_VERSION:-4.7.1}"
 FORGEJO_URL=""
-FORGEJO_USERNAME=""
+FORGEJO_USERNAME="${FORGEJO_ADMIN_USER:-demo-admin}"
 FORGEJO_TOKEN="${FORGEJO_TOKEN:-}"
-FORGEJO_OWNER=""
-FORGEJO_OWNER_TYPE="org"
+FORGEJO_PASSWORD="${FORGEJO_PASSWORD:-${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-admin}}"
+FORGEJO_OWNER="${FORGEJO_OWNER:-}"
+FORGEJO_OWNER_TYPE="user"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -151,6 +152,10 @@ while [[ $# -gt 0 ]]; do
       FORGEJO_TOKEN="${2:-}"
       shift 2
       ;;
+    --forgejo-password)
+      FORGEJO_PASSWORD="${2:-}"
+      shift 2
+      ;;
     --forgejo-owner)
       FORGEJO_OWNER="${2:-}"
       shift 2
@@ -217,6 +222,14 @@ if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
   fi
 fi
 
+if [[ -z "$FORGEJO_URL" ]]; then
+  FORGEJO_URL="https://${FORGEJO_HOST}"
+fi
+
+if [[ -z "$FORGEJO_OWNER" ]]; then
+  FORGEJO_OWNER="$FORGEJO_USERNAME"
+fi
+
 if [[ "$SKIP_VIND" != "true" ]]; then
   bash vind-demo-cluster/install-vind.sh \
     --cluster-name "$CLUSTER_NAME" \
@@ -226,6 +239,8 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --vcp-host "$VCP_HOST" \
     --argocd-host "$ARGOCD_HOST" \
     --forgejo-host "$FORGEJO_HOST" \
+    --forgejo-admin-user "$FORGEJO_USERNAME" \
+    --forgejo-admin-password "$FORGEJO_PASSWORD" \
     --orbstack-env-file "$ORBSTACK_ENV_FILE" \
     --skip-orbstack-domains
 fi
@@ -252,16 +267,31 @@ if [[ "$SKIP_ORBSTACK_ENV" != "true" ]]; then
 fi
 
 if [[ "$SKIP_FORGEJO" != "true" ]]; then
-  if [[ -n "$FORGEJO_URL" && -n "$FORGEJO_USERNAME" && -n "$FORGEJO_TOKEN" && -n "$FORGEJO_OWNER" && -n "$REPO_NAME" ]]; then
+  if [[ -n "$REPO_NAME" ]]; then
+    declare -a forgejo_auth_args
+    require_cmd curl
+    for _ in $(seq 1 60); do
+      if curl -ksSf "${FORGEJO_URL}/api/healthz" >/dev/null 2>&1; then
+        break
+      fi
+      sleep 2
+    done
+
+    if [[ -n "$FORGEJO_TOKEN" ]]; then
+      forgejo_auth_args+=(--token "$FORGEJO_TOKEN")
+    elif [[ -n "$FORGEJO_PASSWORD" ]]; then
+      forgejo_auth_args+=(--password "$FORGEJO_PASSWORD")
+    fi
+
     bash scripts/bootstrap-forgejo-repo.sh \
       --forgejo-url "$FORGEJO_URL" \
       --username "$FORGEJO_USERNAME" \
-      --token "$FORGEJO_TOKEN" \
+      "${forgejo_auth_args[@]}" \
       --owner "$FORGEJO_OWNER" \
       --owner-type "$FORGEJO_OWNER_TYPE" \
       --repo "$REPO_NAME"
   else
-    echo "[INFO] Skipping Forgejo bootstrap because Forgejo options were not fully provided."
+    echo "[INFO] Skipping Forgejo bootstrap because --repo-name was not provided."
   fi
 fi
 

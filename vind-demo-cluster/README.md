@@ -27,16 +27,19 @@ The default target pattern for `vind` in this repo is now:
 The public GitHub-backed path still exists, but it should be treated as the
 fallback when you specifically need GitHub webhooks or public demo URLs.
 
-## Two Bootstrap Styles
+## Bootstrap Style
 
-There are two ways to approach the self-contained `vind` path:
+The default entrypoint for the self-contained `vind` path is the comprehensive
+helper script:
 
-- step-by-step
-  recommended for the first run and for troubleshooting
-- comprehensive helper script
-  useful after the step-by-step flow is understood
+- it creates the `vind` cluster
+- it installs vCluster Platform, Argo CD, ESO, and Forgejo
+- it runs the local placeholder replacement
+- it starts the OrbStack adapter
+- it bootstraps the local repo into Forgejo
 
-The step-by-step path remains the primary documented path.
+The lower-level helper scripts still exist for troubleshooting and partial
+reruns.
 
 ## Why This Path Exists
 
@@ -74,8 +77,7 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 - enables only the `eso` app-of-apps label by default so the initial bootstrap
   stays small
 - exposes Argo CD as a `LoadBalancer` service for local access in `vind`
-- includes a commented-out Forgejo install block for a future local-contained
-  mode
+- installs Forgejo for the self-contained Git and registry path
 
 ## Files In This Folder
 
@@ -110,48 +112,36 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 
 ## Bootstrap Sequence
 
-1. Start `vind` with [`install-vind.sh`](./install-vind.sh).
-
-   Do not pass [`vcluster.yaml`](./vcluster.yaml) directly to `vcluster create`
-   unless you render its placeholders yourself first.
-
-   Recommended command:
+1. Clone this repo directly.
+2. Run the comprehensive bootstrap helper:
 
    ```bash
-   LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh
+   LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+     --repo-name your-demo-repo \
+     --org-name your-org
    ```
 
-   Override the default vCluster Platform version or local host when needed:
+   Default behavior:
+   - `--base-domain` defaults to `vcp.local`
+   - Forgejo defaults to <https://forgejo.vcp.local>
+   - Forgejo admin defaults to `demo-admin` / `vcluster-demo-admin`
+   - the repo is renamed locally before it is pushed into Forgejo
+   - the Forgejo repo owner defaults to the Forgejo admin user
 
-   ```bash
-   bash vind-demo-cluster/install-vind.sh \
-     --license-token "$TOKEN" \
-     --vcp-version 4.7.1 \
-     --vcp-host vcp.local
-   ```
-
-2. The step-by-step installer starts the OrbStack domain adapter
-   automatically by default. That gives you friendly desktop browser hostnames
-   such as:
+3. Open the local endpoints:
    - <https://vcp.local>
    - <https://argocd.vcp.local>
    - <https://forgejo.vcp.local>
 
-   If you do not want that behavior, use `--skip-orbstack-domains`.
-
-   Without the adapter, you can still access the cluster through raw OrbStack
-   hostnames such as `https://vcluster.cp.vcp.orb.local` or the generated
-   `LoadBalancer` hostnames.
-
-3. Create the bootstrap secret `one-password-sa-token` in the `eso` namespace.
-4. Apply [`eso-cluster-store.yaml`](./eso-cluster-store.yaml).
-5. Apply [`bootstrap-external-secrets.yaml`](./bootstrap-external-secrets.yaml).
-6. Verify that the initial bootstrap secrets reconcile in:
+4. Create the bootstrap secret `one-password-sa-token` in the `eso` namespace.
+5. Apply [`eso-cluster-store.yaml`](./eso-cluster-store.yaml).
+6. Apply [`bootstrap-external-secrets.yaml`](./bootstrap-external-secrets.yaml).
+7. Verify that the initial bootstrap secrets reconcile in:
    - `argocd`
    - `vcluster-platform`
    - `crossplane-system`
-7. Apply the Argo CD bootstrap application for this repo.
-8. Enable additional use cases only after the base secret contract is working.
+8. Apply the Argo CD bootstrap application for this repo.
+9. Enable additional use cases only after the base secret contract is working.
 
 ### Teardown
 
@@ -170,29 +160,16 @@ delete helper will reuse the generated OrbStack env file automatically as long
 as it still exists. If you removed that env file or used a custom env-file
 path, pass the same host or env-file override to `delete-vind.sh`.
 
-### Comprehensive Helper Script
+### Lower-Level Helpers
 
-After you are comfortable with the step-by-step path, there is also an
-experimental convenience wrapper:
+The comprehensive helper is the default path. These lower-level helpers remain
+available for troubleshooting and partial reruns:
 
 ```bash
-LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
-  --repo-name vcluster-platform-demo-app-template \
-  --org-name loft-demos
+bash vind-demo-cluster/install-vind.sh
+bash vind-demo-cluster/start-orbstack-domains.sh
+bash vind-demo-cluster/delete-vind.sh
 ```
-
-That helper can:
-
-- create or upgrade `vind`
-- install vCluster Platform as part of that bootstrap
-- run local placeholder replacement
-- start the OrbStack local-domain adapter automatically
-- optionally bootstrap the repo into Forgejo
-
-For the self-contained path, `--base-domain` defaults to the chosen
-`--vcp-host`, which defaults to `vcp.local`.
-
-It intentionally does not replace the step-by-step path yet.
 
 ## Repo Initialization for Self-Contained `vind`
 
@@ -270,19 +247,14 @@ The OrbStack local-domain adapter under
 [`orbstack-domains/`](./orbstack-domains) exists to bridge those friendly
 domains to the actual `vind` service upstreams.
 
-## Optional Forgejo Mode
+## Forgejo
 
-[`vcluster.yaml`](./vcluster.yaml) includes a commented-out Forgejo Helm block.
-This is the preferred default direction for a self-contained demo mode where:
+Forgejo is part of the default self-contained `vind` path. In this mode:
 
 - Git is hosted inside the `vind` cluster
 - OCI images can be pushed to the Forgejo package registry
 - Argo CD can use polling or Gitea-compatible generators instead of
   GitHub-specific webhooks
-
-Keep Forgejo disabled by default until the repo has a dedicated
-`local-contained` overlay, because the current PR automation, notifications,
-and some image flows are still GitHub-specific.
 
 The first pass of that overlay exists at
 [`vcluster-gitops/overlays/local-contained`](../vcluster-gitops/overlays/local-contained/README.md).
@@ -290,14 +262,17 @@ It converts the Argo CD pull request generators to `gitea`, switches the PR
 flows to generic Git and image registry placeholders, and removes
 GitHub-specific notification hooks from the local-contained PR path.
 
-The recommended repo bootstrap step for this mode is now:
+The default Forgejo bootstrap path uses the demo admin credentials created by
+[`install-vind.sh`](./install-vind.sh) and
+[`bootstrap-self-contained.sh`](./bootstrap-self-contained.sh):
 
 ```bash
 bash scripts/bootstrap-forgejo-repo.sh \
   --forgejo-url https://forgejo.vcp.local \
   --username demo-admin \
-  --token "$FORGEJO_TOKEN" \
-  --owner loft-demos \
+  --password "$FORGEJO_ADMIN_PASSWORD" \
+  --owner demo-admin \
+  --owner-type user \
   --repo vcluster-platform-demo-app-template
 ```
 
