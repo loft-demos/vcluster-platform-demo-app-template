@@ -166,6 +166,7 @@ For `vind`, use this sequence:
 1. clone this repo directly
 2. run the default self-contained bootstrap:
    - `LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh --repo-name your-demo-repo --org-name your-org`
+   - default `vind` cluster shape: `1` control plane node, `2` worker nodes, with the control plane tainted `NoSchedule`
    - that creates `vind`, installs Forgejo, runs local placeholder replacement, starts the OrbStack adapter, and bootstraps the repo into Forgejo
 3. configure ESO and 1Password using [docs/secret-contract.md](./docs/secret-contract.md)
 4. choose either:

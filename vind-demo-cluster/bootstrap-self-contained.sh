@@ -11,6 +11,7 @@ What this script can do:
 3. run local placeholder replacement for this repo
 4. start the OrbStack local-domain adapter automatically
 5. bootstrap the repo into Forgejo by default
+6. create the Argo CD Forgejo secrets and apply the self-contained root app
 
 What it does not do yet:
 - configure 1Password / ESO secrets automatically
@@ -31,6 +32,7 @@ Optional OrbStack local domain overrides:
   --argocd-host argocd.team-a.vcp.local
   --forgejo-host forgejo.team-a.vcp.local
   --vcp-version 4.7.1
+  --worker-nodes 2
   --vcp-upstream vcluster.lb.team-a.loft.vcluster-platform:443
   --argocd-upstream vcluster.lb.team-a.argocd-server.argocd:443
   --forgejo-upstream vcluster.lb.team-a.forgejo-http.forgejo:3000
@@ -67,12 +69,17 @@ ORBSTACK_ENV_FILE=""
 
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
 VCP_VERSION="${VCP_VERSION:-4.7.1}"
+CONTROL_PLANE_NODE_COUNT="${CONTROL_PLANE_NODE_COUNT:-1}"
+WORKER_NODE_COUNT="${WORKER_NODE_COUNT:-2}"
 FORGEJO_URL=""
 FORGEJO_USERNAME="${FORGEJO_ADMIN_USER:-demo-admin}"
 FORGEJO_TOKEN="${FORGEJO_TOKEN:-}"
 FORGEJO_PASSWORD="${FORGEJO_PASSWORD:-${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-admin}}"
 FORGEJO_OWNER="${FORGEJO_OWNER:-}"
 FORGEJO_OWNER_TYPE="user"
+GIT_BASE_URL=""
+IMAGE_REPOSITORY_PREFIX=""
+SKIP_ARGOCD_BOOTSTRAP="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -106,6 +113,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --vcp-version)
       VCP_VERSION="${2:-}"
+      shift 2
+      ;;
+    --control-plane-nodes)
+      CONTROL_PLANE_NODE_COUNT="${2:-}"
+      shift 2
+      ;;
+    --worker-nodes)
+      WORKER_NODE_COUNT="${2:-}"
       shift 2
       ;;
     --vcp-host)
@@ -160,6 +175,18 @@ while [[ $# -gt 0 ]]; do
       FORGEJO_OWNER_TYPE="${2:-}"
       shift 2
       ;;
+    --git-base-url)
+      GIT_BASE_URL="${2:-}"
+      shift 2
+      ;;
+    --image-repository-prefix)
+      IMAGE_REPOSITORY_PREFIX="${2:-}"
+      shift 2
+      ;;
+    --skip-argocd-bootstrap)
+      SKIP_ARGOCD_BOOTSTRAP="true"
+      shift
+      ;;
     --skip-vind)
       SKIP_VIND="true"
       shift
@@ -195,6 +222,16 @@ if [[ "$SKIP_VIND" != "true" && -z "$LICENSE_TOKEN" ]]; then
   exit 1
 fi
 
+if [[ ! "$CONTROL_PLANE_NODE_COUNT" =~ ^[0-9]+$ || "$CONTROL_PLANE_NODE_COUNT" -ne 1 ]]; then
+  echo "[ERROR] --control-plane-nodes must be 1 for this vind configuration." >&2
+  exit 1
+fi
+
+if [[ ! "$WORKER_NODE_COUNT" =~ ^[0-9]+$ ]]; then
+  echo "[ERROR] --worker-nodes must be a non-negative integer." >&2
+  exit 1
+fi
+
 if [[ "$SKIP_REPLACE" != "true" ]]; then
   if [[ -z "$REPO_NAME" || -z "$ORG_NAME" ]]; then
     echo "[ERROR] --repo-name and --org-name are required unless --skip-replace is used." >&2
@@ -226,12 +263,22 @@ if [[ -z "$FORGEJO_OWNER" ]]; then
   FORGEJO_OWNER="$FORGEJO_USERNAME"
 fi
 
+if [[ -z "$GIT_BASE_URL" ]]; then
+  GIT_BASE_URL="${FORGEJO_URL%/}"
+fi
+
+if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
+  IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST}/${FORGEJO_OWNER}"
+fi
+
 if [[ "$SKIP_VIND" != "true" ]]; then
   bash vind-demo-cluster/install-vind.sh \
     --cluster-name "$CLUSTER_NAME" \
     --values-file "$VALUES_FILE" \
     --license-token "$LICENSE_TOKEN" \
     --vcp-version "$VCP_VERSION" \
+    --control-plane-nodes "$CONTROL_PLANE_NODE_COUNT" \
+    --worker-nodes "$WORKER_NODE_COUNT" \
     --vcp-host "$VCP_HOST" \
     --argocd-host "$ARGOCD_HOST" \
     --forgejo-host "$FORGEJO_HOST" \
@@ -247,6 +294,8 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --org-name "$ORG_NAME" \
     --vcluster-name "$VCLUSTER_NAME" \
     --base-domain "$BASE_DOMAIN" \
+    --git-base-url "$GIT_BASE_URL" \
+    --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
     --include-md
 fi
 
@@ -288,6 +337,59 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       --repo "$REPO_NAME"
   else
     echo "[INFO] Skipping Forgejo bootstrap because --repo-name was not provided."
+  fi
+fi
+
+if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
+  require_cmd kubectl
+  require_cmd jq
+  require_cmd curl
+
+  if [[ -z "$REPO_NAME" || -z "$ORG_NAME" ]]; then
+    echo "[WARN] Skipping Argo CD bootstrap because --repo-name and --org-name were not provided." >&2
+  else
+    kubectl -n argocd wait --for=condition=Available deploy/argocd-server --timeout=300s >/dev/null 2>&1 || true
+    kubectl wait --for=condition=Established crd/applications.argoproj.io --timeout=180s >/dev/null 2>&1 || true
+
+    argocd_token="${FORGEJO_TOKEN:-}"
+
+    if [[ -z "$argocd_token" ]]; then
+      token_name="argocd-bootstrap-$(date +%s)"
+      token_payload="$(jq -cn --arg name "$token_name" '{name: $name, scopes: ["all"]}')"
+      argocd_token="$(
+        curl -fsS \
+          -u "${FORGEJO_USERNAME}:${FORGEJO_PASSWORD}" \
+          -H "Content-Type: application/json" \
+          -X POST \
+          "${FORGEJO_URL%/}/api/v1/users/${FORGEJO_USERNAME}/tokens" \
+          -d "$token_payload" | jq -r '.sha1'
+      )"
+    fi
+
+    cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: forgejo-repo-creds
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  type: git
+  url: ${GIT_BASE_URL}/${ORG_NAME}
+  username: ${FORGEJO_USERNAME}
+  password: ${argocd_token}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: loft-demo-org-cred
+  namespace: argocd
+stringData:
+  token: ${argocd_token}
+EOF
+
+    kubectl apply -f vcluster-gitops/overlays/local-contained/root-application.yaml
   fi
 fi
 

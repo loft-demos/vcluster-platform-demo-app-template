@@ -10,6 +10,7 @@
 # - __FORGEJO_HOST__
 # - __FORGEJO_ADMIN_USER__
 # - __FORGEJO_ADMIN_PASSWORD__
+# - worker node list for `experimental.docker.nodes`
 controlPlane:
   distro:
     k8s:
@@ -17,6 +18,9 @@ controlPlane:
         tag: v1.35.1
 
 experimental:
+  docker:
+    nodes:
+__VIND_DOCKER_NODES__
   deploy:
     vcluster:
       manifests: |-

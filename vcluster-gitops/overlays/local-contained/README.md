@@ -1,19 +1,18 @@
 # Local-Contained Overlay
 
-This overlay is the first-pass `local-contained` mode for running this repo
-against an embedded Forgejo or another Gitea-compatible Git service inside a
-`vind` management cluster.
-
-This is the default target pattern for `vind`, even though it is not fully
-completed yet.
+This overlay is the `local-contained` mode for running this repo against an
+embedded Forgejo or another Gitea-compatible Git service inside a `vind`
+management cluster.
 
 It intentionally changes only the pull request driven Argo CD flows. The
 default GitHub-oriented manifests remain unchanged in the base directories.
 
 ## What This Overlay Changes
 
+- provides the root Argo CD bootstrap `Application` at
+  [`root-application.yaml`](./root-application.yaml)
 - points the root app-of-apps bootstrap at a local-contained app-of-apps overlay
-- converts the `argo-cd-pr-application-set` `App` from `github` to `gitea`
+- uses pure Argo CD `ApplicationSet` resources for the repo preview path
 - converts the repo preview `ApplicationSet` from `github` to `gitea`
 - routes the pull request environment bootstrap `Application` to a local-contained
   overlay under the use-case directory

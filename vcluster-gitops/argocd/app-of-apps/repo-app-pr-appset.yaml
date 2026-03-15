@@ -9,7 +9,7 @@ spec:
       github:
         appSecretName: loft-demo-org-cred
         # The GitHub organization or user.
-        owner: loft-demos
+        owner: {REPLACE_ORG_NAME}
         # The Github repository
         repo: {REPLACE_REPO_NAME}
         # (optional) use a GitHub App to access the API instead of a PAT.
@@ -28,13 +28,13 @@ spec:
         syncOptions:
           - CreateNamespace=true
       source:
-        repoURL: 'https://github.com/loft-demos/{REPLACE_REPO_NAME}.git'
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
         targetRevision: '{{head_sha}}'
         path: helm-chart/
         helm:
           parameters:
           - name: "image.repository"
-            value: ghcr.io/loft-demos/{REPLACE_REPO_NAME}
+            value: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}
           - name: "image.tag"
             value: "{{head_short_sha}}"
           - name: "image.args.text"
@@ -61,4 +61,4 @@ spec:
             https://{REPLACE_REPO_NAME}-pr-{{number}}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
         - name: GitHub PR
           value: >-
-            https://github.com/loft-demos/{REPLACE_REPO_NAME}/pull/{{number}}
+            {REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
