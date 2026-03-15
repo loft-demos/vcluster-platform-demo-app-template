@@ -381,8 +381,8 @@ For manual reconfiguration, reruns, or troubleshooting, use
    The helper targets the Docker-network DNS names directly. For the default
    `vcp` cluster, that means:
 
-   - Argo CD: `vcluster.lb.vcp.argocd-server.argocd:80`
-   - vCluster Platform: `vcluster.lb.vcp.loft.vcluster-platform:80`
+   - Argo CD: `vcluster.lb.vcp.argocd-server.argocd:443`
+   - vCluster Platform: `vcluster.lb.vcp.loft.vcluster-platform:443`
 
    You can still override them with `--argocd-upstream` and
    `--vcp-upstream`.
@@ -390,7 +390,7 @@ For manual reconfiguration, reruns, or troubleshooting, use
    In practice, these upstreams may be:
 
    - the HAProxy container DNS names on the `vcluster.<cluster-name>` Docker
-     network, such as `vcluster.lb.vcp.loft.vcluster-platform:80`
+     network, such as `vcluster.lb.vcp.loft.vcluster-platform:443`
    - a custom override `host:port`
 
    The preferred path is the HAProxy container DNS names. The point of the

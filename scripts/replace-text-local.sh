@@ -107,7 +107,10 @@ if [[ "$INCLUDE_MD" == "true" ]]; then
   globs+=(--glob '*.md')
 fi
 
-mapfile -t files < <(
+declare -a files=()
+while IFS= read -r file; do
+  files+=("$file")
+done < <(
   rg -l \
     '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}' \
     . \
@@ -130,6 +133,8 @@ if [[ "$DRY_RUN" == "true" ]]; then
   printf '%s\n' "${files[@]}"
   exit 0
 fi
+
+export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN
 
 for file in "${files[@]}"; do
   perl -0pi -e '
