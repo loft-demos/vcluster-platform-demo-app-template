@@ -9,6 +9,7 @@ This helper:
 1. stops the per-cluster OrbStack/Caddy adapter if present
 2. deletes the vind cluster
 3. optionally removes the generated OrbStack env file
+4. stashes local repo changes so the clone can be refreshed from origin
 
 Usage:
   bash vind-demo-cluster/delete-vind.sh
@@ -28,6 +29,7 @@ Options:
                             reused automatically.
   --skip-orbstack-domains   Optional. Skip OrbStack/Caddy cleanup.
   --keep-orbstack-env       Optional. Keep the generated env file.
+  --skip-git-stash          Optional. Keep local repo changes in place.
   --help                    Show this message.
 EOF
 }
@@ -47,6 +49,7 @@ FORGEJO_HOST=""
 ORBSTACK_ENV_FILE=""
 SKIP_ORBSTACK_DOMAINS="false"
 KEEP_ORBSTACK_ENV="false"
+SKIP_GIT_STASH="false"
 COMPOSE_DIR="vind-demo-cluster/orbstack-domains"
 
 while [[ $# -gt 0 ]]; do
@@ -79,6 +82,10 @@ while [[ $# -gt 0 ]]; do
       KEEP_ORBSTACK_ENV="true"
       shift
       ;;
+    --skip-git-stash)
+      SKIP_GIT_STASH="true"
+      shift
+      ;;
     --help|-h)
       usage
       exit 0
@@ -94,6 +101,10 @@ done
 require_cmd vcluster
 require_cmd docker
 require_cmd mktemp
+
+if [[ "$SKIP_GIT_STASH" != "true" ]]; then
+  require_cmd git
+fi
 
 if [[ -z "$ARGOCD_HOST" ]]; then
   ARGOCD_HOST="argocd.${VCP_HOST}"
@@ -147,6 +158,21 @@ if [[ "$KEEP_ORBSTACK_ENV" != "true" && -f "$ORBSTACK_ENV_FILE" ]]; then
   rm -f "$ORBSTACK_ENV_FILE"
 fi
 
+stash_result=""
+stash_message=""
+repo_root=""
+
+if [[ "$SKIP_GIT_STASH" != "true" ]]; then
+  repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+
+  if [[ -n "$repo_root" ]]; then
+    if [[ -n "$(git -C "$repo_root" status --short)" ]]; then
+      stash_message="vind delete cleanup (${CLUSTER_NAME})"
+      stash_result="$(git -C "$repo_root" stash push -u -m "$stash_message" 2>&1 || true)"
+    fi
+  fi
+fi
+
 cat <<EOF
 
 [INFO] Deleted vind cluster '$CLUSTER_NAME'.
@@ -156,3 +182,15 @@ OrbStack adapter:
 - env file: ${ORBSTACK_ENV_FILE}
 
 EOF
+
+if [[ "$SKIP_GIT_STASH" == "true" ]]; then
+  echo "[INFO] Left local repo changes in place (--skip-git-stash)."
+elif [[ -z "$repo_root" ]]; then
+  echo "[WARN] Did not stash repo changes because this directory is not in a git worktree."
+elif [[ -z "$stash_result" ]]; then
+  echo "[INFO] No local repo changes were present to stash."
+else
+  echo "[INFO] Stashed local repo changes:"
+  echo "       ${stash_message}"
+  echo "[INFO] Review with: git stash list"
+fi
