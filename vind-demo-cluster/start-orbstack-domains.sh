@@ -140,7 +140,7 @@ if ! docker network inspect "$VIND_DOCKER_NETWORK" >/dev/null 2>&1; then
 fi
 
 if [[ -z "$ARGOCD_UPSTREAM" ]]; then
-  ARGOCD_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.argocd-server.argocd:443"
+  ARGOCD_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.argocd-server.argocd:80"
 fi
 
 if [[ -z "$VCP_UPSTREAM" ]]; then

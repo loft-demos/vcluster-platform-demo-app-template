@@ -3,11 +3,7 @@
 }
 
 http://{$ARGOCD_HOST} {
-  reverse_proxy https://{$ARGOCD_UPSTREAM} {
-    transport http {
-      tls_insecure_skip_verify
-    }
-  }
+  reverse_proxy http://{$ARGOCD_UPSTREAM}
 }
 
 http://{$VCP_HOST} {
