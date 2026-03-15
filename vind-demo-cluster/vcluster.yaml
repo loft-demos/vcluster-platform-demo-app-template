@@ -7,6 +7,8 @@
 # - __VCP_PLATFORM_VERSION__
 # - __VCP_LICENSE_TOKEN__
 # - __VCP_LOFT_HOST__
+# - __VCP_DOMAIN_PREFIX__
+# - __VCP_DOMAIN__
 # - __FORGEJO_HOST__
 # - __FORGEJO_ADMIN_USER__
 # - __FORGEJO_ADMIN_PASSWORD__
@@ -64,6 +66,9 @@ __VIND_DOCKER_NODES__
         metadata:
           name: cluster-local
           namespace: argocd
+          annotations:
+            domainPrefix: __VCP_DOMAIN_PREFIX__
+            domain: __VCP_DOMAIN__
           labels:
             argocd.argoproj.io/secret-type: cluster
             crossplane: "false"
@@ -71,6 +76,8 @@ __VIND_DOCKER_NODES__
             flux: "false"
             kyverno: "false"
             loftDemoDomain: __VCP_LOFT_HOST__
+            domainPrefix: __VCP_DOMAIN_PREFIX__
+            domain: __VCP_DOMAIN__
             mysql: "false"
             postgres: "false"
             rancher: "false"

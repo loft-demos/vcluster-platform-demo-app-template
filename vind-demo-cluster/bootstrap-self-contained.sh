@@ -299,7 +299,8 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --forgejo-admin-user "$FORGEJO_USERNAME" \
     --forgejo-admin-password "$FORGEJO_PASSWORD" \
     --orbstack-env-file "$ORBSTACK_ENV_FILE" \
-    --skip-orbstack-domains
+    --skip-orbstack-domains \
+    --skip-summary
 fi
 
 if [[ "$SKIP_REPLACE" != "true" ]]; then
@@ -430,9 +431,16 @@ Recommended next steps:
 1. Argo CD login:
    - username: admin
    - password: ${argocd_password:-<not available yet>}
-2. Configure 1Password + ESO:
+2. Open the local URLs:
+   - https://${VCP_HOST}
+   - https://${ARGOCD_HOST}
+   - https://${FORGEJO_HOST}
+3. Configure 1Password + ESO:
    - vind-demo-cluster/eso-cluster-store.yaml
    - vind-demo-cluster/bootstrap-external-secrets.yaml
-3. Continue with the step-by-step vind docs for validation.
+4. Confirm Argo CD and vCluster Platform are healthy:
+   - kubectl -n argocd get pods
+   - kubectl -n vcluster-platform get pods
+5. Continue with vind-demo-cluster/README.md if you want the detailed flow.
 
 EOF
