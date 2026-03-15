@@ -11,7 +11,8 @@ What this script can do:
 3. run local placeholder replacement for this repo
 4. start the OrbStack local-domain adapter automatically
 5. bootstrap the repo into Forgejo by default
-6. create the Argo CD Forgejo secrets and apply the self-contained root app
+6. build and push the demo app image to the Forgejo container registry
+7. create the Argo CD Forgejo secrets, the default vCP ProjectSecret, and apply the self-contained root app
 
 What it does not do yet:
 - configure 1Password / ESO secrets automatically
@@ -37,6 +38,19 @@ Optional OrbStack local domain overrides:
   --vcp-upstream vcluster.lb.team-a.loft.vcluster-platform:443
   --argocd-upstream vcluster.lb.team-a.argocd-server.argocd:443
   --forgejo-upstream vcluster.lb.team-a.forgejo-http.forgejo:3000
+
+Optional skip flags:
+  --skip-vind
+  --skip-replace
+  --skip-orbstack-env
+  --skip-forgejo
+  --skip-image-build
+  --skip-argocd-bootstrap
+
+ProjectSecret defaults:
+  --image-pull-project-namespace p-default
+  --image-pull-project-secret-name vcluster-demos-ghcr-write-pat
+  --image-pull-source-secret-name vcluster-demos-ghcr-write
 EOF
 }
 
@@ -59,6 +73,7 @@ SKIP_VIND="false"
 SKIP_REPLACE="false"
 SKIP_ORBSTACK_ENV="false"
 SKIP_FORGEJO="false"
+SKIP_IMAGE_BUILD="false"
 
 VCP_HOST="vcp.local"
 ARGOCD_HOST="argocd.vcp.local"
@@ -83,6 +98,9 @@ GIT_BASE_URL=""
 GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 SKIP_ARGOCD_BOOTSTRAP="false"
+IMAGE_PULL_PROJECT_NAMESPACE="p-default"
+IMAGE_PULL_PROJECT_SECRET_NAME=""
+IMAGE_PULL_SOURCE_SECRET_NAME=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -194,6 +212,22 @@ while [[ $# -gt 0 ]]; do
       IMAGE_REPOSITORY_PREFIX="${2:-}"
       shift 2
       ;;
+    --image-pull-project-namespace)
+      IMAGE_PULL_PROJECT_NAMESPACE="${2:-}"
+      shift 2
+      ;;
+    --image-pull-project-secret-name)
+      IMAGE_PULL_PROJECT_SECRET_NAME="${2:-}"
+      shift 2
+      ;;
+    --image-pull-source-secret-name)
+      IMAGE_PULL_SOURCE_SECRET_NAME="${2:-}"
+      shift 2
+      ;;
+    --skip-image-build)
+      SKIP_IMAGE_BUILD="true"
+      shift
+      ;;
     --skip-argocd-bootstrap)
       SKIP_ARGOCD_BOOTSTRAP="true"
       shift
@@ -291,6 +325,14 @@ if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
   IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST}/${FORGEJO_OWNER}"
 fi
 
+if [[ -z "$IMAGE_PULL_PROJECT_SECRET_NAME" ]]; then
+  IMAGE_PULL_PROJECT_SECRET_NAME="${ORG_NAME}-ghcr-write-pat"
+fi
+
+if [[ -z "$IMAGE_PULL_SOURCE_SECRET_NAME" ]]; then
+  IMAGE_PULL_SOURCE_SECRET_NAME="${ORG_NAME}-ghcr-write"
+fi
+
 if [[ "$SKIP_VIND" != "true" ]]; then
   bash vind-demo-cluster/install-vind.sh \
     --cluster-name "$CLUSTER_NAME" \
@@ -364,6 +406,28 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
   fi
 fi
 
+if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
+  require_cmd docker
+
+  image_auth_password="$FORGEJO_PASSWORD"
+  image_auth_token="$FORGEJO_TOKEN"
+  declare -a image_auth_args
+
+  if [[ -n "$image_auth_token" ]]; then
+    image_auth_args+=(--token "$image_auth_token")
+  elif [[ -n "$image_auth_password" ]]; then
+    image_auth_args+=(--password "$image_auth_password")
+  fi
+
+  bash scripts/build-push-forgejo-image.sh \
+    --registry "$FORGEJO_HOST" \
+    --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
+    --repo-name "$REPO_NAME" \
+    --username "$FORGEJO_USERNAME" \
+    "${image_auth_args[@]}" \
+    --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
+fi
+
 if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
   require_cmd kubectl
   require_cmd jq
@@ -414,6 +478,46 @@ stringData:
 EOF
 
     kubectl apply -f vcluster-gitops/overlays/local-contained/root-application.yaml
+  fi
+fi
+
+if command -v kubectl >/dev/null 2>&1; then
+  project_secret_password="${FORGEJO_TOKEN:-}"
+  if [[ -z "$project_secret_password" && -n "${argocd_token:-}" ]]; then
+    project_secret_password="$argocd_token"
+  fi
+  if [[ -z "$project_secret_password" ]]; then
+    project_secret_password="$FORGEJO_PASSWORD"
+  fi
+
+  if [[ -n "$project_secret_password" ]]; then
+    for _ in $(seq 1 60); do
+      if kubectl get namespace "$IMAGE_PULL_PROJECT_NAMESPACE" >/dev/null 2>&1; then
+        break
+      fi
+      sleep 2
+    done
+
+    if kubectl get namespace "$IMAGE_PULL_PROJECT_NAMESPACE" >/dev/null 2>&1; then
+      cat <<EOF | kubectl apply -f -
+apiVersion: management.loft.sh/v1
+kind: ProjectSecret
+metadata:
+  name: ${IMAGE_PULL_PROJECT_SECRET_NAME}
+  namespace: ${IMAGE_PULL_PROJECT_NAMESPACE}
+  labels:
+    loft.sh/project-secret-name: ${IMAGE_PULL_SOURCE_SECRET_NAME}
+    org: ${ORG_NAME}
+    repo: ${REPO_NAME}
+spec:
+  displayName: ${IMAGE_PULL_PROJECT_SECRET_NAME}
+  data:
+    username: ${FORGEJO_USERNAME}
+    password: ${project_secret_password}
+EOF
+    else
+      echo "[WARN] Could not find namespace ${IMAGE_PULL_PROJECT_NAMESPACE} to create ${IMAGE_PULL_PROJECT_SECRET_NAME}." >&2
+    fi
   fi
 fi
 

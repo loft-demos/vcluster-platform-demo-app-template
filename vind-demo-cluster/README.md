@@ -34,7 +34,9 @@ What the bootstrap does:
 - annotates `clusters.management.loft.sh/loft-cluster` with `domainPrefix`, `domain`, and `sleepTimeZone`
 - runs local placeholder replacement
 - pushes the repo into Forgejo
+- builds and pushes the `src/` demo image to the Forgejo container registry
 - creates the Argo CD Forgejo secrets
+- creates a default vCP `ProjectSecret` for registry auth in `p-default`
 - applies the root Argo CD `Application`
 - starts the OrbStack domain adapter
 
@@ -77,6 +79,13 @@ Delete the environment cleanly:
 
 ```bash
 bash vind-demo-cluster/delete-vind.sh
+```
+
+Use a different vCP project namespace for the registry `ProjectSecret`:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --image-pull-project-namespace p-demos
 ```
 
 ## Local Access
@@ -127,6 +136,22 @@ After the cluster is up, continue with:
 The full secret contract is here:
 
 - [docs/secret-contract.md](../docs/secret-contract.md)
+
+The self-contained bootstrap also creates a default Platform `ProjectSecret`
+for the Forgejo registry:
+
+- name: `vcluster-demos-ghcr-write-pat`
+- namespace: `p-default`
+- label `loft.sh/project-secret-name`: `vcluster-demos-ghcr-write`
+- data keys:
+  - `username`
+  - `password`
+
+Override that with:
+
+- `--image-pull-project-namespace`
+- `--image-pull-project-secret-name`
+- `--image-pull-source-secret-name`
 
 ## Lower-Level Helpers
 
