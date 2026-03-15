@@ -20,6 +20,8 @@ Defaults:
 - repo: `vcp-gitops`
 - org: `vcluster-demos`
 - base domain: `vcp.local`
+- git base URL: `https://forgejo.vcp.local`
+- image repository prefix: `forgejo.vcp.local/vcluster-demos`
 
 ## `bootstrap-forgejo-repo.sh`
 
