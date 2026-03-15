@@ -40,6 +40,7 @@ Options:
                          Optional. Defaults to orbstack-domains/.env.<cluster-name>.
   --skip-orbstack-domains
                          Optional. Skip automatic OrbStack domain setup.
+  --skip-summary         Optional. Skip the final next-steps summary.
   --help                 Show this message.
 EOF
 }
@@ -65,6 +66,7 @@ FORGEJO_ADMIN_USER="${FORGEJO_ADMIN_USER:-demo-admin}"
 FORGEJO_ADMIN_PASSWORD="${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-admin}"
 ORBSTACK_ENV_FILE=""
 SKIP_ORBSTACK_DOMAINS="false"
+SKIP_SUMMARY="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -120,6 +122,10 @@ while [[ $# -gt 0 ]]; do
       SKIP_ORBSTACK_DOMAINS="true"
       shift
       ;;
+    --skip-summary)
+      SKIP_SUMMARY="true"
+      shift
+      ;;
     --help|-h)
       usage
       exit 0
@@ -160,6 +166,13 @@ if [[ -z "$FORGEJO_HOST" ]]; then
   FORGEJO_HOST="forgejo.${VCP_HOST}"
 fi
 
+vcp_domain_prefix="${VCP_HOST%%.*}"
+if [[ "$VCP_HOST" == *.* ]]; then
+  vcp_domain="${VCP_HOST#*.}"
+else
+  vcp_domain="local"
+fi
+
 if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
   if [[ "$CLUSTER_NAME" == "vcp" ]]; then
     ORBSTACK_ENV_FILE="vind-demo-cluster/orbstack-domains/.env"
@@ -187,11 +200,14 @@ trap cleanup EXIT
 cp "$VALUES_FILE" "$rendered_values"
 
 export LICENSE_TOKEN VCP_VERSION VCP_HOST FORGEJO_HOST FORGEJO_ADMIN_USER FORGEJO_ADMIN_PASSWORD
+export VCP_DOMAIN_PREFIX="$vcp_domain_prefix" VCP_DOMAIN="$vcp_domain"
 export VIND_DOCKER_NODES="$worker_nodes_yaml"
 perl -0pi -e '
   s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
   s/__VCP_LOFT_HOST__/$ENV{VCP_HOST}/g;
+  s/__VCP_DOMAIN_PREFIX__/$ENV{VCP_DOMAIN_PREFIX}/g;
+  s/__VCP_DOMAIN__/$ENV{VCP_DOMAIN}/g;
   s/__FORGEJO_HOST__/$ENV{FORGEJO_HOST}/g;
   s/__FORGEJO_ADMIN_USER__/$ENV{FORGEJO_ADMIN_USER}/g;
   s/__FORGEJO_ADMIN_PASSWORD__/$ENV{FORGEJO_ADMIN_PASSWORD}/g;
@@ -262,6 +278,10 @@ if [[ "$SKIP_ORBSTACK_DOMAINS" != "true" ]]; then
     echo "[WARN] Automatic OrbStack domain setup failed." >&2
     echo "[WARN] You can rerun vind-demo-cluster/start-orbstack-domains.sh after the services are ready." >&2
   fi
+fi
+
+if [[ "$SKIP_SUMMARY" == "true" ]]; then
+  exit 0
 fi
 
 cat <<EOF
