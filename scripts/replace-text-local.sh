@@ -27,9 +27,9 @@ Options:
   --org-name NAME         Optional. Defaults to vcluster-demos.
   --vcluster-name NAME    Optional. Defaults to repo name with trailing -app removed.
   --base-domain DOMAIN    Optional. Defaults to VCP_HOST or vcp.local.
-  --git-base-url URL      Optional. Defaults to https://github.com.
+  --git-base-url URL      Optional. Defaults to https://forgejo.vcp.local.
   --image-repository-prefix PREFIX
-                          Optional. Defaults to ghcr.io/<org-name>.
+                          Optional. Defaults to forgejo.vcp.local/<org-name>.
   --include-md            Also replace in Markdown files.
   --dry-run               Print matching files but do not modify them.
   --help                  Show this message.
@@ -111,11 +111,11 @@ if [[ -z "$VCLUSTER_NAME" ]]; then
 fi
 
 if [[ -z "$GIT_BASE_URL" ]]; then
-  GIT_BASE_URL="https://github.com"
+  GIT_BASE_URL="https://${FORGEJO_HOST:-forgejo.vcp.local}"
 fi
 
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
-  IMAGE_REPOSITORY_PREFIX="ghcr.io/${ORG_NAME}"
+  IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST:-forgejo.vcp.local}/${ORG_NAME}"
 fi
 
 declare -a globs

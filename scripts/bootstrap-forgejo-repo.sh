@@ -219,7 +219,13 @@ push_working_tree_snapshot() {
 
   (
     cd "$temp_repo"
-    git checkout -B "$current_branch" >/dev/null 2>&1
+    git remote add forgejo "$REPO_URL"
+    if git -c "http.extraHeader=Authorization: Basic $auth_header" \
+      fetch forgejo "$current_branch" >/dev/null 2>&1; then
+      git checkout -B "$current_branch" "FETCH_HEAD" >/dev/null 2>&1
+    else
+      git checkout -B "$current_branch" >/dev/null 2>&1
+    fi
     rsync -a --delete --exclude '.git' "$repo_root"/ "$temp_repo"/
     git add -A
     if ! git diff --cached --quiet; then
@@ -228,7 +234,7 @@ push_working_tree_snapshot() {
       git commit -m "Bootstrap working tree snapshot" >/dev/null
     fi
     git -c "http.extraHeader=Authorization: Basic $auth_header" \
-      push --force-with-lease "$REPO_URL" "HEAD:refs/heads/$current_branch"
+      push --force-with-lease forgejo "HEAD:refs/heads/$current_branch"
   )
 }
 
