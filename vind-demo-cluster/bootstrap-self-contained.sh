@@ -409,14 +409,30 @@ EOF
   fi
 fi
 
+argocd_password=""
+if command -v kubectl >/dev/null 2>&1; then
+  echo "[INFO] Looking up the Argo CD initial admin password"
+  for _ in $(seq 1 60); do
+    secret_b64="$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' 2>/dev/null || true)"
+    if [[ -n "$secret_b64" ]]; then
+      argocd_password="$(printf '%s' "$secret_b64" | perl -MMIME::Base64 -ne 'print decode_base64($_)')"
+      break
+    fi
+    sleep 2
+  done
+fi
+
 cat <<EOF
 
 [INFO] Self-contained bootstrap helper complete.
 
 Recommended next steps:
-1. Configure 1Password + ESO:
+1. Argo CD login:
+   - username: admin
+   - password: ${argocd_password:-<not available yet>}
+2. Configure 1Password + ESO:
    - vind-demo-cluster/eso-cluster-store.yaml
    - vind-demo-cluster/bootstrap-external-secrets.yaml
-2. Continue with the step-by-step vind docs for validation.
+3. Continue with the step-by-step vind docs for validation.
 
 EOF
