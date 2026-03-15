@@ -18,14 +18,16 @@ Usage:
   bash scripts/bootstrap-forgejo-repo.sh \
     --forgejo-url https://forgejo.vcp.local \
     --username demo-admin \
-    --token "$FORGEJO_TOKEN" \
-    --owner loft-demos \
+    --password "$FORGEJO_ADMIN_PASSWORD" \
+    --owner demo-admin \
+    --owner-type user \
     --repo vcluster-platform-demo-app-template
 
 Options:
   --forgejo-url URL        Base URL for Forgejo, for example https://forgejo.vcp.local
   --username NAME          Forgejo username used for git HTTP auth
   --token VALUE            Forgejo personal access token. Defaults to FORGEJO_TOKEN
+  --password VALUE         Forgejo password for basic auth. Defaults to FORGEJO_PASSWORD
   --owner NAME             Forgejo user or org that will own the repo
   --owner-type TYPE        user or org. Default: org
   --repo NAME              Target repo name
@@ -66,26 +68,39 @@ api_request() {
   local url="$2"
   local data="${3:-}"
 
+  local auth_args=()
+  if [[ -n "$TOKEN" ]]; then
+    auth_args=(-H "Authorization: token $TOKEN")
+  else
+    auth_args=(-u "$USERNAME:$PASSWORD")
+  fi
+
   if [[ -n "$data" ]]; then
     curl -fsS \
       -X "$method" \
-      -H "Authorization: token $TOKEN" \
+      "${auth_args[@]}" \
       -H "Content-Type: application/json" \
       "$url" \
       -d "$data"
   else
     curl -fsS \
       -X "$method" \
-      -H "Authorization: token $TOKEN" \
+      "${auth_args[@]}" \
       "$url"
   fi
 }
 
 repo_exists() {
   local status
-  status="$(curl -sS -o /dev/null -w '%{http_code}' \
-    -H "Authorization: token $TOKEN" \
-    "$API_BASE/repos/$OWNER/$REPO")"
+  if [[ -n "$TOKEN" ]]; then
+    status="$(curl -sS -o /dev/null -w '%{http_code}' \
+      -H "Authorization: token $TOKEN" \
+      "$API_BASE/repos/$OWNER/$REPO")"
+  else
+    status="$(curl -sS -o /dev/null -w '%{http_code}' \
+      -u "$USERNAME:$PASSWORD" \
+      "$API_BASE/repos/$OWNER/$REPO")"
+  fi
   [[ "$status" == "200" ]]
 }
 
@@ -121,8 +136,13 @@ create_repo() {
 }
 
 push_refs() {
-  local auth_header branch
-  auth_header="$(printf '%s' "$USERNAME:$TOKEN" | base64)"
+  local auth_secret auth_header branch
+  if [[ -n "$TOKEN" ]]; then
+    auth_secret="$TOKEN"
+  else
+    auth_secret="$PASSWORD"
+  fi
+  auth_header="$(printf '%s' "$USERNAME:$auth_secret" | base64)"
 
   echo "[INFO] Pushing branches to $REPO_URL"
   while IFS= read -r branch; do
@@ -139,6 +159,7 @@ push_refs() {
 FORGEJO_URL=""
 USERNAME=""
 TOKEN="${FORGEJO_TOKEN:-}"
+PASSWORD="${FORGEJO_PASSWORD:-}"
 OWNER=""
 OWNER_TYPE="org"
 REPO=""
@@ -158,6 +179,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --token)
       TOKEN="${2:-}"
+      shift 2
+      ;;
+    --password)
+      PASSWORD="${2:-}"
       shift 2
       ;;
     --owner)
@@ -205,9 +230,14 @@ if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ -z "$FORGEJO_URL" || -z "$USERNAME" || -z "$TOKEN" || -z "$OWNER" || -z "$REPO" ]]; then
+if [[ -z "$FORGEJO_URL" || -z "$USERNAME" || -z "$OWNER" || -z "$REPO" ]]; then
   echo "[ERROR] Missing required arguments." >&2
   usage >&2
+  exit 1
+fi
+
+if [[ -z "$TOKEN" && -z "$PASSWORD" ]]; then
+  echo "[ERROR] Provide either --token/FORGEJO_TOKEN or --password/FORGEJO_PASSWORD." >&2
   exit 1
 fi
 

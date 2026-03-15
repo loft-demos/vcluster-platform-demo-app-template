@@ -26,6 +26,11 @@ Options:
   --vcp-host HOST        Optional. Defaults to vcp.local.
   --argocd-host HOST     Optional. Defaults to argocd.<vcp-host>.
   --forgejo-host HOST    Optional. Defaults to forgejo.<vcp-host>.
+  --forgejo-admin-user NAME
+                         Optional. Defaults to demo-admin.
+  --forgejo-admin-password VALUE
+                         Optional. Defaults to FORGEJO_ADMIN_PASSWORD or
+                         vcluster-demo-admin.
   --orbstack-env-file PATH
                          Optional. Defaults to orbstack-domains/.env.<cluster-name>.
   --skip-orbstack-domains
@@ -49,6 +54,8 @@ VCP_VERSION="${VCP_VERSION:-4.7.1}"
 VCP_HOST="${VCP_HOST:-vcp.local}"
 ARGOCD_HOST=""
 FORGEJO_HOST=""
+FORGEJO_ADMIN_USER="${FORGEJO_ADMIN_USER:-demo-admin}"
+FORGEJO_ADMIN_PASSWORD="${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-admin}"
 ORBSTACK_ENV_FILE=""
 SKIP_ORBSTACK_DOMAINS="false"
 
@@ -80,6 +87,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --forgejo-host)
       FORGEJO_HOST="${2:-}"
+      shift 2
+      ;;
+    --forgejo-admin-user)
+      FORGEJO_ADMIN_USER="${2:-}"
+      shift 2
+      ;;
+    --forgejo-admin-password)
+      FORGEJO_ADMIN_PASSWORD="${2:-}"
       shift 2
       ;;
     --orbstack-env-file)
@@ -136,11 +151,14 @@ trap cleanup EXIT
 
 cp "$VALUES_FILE" "$rendered_values"
 
-export LICENSE_TOKEN VCP_VERSION VCP_HOST
+export LICENSE_TOKEN VCP_VERSION VCP_HOST FORGEJO_HOST FORGEJO_ADMIN_USER FORGEJO_ADMIN_PASSWORD
 perl -0pi -e '
   s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
   s/__VCP_LOFT_HOST__/$ENV{VCP_HOST}/g;
+  s/__FORGEJO_HOST__/$ENV{FORGEJO_HOST}/g;
+  s/__FORGEJO_ADMIN_USER__/$ENV{FORGEJO_ADMIN_USER}/g;
+  s/__FORGEJO_ADMIN_PASSWORD__/$ENV{FORGEJO_ADMIN_PASSWORD}/g;
 ' "$rendered_values"
 
 echo "[INFO] Creating or upgrading vind cluster '$CLUSTER_NAME'"
@@ -148,6 +166,8 @@ echo "[INFO] Values file template: $VALUES_FILE"
 echo "[INFO] Rendered values file: $rendered_values"
 echo "[INFO] vCluster Platform version: $VCP_VERSION"
 echo "[INFO] vCluster Platform host: $VCP_HOST"
+echo "[INFO] Forgejo host: $FORGEJO_HOST"
+echo "[INFO] Forgejo admin user: $FORGEJO_ADMIN_USER"
 
 vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
 

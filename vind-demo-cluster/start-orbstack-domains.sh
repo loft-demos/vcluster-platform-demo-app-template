@@ -29,7 +29,7 @@ Options:
   --argocd-upstream HOST:PORT
                             Optional. Override the default Argo CD HAProxy upstream.
   --forgejo-upstream HOST:PORT
-                            Optional. Defaults to 127.0.0.1:3000.
+                            Optional. Override the default Forgejo HAProxy upstream.
   --env-file PATH           Optional. Defaults to orbstack-domains/.env.<cluster-name>.
   --docker-network NAME     Optional. Defaults to vcluster.<cluster-name>.
   --timeout SECONDS         Optional. Defaults to 120.
@@ -51,7 +51,7 @@ ARGOCD_HOST=""
 FORGEJO_HOST=""
 VCP_UPSTREAM=""
 ARGOCD_UPSTREAM=""
-FORGEJO_UPSTREAM="127.0.0.1:3000"
+FORGEJO_UPSTREAM=""
 ENV_FILE=""
 VIND_DOCKER_NETWORK=""
 TIMEOUT_SECONDS="120"
@@ -145,6 +145,10 @@ fi
 
 if [[ -z "$VCP_UPSTREAM" ]]; then
   VCP_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.loft.vcluster-platform:80"
+fi
+
+if [[ -z "$FORGEJO_UPSTREAM" ]]; then
+  FORGEJO_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.forgejo-http.forgejo:3000"
 fi
 
 mkdir -p "$(dirname "$ENV_FILE")"

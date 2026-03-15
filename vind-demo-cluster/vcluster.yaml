@@ -7,6 +7,9 @@
 # - __VCP_PLATFORM_VERSION__
 # - __VCP_LICENSE_TOKEN__
 # - __VCP_LOFT_HOST__
+# - __FORGEJO_HOST__
+# - __FORGEJO_ADMIN_USER__
+# - __FORGEJO_ADMIN_PASSWORD__
 controlPlane:
   distro:
     k8s:
@@ -36,6 +39,21 @@ experimental:
         kind: Namespace
         metadata:
           name: crossplane-system
+        ---
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: forgejo
+        ---
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: forgejo-admin-secret
+          namespace: forgejo
+        type: Opaque
+        stringData:
+          username: __FORGEJO_ADMIN_USER__
+          password: __FORGEJO_ADMIN_PASSWORD__
         ---
         apiVersion: v1
         kind: Secret
@@ -115,39 +133,33 @@ experimental:
                 enabled: false
               imageBuilder:
                 enabled: false
-        # Optional: embedded Forgejo for a local-contained demo mode.
-        # Keep this disabled by default. This repo is still GitHub-shaped in a
-        # number of places, so enabling Forgejo should be paired with a
-        # dedicated local-contained overlay or manifest pass.
-        #
-        # The official Forgejo Helm install path uses:
-        #   helm install forgejo oci://code.forgejo.org/forgejo-helm/forgejo
-        #
-        # Example block to adapt when you are ready to enable it:
-        #
-        # - chart:
-        #     name: forgejo
-        #     repo: oci://code.forgejo.org/forgejo-helm
-        #     version: 16.0.2
-        #   release:
-        #     name: forgejo
-        #     namespace: forgejo
-        #   timeout: 15m
-        #   values: |-
-        #     strategy:
-        #       type: Recreate
-        #     persistence:
-        #       enabled: true
-        #       size: 20Gi
-        #     ingress:
-        #       enabled: false
-        #     gitea:
-        #       admin:
-        #         existingSecret: forgejo-admin-secret
-        #       config:
-        #         server:
-        #           ROOT_URL: https://forgejo.example.com/
-        #         packages:
-        #           ENABLED: true
-        #         service:
-        #           DISABLE_REGISTRATION: true
+        - chart:
+            name: forgejo
+            repo: oci://code.forgejo.org/forgejo-helm
+            version: 16.0.2
+          release:
+            name: forgejo
+            namespace: forgejo
+          timeout: 15m
+          values: |-
+            strategy:
+              type: Recreate
+            persistence:
+              enabled: true
+              size: 20Gi
+            service:
+              http:
+                type: LoadBalancer
+            ingress:
+              enabled: false
+            gitea:
+              admin:
+                existingSecret: forgejo-admin-secret
+                email: demo-admin@__VCP_LOFT_HOST__
+              config:
+                server:
+                  ROOT_URL: https://__FORGEJO_HOST__/
+                packages:
+                  ENABLED: true
+                service:
+                  DISABLE_REGISTRATION: true
