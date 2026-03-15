@@ -3,13 +3,21 @@
 }
 
 http://{$ARGOCD_HOST} {
-  reverse_proxy {$ARGOCD_UPSTREAM}
+  reverse_proxy https://{$ARGOCD_UPSTREAM} {
+    transport http {
+      tls_insecure_skip_verify
+    }
+  }
 }
 
 http://{$VCP_HOST} {
-  reverse_proxy {$VCP_UPSTREAM}
+  reverse_proxy https://{$VCP_UPSTREAM} {
+    transport http {
+      tls_insecure_skip_verify
+    }
+  }
 }
 
 http://{$FORGEJO_HOST} {
-  reverse_proxy {$FORGEJO_UPSTREAM}
+  reverse_proxy http://{$FORGEJO_UPSTREAM}
 }

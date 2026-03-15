@@ -25,10 +25,10 @@ Options:
   --vcp-host HOST           Optional. Defaults to vcp.local.
   --argocd-host HOST        Optional. Defaults to argocd.<vcp-host>.
   --forgejo-host HOST       Optional. Defaults to forgejo.<vcp-host>.
-  --vcp-upstream HOST:PORT  Optional. Override the default vCP HAProxy upstream.
+  --vcp-upstream HOST[:PORT] Optional. Override the default vCP HAProxy upstream.
   --argocd-upstream HOST:PORT
                             Optional. Override the default Argo CD HAProxy upstream.
-  --forgejo-upstream HOST:PORT
+  --forgejo-upstream HOST[:PORT]
                             Optional. Override the default Forgejo HAProxy upstream.
   --env-file PATH           Optional. Defaults to orbstack-domains/.env.<cluster-name>.
   --docker-network NAME     Optional. Defaults to vcluster.<cluster-name>.
@@ -140,11 +140,11 @@ if ! docker network inspect "$VIND_DOCKER_NETWORK" >/dev/null 2>&1; then
 fi
 
 if [[ -z "$ARGOCD_UPSTREAM" ]]; then
-  ARGOCD_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.argocd-server.argocd:80"
+  ARGOCD_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.argocd-server.argocd:443"
 fi
 
 if [[ -z "$VCP_UPSTREAM" ]]; then
-  VCP_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.loft.vcluster-platform:80"
+  VCP_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.loft.vcluster-platform:443"
 fi
 
 if [[ -z "$FORGEJO_UPSTREAM" ]]; then

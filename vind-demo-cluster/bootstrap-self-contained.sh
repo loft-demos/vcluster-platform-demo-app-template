@@ -3,10 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Experimental comprehensive bootstrap helper for the self-contained vind path.
-
-This script intentionally complements, not replaces, the step-by-step path.
-Use the step-by-step docs first if you want minimal troubleshooting.
+Default comprehensive bootstrap helper for the self-contained vind path.
 
 What this script can do:
 1. create or upgrade a vind cluster
@@ -17,7 +14,6 @@ What this script can do:
 
 What it does not do yet:
 - configure 1Password / ESO secrets automatically
-- enable Forgejo inside vind automatically
 
 Usage:
   LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
@@ -35,8 +31,8 @@ Optional OrbStack local domain overrides:
   --argocd-host argocd.team-a.vcp.local
   --forgejo-host forgejo.team-a.vcp.local
   --vcp-version 4.7.1
-  --vcp-upstream something.lb.vcluster-platform.vcluster-platform.orb.local:443
-  --argocd-upstream something.lb.argocd-server.argocd.orb.local:80
+  --vcp-upstream vcluster.lb.team-a.loft.vcluster-platform:443
+  --argocd-upstream vcluster.lb.team-a.argocd-server.argocd:443
   --forgejo-upstream vcluster.lb.team-a.forgejo-http.forgejo:3000
 EOF
 }
