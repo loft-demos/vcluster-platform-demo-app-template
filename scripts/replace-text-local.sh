@@ -14,6 +14,7 @@ Replacements:
 - {REPLACE_VCLUSTER_NAME}
 - {REPLACE_BASE_DOMAIN}
 - {REPLACE_GIT_BASE_URL}
+- {REPLACE_GIT_PUBLIC_URL}
 - {REPLACE_IMAGE_REPOSITORY_PREFIX}
 
 Usage:
@@ -28,6 +29,7 @@ Options:
   --vcluster-name NAME    Optional. Defaults to repo name with trailing -app removed.
   --base-domain DOMAIN    Optional. Defaults to VCP_HOST or vcp.local.
   --git-base-url URL      Optional. Defaults to https://forgejo.vcp.local.
+  --git-public-url URL    Optional. Defaults to https://forgejo.vcp.local.
   --image-repository-prefix PREFIX
                           Optional. Defaults to forgejo.vcp.local/<org-name>.
   --include-md            Also replace in Markdown files.
@@ -49,6 +51,7 @@ ORG_NAME="vcluster-demos"
 VCLUSTER_NAME=""
 BASE_DOMAIN=""
 GIT_BASE_URL=""
+GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 INCLUDE_MD="false"
 DRY_RUN="false"
@@ -73,6 +76,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --git-base-url)
       GIT_BASE_URL="${2:-}"
+      shift 2
+      ;;
+    --git-public-url)
+      GIT_PUBLIC_URL="${2:-}"
       shift 2
       ;;
     --image-repository-prefix)
@@ -111,7 +118,11 @@ if [[ -z "$VCLUSTER_NAME" ]]; then
 fi
 
 if [[ -z "$GIT_BASE_URL" ]]; then
-  GIT_BASE_URL="https://${FORGEJO_HOST:-forgejo.vcp.local}"
+  GIT_BASE_URL="http://${FORGEJO_SERVICE_HOST:-forgejo-http.forgejo.svc.cluster.local:3000}"
+fi
+
+if [[ -z "$GIT_PUBLIC_URL" ]]; then
+  GIT_PUBLIC_URL="https://${FORGEJO_HOST:-forgejo.vcp.local}"
 fi
 
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
@@ -129,7 +140,7 @@ while IFS= read -r file; do
   files+=("$file")
 done < <(
   rg -l \
-    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}' \
+    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}' \
     . \
     "${globs[@]}" \
     --glob '!.git/*'
@@ -145,6 +156,7 @@ echo "[INFO] Org name: $ORG_NAME"
 echo "[INFO] vCluster name: $VCLUSTER_NAME"
 echo "[INFO] Base domain: $BASE_DOMAIN"
 echo "[INFO] Git base URL: $GIT_BASE_URL"
+echo "[INFO] Git public URL: $GIT_PUBLIC_URL"
 echo "[INFO] Image repository prefix: $IMAGE_REPOSITORY_PREFIX"
 echo "[INFO] Files: ${#files[@]}"
 
@@ -153,7 +165,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
-export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL IMAGE_REPOSITORY_PREFIX
+export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX
 
 for file in "${files[@]}"; do
   perl -0pi -e '
@@ -162,6 +174,7 @@ for file in "${files[@]}"; do
     s/\{REPLACE_VCLUSTER_NAME\}/$ENV{VCLUSTER_NAME}/g;
     s/\{REPLACE_BASE_DOMAIN\}/$ENV{BASE_DOMAIN}/g;
     s/\{REPLACE_GIT_BASE_URL\}/$ENV{GIT_BASE_URL}/g;
+    s/\{REPLACE_GIT_PUBLIC_URL\}/$ENV{GIT_PUBLIC_URL}/g;
     s/\{REPLACE_IMAGE_REPOSITORY_PREFIX\}/$ENV{IMAGE_REPOSITORY_PREFIX}/g;
   ' "$file"
 done

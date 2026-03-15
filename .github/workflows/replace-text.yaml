@@ -22,6 +22,7 @@ env:
   ORG_NAME: ${{ github.repository_owner || 'loft-demos' }}
   BASE_DOMAIN: ${{ inputs.base_domain || 'us.demo.dev' }}
   GIT_BASE_URL: https://github.com
+  GIT_PUBLIC_URL: https://github.com
   IMAGE_REPOSITORY_PREFIX: ghcr.io/${{ github.repository_owner || 'loft-demos' }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -55,6 +56,7 @@ jobs:
               { "find": "{REPLACE_VCLUSTER_NAME}", "replace": "${{ env.VCLUSTER_NAME }}" },
               { "find": "{REPLACE_BASE_DOMAIN}", "replace": "${{ env.BASE_DOMAIN }}" },
               { "find": "{REPLACE_GIT_BASE_URL}", "replace": "${{ env.GIT_BASE_URL }}" },
+              { "find": "{REPLACE_GIT_PUBLIC_URL}", "replace": "${{ env.GIT_PUBLIC_URL }}" },
               { "find": "{REPLACE_IMAGE_REPOSITORY_PREFIX}", "replace": "${{ env.IMAGE_REPOSITORY_PREFIX }}" }
             ]
           prefix: ''

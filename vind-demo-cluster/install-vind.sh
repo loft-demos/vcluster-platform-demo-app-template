@@ -223,6 +223,21 @@ else
   echo "[WARN] Timed out waiting for nodes to become ready before tainting the control plane node." >&2
 fi
 
+argocd_password=""
+echo "[INFO] Looking up the Argo CD initial admin password"
+for _ in $(seq 1 60); do
+  secret_b64="$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' 2>/dev/null || true)"
+  if [[ -n "$secret_b64" ]]; then
+    argocd_password="$(printf '%s' "$secret_b64" | perl -MMIME::Base64 -ne 'print decode_base64($_)')"
+    break
+  fi
+  sleep 2
+done
+
+if [[ -z "$argocd_password" ]]; then
+  echo "[WARN] Could not read argocd-initial-admin-secret yet." >&2
+fi
+
 if [[ "$SKIP_ORBSTACK_DOMAINS" != "true" ]]; then
   if ! bash vind-demo-cluster/start-orbstack-domains.sh \
     --cluster-name "$CLUSTER_NAME" \
@@ -251,12 +266,15 @@ Recommended next steps:
    kubectl -n vcluster-platform get pods
 2. Start vind-demo-cluster/orbstack-domains if you want friendly desktop browser hostnames:
    - https://$VCP_HOST
-   - https://argocd.$VCP_HOST
-   - https://forgejo.$VCP_HOST
+   - https://$ARGOCD_HOST
+   - https://$FORGEJO_HOST
    - Docker network: vcluster.$CLUSTER_NAME
    - Env file: $ORBSTACK_ENV_FILE
    This is started automatically unless --skip-orbstack-domains was used.
-3. Configure 1Password + ESO:
+3. Argo CD login:
+   - username: admin
+   - password: ${argocd_password:-<not available yet>}
+4. Configure 1Password + ESO:
    - vind-demo-cluster/eso-cluster-store.yaml
    - vind-demo-cluster/bootstrap-external-secrets.yaml
 

@@ -148,7 +148,7 @@ spec:
                     https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
                 - name: GitHub PR
                   value: >-
-                    {REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{ .Values.repoName }}/pull/{{`{{number}}`}}
+                    {REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{{ .Values.repoName }}/pull/{{`{{number}}`}}
         EOF
   parameters:
     - variable: vClusterName
