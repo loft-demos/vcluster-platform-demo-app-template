@@ -18,6 +18,7 @@ Default `vind` values:
 
 - Forgejo org: `vcluster-demos`
 - Forgejo repo: `vcp-gitops`
+- demo image: pushed to `forgejo.vcp.local/vcluster-demos/vcp-gitops`
 - local URLs:
   - <https://vcp.local>
   - <https://argocd.vcp.local>

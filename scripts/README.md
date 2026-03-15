@@ -1,6 +1,6 @@
 # Scripts
 
-This folder has three scripts that matter for the self-contained `vind` path.
+This folder has four scripts that matter for the self-contained `vind` path.
 
 ## `replace-text-local.sh`
 
@@ -20,7 +20,8 @@ Defaults:
 - repo: `vcp-gitops`
 - org: `vcluster-demos`
 - base domain: `vcp.local`
-- git base URL: `https://forgejo.vcp.local`
+- git base URL: `http://forgejo-http.forgejo.svc.cluster.local:3000`
+- git public URL: `https://forgejo.vcp.local`
 - image repository prefix: `forgejo.vcp.local/vcluster-demos`
 
 ## `bootstrap-forgejo-repo.sh`
@@ -42,6 +43,27 @@ bash scripts/bootstrap-forgejo-repo.sh \
 
 `--include-working-tree` is what makes the local replacement output show up in
 Forgejo without committing local changes first.
+
+## `build-push-forgejo-image.sh`
+
+Builds `src/Dockerfile` and pushes the demo image to the Forgejo container
+registry.
+
+Example:
+
+```bash
+bash scripts/build-push-forgejo-image.sh \
+  --registry forgejo.vcp.local \
+  --image-repository-prefix forgejo.vcp.local/vcluster-demos \
+  --repo-name vcp-gitops \
+  --username demo-admin \
+  --password "$FORGEJO_ADMIN_PASSWORD"
+```
+
+It pushes:
+
+- the local git short SHA tag
+- the Helm chart `appVersion` tag
 
 ## `update-templates.sh`
 
