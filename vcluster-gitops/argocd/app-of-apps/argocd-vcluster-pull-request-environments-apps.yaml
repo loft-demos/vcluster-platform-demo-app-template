@@ -14,7 +14,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
     targetRevision: HEAD
     path: vcluster-use-cases/argocd-vcluster-pull-request-environments/apps
   destination:

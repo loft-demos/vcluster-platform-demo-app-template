@@ -15,8 +15,6 @@ resources:
   - ../../project-secrets/loft-demo-org-cred.yaml
   - ../../project-secrets/argocd-notifications-secret.yaml
   - ../../virtual-cluster-instances/api-framework-qa.yaml
-  - ../../apps/argo-cd-pr-application-set.yaml
   - ../../argocd/app-of-apps.yaml
 patches:
   - path: patch-app-of-apps-bootstrap.yaml
-  - path: patch-argo-cd-pr-application-set.yaml

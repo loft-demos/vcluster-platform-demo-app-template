@@ -123,6 +123,9 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
 
    Default behavior:
    - `--base-domain` defaults to `vcp.local`
+   - `--control-plane-nodes` defaults to `1`
+   - `--worker-nodes` defaults to `2`
+   - the control plane node is tainted `node-role.kubernetes.io/control-plane=:NoSchedule`
    - Forgejo defaults to <https://forgejo.vcp.local>
    - Forgejo admin defaults to `demo-admin` / `vcluster-demo-admin`
    - the repo is renamed locally before it is pushed into Forgejo
@@ -140,7 +143,8 @@ The local [`vcluster.yaml`](./vcluster.yaml) is tuned for this repo. It:
    - `argocd`
    - `vcluster-platform`
    - `crossplane-system`
-8. Apply the Argo CD bootstrap application for this repo.
+8. Verify that the comprehensive bootstrap applied the Argo CD root application:
+   - [`vcluster-gitops/overlays/local-contained/root-application.yaml`](../vcluster-gitops/overlays/local-contained/root-application.yaml)
 9. Enable additional use cases only after the base secret contract is working.
 
 ### Teardown
@@ -221,6 +225,14 @@ If you create `vind` with:
 
 ```bash
 LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh
+```
+
+The default cluster shape is `1` control plane node and `2` worker nodes. You
+can override the worker count, for example:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/install-vind.sh \
+  --worker-nodes 3
 ```
 
 OrbStack will usually expose the control plane container at a domain like:
@@ -420,7 +432,8 @@ chart is rendered with the same host:
 ```bash
 bash vind-demo-cluster/install-vind.sh \
   --license-token "$TOKEN" \
-  --vcp-host team-a.vcp.local
+  --vcp-host team-a.vcp.local \
+  --worker-nodes 3
 ```
 
 That `--vcp-host` value is written into `config.loftHost` for the chart and

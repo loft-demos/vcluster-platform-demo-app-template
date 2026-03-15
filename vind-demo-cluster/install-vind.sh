@@ -16,13 +16,18 @@ Usage:
   bash vind-demo-cluster/install-vind.sh \
     --license-token "$TOKEN" \
     --vcp-version 4.7.1 \
-    --vcp-host vcp.local
+    --vcp-host vcp.local \
+    --worker-nodes 2
 
 Options:
   --cluster-name NAME    Optional. Defaults to vcp.
   --values-file PATH     Optional. Defaults to vind-demo-cluster/vcluster.yaml.
   --license-token TOKEN  Required unless LICENSE_TOKEN is already exported.
   --vcp-version VERSION  Optional. Defaults to 4.7.1.
+  --control-plane-nodes COUNT
+                         Optional. Defaults to 1. This vind config currently
+                         supports exactly one control plane node.
+  --worker-nodes COUNT   Optional. Defaults to 2.
   --vcp-host HOST        Optional. Defaults to vcp.local.
   --argocd-host HOST     Optional. Defaults to argocd.<vcp-host>.
   --forgejo-host HOST    Optional. Defaults to forgejo.<vcp-host>.
@@ -51,6 +56,8 @@ CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
 VCP_VERSION="${VCP_VERSION:-4.7.1}"
+CONTROL_PLANE_NODE_COUNT="${CONTROL_PLANE_NODE_COUNT:-1}"
+WORKER_NODE_COUNT="${WORKER_NODE_COUNT:-2}"
 VCP_HOST="${VCP_HOST:-vcp.local}"
 ARGOCD_HOST=""
 FORGEJO_HOST=""
@@ -75,6 +82,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --vcp-version)
       VCP_VERSION="${2:-}"
+      shift 2
+      ;;
+    --control-plane-nodes)
+      CONTROL_PLANE_NODE_COUNT="${2:-}"
+      shift 2
+      ;;
+    --worker-nodes)
+      WORKER_NODE_COUNT="${2:-}"
       shift 2
       ;;
     --vcp-host)
@@ -127,6 +142,16 @@ if [[ -z "$LICENSE_TOKEN" ]]; then
   exit 1
 fi
 
+if [[ ! "$CONTROL_PLANE_NODE_COUNT" =~ ^[0-9]+$ || "$CONTROL_PLANE_NODE_COUNT" -ne 1 ]]; then
+  echo "[ERROR] --control-plane-nodes must be 1 for this vind configuration." >&2
+  exit 1
+fi
+
+if [[ ! "$WORKER_NODE_COUNT" =~ ^[0-9]+$ ]]; then
+  echo "[ERROR] --worker-nodes must be a non-negative integer." >&2
+  exit 1
+fi
+
 if [[ -z "$ARGOCD_HOST" ]]; then
   ARGOCD_HOST="argocd.${VCP_HOST}"
 fi
@@ -143,6 +168,16 @@ if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
   fi
 fi
 
+worker_nodes_yaml="      []"
+if [[ "$WORKER_NODE_COUNT" -gt 0 ]]; then
+  worker_nodes_yaml=""
+  for worker_index in $(seq 1 "$WORKER_NODE_COUNT"); do
+    worker_nodes_yaml="${worker_nodes_yaml}      - name: worker-${worker_index}
+"
+  done
+  worker_nodes_yaml="${worker_nodes_yaml%$'\n'}"
+fi
+
 rendered_values="$(mktemp "${TMPDIR:-/tmp}/vind-values.XXXXXX")"
 cleanup() {
   rm -f "$rendered_values"
@@ -152,6 +187,7 @@ trap cleanup EXIT
 cp "$VALUES_FILE" "$rendered_values"
 
 export LICENSE_TOKEN VCP_VERSION VCP_HOST FORGEJO_HOST FORGEJO_ADMIN_USER FORGEJO_ADMIN_PASSWORD
+export VIND_DOCKER_NODES="$worker_nodes_yaml"
 perl -0pi -e '
   s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
@@ -159,17 +195,33 @@ perl -0pi -e '
   s/__FORGEJO_HOST__/$ENV{FORGEJO_HOST}/g;
   s/__FORGEJO_ADMIN_USER__/$ENV{FORGEJO_ADMIN_USER}/g;
   s/__FORGEJO_ADMIN_PASSWORD__/$ENV{FORGEJO_ADMIN_PASSWORD}/g;
+  s/__VIND_DOCKER_NODES__/$ENV{VIND_DOCKER_NODES}/g;
 ' "$rendered_values"
 
 echo "[INFO] Creating or upgrading vind cluster '$CLUSTER_NAME'"
 echo "[INFO] Values file template: $VALUES_FILE"
 echo "[INFO] Rendered values file: $rendered_values"
 echo "[INFO] vCluster Platform version: $VCP_VERSION"
+echo "[INFO] Control plane nodes: $CONTROL_PLANE_NODE_COUNT"
+echo "[INFO] Worker nodes: $WORKER_NODE_COUNT"
 echo "[INFO] vCluster Platform host: $VCP_HOST"
 echo "[INFO] Forgejo host: $FORGEJO_HOST"
 echo "[INFO] Forgejo admin user: $FORGEJO_ADMIN_USER"
 
 vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
+
+echo "[INFO] Applying a NoSchedule taint to the control plane node"
+if kubectl wait --for=condition=Ready nodes --all --timeout=180s >/dev/null 2>&1; then
+  if kubectl get node "vcluster.cp.${CLUSTER_NAME}" >/dev/null 2>&1; then
+    kubectl taint nodes "vcluster.cp.${CLUSTER_NAME}" \
+      node-role.kubernetes.io/control-plane=:NoSchedule \
+      --overwrite >/dev/null
+  else
+    echo "[WARN] Could not find control plane node 'vcluster.cp.${CLUSTER_NAME}' to taint." >&2
+  fi
+else
+  echo "[WARN] Timed out waiting for nodes to become ready before tainting the control plane node." >&2
+fi
 
 if [[ "$SKIP_ORBSTACK_DOMAINS" != "true" ]]; then
   if ! bash vind-demo-cluster/start-orbstack-domains.sh \
