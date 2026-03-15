@@ -36,6 +36,7 @@ Options:
   --forgejo-admin-password VALUE
                          Optional. Defaults to FORGEJO_ADMIN_PASSWORD or
                          vcluster-demo-admin.
+  --sleep-time-zone TZ   Optional. Defaults to America/New_York.
   --orbstack-env-file PATH
                          Optional. Defaults to orbstack-domains/.env.<cluster-name>.
   --skip-orbstack-domains
@@ -64,6 +65,7 @@ ARGOCD_HOST=""
 FORGEJO_HOST=""
 FORGEJO_ADMIN_USER="${FORGEJO_ADMIN_USER:-demo-admin}"
 FORGEJO_ADMIN_PASSWORD="${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-admin}"
+SLEEP_TIME_ZONE="${SLEEP_TIME_ZONE:-America/New_York}"
 ORBSTACK_ENV_FILE=""
 SKIP_ORBSTACK_DOMAINS="false"
 SKIP_SUMMARY="false"
@@ -112,6 +114,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --forgejo-admin-password)
       FORGEJO_ADMIN_PASSWORD="${2:-}"
+      shift 2
+      ;;
+    --sleep-time-zone)
+      SLEEP_TIME_ZONE="${2:-}"
       shift 2
       ;;
     --orbstack-env-file)
@@ -223,8 +229,25 @@ echo "[INFO] Worker nodes: $WORKER_NODE_COUNT"
 echo "[INFO] vCluster Platform host: $VCP_HOST"
 echo "[INFO] Forgejo host: $FORGEJO_HOST"
 echo "[INFO] Forgejo admin user: $FORGEJO_ADMIN_USER"
+echo "[INFO] Sleep time zone: $SLEEP_TIME_ZONE"
 
 vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
+
+echo "[INFO] Annotating cluster/loft-cluster"
+for _ in $(seq 1 60); do
+  if kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
+    kubectl annotate --overwrite clusters.management.loft.sh loft-cluster \
+      "domainPrefix=${vcp_domain_prefix}" \
+      "domain=${vcp_domain}" \
+      "sleepTimeZone=${SLEEP_TIME_ZONE}" >/dev/null
+    break
+  fi
+  sleep 2
+done
+
+if ! kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
+  echo "[WARN] Could not find cluster/loft-cluster to annotate yet." >&2
+fi
 
 echo "[INFO] Applying a NoSchedule taint to the control plane node"
 if kubectl wait --for=condition=Ready nodes --all --timeout=180s >/dev/null 2>&1; then

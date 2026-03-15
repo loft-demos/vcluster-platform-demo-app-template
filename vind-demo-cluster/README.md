@@ -31,6 +31,7 @@ What the bootstrap does:
 
 - creates or upgrades the `vind` cluster
 - installs vCluster Platform, Argo CD, ESO, and Forgejo
+- annotates `clusters.management.loft.sh/loft-cluster` with `domainPrefix`, `domain`, and `sleepTimeZone`
 - runs local placeholder replacement
 - pushes the repo into Forgejo
 - creates the Argo CD Forgejo secrets
@@ -93,6 +94,26 @@ hostnames to the `vind` service upstreams.
 If you want a public fallback instead, use:
 
 - [cloudflare-tunnel.yaml](./cloudflare-tunnel.yaml)
+
+## Cluster Annotations
+
+Some Platform-side apps in this repo read host and timezone values from the
+vCP `Cluster` resource, not from Argo CD.
+
+The bootstrap annotates `clusters.management.loft.sh/loft-cluster` with:
+
+- `domainPrefix`
+- `domain`
+- `sleepTimeZone`
+
+For the default `vcp.local` setup, that becomes:
+
+- `domainPrefix=vcp`
+- `domain=local`
+- `sleepTimeZone=America/New_York`
+
+That is what keeps things like Helm Dashboard ingress hosts rendering as
+`<name>.vcp.local` instead of an empty suffix.
 
 ## Secrets
 
