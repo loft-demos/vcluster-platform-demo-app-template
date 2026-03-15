@@ -33,6 +33,7 @@ Optional OrbStack local domain overrides:
   --forgejo-host forgejo.team-a.vcp.local
   --vcp-version 4.7.1
   --worker-nodes 2
+  --sleep-time-zone America/New_York
   --vcp-upstream vcluster.lb.team-a.loft.vcluster-platform:443
   --argocd-upstream vcluster.lb.team-a.argocd-server.argocd:443
   --forgejo-upstream vcluster.lb.team-a.forgejo-http.forgejo:3000
@@ -71,6 +72,7 @@ LICENSE_TOKEN="${LICENSE_TOKEN:-}"
 VCP_VERSION="${VCP_VERSION:-4.7.1}"
 CONTROL_PLANE_NODE_COUNT="${CONTROL_PLANE_NODE_COUNT:-1}"
 WORKER_NODE_COUNT="${WORKER_NODE_COUNT:-2}"
+SLEEP_TIME_ZONE="${SLEEP_TIME_ZONE:-America/New_York}"
 FORGEJO_URL=""
 FORGEJO_USERNAME="${FORGEJO_ADMIN_USER:-demo-admin}"
 FORGEJO_TOKEN="${FORGEJO_TOKEN:-}"
@@ -122,6 +124,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --worker-nodes)
       WORKER_NODE_COUNT="${2:-}"
+      shift 2
+      ;;
+    --sleep-time-zone)
+      SLEEP_TIME_ZONE="${2:-}"
       shift 2
       ;;
     --vcp-host)
@@ -293,6 +299,7 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --vcp-version "$VCP_VERSION" \
     --control-plane-nodes "$CONTROL_PLANE_NODE_COUNT" \
     --worker-nodes "$WORKER_NODE_COUNT" \
+    --sleep-time-zone "$SLEEP_TIME_ZONE" \
     --vcp-host "$VCP_HOST" \
     --argocd-host "$ARGOCD_HOST" \
     --forgejo-host "$FORGEJO_HOST" \
