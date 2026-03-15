@@ -212,12 +212,26 @@ vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "
 
 echo "[INFO] Applying a NoSchedule taint to the control plane node"
 if kubectl wait --for=condition=Ready nodes --all --timeout=180s >/dev/null 2>&1; then
-  if kubectl get node "vcluster.cp.${CLUSTER_NAME}" >/dev/null 2>&1; then
-    kubectl taint nodes "vcluster.cp.${CLUSTER_NAME}" \
+  control_plane_node="$(
+    kubectl get nodes -l node-role.kubernetes.io/control-plane \
+      -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true
+  )"
+  if [[ -z "$control_plane_node" ]]; then
+    control_plane_node="$(
+      kubectl get nodes -l node-role.kubernetes.io/master \
+        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true
+    )"
+  fi
+  if [[ -z "$control_plane_node" ]] && kubectl get node "$CLUSTER_NAME" >/dev/null 2>&1; then
+    control_plane_node="$CLUSTER_NAME"
+  fi
+
+  if [[ -n "$control_plane_node" ]]; then
+    kubectl taint nodes "$control_plane_node" \
       node-role.kubernetes.io/control-plane=:NoSchedule \
       --overwrite >/dev/null
   else
-    echo "[WARN] Could not find control plane node 'vcluster.cp.${CLUSTER_NAME}' to taint." >&2
+    echo "[WARN] Could not find a control plane node to taint." >&2
   fi
 else
   echo "[WARN] Timed out waiting for nodes to become ready before tainting the control plane node." >&2

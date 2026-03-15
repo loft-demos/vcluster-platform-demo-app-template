@@ -97,6 +97,7 @@ __VIND_DOCKER_NODES__
             configs:
               cm:
                 application.resourceTrackingMethod: annotation
+                kustomize.buildOptions: --load-restrictor LoadRestrictionsNone
               params:
                 server.insecure: true
             server:
