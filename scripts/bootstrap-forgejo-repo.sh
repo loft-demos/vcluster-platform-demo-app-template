@@ -8,6 +8,7 @@ Bootstrap the current git repository into a Forgejo or Gitea-compatible remote.
 This script:
 1. creates the target repo through the Forgejo API if it does not exist
 2. pushes the current local branches and tags to the target repo
+3. optionally pushes the current working tree as a snapshot of the default branch
 
 Requirements:
 - git
@@ -29,15 +30,17 @@ Options:
   --token VALUE            Forgejo personal access token. Defaults to FORGEJO_TOKEN
   --password VALUE         Forgejo password for basic auth. Defaults to FORGEJO_PASSWORD
   --owner NAME             Forgejo user or org that will own the repo
-  --owner-type TYPE        user or org. Default: org
+  --owner-type TYPE        user or org. Default: infer from owner vs username.
   --repo NAME              Target repo name
   --default-branch NAME    Branch to set as default. Auto-detected if omitted
   --visibility VALUE       private or public. Default: private
   --description TEXT       Optional repo description
+  --include-working-tree   Also push the current working tree to the default
+                           branch without changing local git history.
   --help                   Show this message
 
 Notes:
-- The script pushes committed git history. Uncommitted local changes are not included.
+- Without --include-working-tree, the script pushes committed git history only.
 - For org repos, the token user must have permission to create repos in the org.
 EOF
 }
@@ -104,6 +107,38 @@ repo_exists() {
   [[ "$status" == "200" ]]
 }
 
+org_exists() {
+  local status
+  if [[ -n "$TOKEN" ]]; then
+    status="$(curl -sS -o /dev/null -w '%{http_code}' \
+      -H "Authorization: token $TOKEN" \
+      "$API_BASE/orgs/$OWNER")"
+  else
+    status="$(curl -sS -o /dev/null -w '%{http_code}' \
+      -u "$USERNAME:$PASSWORD" \
+      "$API_BASE/orgs/$OWNER")"
+  fi
+  [[ "$status" == "200" ]]
+}
+
+create_org() {
+  local payload
+  payload="$(jq -cn \
+    --arg username "$OWNER" \
+    --arg full_name "$OWNER" \
+    --arg description "Bootstrap organization for $OWNER" \
+    --arg visibility "private" \
+    '{
+      username: $username,
+      full_name: $full_name,
+      description: $description,
+      visibility: $visibility
+    }')"
+
+  echo "[INFO] Creating org $OWNER"
+  api_request POST "$API_BASE/orgs" "$payload" >/dev/null
+}
+
 create_repo() {
   local endpoint payload private_flag
   if [[ "$VISIBILITY" == "private" ]]; then
@@ -156,16 +191,58 @@ push_refs() {
     push "$REPO_URL" --tags
 }
 
+push_working_tree_snapshot() {
+  local auth_secret auth_header repo_root current_branch temp_dir temp_repo
+
+  if [[ -n "$TOKEN" ]]; then
+    auth_secret="$TOKEN"
+  else
+    auth_secret="$PASSWORD"
+  fi
+  auth_header="$(printf '%s' "$USERNAME:$auth_secret" | base64)"
+
+  repo_root="$(git rev-parse --show-toplevel)"
+  current_branch="$(git branch --show-current 2>/dev/null || true)"
+  if [[ -z "$current_branch" ]]; then
+    current_branch="$DEFAULT_BRANCH"
+  fi
+
+  temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/forgejo-bootstrap.XXXXXX")"
+  temp_repo="$temp_dir/repo"
+
+  cleanup_snapshot() {
+    rm -rf "$temp_dir"
+  }
+  trap cleanup_snapshot RETURN
+
+  git clone --quiet --no-hardlinks "$repo_root" "$temp_repo"
+
+  (
+    cd "$temp_repo"
+    git checkout -B "$current_branch" >/dev/null 2>&1
+    rsync -a --delete --exclude '.git' "$repo_root"/ "$temp_repo"/
+    git add -A
+    if ! git diff --cached --quiet; then
+      git config user.name "Codex Bootstrap"
+      git config user.email "codex-bootstrap@local.invalid"
+      git commit -m "Bootstrap working tree snapshot" >/dev/null
+    fi
+    git -c "http.extraHeader=Authorization: Basic $auth_header" \
+      push --force-with-lease "$REPO_URL" "HEAD:refs/heads/$current_branch"
+  )
+}
+
 FORGEJO_URL=""
 USERNAME=""
 TOKEN="${FORGEJO_TOKEN:-}"
 PASSWORD="${FORGEJO_PASSWORD:-}"
 OWNER=""
-OWNER_TYPE="org"
+OWNER_TYPE=""
 REPO=""
 DEFAULT_BRANCH=""
 VISIBILITY="private"
 DESCRIPTION="Bootstrap copy of vcluster-platform-demo-app-template"
+INCLUDE_WORKING_TREE="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -209,6 +286,10 @@ while [[ $# -gt 0 ]]; do
       DESCRIPTION="${2:-}"
       shift 2
       ;;
+    --include-working-tree)
+      INCLUDE_WORKING_TREE="true"
+      shift
+      ;;
     --help|-h)
       usage
       exit 0
@@ -224,6 +305,7 @@ done
 require_cmd git
 require_cmd curl
 require_cmd jq
+require_cmd rsync
 
 if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
   echo "[ERROR] Run this script from inside a git repository." >&2
@@ -241,7 +323,7 @@ if [[ -z "$TOKEN" && -z "$PASSWORD" ]]; then
   exit 1
 fi
 
-if [[ "$OWNER_TYPE" != "org" && "$OWNER_TYPE" != "user" ]]; then
+if [[ -n "$OWNER_TYPE" && "$OWNER_TYPE" != "org" && "$OWNER_TYPE" != "user" ]]; then
   echo "[ERROR] --owner-type must be 'org' or 'user'." >&2
   exit 1
 fi
@@ -259,9 +341,26 @@ FORGEJO_URL="${FORGEJO_URL%/}"
 API_BASE="$FORGEJO_URL/api/v1"
 REPO_URL="$FORGEJO_URL/$OWNER/$REPO.git"
 
+if [[ -z "$OWNER_TYPE" ]]; then
+  if [[ "$OWNER" == "$USERNAME" ]]; then
+    OWNER_TYPE="user"
+  else
+    OWNER_TYPE="org"
+  fi
+fi
+
 echo "[INFO] Forgejo URL: $FORGEJO_URL"
 echo "[INFO] Target repo: $OWNER/$REPO"
+echo "[INFO] Owner type: $OWNER_TYPE"
 echo "[INFO] Default branch: $DEFAULT_BRANCH"
+
+if [[ "$OWNER_TYPE" == "org" ]]; then
+  if org_exists; then
+    echo "[INFO] Org already exists: $OWNER"
+  else
+    create_org
+  fi
+fi
 
 if repo_exists; then
   echo "[INFO] Repo already exists: $OWNER/$REPO"
@@ -270,6 +369,11 @@ else
 fi
 
 push_refs
+
+if [[ "$INCLUDE_WORKING_TREE" == "true" ]]; then
+  echo "[INFO] Pushing working tree snapshot to $DEFAULT_BRANCH"
+  push_working_tree_snapshot
+fi
 
 echo "[INFO] Forgejo bootstrap complete."
 echo "[INFO] Suggested local-contained placeholders:"

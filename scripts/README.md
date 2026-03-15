@@ -1,143 +1,52 @@
-# vCluster Template Version & Parameter Updater
+# Scripts
 
-**The `update-templates.sh` script automates updates to Kubernetes and vCluster Helm chart versions across a set of [vCluster Platform](https://www.vcluster.com) `VirtualClusterTemplate` manifests.**
+This folder has three scripts that matter for the self-contained `vind` path.
 
-It ensures that default Kubernetes versions and chart versions stay current, and injects shared parameters like `k8sVersion` and `sleepAfter` in a consistent way.
+## `replace-text-local.sh`
 
----
+Replaces the repo placeholders locally.
 
-## Features
-
-- Fetches the latest 4 stable Kubernetes versions (no alpha, beta, or rc)
-- Updates the default Kubernetes version to second newest stable version in shared configuration
-- Retrieves the latest stable `vcluster` Helm chart version
-- Replaces or patches relevant fields in both versioned and unversioned `VirtualClusterTemplate` manifests
-- Injects consistent parameters like `k8sVersion`, `sleepAfter`, and `env`
-
----
-
-## Triggers
-
-This script is automated by a GitHub Actions workflow (`.github/workflows/update-vct.yaml`):
-
-- **Daily at 6:00 AM UTC**
-- **Manually** via the GitHub UI ("Run workflow" button)
-
----
-
-## Workflow Steps
-
-1. **Checkout** the repo
-2. **Install** required tools (`jq`, `yq`)
-3. **Generate PR branch**
-4. **Run** the update script: `bash scripts/update-templates.sh`
-5. **Check and commit** any changes
-6. **Push** the branch and optionally open a PR if there are diffs from `main`
-
----
-
-## How It Works
-
-### Kubernetes Versions
-
-- Fetches all official Kubernetes GitHub releases
-- Filters out pre-releases
-- Selects the latest 4 minor versions (e.g., `v1.33.x`, `v1.32.x`, ...)
-- Updates:
-  - The `options` list in [`patch-k8s-versions.yaml`](../vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-version.yaml) and replaces `patch-k8s-versioned.json`
-  - The default Kubernetes version (`defaultValue`)
-
-### vCluster Helm Chart Version
-
-- Downloads and parses `https://charts.loft.sh/index.yaml`
-- Selects the latest non-pre-release `vcluster` chart version
-- Updates:
-  - The `chart.version` field in:
-    - `vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-version.yaml`
-    - Any matching versioned or non-versioned template files under `vcluster-use-cases/`
-
----
-
-## Patch and Template Updates
-
-### For Non-Versioned Templates
-
-- Uses `yq` to patch `chart.version` and update shared parameters in-place
-- Target: `vcluster-gitops/virtual-cluster-templates/overlays/prod/patch-k8s-version.yaml`
-
-### For Versioned Templates
-
-- Creates a JSON patch (`patch-k8s-versioned.json`) with:
-  - Updated `chart.version`
-  - Fully replaced `parameters` list
-- Intended to be used as a Kustomize JSON6902 patch for overlays
-
-### Template Discovery
-
-- Scans for `VirtualClusterTemplate` manifests under `vcluster-use-cases/`
-- For each:
-  - Detects whether it's versioned (via `.spec.versions`)
-  - For versioned templates, only updates `version: 1.0.0`
-  - Updates the chart version inline using `sed`, preserving formatting
-
----
-
-## Requirements
-
-You need the following installed (or the GitHub Actions job will install them for you):
-
-- `bash`
-- `curl`, `sed`, `awk`, `jq`, `perl`, `find`
-- [`yq`](https://github.com/mikefarah/yq) (v4) for YAML manipulation
-- [`jq`](https://stedolan.github.io/jq/) for JSON generation
-
----
-
-## Manual Usage
-
-You can run the script locally as well:
+Default example:
 
 ```bash
-bash scripts/update-templates.sh
+bash scripts/replace-text-local.sh \
+  --repo-name vcp-gitops \
+  --org-name vcluster-demos \
+  --include-md
 ```
 
-## Forgejo Bootstrap
+Defaults:
 
-The repo also includes [`bootstrap-forgejo-repo.sh`](./bootstrap-forgejo-repo.sh)
-for the `vind` local-contained path.
+- repo: `vcp-gitops`
+- org: `vcluster-demos`
+- base domain: `vcp.local`
 
-Use it to create a repo in Forgejo and push the current local git branches and
-tags into that repo:
+## `bootstrap-forgejo-repo.sh`
+
+Creates the Forgejo repo and pushes the local repo into it.
+
+Example:
 
 ```bash
 bash scripts/bootstrap-forgejo-repo.sh \
   --forgejo-url https://forgejo.vcp.local \
   --username demo-admin \
   --password "$FORGEJO_ADMIN_PASSWORD" \
-  --owner demo-admin \
-  --owner-type user \
-  --repo vcluster-platform-demo-app-template
+  --owner vcluster-demos \
+  --owner-type org \
+  --repo vcp-gitops \
+  --include-working-tree
 ```
 
-This script pushes committed git history only. Uncommitted local changes are
-not included.
+`--include-working-tree` is what makes the local replacement output show up in
+Forgejo without committing local changes first.
 
-## Local Template Replacement
+## `update-templates.sh`
 
-The repo also includes [`replace-text-local.sh`](./replace-text-local.sh), which
-is the local equivalent of [`.github/workflows/replace-text.yaml`](../.github/workflows/replace-text.yaml).
+Updates Kubernetes and vCluster chart versions across the template manifests.
 
-Use it when you are following the self-contained `vind` path and do not want to
-depend on GitHub Actions to rename placeholders in the repo:
+Run it with:
 
 ```bash
-bash scripts/replace-text-local.sh \
-  --repo-name vcluster-platform-demo-app-template \
-  --org-name loft-demos \
-  --include-md
+bash scripts/update-templates.sh
 ```
-
-This script only updates the local working tree. It does not create or rename
-any remote GitHub or Forgejo repo.
-
-If `--base-domain` is omitted, it defaults to `VCP_HOST` or `vcp.local`.

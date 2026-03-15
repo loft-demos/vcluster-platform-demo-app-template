@@ -18,14 +18,14 @@ What it does not do yet:
 
 Usage:
   LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
-    --repo-name my-demo-app \
-    --org-name loft-demos
+    --repo-name vcp-gitops \
+    --org-name vcluster-demos
 
 Default Forgejo bootstrap:
   --forgejo-url https://forgejo.vcp.local
   --forgejo-username demo-admin
   --forgejo-password "$FORGEJO_ADMIN_PASSWORD"
-  --forgejo-owner demo-admin
+  --forgejo-owner vcluster-demos
 
 Optional OrbStack local domain overrides:
   --vcp-host team-a.vcp.local
@@ -49,8 +49,8 @@ require_cmd() {
 
 CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
-REPO_NAME=""
-ORG_NAME=""
+REPO_NAME="vcp-gitops"
+ORG_NAME="vcluster-demos"
 BASE_DOMAIN=""
 VCLUSTER_NAME=""
 INCLUDE_MD="true"
@@ -76,7 +76,7 @@ FORGEJO_USERNAME="${FORGEJO_ADMIN_USER:-demo-admin}"
 FORGEJO_TOKEN="${FORGEJO_TOKEN:-}"
 FORGEJO_PASSWORD="${FORGEJO_PASSWORD:-${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-admin}}"
 FORGEJO_OWNER="${FORGEJO_OWNER:-}"
-FORGEJO_OWNER_TYPE="user"
+FORGEJO_OWNER_TYPE="${FORGEJO_OWNER_TYPE:-}"
 GIT_BASE_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 SKIP_ARGOCD_BOOTSTRAP="false"
@@ -232,13 +232,6 @@ if [[ ! "$WORKER_NODE_COUNT" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
-if [[ "$SKIP_REPLACE" != "true" ]]; then
-  if [[ -z "$REPO_NAME" || -z "$ORG_NAME" ]]; then
-    echo "[ERROR] --repo-name and --org-name are required unless --skip-replace is used." >&2
-    exit 1
-  fi
-fi
-
 if [[ -z "$VCLUSTER_NAME" && -n "$REPO_NAME" ]]; then
   VCLUSTER_NAME="${REPO_NAME%-app}"
 fi
@@ -260,7 +253,19 @@ if [[ -z "$FORGEJO_URL" ]]; then
 fi
 
 if [[ -z "$FORGEJO_OWNER" ]]; then
-  FORGEJO_OWNER="$FORGEJO_USERNAME"
+  if [[ -n "$ORG_NAME" ]]; then
+    FORGEJO_OWNER="$ORG_NAME"
+  else
+    FORGEJO_OWNER="$FORGEJO_USERNAME"
+  fi
+fi
+
+if [[ -z "$FORGEJO_OWNER_TYPE" ]]; then
+  if [[ "$FORGEJO_OWNER" == "$FORGEJO_USERNAME" ]]; then
+    FORGEJO_OWNER_TYPE="user"
+  else
+    FORGEJO_OWNER_TYPE="org"
+  fi
 fi
 
 if [[ -z "$GIT_BASE_URL" ]]; then
@@ -334,7 +339,8 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       "${forgejo_auth_args[@]}" \
       --owner "$FORGEJO_OWNER" \
       --owner-type "$FORGEJO_OWNER_TYPE" \
-      --repo "$REPO_NAME"
+      --repo "$REPO_NAME" \
+      --include-working-tree
   else
     echo "[INFO] Skipping Forgejo bootstrap because --repo-name was not provided."
   fi
