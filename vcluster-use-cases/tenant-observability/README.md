@@ -108,6 +108,7 @@ That stack contains:
 - Grafana
 - Loki
 - Prometheus
+- kube-state-metrics
 - Promtail
 - the sample workload
 
@@ -165,6 +166,21 @@ The default dashboard includes:
 - sample uptime
 - demo identity labels from Prometheus
 - recent demo logs from Loki
+
+A second dashboard is also provisioned:
+
+- `Kubernetes Workload Overview`
+
+That dashboard uses `kube-state-metrics` scraped by Prometheus for:
+
+- running and pending pods
+- container restarts
+- available deployment replicas
+- pod phase breakdown
+
+`metrics-server` is not required for these Grafana dashboards. Prometheus needs
+exported metrics to scrape, and `kube-state-metrics` is the lightweight source
+for the standard Kubernetes object metrics used here.
 
 ## Confirm HostPath Mapper Is Working
 
