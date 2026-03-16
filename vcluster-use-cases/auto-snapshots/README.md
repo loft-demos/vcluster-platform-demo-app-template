@@ -7,8 +7,7 @@ can be pushed to either:
 - an S3 bucket
 
 This demo configures a `VirtualClusterTemplate` and example
-`VirtualClusterInstance` with snapshots configured under
-`external.platform.autoSnapshot`.
+`VirtualClusterInstance` with snapshots configured under `snapshots.auto`.
 
 ## Registry Target By Deployment Mode
 
@@ -17,24 +16,20 @@ This use case now has two render paths:
 - vCluster Platform Demo Generator / GitHub path:
   snapshots are pushed to GHCR
 - self-contained `vind` path:
-  snapshots are rendered to the Forgejo OCI registry that is installed inside
-  the local `vind` cluster
-
-The self-contained `vind` path does this so you do not need to introduce S3
-just to demonstrate snapshots locally.
+  snapshots also use GHCR for now
 
 The OCI image location therefore depends on how the repo was rendered:
 
 - generator / GitHub:
   `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
 - self-contained `vind`:
-  `oci://{REPLACE_OCI_REGISTRY_HOST}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
+  `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
 
 The corresponding credential secret also differs by render path:
 
 - the original path keeps the GHCR-style secret naming
-- the self-contained path renders the projected secret name used by the Forgejo
-  registry bootstrap
+- the self-contained path still uses the rendered projected secret name, but it
+  should contain GHCR credentials instead of Forgejo credentials
 
 ## Self-Contained vind Notes
 
@@ -42,50 +37,48 @@ In the self-contained `vind` flow:
 
 - `bootstrap-self-contained.sh` builds and pushes the demo image to the Forgejo
   container registry
-- the same bootstrap creates the default Platform `ProjectSecret` used for
-  registry auth
+- the same bootstrap can create the default Platform `ProjectSecret` used for
+  snapshot registry auth when `GHCR_USERNAME` and `GHCR_TOKEN` or
+  `GHCR_PASSWORD` are provided
 - the local-contained overlay points the auto-snapshots manifests at the
   self-contained version so Argo CD does not fight the populated registry
   secret
 
-That keeps the `vind` path self-contained while leaving the original
-demo-generator / GitHub path unchanged.
+The demo app image flow uses Forgejo. Snapshot storage stays on GHCR for the
+local `vind` path because the in-cluster snapshot client does not trust the
+local `forgejo.vcp.local` certificate.
 
 ## Schedule
 
 Snapshots are configured to run Monday through Friday at 15 minutes past the
 hour from 7 AM through 5 PM.
 
-The current snapshot config shape follows the vCluster Platform docs:
+The current snapshot config shape for `0.32+` is:
 
 ```yaml
-external:
-  platform:
-    autoSnapshot:
-      enabled: true
-      schedule: "15 7-17/3 * * 1-5"
-      timezone: America/New_York
-      retention:
-        period: 5
-        maxSnapshots: 4
-      storage:
-        type: oci
-        oci:
-          repository: oci://{REPLACE_OCI_REGISTRY_HOST}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
-          credential:
-            secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
-            secretNamespace: <vcluster-host-namespace>
+snapshots:
+  auto:
+    schedule: "15 7-17/3 * * 1-5"
+    timezone: America/New_York
+    retention:
+      period: 5
+      maxSnapshots: 4
+    storage:
+      type: oci
+      oci:
+        repository: oci://{REPLACE_SNAPSHOT_OCI_REPOSITORY}
+        credential:
+          secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
+          secretNamespace: <vcluster-host-namespace>
 ```
 
-This use case does not enable volume snapshots by default. The current docs
-show that under:
+This use case does not enable volume snapshots by default. If you need them,
+the config lives under:
 
 ```yaml
-external:
-  platform:
-    autoSnapshot:
-      volumes:
-        enabled: true
+snapshots:
+  volumes:
+    enabled: true
 ```
 
 but that requires the additional host or virtual cluster volume snapshot
@@ -99,7 +92,7 @@ Example:
 
 ```bash
 vcluster platform login https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
-vcluster restore snappy oci://{REPLACE_OCI_REGISTRY_HOST}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}:snappy-20250826111511
+vcluster restore snappy oci://{REPLACE_SNAPSHOT_OCI_REPOSITORY}:snappy-20250826111511
 ```
 
 ## Demo Flow
@@ -116,14 +109,14 @@ GitHub package UI here:
 
 - `https://github.com/orgs/{REPLACE_ORG_NAME}/packages/container/package/{REPLACE_REPO_NAME}`
 
-For the self-contained `vind` path, use the Forgejo package UI instead:
+For the self-contained `vind` path, use the GitHub package UI instead:
 
-- `https://forgejo.vcp.local/{REPLACE_ORG_NAME}/-/packages/container/{REPLACE_REPO_NAME}`
+- `https://github.com/orgs/{REPLACE_ORG_NAME}/packages/container/package/{REPLACE_REPO_NAME}`
 
 > [!IMPORTANT]
-> The self-contained `vind` path is wired to use the Forgejo OCI registry, but
-> the registry-backed snapshot flow has not been validated as thoroughly yet as
-> the Git hosting flow.
+> The self-contained `vind` path keeps snapshots on GHCR for now. A local
+> Forgejo OCI registry endpoint is not a good default here yet because the
+> in-cluster snapshot job does not trust the local OrbStack/Caddy certificate.
 
 Official docs:
 

@@ -17,7 +17,9 @@ Replacements:
 - {REPLACE_GIT_PUBLIC_URL}
 - {REPLACE_IMAGE_REPOSITORY_PREFIX}
 - {REPLACE_OCI_REGISTRY_HOST}
+- {REPLACE_SNAPSHOT_OCI_REPOSITORY}
 - {REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}
+- {REPLACE_1PASSWORD_VAULT}
 
 Usage:
   bash scripts/replace-text-local.sh \
@@ -36,8 +38,12 @@ Options:
                           Optional. Defaults to forgejo.vcp.local/<org-name>/<repo-name>.
   --oci-registry-host HOST
                           Optional. Defaults to forgejo.vcp.local.
+  --snapshot-oci-repository PATH
+                          Optional. Defaults to ghcr.io/<org-name>/<repo-name>.
   --image-pull-source-secret-name NAME
                           Optional. Defaults to <org-name>-ghcr-write.
+  --onepassword-vault NAME
+                          Optional. Defaults to <org-name>.
   --include-md            Also replace in Markdown files.
   --dry-run               Print matching files but do not modify them.
   --help                  Show this message.
@@ -60,7 +66,9 @@ GIT_BASE_URL=""
 GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 OCI_REGISTRY_HOST=""
+SNAPSHOT_OCI_REPOSITORY=""
 IMAGE_PULL_SOURCE_SECRET_NAME=""
+ONEPASSWORD_VAULT=""
 INCLUDE_MD="false"
 DRY_RUN="false"
 
@@ -98,8 +106,16 @@ while [[ $# -gt 0 ]]; do
       OCI_REGISTRY_HOST="${2:-}"
       shift 2
       ;;
+    --snapshot-oci-repository)
+      SNAPSHOT_OCI_REPOSITORY="${2:-}"
+      shift 2
+      ;;
     --image-pull-source-secret-name)
       IMAGE_PULL_SOURCE_SECRET_NAME="${2:-}"
+      shift 2
+      ;;
+    --onepassword-vault)
+      ONEPASSWORD_VAULT="${2:-}"
       shift 2
       ;;
     --include-md)
@@ -149,8 +165,16 @@ if [[ -z "$OCI_REGISTRY_HOST" ]]; then
   OCI_REGISTRY_HOST="${FORGEJO_HOST:-forgejo.vcp.local}"
 fi
 
+if [[ -z "$SNAPSHOT_OCI_REPOSITORY" ]]; then
+  SNAPSHOT_OCI_REPOSITORY="ghcr.io/${ORG_NAME}/${REPO_NAME}"
+fi
+
 if [[ -z "$IMAGE_PULL_SOURCE_SECRET_NAME" ]]; then
   IMAGE_PULL_SOURCE_SECRET_NAME="${ORG_NAME}-ghcr-write"
+fi
+
+if [[ -z "$ONEPASSWORD_VAULT" ]]; then
+  ONEPASSWORD_VAULT="${ORG_NAME}"
 fi
 
 declare -a globs
@@ -164,7 +188,7 @@ while IFS= read -r file; do
   files+=("$file")
 done < <(
   rg -l \
-    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}' \
+    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}' \
     . \
     "${globs[@]}" \
     --glob '!.git/*'
@@ -183,7 +207,9 @@ echo "[INFO] Git base URL: $GIT_BASE_URL"
 echo "[INFO] Git public URL: $GIT_PUBLIC_URL"
 echo "[INFO] Image repository prefix: $IMAGE_REPOSITORY_PREFIX"
 echo "[INFO] OCI registry host: $OCI_REGISTRY_HOST"
+echo "[INFO] Snapshot OCI repository: $SNAPSHOT_OCI_REPOSITORY"
 echo "[INFO] Image pull source secret name: $IMAGE_PULL_SOURCE_SECRET_NAME"
+echo "[INFO] 1Password vault: $ONEPASSWORD_VAULT"
 echo "[INFO] Files: ${#files[@]}"
 
 if [[ "$DRY_RUN" == "true" ]]; then
@@ -191,7 +217,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
-export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST IMAGE_PULL_SOURCE_SECRET_NAME
+export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT
 
 for file in "${files[@]}"; do
   perl -0pi -e '
@@ -203,7 +229,9 @@ for file in "${files[@]}"; do
     s/\{REPLACE_GIT_PUBLIC_URL\}/$ENV{GIT_PUBLIC_URL}/g;
     s/\{REPLACE_IMAGE_REPOSITORY_PREFIX\}/$ENV{IMAGE_REPOSITORY_PREFIX}/g;
     s/\{REPLACE_OCI_REGISTRY_HOST\}/$ENV{OCI_REGISTRY_HOST}/g;
+    s/\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}/$ENV{SNAPSHOT_OCI_REPOSITORY}/g;
     s/\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}/$ENV{IMAGE_PULL_SOURCE_SECRET_NAME}/g;
+    s/\{REPLACE_1PASSWORD_VAULT\}/$ENV{ONEPASSWORD_VAULT}/g;
   ' "$file"
 done
 

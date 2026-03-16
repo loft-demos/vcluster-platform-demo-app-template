@@ -1,0 +1,39 @@
+// Optional future collector scaffold for the tenant-observability use case.
+// Promtail remains the default PoV collector today.
+//
+// Assumption:
+// - Central HostPath Mapper is enabled in the vCluster
+// - /var/log/pods is rewritten to the vCluster-scoped symlink tree
+
+local.file_match "tenant_pod_logs" {
+  path_targets = [
+    {
+      __path__        = "/var/log/pods/*/*/*.log",
+      job             = "tenant-pod-logs",
+      tenant_vcluster = env("TENANT_VCLUSTER"),
+      tenant_project  = env("TENANT_PROJECT"),
+    },
+  ]
+}
+
+loki.source.file "tenant_pod_logs" {
+  targets    = local.file_match.tenant_pod_logs.targets
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki.tenant-observability.svc.cluster.local:3100/loki/api/v1/push"
+  }
+}
+
+prometheus.scrape "tenant_demo_app" {
+  targets = [
+    {
+      __address__     = "tenant-observability-sample.tenant-observability.svc.cluster.local:8080",
+      tenant_vcluster = env("TENANT_VCLUSTER"),
+      tenant_project  = env("TENANT_PROJECT"),
+    },
+  ]
+  forward_to = []
+}

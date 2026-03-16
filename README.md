@@ -56,6 +56,7 @@ Main repo areas:
 | `private-nodes` | Attaches dedicated external compute to a vCluster instance with Private Nodes and auto-node patterns. | [Repo](./vcluster-use-cases/private-nodes/README.md) |
 | `rancher-integration` | Rancher integration examples for deploying and wiring Rancher alongside vCluster Platform. | [Repo](./vcluster-use-cases/rancher-integration/) |
 | `resolve-dns` | Cross-vCluster DNS resolution with embedded CoreDNS and `resolveDNS` mappings. | [Repo](./vcluster-use-cases/resolve-dns/README.md), [Resolve DNS](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/networking/resolve-dns) |
+| `tenant-observability` | Tenant-scoped Grafana, Loki, Prometheus, and Promtail inside each vCluster using Central HostPath Mapper for log access. | [Repo](./vcluster-use-cases/tenant-observability/README.md), [Central HostPath Mapper](https://www.vcluster.com/docs/platform/maintenance/monitoring/central-hostpath-mapper) |
 | `virtual-scheduler` | Enables the Kubernetes scheduler, or other schedulers, inside a vCluster. | [Repo](./vcluster-use-cases/virtual-scheduler/README.md), [Sync nodes from host](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/sync/from-host/nodes) |
 | `vnode-with-vcluster` | Uses vNode with vCluster for stronger workload isolation and breakout demos. | [Repo](./vcluster-use-cases/vnode-with-vcluster/README.md), [vNode docs](https://www.vnode.com/docs) |
 
@@ -86,6 +87,19 @@ Disable a use case:
 kubectl -n argocd label secret cluster-local postgres=false --overwrite
 ```
 
+Enable a few more use cases with the exact label keys:
+
+```bash
+kubectl -n argocd label secret cluster-local \
+  argoCdInVcluster=true \
+  connectedHostCluster=true \
+  namespaceSync=true \
+  resolveDNS=true \
+  tenantObservability=true \
+  virtualScheduler=true \
+  --overwrite
+```
+
 Typical flow:
 
 1. connect `kubectl` to the demo environment management cluster
@@ -108,6 +122,7 @@ The label keys currently used by the repo are:
 | `postgres` | `postgres` |
 | `rancher` | `rancher` |
 | `resolve-dns` | `resolveDNS` |
+| `tenant-observability` | `tenantObservability` |
 | `virtual-scheduler` | `virtualScheduler` |
 | `vnode` | `vnode` |
 

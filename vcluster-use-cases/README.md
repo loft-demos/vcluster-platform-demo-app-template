@@ -12,6 +12,7 @@
 - Private Nodes (requires some manual setup)
 - Rancher Integration with the vCluster Rancher Operator
 - Resolve DNS for vCluster
+- Tenant Observability with Grafana, Loki, Prometheus, and Promtail
 - vCluster Platform Database Connector
 - Virtual Scheduler for vCluster
 - vNode for vCluster

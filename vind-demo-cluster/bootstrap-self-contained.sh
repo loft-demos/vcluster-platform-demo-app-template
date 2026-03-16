@@ -35,6 +35,7 @@ Optional OrbStack local domain overrides:
   --vcp-host team-a.vcp.local
   --argocd-host argocd.team-a.vcp.local
   --forgejo-host forgejo.team-a.vcp.local
+  --onepassword-vault team-a
   --vcp-version 4.7.1
   --worker-nodes 2
   --use-cases eso,auto-snapshots
@@ -57,6 +58,8 @@ ProjectSecret defaults:
   --image-pull-project-namespace p-default
   --image-pull-project-secret-name vcluster-demos-ghcr-write-pat
   --image-pull-source-secret-name vcluster-demos-ghcr-write
+  --snapshot-registry-username <ghcr-user>
+  --snapshot-registry-token <ghcr-token>
 
 Use case selection:
   --use-cases default
@@ -218,6 +221,10 @@ SKIP_ARGOCD_BOOTSTRAP="false"
 IMAGE_PULL_PROJECT_NAMESPACE="p-default"
 IMAGE_PULL_PROJECT_SECRET_NAME=""
 IMAGE_PULL_SOURCE_SECRET_NAME=""
+ONEPASSWORD_VAULT=""
+SNAPSHOT_REGISTRY_USERNAME="${SNAPSHOT_REGISTRY_USERNAME:-${GHCR_USERNAME:-}}"
+SNAPSHOT_REGISTRY_TOKEN="${SNAPSHOT_REGISTRY_TOKEN:-${GHCR_TOKEN:-}}"
+SNAPSHOT_REGISTRY_PASSWORD="${SNAPSHOT_REGISTRY_PASSWORD:-${GHCR_PASSWORD:-}}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -275,6 +282,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --forgejo-host)
       FORGEJO_HOST="${2:-}"
+      shift 2
+      ;;
+    --onepassword-vault)
+      ONEPASSWORD_VAULT="${2:-}"
       shift 2
       ;;
     --vcp-upstream)
@@ -351,6 +362,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --image-pull-source-secret-name)
       IMAGE_PULL_SOURCE_SECRET_NAME="${2:-}"
+      shift 2
+      ;;
+    --snapshot-registry-username)
+      SNAPSHOT_REGISTRY_USERNAME="${2:-}"
+      shift 2
+      ;;
+    --snapshot-registry-token)
+      SNAPSHOT_REGISTRY_TOKEN="${2:-}"
+      shift 2
+      ;;
+    --snapshot-registry-password)
+      SNAPSHOT_REGISTRY_PASSWORD="${2:-}"
       shift 2
       ;;
     --skip-image-build)
@@ -466,6 +489,10 @@ if [[ -z "$IMAGE_PULL_SOURCE_SECRET_NAME" ]]; then
   IMAGE_PULL_SOURCE_SECRET_NAME="${ORG_NAME}-ghcr-write"
 fi
 
+if [[ -z "$ONEPASSWORD_VAULT" ]]; then
+  ONEPASSWORD_VAULT="$ORG_NAME"
+fi
+
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 
 vcp_domain_prefix="${VCP_HOST%%.*}"
@@ -544,6 +571,7 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
     --oci-registry-host "$FORGEJO_HOST" \
     --image-pull-source-secret-name "$IMAGE_PULL_SOURCE_SECRET_NAME" \
+    --onepassword-vault "$ONEPASSWORD_VAULT" \
     --include-md
 fi
 
@@ -712,15 +740,9 @@ if command -v kubectl >/dev/null 2>&1; then
 
   step "Create the default Platform ProjectSecret for registry auth"
   require_cmd base64
-  project_secret_password="${FORGEJO_TOKEN:-}"
-  if [[ -z "$project_secret_password" && -n "${argocd_token:-}" ]]; then
-    project_secret_password="$argocd_token"
-  fi
-  if [[ -z "$project_secret_password" ]]; then
-    project_secret_password="$FORGEJO_PASSWORD"
-  fi
+  project_secret_password="${SNAPSHOT_REGISTRY_TOKEN:-$SNAPSHOT_REGISTRY_PASSWORD}"
 
-  if [[ -n "$project_secret_password" ]]; then
+  if [[ -n "$SNAPSHOT_REGISTRY_USERNAME" && -n "$project_secret_password" ]]; then
     for _ in $(seq 1 60); do
       if kubectl get namespace "$IMAGE_PULL_PROJECT_NAMESPACE" >/dev/null 2>&1; then
         break
@@ -729,7 +751,7 @@ if command -v kubectl >/dev/null 2>&1; then
     done
 
     if kubectl get namespace "$IMAGE_PULL_PROJECT_NAMESPACE" >/dev/null 2>&1; then
-      project_secret_username_b64="$(printf '%s' "$FORGEJO_USERNAME" | base64 | tr -d '\n')"
+      project_secret_username_b64="$(printf '%s' "$SNAPSHOT_REGISTRY_USERNAME" | base64 | tr -d '\n')"
       project_secret_password_b64="$(printf '%s' "$project_secret_password" | base64 | tr -d '\n')"
       cat <<EOF | kubectl apply -f -
 apiVersion: management.loft.sh/v1
@@ -750,6 +772,8 @@ EOF
     else
       echo "[WARN] Could not find namespace ${IMAGE_PULL_PROJECT_NAMESPACE} to create ${IMAGE_PULL_SOURCE_SECRET_NAME}." >&2
     fi
+  else
+    echo "[WARN] Skipping ${IMAGE_PULL_SOURCE_SECRET_NAME} ProjectSecret creation because snapshot registry credentials were not provided." >&2
   fi
 fi
 
@@ -781,6 +805,7 @@ Recommended next steps:
 3. Configure 1Password + ESO:
    - vind-demo-cluster/eso-cluster-store.yaml
    - vind-demo-cluster/bootstrap-external-secrets.yaml
+   - 1Password vault: ${ONEPASSWORD_VAULT}
 4. Confirm Argo CD and vCluster Platform are healthy:
    - kubectl -n argocd get pods
    - kubectl -n vcluster-platform get pods

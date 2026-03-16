@@ -38,7 +38,7 @@ What the bootstrap does:
 - builds and pushes the `src/` demo image to the Forgejo container registry
 - creates the Argo CD Forgejo secrets
 - updates the Argo CD `cluster-local` secret that controls which use-case appsets are selected
-- creates a default vCP `ProjectSecret` for registry auth in `p-default`
+- optionally creates a default vCP `ProjectSecret` for snapshot registry auth in `p-default`
 - applies the root Argo CD `Application`
 - starts the OrbStack domain adapter
 - adds vCluster Platform navbar links for the Forgejo GitOps repo and, when
@@ -50,8 +50,8 @@ The root Argo CD app is:
 
 ## Forgejo Instead of GitHub
 
-The self-contained `vind` path uses Forgejo as the local replacement for both
-GitHub and most of the GHCR-dependent flow.
+The self-contained `vind` path uses Forgejo as the local replacement for GitHub
+and for the demo app image flow.
 
 In practice that means:
 
@@ -61,8 +61,8 @@ In practice that means:
 - the demo app image from `src/` is built and pushed to the Forgejo container
   registry as `<repo>-demo-app`, under the repo-scoped prefix
   `forgejo.vcp.local/<org>/<repo>/<repo>-demo-app`
-- the bootstrap creates a default Platform `ProjectSecret` with Forgejo
-  registry credentials for image pulls
+- the bootstrap can also create a default Platform `ProjectSecret` for snapshot
+  registry auth when GHCR credentials are provided
 - the vCluster Platform UI includes a `Forgejo Repo` button that points at the
   rendered GitOps repo
 
@@ -71,14 +71,14 @@ Current intent for the self-contained path:
 - PR examples should eventually build and pull images from the Forgejo registry
   instead of GHCR
 - [vcluster-use-cases/auto-snapshots](../vcluster-use-cases/auto-snapshots)
-  now renders to the Forgejo OCI registry in the self-contained path instead of
-  GHCR, so it does not require S3 just for the local demo setup
+  still uses GHCR for snapshots in the self-contained path, because the local
+  `forgejo.vcp.local` certificate is not trusted by the in-cluster snapshot job
 
 > [!IMPORTANT]
 > The Git hosting flow is the primary path and is the part that has been worked
-> through the most. The Forgejo container registry path is wired into the
-> bootstrap, including the self-contained auto-snapshots manifests, but it has
-> not been validated as thoroughly yet as the Git side.
+> through the most. Forgejo is the default Git host for `vind`, but snapshots
+> currently stay on GHCR until there is a trusted local registry endpoint for
+> the in-cluster snapshot client.
 
 When `flux` is enabled in `--use-cases`, the vCluster Platform UI also gets a
 `Flux UI` button that points at the shared Flux Operator web UI host for this
@@ -178,6 +178,22 @@ LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --image-pull-project-namespace p-demos
 ```
 
+Create the snapshot registry `ProjectSecret` during bootstrap:
+
+```bash
+LICENSE_TOKEN="$TOKEN" \
+GHCR_USERNAME="$GHCR_USERNAME" \
+GHCR_TOKEN="$GHCR_TOKEN" \
+bash vind-demo-cluster/bootstrap-self-contained.sh
+```
+
+Use a different 1Password vault for the ESO store:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --onepassword-vault team-a
+```
+
 ## Local Access
 
 Default local hostnames:
@@ -256,6 +272,7 @@ Available use cases for the `vind` bootstrap:
 - `postgres`
 - `rancher`
 - `resolve-dns`
+- `tenant-observability`
 - `virtual-scheduler`
 - `vnode`
 
@@ -280,12 +297,20 @@ After the cluster is up, continue with:
 3. apply [bootstrap-external-secrets.yaml](./bootstrap-external-secrets.yaml)
 4. verify the initial secrets in `argocd`, `vcluster-platform`, and `crossplane-system`
 
+The default 1Password vault placeholder for this path is:
+
+- `vcluster-demos`
+
+Override it during bootstrap with:
+
+- `--onepassword-vault`
+
 The full secret contract is here:
 
 - [docs/secret-contract.md](../docs/secret-contract.md)
 
-The self-contained bootstrap also creates a default Platform `ProjectSecret`
-for the Forgejo registry:
+The self-contained bootstrap can also create a default Platform `ProjectSecret`
+for snapshot registry auth:
 
 - name: `vcluster-demos-ghcr-write`
 - namespace: `p-default`
@@ -294,6 +319,13 @@ for the Forgejo registry:
 - data keys:
   - `username`
   - `password`
+
+That secret is only created when snapshot registry credentials are provided,
+for example with:
+
+- `GHCR_USERNAME`
+- `GHCR_TOKEN`
+- `GHCR_PASSWORD`
 
 Override that with:
 
