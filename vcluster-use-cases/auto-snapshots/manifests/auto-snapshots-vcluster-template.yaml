@@ -16,8 +16,33 @@ spec:
     pro: {}
     helmRelease:
       chart:
-        version: 0.27.0
-      values: |-
+        version: 0.32.1
+      values: |+
+        external:
+          platform:
+            autoSnapshot:
+              enabled: true
+              schedule: "15 7-17/3 * * 1-5"
+              retention:
+                period: 5
+                maxSnapshots: 4
+              timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
+              storage:
+                type: oci
+                oci:
+                  credential:
+                    secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
+                    secretNamespace: {{ .Values.loft.virtualClusterNamespace }}
+                  repository: oci://{REPLACE_OCI_REGISTRY_HOST}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+        sleep:
+          auto:
+            afterInactivity: 35m
+            timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
+            wakeup:
+              schedule: 11 7-17 * * 1-5
+        deletion:
+          auto:
+            afterInactivity: 500h
         sync:
           toHost:
             ingresses:

@@ -27,7 +27,7 @@ env:
   OCI_REGISTRY_HOST: ghcr.io
   IMAGE_PULL_SOURCE_SECRET_NAME: ${{ github.repository_owner || 'loft-demos' }}-ghcr-write-pat
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository_owner || 'loft-demos' }}/${{ github.event.repository.name }}-demo-app
 
 jobs:
   replace-text:
@@ -72,7 +72,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.KM_PAT_DELETE_PACKAGES }}
         run: |
-          PACKAGE_NAME=${{ github.event.repository.name }}
+          PACKAGE_NAME=${{ github.event.repository.name }}-demo-app
 
           echo "[INFO] Attempting to delete package: $PACKAGE_NAME"
 

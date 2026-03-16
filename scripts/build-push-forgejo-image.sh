@@ -15,15 +15,16 @@ Default behavior:
 Usage:
   bash scripts/build-push-forgejo-image.sh \
     --registry forgejo.vcp.local \
-    --image-repository-prefix forgejo.vcp.local/vcluster-demos \
+    --image-repository-prefix forgejo.vcp.local/vcluster-demos/vcp-gitops \
     --repo-name vcp-gitops \
     --username demo-admin \
     --password "$FORGEJO_ADMIN_PASSWORD"
 
 Options:
   --registry HOST                 Registry host, for example forgejo.vcp.local
-  --image-repository-prefix PATH  Registry org/user path, for example forgejo.vcp.local/vcluster-demos
-  --repo-name NAME                Image name suffix. Default: current repo name
+  --image-repository-prefix PATH  Registry path prefix, for example forgejo.vcp.local/vcluster-demos/vcp-gitops
+  --repo-name NAME                Repo name used to derive the image name. Default: current repo name
+  --image-name NAME               Final image name. Default: <repo-name>-demo-app
   --username NAME                 Registry username
   --token VALUE                   Registry token. Defaults to FORGEJO_TOKEN
   --password VALUE                Registry password. Defaults to FORGEJO_PASSWORD
@@ -48,6 +49,7 @@ require_cmd() {
 REGISTRY=""
 IMAGE_REPOSITORY_PREFIX=""
 REPO_NAME=""
+IMAGE_NAME=""
 USERNAME=""
 TOKEN="${FORGEJO_TOKEN:-}"
 PASSWORD="${FORGEJO_PASSWORD:-}"
@@ -70,6 +72,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --repo-name)
       REPO_NAME="${2:-}"
+      shift 2
+      ;;
+    --image-name)
+      IMAGE_NAME="${2:-}"
       shift 2
       ;;
     --username)
@@ -149,6 +155,10 @@ if [[ -z "$TOKEN" && -z "$PASSWORD" ]]; then
   exit 1
 fi
 
+if [[ -z "$IMAGE_NAME" ]]; then
+  IMAGE_NAME="${REPO_NAME}-demo-app"
+fi
+
 if [[ -z "$SOURCE_URL" ]]; then
   SOURCE_URL="https://${REGISTRY}"
 fi
@@ -180,7 +190,7 @@ if [[ -z "$chart_app_version" ]]; then
   exit 1
 fi
 
-image_ref="${IMAGE_REPOSITORY_PREFIX%/}/${REPO_NAME}"
+image_ref="${IMAGE_REPOSITORY_PREFIX%/}/${IMAGE_NAME}"
 
 echo "[INFO] Logging into ${REGISTRY}"
 if [[ -n "$TOKEN" ]]; then
@@ -199,7 +209,7 @@ build_args=(
   --file "$DOCKERFILE_PATH"
   --push
   --label "org.opencontainers.image.revision=${full_sha}"
-  --label "org.opencontainers.image.title=${REPO_NAME}"
+  --label "org.opencontainers.image.title=${IMAGE_NAME}"
   --label "org.opencontainers.image.vendor=loft.sh"
   --label "org.opencontainers.image.source=${SOURCE_URL%/}"
   --tag "${image_ref}:${short_sha}"
