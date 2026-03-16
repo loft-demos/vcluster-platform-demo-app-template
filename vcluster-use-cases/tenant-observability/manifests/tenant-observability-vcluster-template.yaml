@@ -47,6 +47,8 @@ spec:
           counter = 0
           started = time.time()
           lock = threading.Lock()
+          label_open = "{"
+          label_close = "}"
 
           class Handler(BaseHTTPRequestHandler):
               def log_message(self, format, *args):
@@ -67,7 +69,7 @@ spec:
           tenant_observability_demo_messages_total {current}
           # HELP tenant_observability_demo_info Static demo identity
           # TYPE tenant_observability_demo_info gauge
-          tenant_observability_demo_info{{cluster="{cluster_name}",project="{project_name}"}} 1
+          tenant_observability_demo_info{label_open}cluster="{cluster_name}",project="{project_name}"{label_close} 1
           # HELP tenant_observability_demo_uptime_seconds Demo uptime in seconds
           # TYPE tenant_observability_demo_uptime_seconds gauge
           tenant_observability_demo_uptime_seconds {int(time.time() - started)}
