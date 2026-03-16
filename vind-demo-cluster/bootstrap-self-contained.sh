@@ -803,8 +803,10 @@ fi
 if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
   step "Create the default OrbStack VM for the private-nodes demo"
   require_cmd orb
+  require_cmd nohup
   bash vcluster-use-cases/private-nodes/create-orbstack-private-node.sh \
-    --machine "$PRIVATE_NODE_VM_NAME"
+    --machine "$PRIVATE_NODE_VM_NAME" \
+    --background
 fi
 
 argocd_password=""

@@ -55,6 +55,14 @@ bash vcluster-use-cases/private-nodes/create-orbstack-private-node.sh \
   --connect-command '<paste the connect command from vCluster Platform>'
 ```
 
+Start the VM creation in the background instead of waiting for OrbStack boot:
+
+```bash
+bash vcluster-use-cases/private-nodes/create-orbstack-private-node.sh \
+  --machine private-node-a \
+  --background
+```
+
 This helper intentionally does not use cloud-init. The Private Nodes connect
 command already handles the required node bootstrap.
 
@@ -79,6 +87,9 @@ For `vind`, include it in the selected use cases once that appset is wired:
 LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --use-cases eso,private-nodes
 ```
+
+In the `vind` bootstrap, the default OrbStack VM creation runs in the
+background so the bootstrap does not wait for the initial VM boot.
 
 ## What Changed from the Older Cloud Auto-Node Example
 
