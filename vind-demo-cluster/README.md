@@ -68,7 +68,8 @@ What the bootstrap does:
 - applies the root Argo CD `Application`
 - starts the OrbStack domain adapter
 - when `private-nodes` is enabled, creates a default OrbStack Ubuntu VM named
-  `private-node-demo-worker-1` for the manual worker-node join flow
+  `private-node-demo-worker-1` for the manual worker-node join flow in the
+  background
 - adds vCluster Platform navbar links for the Forgejo GitOps repo and, when
   `flux` is enabled, the Flux UI
 
@@ -317,6 +318,8 @@ Ubuntu VM for the example `private-node-demo` vCluster instance:
 
 - default VM: `private-node-demo-worker-1`
 - override with `--private-node-vm-name`
+- the VM creation runs in the background so the bootstrap does not block on the
+  initial OrbStack boot
 - final join still happens manually by copying the Private Nodes connect command
   from vCluster Platform and running it inside that VM
 

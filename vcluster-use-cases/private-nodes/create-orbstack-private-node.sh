@@ -22,6 +22,8 @@ Options:
   --arch ARCH             Optional. Defaults to arm64 on Apple Silicon and
                           amd64 on Intel.
   --user NAME             Optional. Defaults to your macOS username.
+  --background            Optional. Start creation in the background and do not
+                          wait for the VM to be ready.
   --connect-command CMD   Optional. Runs the provided connect command inside
                           the VM as root after the machine is ready.
   --help                  Show this message.
@@ -40,6 +42,7 @@ MACHINE_NAME="private-node-1"
 IMAGE="ubuntu:24.04"
 USER_NAME="${USER:-}"
 CONNECT_COMMAND=""
+BACKGROUND="false"
 
 case "$(uname -m)" in
   arm64|aarch64) ARCH="arm64" ;;
@@ -63,6 +66,10 @@ while [[ $# -gt 0 ]]; do
     --user)
       USER_NAME="${2:-}"
       shift 2
+      ;;
+    --background)
+      BACKGROUND="true"
+      shift
       ;;
     --connect-command)
       CONNECT_COMMAND="${2:-}"
@@ -88,11 +95,42 @@ if [[ -z "$USER_NAME" ]]; then
   exit 1
 fi
 
+if [[ "$BACKGROUND" == "true" && -n "$CONNECT_COMMAND" ]]; then
+  echo "[ERROR] --background cannot be used with --connect-command." >&2
+  exit 1
+fi
+
 if orb list -q | grep -Fx "$MACHINE_NAME" >/dev/null 2>&1; then
   echo "[INFO] OrbStack machine already exists: $MACHINE_NAME"
+  if [[ "$BACKGROUND" == "true" ]]; then
+    mkdir -p vcluster-use-cases/private-nodes/logs
+    LOG_FILE="vcluster-use-cases/private-nodes/logs/orbstack-vm-${MACHINE_NAME}-$(date +%Y%m%d-%H%M%S).log"
+    nohup orb start "$MACHINE_NAME" >"$LOG_FILE" 2>&1 &
+    ORB_PID="$!"
+    cat <<EOF
+[INFO] OrbStack machine start running in background.
+[INFO] Machine: $MACHINE_NAME
+[INFO] PID: $ORB_PID
+[INFO] Log: $LOG_FILE
+EOF
+    exit 0
+  fi
   orb start "$MACHINE_NAME" >/dev/null
 else
   echo "[INFO] Creating OrbStack machine $MACHINE_NAME from $IMAGE ($ARCH)"
+  if [[ "$BACKGROUND" == "true" ]]; then
+    mkdir -p vcluster-use-cases/private-nodes/logs
+    LOG_FILE="vcluster-use-cases/private-nodes/logs/orbstack-vm-${MACHINE_NAME}-$(date +%Y%m%d-%H%M%S).log"
+    nohup orb create -a "$ARCH" -u "$USER_NAME" "$IMAGE" "$MACHINE_NAME" >"$LOG_FILE" 2>&1 &
+    ORB_PID="$!"
+    cat <<EOF
+[INFO] OrbStack VM creation running in background.
+[INFO] Machine: $MACHINE_NAME
+[INFO] PID: $ORB_PID
+[INFO] Log: $LOG_FILE
+EOF
+    exit 0
+  fi
   orb create -a "$ARCH" -u "$USER_NAME" "$IMAGE" "$MACHINE_NAME"
 fi
 
