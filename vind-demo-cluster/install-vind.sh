@@ -239,17 +239,9 @@ cluster_local_use_case_labels="$(render_cluster_local_use_case_labels "$USE_CASE
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 selected_use_case_lines="$(resolve_use_case_selection "$USE_CASES")"
 
-vcp_ui_navbar_buttons="                  - link: https://www.vcluster.com/docs/platform/
-                    position: TopEnd
-                    text: vCluster Docs
-                  - link: https://${FORGEJO_HOST}/${ORG_NAME}/${REPO_NAME}
-                    icon: https://${FORGEJO_HOST}/assets/img/logo.svg
-                    position: TopEnd
-                    text: Forgejo Repo"
-
+vcp_flux_navbar_button=""
 if use_case_list_contains "$selected_use_case_lines" "flux"; then
-  vcp_ui_navbar_buttons="${vcp_ui_navbar_buttons}
-                  - link: https://flux-${VCLUSTER_NAME}.${VCP_HOST}
+  vcp_flux_navbar_button="                  - link: https://flux-${VCLUSTER_NAME}.${VCP_HOST}
                     position: TopEnd
                     text: Flux UI"
 fi
@@ -276,7 +268,7 @@ export LICENSE_TOKEN VCP_VERSION VCP_HOST FORGEJO_HOST FORGEJO_ADMIN_USER FORGEJ
 export VCP_DOMAIN_PREFIX="$vcp_domain_prefix" VCP_DOMAIN="$vcp_domain"
 export VIND_DOCKER_NODES="$worker_nodes_yaml"
 export CLUSTER_LOCAL_USE_CASE_LABELS="$cluster_local_use_case_labels"
-export REPO_NAME ORG_NAME VCLUSTER_NAME VCP_UI_NAVBAR_BUTTONS="$vcp_ui_navbar_buttons"
+export REPO_NAME ORG_NAME VCLUSTER_NAME VCP_FLUX_NAVBAR_BUTTON="$vcp_flux_navbar_button"
 perl -0pi -e '
   s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
@@ -291,7 +283,7 @@ perl -0pi -e '
   s/__REPO_NAME__/$ENV{REPO_NAME}/g;
   s/__ORG_NAME__/$ENV{ORG_NAME}/g;
   s/__VCLUSTER_NAME__/$ENV{VCLUSTER_NAME}/g;
-  s/__VCP_UI_NAVBAR_BUTTONS__/$ENV{VCP_UI_NAVBAR_BUTTONS}/g;
+  s/__VCP_FLUX_NAVBAR_BUTTON__/$ENV{VCP_FLUX_NAVBAR_BUTTON}/g;
 ' "$rendered_values"
 
 echo "[INFO] Creating or upgrading vind cluster '$CLUSTER_NAME'"
