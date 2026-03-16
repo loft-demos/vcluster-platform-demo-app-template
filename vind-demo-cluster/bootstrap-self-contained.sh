@@ -761,11 +761,80 @@ if command -v kubectl >/dev/null 2>&1; then
   require_cmd kubectl
   apply_cluster_local_secret "$VCP_HOST" "$vcp_domain_prefix" "$vcp_domain" "$USE_CASES"
 
-  step "Create the default Platform ProjectSecret for registry auth"
+  step "Create the default Platform registry auth secrets"
   require_cmd base64
+  require_cmd jq
   project_secret_password="${SNAPSHOT_REGISTRY_TOKEN:-$SNAPSHOT_REGISTRY_PASSWORD}"
 
   if [[ -n "$SNAPSHOT_REGISTRY_USERNAME" && -n "$project_secret_password" ]]; then
+    for _ in $(seq 1 60); do
+      if kubectl get namespace vcluster-platform >/dev/null 2>&1; then
+        break
+      fi
+      sleep 2
+    done
+
+    if kubectl get namespace vcluster-platform >/dev/null 2>&1; then
+      for project_secret_namespace in p-api-framework p-auth-core; do
+        for _ in $(seq 1 60); do
+          if kubectl get namespace "$project_secret_namespace" >/dev/null 2>&1; then
+            break
+          fi
+          sleep 2
+        done
+      done
+
+      ghcr_auth_b64="$(printf '%s:%s' "$SNAPSHOT_REGISTRY_USERNAME" "$project_secret_password" | base64 | tr -d '\n')"
+      ghcr_dockerconfigjson="$(
+        jq -cn \
+          --arg username "$SNAPSHOT_REGISTRY_USERNAME" \
+          --arg password "$project_secret_password" \
+          --arg auth "$ghcr_auth_b64" \
+          '{auths: {"ghcr.io": {username: $username, password: $password, auth: $auth}}}'
+      )"
+      ghcr_dockerconfigjson_b64="$(printf '%s' "$ghcr_dockerconfigjson" | base64 | tr -d '\n')"
+      if kubectl get namespace p-api-framework >/dev/null 2>&1 && kubectl get namespace p-auth-core >/dev/null 2>&1; then
+        cat <<EOF | kubectl apply -f -
+apiVersion: management.loft.sh/v1
+kind: SharedSecret
+metadata:
+  name: ghcr-login-secret
+  namespace: vcluster-platform
+spec:
+  displayName: ghcr-login-secret
+  description: Pull image secret for loft-demos ghcr
+  data:
+    .dockerconfigjson: ${ghcr_dockerconfigjson_b64}
+---
+apiVersion: management.loft.sh/v1
+kind: ProjectSecret
+metadata:
+  name: ghcr-login-secret
+  namespace: p-api-framework
+  labels:
+    loft.sh/sharedsecret-name: ghcr-login-secret
+    loft.sh/sharedsecret-namespace: vcluster-platform
+spec:
+  displayName: ghcr-login-secret
+---
+apiVersion: management.loft.sh/v1
+kind: ProjectSecret
+metadata:
+  name: ghcr-login-secret
+  namespace: p-auth-core
+  labels:
+    loft.sh/sharedsecret-name: ghcr-login-secret
+    loft.sh/sharedsecret-namespace: vcluster-platform
+spec:
+  displayName: ghcr-login-secret
+EOF
+      else
+        echo "[WARN] Could not find p-api-framework and p-auth-core to create ghcr-login-secret projections." >&2
+      fi
+    else
+      echo "[WARN] Could not find namespace vcluster-platform to create ghcr-login-secret." >&2
+    fi
+
     for _ in $(seq 1 60); do
       if kubectl get namespace "$IMAGE_PULL_PROJECT_NAMESPACE" >/dev/null 2>&1; then
         break
@@ -796,7 +865,7 @@ EOF
       echo "[WARN] Could not find namespace ${IMAGE_PULL_PROJECT_NAMESPACE} to create ${IMAGE_PULL_SOURCE_SECRET_NAME}." >&2
     fi
   else
-    echo "[WARN] Skipping ${IMAGE_PULL_SOURCE_SECRET_NAME} ProjectSecret creation because snapshot registry credentials were not provided." >&2
+    echo "[WARN] Skipping GHCR shared secret and ${IMAGE_PULL_SOURCE_SECRET_NAME} ProjectSecret creation because snapshot registry credentials were not provided." >&2
   fi
 fi
 
