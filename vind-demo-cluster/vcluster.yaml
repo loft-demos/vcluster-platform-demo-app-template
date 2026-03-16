@@ -149,7 +149,7 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                   - link: https://www.vcluster.com/docs/platform/
                     position: TopEnd
                     text: vCluster Docs
-                  - link: https://__FORGEJO_HOST__/__ORG_NAME__/__REPO_NAME__
+                  - link: https://__FORGEJO_HOST__/
                     icon: https://__FORGEJO_HOST__/assets/img/logo.svg
                     position: TopEnd
                     text: Forgejo Repo

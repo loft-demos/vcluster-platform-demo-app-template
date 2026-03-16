@@ -64,7 +64,7 @@ In practice that means:
 - the bootstrap can also create a default Platform `ProjectSecret` for snapshot
   registry auth when GHCR credentials are provided
 - the vCluster Platform UI includes a `Forgejo Repo` button that points at the
-  rendered GitOps repo
+  Forgejo home page, which avoids the logged-out repo `404` path
 
 Current intent for the self-contained path:
 
