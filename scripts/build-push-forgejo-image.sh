@@ -6,7 +6,7 @@ usage() {
 Build and push the demo app image to a Forgejo container registry.
 
 Default behavior:
-- builds ./src/Dockerfile for linux/amd64
+- builds ./src/Dockerfile for the local native Linux platform
 - logs into the target registry
 - pushes two tags:
   - the local git short SHA
@@ -30,7 +30,7 @@ Options:
   --context PATH                  Docker build context. Default: src
   --dockerfile PATH               Dockerfile path. Default: src/Dockerfile
   --chart-file PATH               Helm chart file used to read appVersion. Default: helm-chart/Chart.yaml
-  --platform VALUE                Docker platform. Default: linux/amd64
+  --platform VALUE                Docker platform. Default: auto-detect from the local machine
   --source-url URL                OCI source label URL
   --skip-cache                    Disable registry build cache
   --help                          Show this message
@@ -54,7 +54,7 @@ PASSWORD="${FORGEJO_PASSWORD:-}"
 CONTEXT_PATH="src"
 DOCKERFILE_PATH="src/Dockerfile"
 CHART_FILE="helm-chart/Chart.yaml"
-PLATFORM="linux/amd64"
+PLATFORM="auto"
 SOURCE_URL=""
 SKIP_CACHE="false"
 
@@ -123,6 +123,7 @@ done
 require_cmd docker
 require_cmd git
 require_cmd sed
+require_cmd uname
 
 if [[ -z "$REPO_NAME" ]]; then
   REPO_NAME="$(basename "$(git rev-parse --show-toplevel)")"
@@ -150,6 +151,22 @@ fi
 
 if [[ -z "$SOURCE_URL" ]]; then
   SOURCE_URL="https://${REGISTRY}"
+fi
+
+if [[ -z "$PLATFORM" || "$PLATFORM" == "auto" ]]; then
+  case "$(uname -m)" in
+    arm64|aarch64)
+      PLATFORM="linux/arm64"
+      ;;
+    x86_64|amd64)
+      PLATFORM="linux/amd64"
+      ;;
+    *)
+      echo "[ERROR] Could not infer a supported image platform from $(uname -m)." >&2
+      echo "[ERROR] Use --platform to set it explicitly." >&2
+      exit 1
+      ;;
+  esac
 fi
 
 short_sha="$(git rev-parse --short=8 HEAD)"
@@ -199,5 +216,6 @@ fi
 build_args+=("$CONTEXT_PATH")
 
 echo "[INFO] Building and pushing ${image_ref}"
+echo "[INFO] Platform: ${PLATFORM}"
 echo "[INFO] Tags: ${short_sha}, ${chart_app_version}"
 docker buildx "${build_args[@]}"

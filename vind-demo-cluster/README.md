@@ -104,6 +104,20 @@ LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --worker-nodes 3
 ```
 
+The demo image build runs in the background by default so the bootstrap can
+finish faster. Use `--wait-for-image-build` if you want the script to block
+until the Forgejo registry push completes.
+
+On Apple Silicon, the image build now defaults to native `linux/arm64` instead
+of forcing `linux/amd64`.
+
+If you need to override that, use:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --image-platform linux/amd64
+```
+
 ### Override the vCluster Platform Version
 
 The default vCluster Platform chart version for the self-contained `vind` path
