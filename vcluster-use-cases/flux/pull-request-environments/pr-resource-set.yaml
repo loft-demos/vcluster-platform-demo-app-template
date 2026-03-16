@@ -22,7 +22,7 @@ spec:
     spec:
       provider: generic # or 'github' if using GitHub App
       interval: 48h
-      url: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+      url: {REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
       ref:
         # configured to only watch the Pull Request branch as the vCluster does not need to be updated for each PR commit
         branch: << inputs.branch >> 
@@ -36,7 +36,7 @@ spec:
     spec:
       provider: generic # or 'github' if using GitHub App
       interval: 48h
-      url: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+      url: {REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
       ref:
         # using PR head sha will trigger update on every commit to PR head branch
         commit: << inputs.sha >>

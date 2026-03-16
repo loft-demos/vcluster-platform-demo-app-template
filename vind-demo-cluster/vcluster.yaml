@@ -71,19 +71,10 @@ __VIND_DOCKER_NODES__
             domain: __VCP_DOMAIN__
           labels:
             argocd.argoproj.io/secret-type: cluster
-            crossplane: "false"
-            eso: "true"
-            flux: "false"
-            kyverno: "false"
             loftDemoDomain: __VCP_LOFT_HOST__
             domainPrefix: __VCP_DOMAIN_PREFIX__
             domain: __VCP_DOMAIN__
-            mysql: "false"
-            postgres: "false"
-            rancher: "false"
-            resolveDNS: "false"
-            virtualScheduler: "false"
-            vnode: "false"
+__CLUSTER_LOCAL_USE_CASE_LABELS__
         type: Opaque
         stringData:
           config: '{"tlsClientConfig":{"insecure":false}}'

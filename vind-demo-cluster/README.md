@@ -26,6 +26,7 @@ Default behavior:
   - <https://forgejo.vcp.local>
 - cluster shape: `1` control plane node, `2` worker nodes
 - control plane taint: `node-role.kubernetes.io/control-plane=:NoSchedule`
+- enabled use cases: `eso`
 
 What the bootstrap does:
 
@@ -36,6 +37,7 @@ What the bootstrap does:
 - pushes the repo into Forgejo
 - builds and pushes the `src/` demo image to the Forgejo container registry
 - creates the Argo CD Forgejo secrets
+- updates the Argo CD `cluster-local` secret that controls which use-case appsets are selected
 - creates a default vCP `ProjectSecret` for registry auth in `p-default`
 - applies the root Argo CD `Application`
 - starts the OrbStack domain adapter
@@ -102,6 +104,26 @@ Use more worker nodes:
 ```bash
 LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --worker-nodes 3
+```
+
+Enable a few use cases as part of the bootstrap:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --use-cases eso,auto-snapshots,flux
+```
+
+Enable almost everything except the heavier ones:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --use-cases all,-crossplane,-rancher
+```
+
+List the supported use cases:
+
+```bash
+bash vind-demo-cluster/bootstrap-self-contained.sh --list-use-cases
 ```
 
 The demo image build runs in the background by default so the bootstrap can
@@ -199,6 +221,24 @@ For the default `vcp.local` setup, that becomes:
 
 That is what keeps things like Helm Dashboard ingress hosts rendering as
 `<name>.vcp.local` instead of an empty suffix.
+
+## Use Case Selection
+
+The Argo CD app-of-apps layer uses the `argocd/cluster-local` secret to decide
+which use-case `ApplicationSet`s should match the local `vind` cluster.
+
+The bootstrap manages that secret for you. Use:
+
+- `--use-cases default`
+- `--use-cases eso,auto-snapshots,flux`
+- `--use-cases all,-crossplane,-rancher`
+
+The current default is intentionally small:
+
+- `eso`
+
+That keeps the self-contained path lighter and avoids turning on use cases that
+still depend on extra secrets or infrastructure by default.
 
 ## Secrets
 

@@ -28,8 +28,8 @@ spec:
       info:
         - name: PRvCluster Argo CD URL
           value: https://argocd-{REPLACE_REPO_NAME}-pr-{{number}}.{REPLACE_BASE_DOMAIN}
-        - name: GitHub PR
-          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
+        - name: Pull Request
+          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}'
       project: default
       source:
         kustomize:
@@ -43,7 +43,7 @@ spec:
                 kind: PullRequestEnvironment
                 name: vcluster
         path: vcluster-use-cases/argocd-vcluster-pull-request-environments/internal/kustomize
-        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
         targetRevision: '{{head_sha}}'
       syncPolicy:
         automated:

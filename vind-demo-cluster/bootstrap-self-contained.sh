@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=./use-case-labels.sh
+source "$(dirname "$0")/use-case-labels.sh"
+
 usage() {
   cat <<'EOF'
 Default comprehensive bootstrap helper for the self-contained vind path.
@@ -34,6 +37,7 @@ Optional OrbStack local domain overrides:
   --forgejo-host forgejo.team-a.vcp.local
   --vcp-version 4.7.1
   --worker-nodes 2
+  --use-cases eso,auto-snapshots
   --sleep-time-zone America/New_York
   --vcp-upstream vcluster.lb.team-a.loft.vcluster-platform:443
   --argocd-upstream vcluster.lb.team-a.argocd-server.argocd:443
@@ -53,6 +57,12 @@ ProjectSecret defaults:
   --image-pull-project-namespace p-default
   --image-pull-project-secret-name vcluster-demos-ghcr-write-pat
   --image-pull-source-secret-name vcluster-demos-ghcr-write
+
+Use case selection:
+  --use-cases default
+  --use-cases eso,auto-snapshots,flux
+  --use-cases all,-crossplane,-rancher
+  --list-use-cases
 EOF
 }
 
@@ -134,6 +144,38 @@ taint_control_plane_node() {
   fi
 }
 
+apply_cluster_local_secret() {
+  local vcp_host="$1"
+  local domain_prefix="$2"
+  local domain_name="$3"
+  local use_case_spec="$4"
+  local labels_block=""
+
+  labels_block="$(render_cluster_local_use_case_labels "$use_case_spec")" || return 1
+
+  cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-local
+  namespace: argocd
+  annotations:
+    domainPrefix: ${domain_prefix}
+    domain: ${domain_name}
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+    loftDemoDomain: ${vcp_host}
+    domainPrefix: ${domain_prefix}
+    domain: ${domain_name}
+${labels_block}
+type: Opaque
+stringData:
+  config: '{"tlsClientConfig":{"insecure":false}}'
+  name: in-cluster
+  server: https://kubernetes.default.svc
+EOF
+}
+
 CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 REPO_NAME="vcp-gitops"
@@ -171,6 +213,7 @@ GIT_BASE_URL=""
 GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 IMAGE_PLATFORM="auto"
+USE_CASES="${USE_CASES:-$DEFAULT_USE_CASE_SPEC}"
 SKIP_ARGOCD_BOOTSTRAP="false"
 IMAGE_PULL_PROJECT_NAMESPACE="p-default"
 IMAGE_PULL_PROJECT_SECRET_NAME=""
@@ -289,6 +332,14 @@ while [[ $# -gt 0 ]]; do
     --image-platform)
       IMAGE_PLATFORM="${2:-}"
       shift 2
+      ;;
+    --use-cases)
+      USE_CASES="${2:-}"
+      shift 2
+      ;;
+    --list-use-cases)
+      print_known_use_cases
+      exit 0
       ;;
     --image-pull-project-namespace)
       IMAGE_PULL_PROJECT_NAMESPACE="${2:-}"
@@ -415,6 +466,8 @@ if [[ -z "$IMAGE_PULL_SOURCE_SECRET_NAME" ]]; then
   IMAGE_PULL_SOURCE_SECRET_NAME="${ORG_NAME}-ghcr-write"
 fi
 
+selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
+
 vcp_domain_prefix="${VCP_HOST%%.*}"
 if [[ "$VCP_HOST" == *.* ]]; then
   vcp_domain="${VCP_HOST#*.}"
@@ -443,6 +496,7 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
 fi
 if command -v kubectl >/dev/null 2>&1; then
   TOTAL_STEPS=$((TOTAL_STEPS + 1))
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
   if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
     TOTAL_STEPS=$((TOTAL_STEPS + 1))
     TOTAL_STEPS=$((TOTAL_STEPS + 1))
@@ -462,6 +516,7 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --vcp-version "$VCP_VERSION" \
     --control-plane-nodes "$CONTROL_PLANE_NODE_COUNT" \
     --worker-nodes "$WORKER_NODE_COUNT" \
+    --use-cases "$USE_CASES" \
     --sleep-time-zone "$SLEEP_TIME_ZONE" \
     --vcp-host "$VCP_HOST" \
     --argocd-host "$ARGOCD_HOST" \
@@ -641,6 +696,10 @@ EOF
 fi
 
 if command -v kubectl >/dev/null 2>&1; then
+  step "Apply cluster-local use case labels"
+  require_cmd kubectl
+  apply_cluster_local_secret "$VCP_HOST" "$vcp_domain_prefix" "$vcp_domain" "$USE_CASES"
+
   step "Create the default Platform ProjectSecret for registry auth"
   require_cmd base64
   project_secret_password="${FORGEJO_TOKEN:-}"
@@ -716,6 +775,9 @@ Recommended next steps:
    - kubectl -n argocd get pods
    - kubectl -n vcluster-platform get pods
 5. Continue with vind-demo-cluster/README.md if you want the detailed flow.
+
+Enabled use cases:
+- ${selected_use_cases}
 
 EOF
 

@@ -29,12 +29,12 @@ spec:
         namespace: {REPLACE_REPO_NAME}-{{.metadata.labels.env}}
         server: '{{.server}}'
       info:
-        - name: GitHub Repo
-          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/
+        - name: Git Repo
+          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/'
       project: 'loft-{{ index .metadata.labels "demos.loft.sh/project" }}'
       source:
         path: vcluster-use-cases/argocd-vcluster-add-ons/manifests/{{.metadata.labels.env}}/
-        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
         targetRevision: main
       syncPolicy:
         automated:

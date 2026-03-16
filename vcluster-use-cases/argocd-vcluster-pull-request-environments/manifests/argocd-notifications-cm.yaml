@@ -33,7 +33,7 @@ data:
     message: |
       Application {{.app.metadata.name}} is now running new version of deployments manifests.
     github:
-      repoURLPath: "https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}"
+      repoURLPath: "{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}"
       revisionPath: "{{.app.spec.source.targetRevision}}"
       pullRequestComment:
         content: |

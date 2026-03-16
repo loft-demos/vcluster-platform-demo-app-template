@@ -28,8 +28,8 @@ spec:
       info:
         - name: PR vCluster Argo CD URL
           value: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
-        - name: GitHub PR
-          value: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
+        - name: Pull Request
+          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}'
       project: loft-auth-core
       source:
         kustomize:
@@ -64,7 +64,7 @@ spec:
                 kind: VirtualClusterInstance
                 name: vcluster
         path: vcluster-use-cases/argocd-vcluster-pull-request-environments/kustomize
-        repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
         targetRevision: '{{branch}}'
       syncPolicy:
         automated:

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=./use-case-labels.sh
+source "$(dirname "$0")/use-case-labels.sh"
+
 usage() {
   cat <<'EOF'
 Create or upgrade the local vind cluster for this repo.
@@ -17,7 +20,8 @@ Usage:
     --license-token "$TOKEN" \
     --vcp-version 4.7.1 \
     --vcp-host vcp.local \
-    --worker-nodes 2
+    --worker-nodes 2 \
+    --use-cases eso,auto-snapshots
 
 Options:
   --cluster-name NAME    Optional. Defaults to vcp.
@@ -37,6 +41,11 @@ Options:
                          Optional. Defaults to FORGEJO_ADMIN_PASSWORD or
                          vcluster-demo-admin.
   --sleep-time-zone TZ   Optional. Defaults to America/New_York.
+  --use-cases LIST       Optional. Comma-separated use cases or presets.
+                         Defaults to "default" which currently means `eso`.
+                         Example: eso,auto-snapshots,flux
+                         Example: all,-crossplane,-rancher
+  --list-use-cases       Print the supported use cases and exit.
   --orbstack-env-file PATH
                          Optional. Defaults to orbstack-domains/.env.<cluster-name>.
   --skip-cluster-annotation
@@ -68,6 +77,7 @@ FORGEJO_HOST=""
 FORGEJO_ADMIN_USER="${FORGEJO_ADMIN_USER:-demo-admin}"
 FORGEJO_ADMIN_PASSWORD="${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-admin}"
 SLEEP_TIME_ZONE="${SLEEP_TIME_ZONE:-America/New_York}"
+USE_CASES="${USE_CASES:-$DEFAULT_USE_CASE_SPEC}"
 ORBSTACK_ENV_FILE=""
 SKIP_ORBSTACK_DOMAINS="false"
 SKIP_CLUSTER_ANNOTATION="false"
@@ -122,6 +132,14 @@ while [[ $# -gt 0 ]]; do
     --sleep-time-zone)
       SLEEP_TIME_ZONE="${2:-}"
       shift 2
+      ;;
+    --use-cases)
+      USE_CASES="${2:-}"
+      shift 2
+      ;;
+    --list-use-cases)
+      print_known_use_cases
+      exit 0
       ;;
     --orbstack-env-file)
       ORBSTACK_ENV_FILE="${2:-}"
@@ -194,6 +212,9 @@ if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
   fi
 fi
 
+cluster_local_use_case_labels="$(render_cluster_local_use_case_labels "$USE_CASES")"
+selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
+
 worker_nodes_yaml="      []"
 if [[ "$WORKER_NODE_COUNT" -gt 0 ]]; then
   worker_nodes_yaml=""
@@ -215,6 +236,7 @@ cp "$VALUES_FILE" "$rendered_values"
 export LICENSE_TOKEN VCP_VERSION VCP_HOST FORGEJO_HOST FORGEJO_ADMIN_USER FORGEJO_ADMIN_PASSWORD
 export VCP_DOMAIN_PREFIX="$vcp_domain_prefix" VCP_DOMAIN="$vcp_domain"
 export VIND_DOCKER_NODES="$worker_nodes_yaml"
+export CLUSTER_LOCAL_USE_CASE_LABELS="$cluster_local_use_case_labels"
 perl -0pi -e '
   s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
@@ -225,6 +247,7 @@ perl -0pi -e '
   s/__FORGEJO_ADMIN_USER__/$ENV{FORGEJO_ADMIN_USER}/g;
   s/__FORGEJO_ADMIN_PASSWORD__/$ENV{FORGEJO_ADMIN_PASSWORD}/g;
   s/__VIND_DOCKER_NODES__/$ENV{VIND_DOCKER_NODES}/g;
+  s/__CLUSTER_LOCAL_USE_CASE_LABELS__/$ENV{CLUSTER_LOCAL_USE_CASE_LABELS}/g;
 ' "$rendered_values"
 
 echo "[INFO] Creating or upgrading vind cluster '$CLUSTER_NAME'"
@@ -237,6 +260,7 @@ echo "[INFO] vCluster Platform host: $VCP_HOST"
 echo "[INFO] Forgejo host: $FORGEJO_HOST"
 echo "[INFO] Forgejo admin user: $FORGEJO_ADMIN_USER"
 echo "[INFO] Sleep time zone: $SLEEP_TIME_ZONE"
+echo "[INFO] Enabled use cases: $selected_use_cases"
 
 vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
 
