@@ -5,8 +5,9 @@ metadata:
   namespace: p-default
 spec:
   owner:
-    team: api-framework
+    team: loft-admins
   templateRef:
     name: tenant-observability-vcluster
+    version: 1.0.x
   clusterRef:
     cluster: loft-cluster

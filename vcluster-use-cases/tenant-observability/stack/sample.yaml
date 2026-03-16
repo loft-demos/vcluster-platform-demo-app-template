@@ -1,0 +1,142 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-observability
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-observability-sample
+  namespace: tenant-observability
+data:
+  server.py: |
+    import os
+    import threading
+    import time
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    cluster_name = os.getenv("CLUSTER_NAME", "unknown")
+    project_name = os.getenv("PROJECT_NAME", "unknown")
+    counter = 0
+    started = time.time()
+    lock = threading.Lock()
+    label_open = "{"
+    label_close = "}"
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, format, *args):
+            return
+
+        def do_GET(self):
+            if self.path == "/healthz":
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"ok")
+                return
+
+            if self.path == "/metrics":
+                with lock:
+                    current = counter
+                body = f"""# HELP tenant_observability_demo_messages_total Total demo log messages emitted
+    # TYPE tenant_observability_demo_messages_total counter
+    tenant_observability_demo_messages_total {current}
+    # HELP tenant_observability_demo_info Static demo identity
+    # TYPE tenant_observability_demo_info gauge
+    tenant_observability_demo_info{label_open}cluster="{cluster_name}",project="{project_name}"{label_close} 1
+    # HELP tenant_observability_demo_uptime_seconds Demo uptime in seconds
+    # TYPE tenant_observability_demo_uptime_seconds gauge
+    tenant_observability_demo_uptime_seconds {int(time.time() - started)}
+    """
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; version=0.0.4")
+                self.end_headers()
+                self.wfile.write(body.encode("utf-8"))
+                return
+
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(
+                f"tenant-observability sample for {cluster_name}/{project_name}\n".encode("utf-8")
+            )
+
+    def serve():
+        server = HTTPServer(("0.0.0.0", 8080), Handler)
+        server.serve_forever()
+
+    threading.Thread(target=serve, daemon=True).start()
+
+    while True:
+        with lock:
+            counter += 1
+            message_id = counter
+        print(
+            f'tenant-observability demo message cluster={cluster_name} project={project_name} id={message_id}',
+            flush=True,
+        )
+        time.sleep(5)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-observability-sample
+  namespace: tenant-observability
+  labels:
+    app.kubernetes.io/name: tenant-observability-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tenant-observability-sample
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tenant-observability-sample
+    spec:
+      containers:
+        - name: sample
+          image: python:3.12-alpine
+          imagePullPolicy: IfNotPresent
+          command:
+            - python
+            - /app/server.py
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: app
+              mountPath: /app
+      volumes:
+        - name: app
+          configMap:
+            name: tenant-observability-sample
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-observability-sample
+  namespace: tenant-observability
+  labels:
+    app.kubernetes.io/name: tenant-observability-sample
+spec:
+  selector:
+    app.kubernetes.io/name: tenant-observability-sample
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

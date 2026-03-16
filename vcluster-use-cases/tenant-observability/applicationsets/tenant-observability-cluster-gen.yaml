@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: tenant-observability-instance-appset
+  namespace: argocd
+spec:
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            addons.vcluster.demo/tenant-observability: "true"
+  template:
+    metadata:
+      name: 'tenant-observability-{{.name}}'
+      labels:
+        feature.demos.loft.sh: tenant-observability
+    spec:
+      destination:
+        namespace: tenant-observability
+        server: '{{.server}}'
+      project: default
+      source:
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+        targetRevision: HEAD
+        path: vcluster-use-cases/tenant-observability/stack
+        kustomize:
+          patches:
+            - target:
+                kind: Deployment
+                name: tenant-observability-sample
+              patch: |-
+                - op: add
+                  path: /spec/template/spec/containers/0/env
+                  value:
+                    - name: CLUSTER_NAME
+                      value: '{{ index .metadata.labels "vcluster.demo/cluster-name" }}'
+                    - name: PROJECT_NAME
+                      value: '{{ index .metadata.labels "vcluster.demo/project" }}'
+            - target:
+                kind: Ingress
+                name: grafana
+              patch: |-
+                - op: replace
+                  path: /spec/rules/0/host
+                  value: '{{ index .metadata.labels "vcluster.demo/grafana-hostname" }}'
+            - target:
+                kind: Ingress
+                name: prometheus
+              patch: |-
+                - op: replace
+                  path: /spec/rules/0/host
+                  value: '{{ index .metadata.labels "vcluster.demo/prometheus-hostname" }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

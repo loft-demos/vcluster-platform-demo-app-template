@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tenant-observability-central-hostpath-mapper
+  namespace: argocd
+  labels:
+    feature.demos.loft.sh: tenant-observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.loft.sh/
+    chart: central-hostpath-mapper
+    targetRevision: 0.3.0-rc.1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: central-hostpath-mapper
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m
