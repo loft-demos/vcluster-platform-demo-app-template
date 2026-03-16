@@ -269,48 +269,6 @@ if [[ "$SKIP_CLUSTER_ANNOTATION" != "true" ]]; then
   fi
 fi
 
-echo "[INFO] Applying a NoSchedule taint to the control plane node"
-if kubectl wait --for=condition=Ready nodes --all --timeout=180s >/dev/null 2>&1; then
-  control_plane_node="$(
-    kubectl get nodes -l node-role.kubernetes.io/control-plane \
-      -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true
-  )"
-  if [[ -z "$control_plane_node" ]]; then
-    control_plane_node="$(
-      kubectl get nodes -l node-role.kubernetes.io/master \
-        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true
-    )"
-  fi
-  if [[ -z "$control_plane_node" ]] && kubectl get node "$CLUSTER_NAME" >/dev/null 2>&1; then
-    control_plane_node="$CLUSTER_NAME"
-  fi
-
-  if [[ -n "$control_plane_node" ]]; then
-    kubectl taint nodes "$control_plane_node" \
-      node-role.kubernetes.io/control-plane=:NoSchedule \
-      --overwrite >/dev/null
-  else
-    echo "[WARN] Could not find a control plane node to taint." >&2
-  fi
-else
-  echo "[WARN] Timed out waiting for nodes to become ready before tainting the control plane node." >&2
-fi
-
-argocd_password=""
-echo "[INFO] Looking up the Argo CD initial admin password"
-for _ in $(seq 1 60); do
-  secret_b64="$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' 2>/dev/null || true)"
-  if [[ -n "$secret_b64" ]]; then
-    argocd_password="$(printf '%s' "$secret_b64" | perl -MMIME::Base64 -ne 'print decode_base64($_)')"
-    break
-  fi
-  sleep 2
-done
-
-if [[ -z "$argocd_password" ]]; then
-  echo "[WARN] Could not read argocd-initial-admin-secret yet." >&2
-fi
-
 if [[ "$SKIP_ORBSTACK_DOMAINS" != "true" ]]; then
   if ! bash vind-demo-cluster/start-orbstack-domains.sh \
     --cluster-name "$CLUSTER_NAME" \

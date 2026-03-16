@@ -17,4 +17,7 @@ resources:
   - ../../virtual-cluster-instances/api-framework-qa.yaml
   - ../../argocd/app-of-apps.yaml
 patches:
+  - path: patch-project-default.yaml
+  - path: patch-project-api-framework.yaml
+  - path: patch-project-auth-core.yaml
   - path: patch-app-of-apps-bootstrap.yaml
