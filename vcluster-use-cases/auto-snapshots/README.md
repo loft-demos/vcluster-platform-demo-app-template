@@ -7,7 +7,8 @@ can be pushed to either:
 - an S3 bucket
 
 This demo configures a `VirtualClusterTemplate` and example
-`VirtualClusterInstance` with `autoSnapshots` enabled.
+`VirtualClusterInstance` with snapshots configured under
+`external.platform.autoSnapshot`.
 
 ## Registry Target By Deployment Mode
 
@@ -55,6 +56,41 @@ demo-generator / GitHub path unchanged.
 Snapshots are configured to run Monday through Friday at 15 minutes past the
 hour from 7 AM through 5 PM.
 
+The current snapshot config shape follows the vCluster Platform docs:
+
+```yaml
+external:
+  platform:
+    autoSnapshot:
+      enabled: true
+      schedule: "15 7-17/3 * * 1-5"
+      timezone: America/New_York
+      retention:
+        period: 5
+        maxSnapshots: 4
+      storage:
+        type: oci
+        oci:
+          repository: oci://{REPLACE_OCI_REGISTRY_HOST}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+          credential:
+            secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
+            secretNamespace: <vcluster-host-namespace>
+```
+
+This use case does not enable volume snapshots by default. The current docs
+show that under:
+
+```yaml
+external:
+  platform:
+    autoSnapshot:
+      volumes:
+        enabled: true
+```
+
+but that requires the additional host or virtual cluster volume snapshot
+prerequisites to already be in place.
+
 ## Restore
 
 The vCluster CLI is still required to restore a given snapshot.
@@ -88,3 +124,8 @@ For the self-contained `vind` path, use the Forgejo package UI instead:
 > The self-contained `vind` path is wired to use the Forgejo OCI registry, but
 > the registry-backed snapshot flow has not been validated as thoroughly yet as
 > the Git hosting flow.
+
+Official docs:
+
+- [Platform snapshots](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/snapshots)
+- [Snapshot and restore](https://www.vcluster.com/docs/vcluster/manage/backup-restore/)

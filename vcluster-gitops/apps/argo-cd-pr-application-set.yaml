@@ -121,7 +121,7 @@ spec:
                 helm:
                   parameters:
                   - name: "image.repository"
-                    value: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{{ .Values.repoName }}
+                    value: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{{ .Values.repoName }}-demo-app
                   - name: "image.tag"
                     value: "{{`{{head_short_sha}}`}}"
                   - name: "image.args.text"

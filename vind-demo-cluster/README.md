@@ -57,7 +57,8 @@ In practice that means:
 - Argo CD reads the repo from the in-cluster Forgejo service URL
 - browser-facing links still use <https://forgejo.vcp.local>
 - the demo app image from `src/` is built and pushed to the Forgejo container
-  registry
+  registry as `<repo>-demo-app`, under the repo-scoped prefix
+  `forgejo.vcp.local/<org>/<repo>/<repo>-demo-app`
 - the bootstrap creates a default Platform `ProjectSecret` with Forgejo
   registry credentials for image pulls
 

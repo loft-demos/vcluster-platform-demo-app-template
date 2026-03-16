@@ -33,7 +33,7 @@ Options:
   --git-base-url URL      Optional. Defaults to https://forgejo.vcp.local.
   --git-public-url URL    Optional. Defaults to https://forgejo.vcp.local.
   --image-repository-prefix PREFIX
-                          Optional. Defaults to forgejo.vcp.local/<org-name>.
+                          Optional. Defaults to forgejo.vcp.local/<org-name>/<repo-name>.
   --oci-registry-host HOST
                           Optional. Defaults to forgejo.vcp.local.
   --image-pull-source-secret-name NAME
@@ -142,7 +142,7 @@ if [[ -z "$GIT_PUBLIC_URL" ]]; then
 fi
 
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
-  IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST:-forgejo.vcp.local}/${ORG_NAME}"
+  IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST:-forgejo.vcp.local}/${ORG_NAME}/${REPO_NAME}"
 fi
 
 if [[ -z "$OCI_REGISTRY_HOST" ]]; then

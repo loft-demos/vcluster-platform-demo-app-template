@@ -88,7 +88,7 @@ spec:
           enabled: true
         helmRelease:
           chart:
-            version: 0.29.1
+            version: 0.32.1
           values: |+
             external:
               platform:
@@ -103,13 +103,15 @@ spec:
                     type: s3
                     s3:
                       url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
-            sleepMode:
-              enabled: true
-              autoSleep:
+            sleep:
+              auto:
                 afterInactivity: 35m
-              timeZone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
-              autoWakeup:
-                schedule: 10 7-17 * * 1-5
+                timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
+                wakeup:
+                  schedule: 10 7-17 * * 1-5
+            deletion:
+              auto:
+                afterInactivity: 500h
             controlPlane:
               backingStore:
                 etcd:

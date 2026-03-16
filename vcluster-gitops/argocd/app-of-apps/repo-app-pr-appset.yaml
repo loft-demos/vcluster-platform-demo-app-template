@@ -34,7 +34,7 @@ spec:
         helm:
           parameters:
           - name: "image.repository"
-            value: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}
+            value: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app
           - name: "image.tag"
             value: "{{head_short_sha}}"
           - name: "image.args.text"

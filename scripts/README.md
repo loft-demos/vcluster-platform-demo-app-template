@@ -22,7 +22,7 @@ Defaults:
 - base domain: `vcp.local`
 - git base URL: `http://forgejo-http.forgejo.svc.cluster.local:3000`
 - git public URL: `https://forgejo.vcp.local`
-- image repository prefix: `forgejo.vcp.local/vcluster-demos`
+- image repository prefix: `forgejo.vcp.local/vcluster-demos/vcp-gitops`
 
 ## `bootstrap-forgejo-repo.sh`
 
@@ -54,7 +54,7 @@ Example:
 ```bash
 bash scripts/build-push-forgejo-image.sh \
   --registry forgejo.vcp.local \
-  --image-repository-prefix forgejo.vcp.local/vcluster-demos \
+  --image-repository-prefix forgejo.vcp.local/vcluster-demos/vcp-gitops \
   --repo-name vcp-gitops \
   --username demo-admin \
   --password "$FORGEJO_ADMIN_PASSWORD"
@@ -64,6 +64,7 @@ It pushes:
 
 - the local git short SHA tag
 - the Helm chart `appVersion` tag
+- as image `forgejo.vcp.local/vcluster-demos/vcp-gitops/vcp-gitops-demo-app`
 
 ## `update-templates.sh`
 
