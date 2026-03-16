@@ -39,6 +39,7 @@ Optional OrbStack local domain overrides:
   --vcp-version 4.8.0
   --worker-nodes 2
   --use-cases eso,auto-snapshots
+  --private-node-vm-name private-node-demo-worker-1
   --sleep-time-zone America/New_York
   --vcp-upstream vcluster.lb.team-a.loft.vcluster-platform:443
   --argocd-upstream vcluster.lb.team-a.argocd-server.argocd:443
@@ -231,6 +232,7 @@ IMAGE_PULL_PROJECT_NAMESPACE="p-default"
 IMAGE_PULL_PROJECT_SECRET_NAME=""
 IMAGE_PULL_SOURCE_SECRET_NAME=""
 ONEPASSWORD_VAULT=""
+PRIVATE_NODE_VM_NAME="${PRIVATE_NODE_VM_NAME:-private-node-demo-worker-1}"
 SNAPSHOT_REGISTRY_USERNAME="${SNAPSHOT_REGISTRY_USERNAME:-${GHCR_USERNAME:-}}"
 SNAPSHOT_REGISTRY_TOKEN="${SNAPSHOT_REGISTRY_TOKEN:-${GHCR_TOKEN:-}}"
 SNAPSHOT_REGISTRY_PASSWORD="${SNAPSHOT_REGISTRY_PASSWORD:-${GHCR_PASSWORD:-}}"
@@ -295,6 +297,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --onepassword-vault)
       ONEPASSWORD_VAULT="${2:-}"
+      shift 2
+      ;;
+    --private-node-vm-name)
+      PRIVATE_NODE_VM_NAME="${2:-}"
       shift 2
       ;;
     --vcp-upstream)
@@ -503,6 +509,11 @@ if [[ -z "$ONEPASSWORD_VAULT" ]]; then
 fi
 
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
+resolved_use_case_selection="$(resolve_use_case_selection "$USE_CASES")"
+PRIVATE_NODES_ENABLED="false"
+if use_case_list_contains "$resolved_use_case_selection" "private-nodes"; then
+  PRIVATE_NODES_ENABLED="true"
+fi
 
 vcp_domain_prefix="${VCP_HOST%%.*}"
 if [[ "$VCP_HOST" == *.* ]]; then
@@ -537,6 +548,9 @@ if command -v kubectl >/dev/null 2>&1; then
     TOTAL_STEPS=$((TOTAL_STEPS + 1))
     TOTAL_STEPS=$((TOTAL_STEPS + 1))
   fi
+fi
+if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
 fi
 
 STEP_INDEX=0
@@ -786,6 +800,13 @@ EOF
   fi
 fi
 
+if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
+  step "Create the default OrbStack VM for the private-nodes demo"
+  require_cmd orb
+  bash vcluster-use-cases/private-nodes/create-orbstack-private-node.sh \
+    --machine "$PRIVATE_NODE_VM_NAME"
+fi
+
 argocd_password=""
 if command -v kubectl >/dev/null 2>&1; then
   echo "[INFO] Looking up the Argo CD initial admin password"
@@ -824,6 +845,19 @@ Enabled use cases:
 - ${selected_use_cases}
 
 EOF
+
+if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
+  cat <<EOF
+
+Private Nodes:
+- default OrbStack VM: ${PRIVATE_NODE_VM_NAME}
+- example vCluster instance: private-node-demo
+- next step:
+  copy the Private Nodes connect command from vCluster Platform and run:
+  orb -m ${PRIVATE_NODE_VM_NAME} -u root sh -lc '<connect-command>'
+
+EOF
+fi
 
 if [[ -n "$IMAGE_BUILD_LOG" ]]; then
   cat <<EOF

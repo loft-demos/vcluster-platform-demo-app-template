@@ -16,9 +16,7 @@ The included template:
 
 - enables Private Nodes
 - enables the vCluster VPN
-- enables join-node support
 - uses embedded etcd
-- uses embedded CoreDNS
 
 Relevant manifests:
 

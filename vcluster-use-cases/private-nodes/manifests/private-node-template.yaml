@@ -22,16 +22,10 @@ spec:
             etcd:
               embedded:
                 enabled: true
-          coredns:
-            embedded: true
           distro:
             k8s:
               image:
                 tag: v1.33.4
-          standalone:
-            enabled: true
-            joinNode:
-              enabled: true
         privateNodes:
           enabled: true
           vpn:
@@ -66,16 +60,10 @@ spec:
                 etcd:
                   embedded:
                     enabled: true
-              coredns:
-                embedded: true
               distro:
                 k8s:
                   image:
                     tag: '{{ .Values.kubernetesVersion }}'
-              standalone:
-                enabled: true
-                joinNode:
-                  enabled: true
             privateNodes:
               enabled: true
               vpn:
