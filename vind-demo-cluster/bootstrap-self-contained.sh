@@ -732,7 +732,7 @@ if command -v kubectl >/dev/null 2>&1; then
 apiVersion: management.loft.sh/v1
 kind: ProjectSecret
 metadata:
-  name: ${IMAGE_PULL_PROJECT_SECRET_NAME}
+  name: ${IMAGE_PULL_SOURCE_SECRET_NAME}
   namespace: ${IMAGE_PULL_PROJECT_NAMESPACE}
   labels:
     loft.sh/project-secret-name: ${IMAGE_PULL_SOURCE_SECRET_NAME}
@@ -745,7 +745,7 @@ spec:
     password: ${project_secret_password_b64}
 EOF
     else
-      echo "[WARN] Could not find namespace ${IMAGE_PULL_PROJECT_NAMESPACE} to create ${IMAGE_PULL_PROJECT_SECRET_NAME}." >&2
+      echo "[WARN] Could not find namespace ${IMAGE_PULL_PROJECT_NAMESPACE} to create ${IMAGE_PULL_SOURCE_SECRET_NAME}." >&2
     fi
   fi
 fi
