@@ -4,7 +4,9 @@ metadata:
   name: private-node-demo-template
 spec:
   displayName: Private Nodes Demo Template
-  description: This virtual cluster template deploys a virtual cluster with private nodes, configured node pool and has a param to control whether to use spot instances or not.
+  description: This template deploys a vCluster with Private Nodes enabled for a manual node join flow.
+  owner:
+    team: loft-admins
   template:
     metadata: {}
     instanceTemplate:
@@ -20,38 +22,67 @@ spec:
             etcd:
               embedded:
                 enabled: true
+          coredns:
+            embedded: true
           distro:
             k8s:
               image:
                 tag: v1.33.4
+          standalone:
+            enabled: true
+            joinNode:
+              enabled: true
         privateNodes:
           enabled: true
           vpn:
             enabled: true
             nodeToNode:
               enabled: true
-          autoNodes:
-            dynamic:
-              - name: gcp-{REPLACE_VCLUSTER_NAME}-node-pool
-                provider: gcp-compute-{REPLACE_VCLUSTER_NAME}-node-provider
-                limits:
-                  cpu: '30'
-                {{if .Values.disableSpot}}
-                requirements:
-                  - property: spot
-                    operator: NotIn
-                    values:
-                      - 'true'
-                {{end}}
     accessPoint:
       ingress: {}
     spaceTemplate:
       metadata: {}
   parameters:
-    - variable: disableSpot
-      label: Disable Spot Instances
-      description: >-
-        By default, this template is configured to use GCP compute spot instances for private nodes. Set this to true to disable the use of spot instances for private nodes.
-      type: boolean
-      defaultValue: 'false'
-      section: Auto Node Config
+    - variable: kubernetesVersion
+      label: Kubernetes Version
+      description: Kubernetes distro tag for the private-node-enabled vCluster.
+      type: string
+      defaultValue: v1.33.4
+      section: Control Plane
+  versions:
+    - version: 1.0.0
+      template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.32.1
+          values: |-
+            controlPlane:
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+              distro:
+                k8s:
+                  image:
+                    tag: '{{ .Values.kubernetesVersion }}'
+              standalone:
+                enabled: true
+                joinNode:
+                  enabled: true
+            privateNodes:
+              enabled: true
+              vpn:
+                enabled: true
+                nodeToNode:
+                  enabled: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}

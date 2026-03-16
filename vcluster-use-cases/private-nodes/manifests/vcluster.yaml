@@ -3,19 +3,20 @@ controlPlane:
     etcd:
       embedded:
         enabled: true
+  coredns:
+    embedded: true
   distro:
     k8s:
       image:
-        tag: v1.32.5
-  service:
-    spec:
-      type: LoadBalancer
+        tag: v1.33.4
+  standalone:
+    enabled: true
+    joinNode:
+      enabled: true
 
 privateNodes:
   enabled: true
-  joinNode:
-    # Might be useful to configure ec2 machine for private ecr
-    preJoinCommands:
-      - echo "Starting Pre-join commands"
-      - sudo apt update && sudo apt install -y iptables iproute2
-      - echo "Pre-join commands complete"
+  vpn:
+    enabled: true
+    nodeToNode:
+      enabled: true
