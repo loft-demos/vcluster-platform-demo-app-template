@@ -51,15 +51,15 @@ spec:
           metadata:
             annotations:
               loft.sh/custom-links: |-
-                Grafana=https://grafana-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
-                Prometheus=https://prometheus-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+                Grafana=https://grafana-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+                Prometheus=https://prometheus-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             labels:
               addons.vcluster.demo/tenant-observability: 'true'
               vcluster.demo/project: '{{ .Values.loft.project }}'
               vcluster.demo/namespace: '{{ .Values.loft.virtualClusterNamespace }}'
               vcluster.demo/owner: '{{ or (and .Values.loft.user .Values.loft.user.name) (and .Values.loft.team .Values.loft.team.name) }}'
-              vcluster.demo/grafana-hostname: 'grafana-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}'
-              vcluster.demo/prometheus-hostname: 'prometheus-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}'
+              vcluster.demo/grafana-hostname: 'grafana-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}'
+              vcluster.demo/prometheus-hostname: 'prometheus-{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}'
               vcluster.demo/cluster-name: '{{ .Values.loft.virtualClusterName }}'
         pro:
           enabled: true

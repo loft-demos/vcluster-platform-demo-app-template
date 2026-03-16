@@ -150,6 +150,11 @@ Validation flow:
 The template adds `Grafana` and `Prometheus` custom links to the vCluster
 instance so those UIs are easy to open from the Platform UI.
 
+For the `vind` local-domain path, those links use the wildcard hostname shape:
+
+- `grafana-<vcluster>.vcp.local`
+- `prometheus-<vcluster>.vcp.local`
+
 ## Confirm HostPath Mapper Is Working
 
 Inside a tenant vCluster:
