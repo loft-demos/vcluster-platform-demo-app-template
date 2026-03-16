@@ -90,19 +90,17 @@ spec:
           chart:
             version: 0.32.1
           values: |+
-            external:
-              platform:
-                autoSnapshot:
-                  enabled: true
-                  schedule: "20 7-17/2 * * 1-5"
-                  retention:
-                    period: {{ .Values.retentionPeriod }}
-                    maxSnapshots: {{ .Values.maxSnapshots }}
-                  timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
-                  storage:
-                    type: s3
-                    s3:
-                      url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
+            snapshots:
+              auto:
+                schedule: "20 7-17/2 * * 1-5"
+                retention:
+                  period: {{ .Values.retentionPeriod }}
+                  maxSnapshots: {{ .Values.maxSnapshots }}
+                timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
+                storage:
+                  type: s3
+                  s3:
+                    url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
             sleep:
               auto:
                 afterInactivity: 35m
@@ -161,7 +159,7 @@ spec:
    binding the vCluster’s service account to the IAM role from annotations.
 
 4. **Auto Snapshot Configuration**  
-   The virtual cluster instance Helm values configure `autoSnapshot` schedule, retention period, timezone, and S3 backend.  
+   The virtual cluster instance Helm values configure `snapshots.auto` schedule, retention period, timezone, and S3 backend.  
    Snapshots are automatically stored in the annotated S3 bucket.
 
 5. **Sleep Mode Alignment**  
@@ -231,7 +229,7 @@ kubectl -n <vcluster-host-namespace> get podidentityassociations.eks.services.k8
 |----------|----------------|-----|
 | `PodIdentityAssociation` not created | ACK EKS controller missing or CRD not installed | Install the ACK EKS controller and re-apply the template |
 | `AccessDenied` on S3 operations | IAM role not linked or trust policy invalid | Check `roleARN`, trust policy, and bucket permissions |
-| Snapshots not appearing in S3 | Invalid cron expression or timezone misconfiguration | Validate `autoSnapshot.schedule` and `timezone` values |
+| Snapshots not appearing in S3 | Invalid cron expression or timezone misconfiguration | Validate `snapshots.auto.schedule` and `timezone` values |
 | Snapshot job errors | IAM policy missing `s3:PutObject` or bucket enforcing restrictive block rules | Update IAM policy and bucket settings, then re-test |
 
 ---

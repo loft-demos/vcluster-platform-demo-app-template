@@ -18,19 +18,17 @@ spec:
       chart:
         version: 0.32.1
       values: |+
-        external:
-          platform:
-            autoSnapshot:
-              enabled: true
-              schedule: "20 7-17/2 * * 1-5"
-              retention:
-                period: {{ .Values.retentionPeriod }}
-                maxSnapshots: {{ .Values.maxSnapshots }}
-              timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
-              storage:
-                type: s3
-                s3:
-                  url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
+        snapshots:
+          auto:
+            schedule: "20 7-17/2 * * 1-5"
+            retention:
+              period: {{ .Values.retentionPeriod }}
+              maxSnapshots: {{ .Values.maxSnapshots }}
+            timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
+            storage:
+              type: s3
+              s3:
+                url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
         sleep:
           auto:
             afterInactivity: 35m
@@ -239,19 +237,17 @@ spec:
           chart:
             version: 0.32.1
           values: |+
-            external:
-              platform:
-                autoSnapshot:
-                  schedule: "20 7-17/2 * * 1-5"
-                  enabled: true
-                  retention:
-                    period: {{ .Values.retentionPeriod }}
-                    maxSnapshots: {{ .Values.maxSnapshots }}
-                  timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
-                  storage:
-                    type: s3
-                    s3:
-                      url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
+            snapshots:
+              auto:
+                schedule: "20 7-17/2 * * 1-5"
+                retention:
+                  period: {{ .Values.retentionPeriod }}
+                  maxSnapshots: {{ .Values.maxSnapshots }}
+                timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
+                storage:
+                  type: s3
+                  s3:
+                    url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
             sleep:
               auto:
                 afterInactivity: 35m
