@@ -38,6 +38,7 @@ Optional OrbStack local domain overrides:
   --vcp-upstream vcluster.lb.team-a.loft.vcluster-platform:443
   --argocd-upstream vcluster.lb.team-a.argocd-server.argocd:443
   --forgejo-upstream vcluster.lb.team-a.forgejo-http.forgejo:3000
+  --image-platform linux/arm64
 
 Optional skip flags:
   --skip-vind
@@ -45,6 +46,7 @@ Optional skip flags:
   --skip-orbstack-env
   --skip-forgejo
   --skip-image-build
+  --wait-for-image-build
   --skip-argocd-bootstrap
 
 ProjectSecret defaults:
@@ -62,6 +64,12 @@ require_cmd() {
   fi
 }
 
+step() {
+  STEP_INDEX=$((STEP_INDEX + 1))
+  echo
+  echo "[STEP ${STEP_INDEX}/${TOTAL_STEPS}] $1"
+}
+
 CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 REPO_NAME="vcp-gitops"
@@ -74,6 +82,7 @@ SKIP_REPLACE="false"
 SKIP_ORBSTACK_ENV="false"
 SKIP_FORGEJO="false"
 SKIP_IMAGE_BUILD="false"
+WAIT_FOR_IMAGE_BUILD="false"
 
 VCP_HOST="vcp.local"
 ARGOCD_HOST="argocd.vcp.local"
@@ -97,6 +106,7 @@ FORGEJO_OWNER_TYPE="${FORGEJO_OWNER_TYPE:-}"
 GIT_BASE_URL=""
 GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
+IMAGE_PLATFORM="auto"
 SKIP_ARGOCD_BOOTSTRAP="false"
 IMAGE_PULL_PROJECT_NAMESPACE="p-default"
 IMAGE_PULL_PROJECT_SECRET_NAME=""
@@ -212,6 +222,10 @@ while [[ $# -gt 0 ]]; do
       IMAGE_REPOSITORY_PREFIX="${2:-}"
       shift 2
       ;;
+    --image-platform)
+      IMAGE_PLATFORM="${2:-}"
+      shift 2
+      ;;
     --image-pull-project-namespace)
       IMAGE_PULL_PROJECT_NAMESPACE="${2:-}"
       shift 2
@@ -226,6 +240,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-image-build)
       SKIP_IMAGE_BUILD="true"
+      shift
+      ;;
+    --wait-for-image-build)
+      WAIT_FOR_IMAGE_BUILD="true"
       shift
       ;;
     --skip-argocd-bootstrap)
@@ -333,7 +351,35 @@ if [[ -z "$IMAGE_PULL_SOURCE_SECRET_NAME" ]]; then
   IMAGE_PULL_SOURCE_SECRET_NAME="${ORG_NAME}-ghcr-write"
 fi
 
+TOTAL_STEPS=0
 if [[ "$SKIP_VIND" != "true" ]]; then
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
+fi
+if [[ "$SKIP_REPLACE" != "true" ]]; then
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
+fi
+if [[ "$SKIP_ORBSTACK_ENV" != "true" ]]; then
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
+fi
+if [[ "$SKIP_FORGEJO" != "true" ]]; then
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
+fi
+if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
+fi
+if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
+fi
+if command -v kubectl >/dev/null 2>&1; then
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
+fi
+
+STEP_INDEX=0
+IMAGE_BUILD_LOG=""
+IMAGE_BUILD_PID=""
+
+if [[ "$SKIP_VIND" != "true" ]]; then
+  step "Create or upgrade the vind cluster"
   bash vind-demo-cluster/install-vind.sh \
     --cluster-name "$CLUSTER_NAME" \
     --values-file "$VALUES_FILE" \
@@ -353,6 +399,7 @@ if [[ "$SKIP_VIND" != "true" ]]; then
 fi
 
 if [[ "$SKIP_REPLACE" != "true" ]]; then
+  step "Render repo placeholders for the self-contained path"
   bash scripts/replace-text-local.sh \
     --repo-name "$REPO_NAME" \
     --org-name "$ORG_NAME" \
@@ -367,6 +414,7 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
 fi
 
 if [[ "$SKIP_ORBSTACK_ENV" != "true" ]]; then
+  step "Configure local OrbStack domains"
   bash vind-demo-cluster/start-orbstack-domains.sh \
     --cluster-name "$CLUSTER_NAME" \
     --vcp-host "$VCP_HOST" \
@@ -379,6 +427,7 @@ if [[ "$SKIP_ORBSTACK_ENV" != "true" ]]; then
 fi
 
 if [[ "$SKIP_FORGEJO" != "true" ]]; then
+  step "Bootstrap the Forgejo repository"
   if [[ -n "$REPO_NAME" ]]; then
     declare -a forgejo_auth_args
     require_cmd curl
@@ -409,7 +458,13 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
 fi
 
 if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
+  if [[ "$WAIT_FOR_IMAGE_BUILD" == "true" ]]; then
+    step "Build and push the demo image to Forgejo"
+  else
+    step "Start the demo image build in the background"
+  fi
   require_cmd docker
+  require_cmd nohup
 
   image_auth_password="$FORGEJO_PASSWORD"
   image_auth_token="$FORGEJO_TOKEN"
@@ -421,16 +476,33 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
     image_auth_args+=(--password "$image_auth_password")
   fi
 
-  bash scripts/build-push-forgejo-image.sh \
-    --registry "$FORGEJO_HOST" \
-    --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
-    --repo-name "$REPO_NAME" \
-    --username "$FORGEJO_USERNAME" \
-    "${image_auth_args[@]}" \
+  declare -a image_build_cmd
+  image_build_cmd=(
+    bash scripts/build-push-forgejo-image.sh
+    --registry "$FORGEJO_HOST"
+    --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX"
+    --repo-name "$REPO_NAME"
+    --username "$FORGEJO_USERNAME"
+    "${image_auth_args[@]}"
+    --platform "$IMAGE_PLATFORM"
     --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
+  )
+
+  if [[ "$WAIT_FOR_IMAGE_BUILD" == "true" ]]; then
+    "${image_build_cmd[@]}"
+  else
+    mkdir -p vind-demo-cluster/logs
+    IMAGE_BUILD_LOG="vind-demo-cluster/logs/image-build-${CLUSTER_NAME}-$(date +%Y%m%d-%H%M%S).log"
+    nohup "${image_build_cmd[@]}" >"$IMAGE_BUILD_LOG" 2>&1 &
+    IMAGE_BUILD_PID="$!"
+    echo "[INFO] Image build running in background."
+    echo "[INFO] PID: $IMAGE_BUILD_PID"
+    echo "[INFO] Log: $IMAGE_BUILD_LOG"
+  fi
 fi
 
 if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
+  step "Create Argo CD credentials and apply the root application"
   require_cmd kubectl
   require_cmd jq
   require_cmd curl
@@ -484,6 +556,7 @@ EOF
 fi
 
 if command -v kubectl >/dev/null 2>&1; then
+  step "Create the default Platform ProjectSecret for registry auth"
   project_secret_password="${FORGEJO_TOKEN:-}"
   if [[ -z "$project_secret_password" && -n "${argocd_token:-}" ]]; then
     project_secret_password="$argocd_token"
@@ -557,3 +630,15 @@ Recommended next steps:
 5. Continue with vind-demo-cluster/README.md if you want the detailed flow.
 
 EOF
+
+if [[ -n "$IMAGE_BUILD_LOG" ]]; then
+  cat <<EOF
+
+Image build:
+- running in background
+- pid: ${IMAGE_BUILD_PID}
+- log: ${IMAGE_BUILD_LOG}
+- follow with: tail -f ${IMAGE_BUILD_LOG}
+
+EOF
+fi
