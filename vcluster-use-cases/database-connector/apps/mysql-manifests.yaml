@@ -12,9 +12,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
     targetRevision: HEAD
-    path: vcluster-use-cases/vcluster-platform-database-connector/manifests
+    path: vcluster-use-cases/database-connector/manifests
   destination:
     server: https://kubernetes.default.svc
     namespace: mysql-operator

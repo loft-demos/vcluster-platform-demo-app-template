@@ -39,17 +39,17 @@ spec:
         namespace: preview-hello-world-app
         server: '{{server}}'
       info:
-        - name: GitHub Repo
-          value: https://github.com/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/
+        - name: Git Repo
+          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/'
       project: loft-auth-core
       source:
-        repoURL: https://github.com/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git'
         targetRevision: '{{head_sha}}'
         path: helm-chart/
         helm:
           parameters:
           - name: "image.repository"
-            value: "ghcr.io/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}"
+            value: "{REPLACE_IMAGE_REPOSITORY_PREFIX}/{{metadata.labels.repo}}"
           - name: "image.tag"
             value: "{{head_short_sha}}"
           - name: "image.args.text"

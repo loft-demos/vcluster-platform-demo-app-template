@@ -6,11 +6,11 @@ spec:
   terraform:
     nodeTemplate:
       git:
-        repository: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
         subPath: vcluster-use-cases/private-nodes/auto-nodes/gcp-terraform/node
     nodeEnvironmentTemplate:
       git:
-        repository: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
         subPath: vcluster-use-cases/private-nodes/auto-nodes/gcp-terraform/environment
     nodeTypes:
       - properties:
