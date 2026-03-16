@@ -279,9 +279,10 @@ The full secret contract is here:
 The self-contained bootstrap also creates a default Platform `ProjectSecret`
 for the Forgejo registry:
 
-- name: `vcluster-demos-ghcr-write-pat`
+- name: `vcluster-demos-ghcr-write`
 - namespace: `p-default`
 - label `loft.sh/project-secret-name`: `vcluster-demos-ghcr-write`
+- display name: `vcluster-demos-ghcr-write-pat`
 - data keys:
   - `username`
   - `password`
@@ -289,7 +290,7 @@ for the Forgejo registry:
 Override that with:
 
 - `--image-pull-project-namespace`
-- `--image-pull-project-secret-name`
+- `--image-pull-project-secret-name` for the display name shown in Platform
 - `--image-pull-source-secret-name`
 
 ## Lower-Level Helpers
