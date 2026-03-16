@@ -90,7 +90,16 @@ annotate_loft_cluster() {
   local cluster_annotated="false"
 
   echo "[INFO] Waiting for vCluster Platform deployment to become available"
-  kubectl -n vcluster-platform rollout status deploy/loft --timeout=300s >/dev/null 2>&1 || true
+  for attempt in $(seq 1 30); do
+    if kubectl -n vcluster-platform wait --for=condition=Available deploy/loft --timeout=10s >/dev/null 2>&1; then
+      echo "[INFO] vCluster Platform deployment is available"
+      break
+    fi
+    if (( attempt % 3 == 0 )); then
+      echo "[INFO] Still waiting for deploy/loft (${attempt}/30)"
+      kubectl get deploy,pods -n vcluster-platform --no-headers 2>/dev/null || true
+    fi
+  done
 
   echo "[INFO] Waiting for clusters.management.loft.sh/loft-cluster"
   for attempt in $(seq 1 60); do
