@@ -67,6 +67,8 @@ What the bootstrap does:
 - optionally creates a default vCP `ProjectSecret` for snapshot registry auth in `p-default`
 - applies the root Argo CD `Application`
 - starts the OrbStack domain adapter
+- when `private-nodes` is enabled, creates a default OrbStack Ubuntu VM named
+  `private-node-demo-worker-1` for the manual worker-node join flow
 - adds vCluster Platform navbar links for the Forgejo GitOps repo and, when
   `flux` is enabled, the Flux UI
 
@@ -146,6 +148,13 @@ Enable a few use cases as part of the bootstrap:
 ```bash
 LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --use-cases eso,auto-snapshots,flux
+```
+
+Enable the private-nodes flow and create the default OrbStack worker VM:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --use-cases eso,private-nodes
 ```
 
 Enable almost everything except the heavier ones:
@@ -302,6 +311,14 @@ Available use cases for the `vind` bootstrap:
 - `tenant-observability`
 - `virtual-scheduler`
 - `vnode`
+
+When `private-nodes` is selected, the bootstrap also creates a default OrbStack
+Ubuntu VM for the example `private-node-demo` vCluster instance:
+
+- default VM: `private-node-demo-worker-1`
+- override with `--private-node-vm-name`
+- final join still happens manually by copying the Private Nodes connect command
+  from vCluster Platform and running it inside that VM
 
 The current default is intentionally small:
 
