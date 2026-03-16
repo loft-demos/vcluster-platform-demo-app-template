@@ -7,7 +7,7 @@ Bootstrap the current git repository into a Forgejo or Gitea-compatible remote.
 
 This script:
 1. creates the target repo through the Forgejo API if it does not exist
-2. pushes the current local branches and tags to the target repo
+2. pushes the selected local git refs to the target repo
 3. optionally pushes the current working tree as a snapshot of the default branch
 
 Requirements:
@@ -35,6 +35,9 @@ Options:
   --default-branch NAME    Branch to set as default. Auto-detected if omitted
   --visibility VALUE       private or public. Default: private
   --description TEXT       Optional repo description
+  --current-branch-only    Push only the detected default branch instead of all
+                           local branches
+  --skip-tags              Do not push local git tags
   --include-working-tree   Also push the current working tree to the default
                            branch without changing local git history.
   --help                   Show this message
@@ -179,16 +182,24 @@ push_refs() {
   fi
   auth_header="$(printf '%s' "$USERNAME:$auth_secret" | base64)"
 
-  echo "[INFO] Pushing branches to $REPO_URL"
-  while IFS= read -r branch; do
-    [[ -n "$branch" ]] || continue
+  if [[ "$CURRENT_BRANCH_ONLY" == "true" ]]; then
+    echo "[INFO] Pushing branch ${DEFAULT_BRANCH} to $REPO_URL"
     git -c "http.extraHeader=Authorization: Basic $auth_header" \
-      push "$REPO_URL" "refs/heads/$branch:refs/heads/$branch"
-  done < <(git for-each-ref --format='%(refname:short)' refs/heads)
+      push "$REPO_URL" "refs/heads/$DEFAULT_BRANCH:refs/heads/$DEFAULT_BRANCH"
+  else
+    echo "[INFO] Pushing branches to $REPO_URL"
+    while IFS= read -r branch; do
+      [[ -n "$branch" ]] || continue
+      git -c "http.extraHeader=Authorization: Basic $auth_header" \
+        push "$REPO_URL" "refs/heads/$branch:refs/heads/$branch"
+    done < <(git for-each-ref --format='%(refname:short)' refs/heads)
+  fi
 
-  echo "[INFO] Pushing tags to $REPO_URL"
-  git -c "http.extraHeader=Authorization: Basic $auth_header" \
-    push "$REPO_URL" --tags
+  if [[ "$SKIP_TAGS" != "true" ]]; then
+    echo "[INFO] Pushing tags to $REPO_URL"
+    git -c "http.extraHeader=Authorization: Basic $auth_header" \
+      push "$REPO_URL" --tags
+  fi
 }
 
 push_working_tree_snapshot() {
@@ -249,6 +260,8 @@ DEFAULT_BRANCH=""
 VISIBILITY="private"
 DESCRIPTION="Bootstrap copy of vcluster-platform-demo-app-template"
 INCLUDE_WORKING_TREE="false"
+CURRENT_BRANCH_ONLY="false"
+SKIP_TAGS="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -291,6 +304,14 @@ while [[ $# -gt 0 ]]; do
     --description)
       DESCRIPTION="${2:-}"
       shift 2
+      ;;
+    --current-branch-only)
+      CURRENT_BRANCH_ONLY="true"
+      shift
+      ;;
+    --skip-tags)
+      SKIP_TAGS="true"
+      shift
       ;;
     --include-working-tree)
       INCLUDE_WORKING_TREE="true"

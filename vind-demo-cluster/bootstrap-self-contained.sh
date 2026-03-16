@@ -562,9 +562,14 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
   if [[ -n "$REPO_NAME" ]]; then
     declare -a forgejo_auth_args
     require_cmd curl
-    for _ in $(seq 1 60); do
+    echo "[INFO] Waiting for Forgejo API at ${FORGEJO_URL}/api/healthz"
+    for attempt in $(seq 1 60); do
       if curl -ksSf "${FORGEJO_URL}/api/healthz" >/dev/null 2>&1; then
+        echo "[INFO] Forgejo API is reachable"
         break
+      fi
+      if (( attempt % 5 == 0 )); then
+        echo "[INFO] Still waiting for Forgejo API (${attempt}/60)"
       fi
       sleep 2
     done
@@ -582,6 +587,8 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       --owner "$FORGEJO_OWNER" \
       --owner-type "$FORGEJO_OWNER_TYPE" \
       --repo "$REPO_NAME" \
+      --current-branch-only \
+      --skip-tags \
       --include-working-tree
   else
     echo "[INFO] Skipping Forgejo bootstrap because --repo-name was not provided."
