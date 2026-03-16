@@ -81,6 +81,10 @@ Delete the environment cleanly:
 bash vind-demo-cluster/delete-vind.sh
 ```
 
+> [!WARNING]
+> `delete-vind.sh` also stashes local repo changes by default so the clone can
+> be refreshed from `origin` without committing bootstrap mutations first.
+
 Use a different vCP project namespace for the registry `ProjectSecret`:
 
 ```bash
