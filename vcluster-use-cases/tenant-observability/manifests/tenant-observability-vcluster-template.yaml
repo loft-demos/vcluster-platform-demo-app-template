@@ -563,9 +563,8 @@ spec:
       metadata:
         name: grafana
         namespace: tenant-observability
-        annotations:
-          kubernetes.io/ingress.class: nginx
       spec:
+        ingressClassName: nginx
         rules:
           - host: grafana-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             http:
@@ -583,9 +582,8 @@ spec:
       metadata:
         name: prometheus
         namespace: tenant-observability
-        annotations:
-          kubernetes.io/ingress.class: nginx
       spec:
+        ingressClassName: nginx
         rules:
           - host: prometheus-{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
             http:
@@ -608,6 +606,12 @@ spec:
             ingresses:
               enabled: true
         controlPlane:
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          coredns:
+            embedded: true
           hostPathMapper:
             enabled: true
             central: true

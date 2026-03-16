@@ -41,6 +41,30 @@ Required vCluster config for this use case:
 
 ```yaml
 controlPlane:
+  backingStore:
+    etcd:
+      embedded:
+        enabled: true
+  coredns:
+    embedded: true
+  hostPathMapper:
+    enabled: true
+    central: true
+```
+
+This template intentionally uses:
+
+- embedded etcd
+- embedded CoreDNS
+- Central HostPath Mapper
+
+so the demo looks like a more fully featured tenant vCluster instead of the
+lightest possible control plane.
+
+The host-path-specific part of the required config is:
+
+```yaml
+controlPlane:
   hostPathMapper:
     enabled: true
     central: true
@@ -50,9 +74,15 @@ The demo template in
 [manifests/tenant-observability-vcluster-template.yaml](./manifests/tenant-observability-vcluster-template.yaml)
 includes that config already.
 
+For the `vind` path, the management cluster should also run an ingress
+controller. The `vind` bootstrap installs `ingress-nginx`, and the
+OrbStack/Caddy adapter can route `*.vcp.local` to it so tenant app UIs are
+reachable locally.
+
 Relevant docs:
 
 - [Central HostPath Mapper](https://www.vcluster.com/docs/platform/maintenance/monitoring/central-hostpath-mapper)
+- [ingress-nginx install guide](https://kubernetes.github.io/ingress-nginx/deploy/)
 
 ## Deploy It
 
@@ -82,6 +112,7 @@ The use case installs this Argo CD `Application`:
 That `Application` applies:
 
 - [manifests/tenant-observability-vcluster-template.yaml](./manifests/tenant-observability-vcluster-template.yaml)
+- [manifests/tenant-observability-instance.yaml](./manifests/tenant-observability-instance.yaml)
 
 ## Create Two Tenant vClusters
 
@@ -92,6 +123,10 @@ Create two vClusters from the `tenant-observability-vcluster` template:
 
 This can be done from the vCluster Platform UI or with the
 `VirtualClusterInstance` API, depending on how you are running the demo.
+
+An example `VirtualClusterInstance` is included here:
+
+- [manifests/tenant-observability-instance.yaml](./manifests/tenant-observability-instance.yaml)
 
 The template adds a `Grafana` custom link to each tenant instance so you can
 open the local Grafana for that vCluster directly from the Platform UI.
@@ -168,7 +203,10 @@ Scaling considerations:
 
 - the tenant vClusters are created from the provided template, or from another
   template that includes the same Central HostPath Mapper config
-- an ingress controller is available so the Grafana custom link resolves cleanly
+- the management cluster needs an ingress controller for these Ingress objects
+  to resolve; on the `vind` path that is installed from `vind-demo-cluster/vcluster.yaml`
+- the tenant ingress hostnames still need a reachable endpoint and DNS or local
+  host mapping for the ingress controller service
 - this use case keeps everything as raw Kubernetes manifests inside the
   `VirtualClusterTemplate` to avoid requiring Argo CD or Helm inside each
   tenant vCluster just for the demo
