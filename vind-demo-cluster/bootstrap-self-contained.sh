@@ -102,6 +102,38 @@ annotate_loft_cluster() {
   fi
 }
 
+taint_control_plane_node() {
+  local cluster_name="$1"
+  local control_plane_node=""
+
+  if kubectl wait --for=condition=Ready nodes --all --timeout=180s >/dev/null 2>&1; then
+    control_plane_node="$(
+      kubectl get nodes -l node-role.kubernetes.io/control-plane \
+        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true
+    )"
+    if [[ -z "$control_plane_node" ]]; then
+      control_plane_node="$(
+        kubectl get nodes -l node-role.kubernetes.io/master \
+          -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true
+      )"
+    fi
+    if [[ -z "$control_plane_node" ]] && kubectl get node "$cluster_name" >/dev/null 2>&1; then
+      control_plane_node="$cluster_name"
+    fi
+
+    if [[ -n "$control_plane_node" ]]; then
+      kubectl taint nodes "$control_plane_node" \
+        node-role.kubernetes.io/control-plane=:NoSchedule \
+        --overwrite >/dev/null
+      echo "[INFO] Applied NoSchedule taint to node ${control_plane_node}"
+    else
+      echo "[WARN] Could not find a control plane node to taint." >&2
+    fi
+  else
+    echo "[WARN] Timed out waiting for nodes to become ready before tainting the control plane node." >&2
+  fi
+}
+
 CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 REPO_NAME="vcp-gitops"
@@ -413,6 +445,7 @@ if command -v kubectl >/dev/null 2>&1; then
   TOTAL_STEPS=$((TOTAL_STEPS + 1))
   if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
     TOTAL_STEPS=$((TOTAL_STEPS + 1))
+    TOTAL_STEPS=$((TOTAL_STEPS + 1))
   fi
 fi
 
@@ -529,6 +562,7 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
     "${image_auth_args[@]}"
     --platform "$IMAGE_PLATFORM"
     --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
+    --skip-cache
   )
 
   if [[ "$WAIT_FOR_IMAGE_BUILD" == "true" ]]; then
@@ -545,6 +579,10 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
 fi
 
 if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
+  step "Apply the control-plane NoSchedule taint"
+  require_cmd kubectl
+  taint_control_plane_node "$CLUSTER_NAME"
+
   step "Annotate cluster/loft-cluster for Platform-side host and timezone values"
   require_cmd kubectl
   annotate_loft_cluster "$vcp_domain_prefix" "$vcp_domain" "$SLEEP_TIME_ZONE"

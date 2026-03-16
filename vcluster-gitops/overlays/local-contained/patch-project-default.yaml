@@ -1,0 +1,8 @@
+apiVersion: management.loft.sh/v1
+kind: Project
+metadata:
+  name: default
+spec:
+  argoCD:
+    sso:
+      host: https://argocd.{REPLACE_BASE_DOMAIN}/
