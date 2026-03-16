@@ -44,6 +44,34 @@ The root Argo CD app is:
 
 - [root-application.yaml](../vcluster-gitops/overlays/local-contained/root-application.yaml)
 
+## Forgejo Instead of GitHub
+
+The self-contained `vind` path uses Forgejo as the local replacement for both
+GitHub and most of the GHCR-dependent flow.
+
+In practice that means:
+
+- this repo is pushed into Forgejo instead of relying on a GitHub template copy
+- Argo CD reads the repo from the in-cluster Forgejo service URL
+- browser-facing links still use <https://forgejo.vcp.local>
+- the demo app image from `src/` is built and pushed to the Forgejo container
+  registry
+- the bootstrap creates a default Platform `ProjectSecret` with Forgejo
+  registry credentials for image pulls
+
+Current intent for the self-contained path:
+
+- PR examples should eventually build and pull images from the Forgejo registry
+  instead of GHCR
+- [vcluster-use-cases/auto-snapshots](../vcluster-use-cases/auto-snapshots)
+  should be able to target the Forgejo OCI registry instead of requiring GHCR
+  or introducing S3 just for the self-contained setup
+
+> [!IMPORTANT]
+> The Git hosting flow is the primary path and is the part that has been worked
+> through the most. The Forgejo container registry path is wired into the
+> bootstrap, but it has not been validated as thoroughly yet as the Git side.
+
 ## Most Common Commands
 
 Create or rerun everything:
