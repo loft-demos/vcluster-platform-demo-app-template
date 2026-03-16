@@ -100,9 +100,26 @@ Default local hostnames:
 - <https://argocd.vcp.local>
 - <https://forgejo.vcp.local>
 
+This setup uses a small [Caddy adapter](https://caddyserver.com/docs/quick-starts/reverse-proxy) under [orbstack-domains/](./orbstack-domains) because `vind` and OrbStack solve two different parts of the problem:
+
+- `vind` creates `LoadBalancer` services for things like vCluster Platform,
+  Argo CD, and Forgejo
+- those `LoadBalancer` services are backed by HAProxy containers on the
+  per-cluster Docker network, for example `vcluster.vcp`
+- OrbStack can give nice local HTTPS hostnames to containers
+- Caddy is the bridge that lets those OrbStack hostnames proxy to the `vind`
+  `LoadBalancer` upstreams
+
+That gives you friendly local URLs like `vcp.local` instead of relying on:
+
+- raw OrbStack control-plane domains like `vcluster.cp.vcp.orb.local`
+- raw `LoadBalancer` hostnames or local IPs
+
 Raw OrbStack hostnames still exist, but they are not the main operator path.
-The adapter under [orbstack-domains/](./orbstack-domains) maps the friendly
-hostnames to the `vind` service upstreams.
+
+For the full pattern, see:
+
+- [orbstack-domains/README.md](./orbstack-domains/README.md)
 
 If you want a public fallback instead, use:
 
