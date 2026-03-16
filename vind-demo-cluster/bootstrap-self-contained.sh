@@ -70,6 +70,38 @@ step() {
   echo "[STEP ${STEP_INDEX}/${TOTAL_STEPS}] $1"
 }
 
+annotate_loft_cluster() {
+  local domain_prefix="$1"
+  local domain_name="$2"
+  local sleep_time_zone="$3"
+  local cluster_annotated="false"
+
+  echo "[INFO] Waiting for vCluster Platform deployment to become available"
+  kubectl -n vcluster-platform rollout status deploy/loft --timeout=300s >/dev/null 2>&1 || true
+
+  echo "[INFO] Waiting for clusters.management.loft.sh/loft-cluster"
+  for attempt in $(seq 1 60); do
+    if kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
+      kubectl annotate --overwrite clusters.management.loft.sh loft-cluster \
+        "domainPrefix=${domain_prefix}" \
+        "domain=${domain_name}" \
+        "sleepTimeZone=${sleep_time_zone}" >/dev/null
+      cluster_annotated="true"
+      break
+    fi
+    if (( attempt % 5 == 0 )); then
+      echo "[INFO] Still waiting for cluster/loft-cluster (${attempt}/60)"
+    fi
+    sleep 2
+  done
+
+  if [[ "$cluster_annotated" == "true" ]]; then
+    echo "[INFO] Annotated cluster/loft-cluster"
+  else
+    echo "[WARN] Could not find cluster/loft-cluster to annotate yet." >&2
+  fi
+}
+
 CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 REPO_NAME="vcp-gitops"
@@ -351,6 +383,13 @@ if [[ -z "$IMAGE_PULL_SOURCE_SECRET_NAME" ]]; then
   IMAGE_PULL_SOURCE_SECRET_NAME="${ORG_NAME}-ghcr-write"
 fi
 
+vcp_domain_prefix="${VCP_HOST%%.*}"
+if [[ "$VCP_HOST" == *.* ]]; then
+  vcp_domain="${VCP_HOST#*.}"
+else
+  vcp_domain="local"
+fi
+
 TOTAL_STEPS=0
 if [[ "$SKIP_VIND" != "true" ]]; then
   TOTAL_STEPS=$((TOTAL_STEPS + 1))
@@ -372,6 +411,9 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
 fi
 if command -v kubectl >/dev/null 2>&1; then
   TOTAL_STEPS=$((TOTAL_STEPS + 1))
+  if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
+    TOTAL_STEPS=$((TOTAL_STEPS + 1))
+  fi
 fi
 
 STEP_INDEX=0
@@ -394,6 +436,7 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --forgejo-admin-user "$FORGEJO_USERNAME" \
     --forgejo-admin-password "$FORGEJO_PASSWORD" \
     --orbstack-env-file "$ORBSTACK_ENV_FILE" \
+    --skip-cluster-annotation \
     --skip-orbstack-domains \
     --skip-summary
 fi
@@ -502,6 +545,10 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
 fi
 
 if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
+  step "Annotate cluster/loft-cluster for Platform-side host and timezone values"
+  require_cmd kubectl
+  annotate_loft_cluster "$vcp_domain_prefix" "$vcp_domain" "$SLEEP_TIME_ZONE"
+
   step "Create Argo CD credentials and apply the root application"
   require_cmd kubectl
   require_cmd jq
@@ -557,6 +604,7 @@ fi
 
 if command -v kubectl >/dev/null 2>&1; then
   step "Create the default Platform ProjectSecret for registry auth"
+  require_cmd base64
   project_secret_password="${FORGEJO_TOKEN:-}"
   if [[ -z "$project_secret_password" && -n "${argocd_token:-}" ]]; then
     project_secret_password="$argocd_token"
@@ -574,6 +622,8 @@ if command -v kubectl >/dev/null 2>&1; then
     done
 
     if kubectl get namespace "$IMAGE_PULL_PROJECT_NAMESPACE" >/dev/null 2>&1; then
+      project_secret_username_b64="$(printf '%s' "$FORGEJO_USERNAME" | base64 | tr -d '\n')"
+      project_secret_password_b64="$(printf '%s' "$project_secret_password" | base64 | tr -d '\n')"
       cat <<EOF | kubectl apply -f -
 apiVersion: management.loft.sh/v1
 kind: ProjectSecret
@@ -587,8 +637,8 @@ metadata:
 spec:
   displayName: ${IMAGE_PULL_PROJECT_SECRET_NAME}
   data:
-    username: ${FORGEJO_USERNAME}
-    password: ${project_secret_password}
+    username: ${project_secret_username_b64}
+    password: ${project_secret_password_b64}
 EOF
     else
       echo "[WARN] Could not find namespace ${IMAGE_PULL_PROJECT_NAMESPACE} to create ${IMAGE_PULL_PROJECT_SECRET_NAME}." >&2

@@ -39,6 +39,8 @@ Options:
   --sleep-time-zone TZ   Optional. Defaults to America/New_York.
   --orbstack-env-file PATH
                          Optional. Defaults to orbstack-domains/.env.<cluster-name>.
+  --skip-cluster-annotation
+                         Optional. Skip annotating cluster/loft-cluster.
   --skip-orbstack-domains
                          Optional. Skip automatic OrbStack domain setup.
   --skip-summary         Optional. Skip the final next-steps summary.
@@ -68,6 +70,7 @@ FORGEJO_ADMIN_PASSWORD="${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-admin}"
 SLEEP_TIME_ZONE="${SLEEP_TIME_ZONE:-America/New_York}"
 ORBSTACK_ENV_FILE=""
 SKIP_ORBSTACK_DOMAINS="false"
+SKIP_CLUSTER_ANNOTATION="false"
 SKIP_SUMMARY="false"
 
 while [[ $# -gt 0 ]]; do
@@ -123,6 +126,10 @@ while [[ $# -gt 0 ]]; do
     --orbstack-env-file)
       ORBSTACK_ENV_FILE="${2:-}"
       shift 2
+      ;;
+    --skip-cluster-annotation)
+      SKIP_CLUSTER_ANNOTATION="true"
+      shift
       ;;
     --skip-orbstack-domains)
       SKIP_ORBSTACK_DOMAINS="true"
@@ -233,20 +240,33 @@ echo "[INFO] Sleep time zone: $SLEEP_TIME_ZONE"
 
 vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
 
-echo "[INFO] Annotating cluster/loft-cluster"
-for _ in $(seq 1 60); do
-  if kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
-    kubectl annotate --overwrite clusters.management.loft.sh loft-cluster \
-      "domainPrefix=${vcp_domain_prefix}" \
-      "domain=${vcp_domain}" \
-      "sleepTimeZone=${SLEEP_TIME_ZONE}" >/dev/null
-    break
-  fi
-  sleep 2
-done
+if [[ "$SKIP_CLUSTER_ANNOTATION" != "true" ]]; then
+  echo "[INFO] Annotating cluster/loft-cluster"
+  echo "[INFO] Waiting for vCluster Platform deployment to become available"
+  kubectl -n vcluster-platform rollout status deploy/loft --timeout=300s >/dev/null 2>&1 || true
 
-if ! kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
-  echo "[WARN] Could not find cluster/loft-cluster to annotate yet." >&2
+  echo "[INFO] Waiting for clusters.management.loft.sh/loft-cluster"
+  cluster_annotated="false"
+  for attempt in $(seq 1 60); do
+    if kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
+      kubectl annotate --overwrite clusters.management.loft.sh loft-cluster \
+        "domainPrefix=${vcp_domain_prefix}" \
+        "domain=${vcp_domain}" \
+        "sleepTimeZone=${SLEEP_TIME_ZONE}" >/dev/null
+      cluster_annotated="true"
+      break
+    fi
+    if (( attempt % 5 == 0 )); then
+      echo "[INFO] Still waiting for cluster/loft-cluster (${attempt}/60)"
+    fi
+    sleep 2
+  done
+
+  if [[ "$cluster_annotated" == "true" ]]; then
+    echo "[INFO] Annotated cluster/loft-cluster"
+  elif ! kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
+    echo "[WARN] Could not find cluster/loft-cluster to annotate yet." >&2
+  fi
 fi
 
 echo "[INFO] Applying a NoSchedule taint to the control plane node"
