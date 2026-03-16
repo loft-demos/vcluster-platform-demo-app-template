@@ -36,7 +36,7 @@ Optional OrbStack local domain overrides:
   --argocd-host argocd.team-a.vcp.local
   --forgejo-host forgejo.team-a.vcp.local
   --onepassword-vault team-a
-  --vcp-version 4.7.1
+  --vcp-version 4.8.0
   --worker-nodes 2
   --use-cases eso,auto-snapshots
   --sleep-time-zone America/New_York
@@ -211,7 +211,7 @@ FORGEJO_UPSTREAM=""
 ORBSTACK_ENV_FILE=""
 
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
-VCP_VERSION="${VCP_VERSION:-4.7.1}"
+VCP_VERSION="${VCP_VERSION:-4.8.0}"
 CONTROL_PLANE_NODE_COUNT="${CONTROL_PLANE_NODE_COUNT:-1}"
 WORKER_NODE_COUNT="${WORKER_NODE_COUNT:-2}"
 SLEEP_TIME_ZONE="${SLEEP_TIME_ZONE:-America/New_York}"

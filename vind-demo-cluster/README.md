@@ -9,6 +9,32 @@ It uses:
 - OrbStack local domains for laptop access
 - the local-contained GitOps overlay for the Argo CD bootstrap
 
+## Prerequisites
+
+Required:
+
+- macOS with [OrbStack](https://orbstack.dev/) available
+- `vcluster` CLI `0.33.0+`
+- `kubectl` compatible with Kubernetes `1.35`
+- `helm` `v3.10+`
+- OrbStack's Docker runtime and `docker` CLI available
+- a vCluster Platform `LICENSE_TOKEN`
+- network access to:
+  - `ghcr.io`
+  - `charts.loft.sh`
+  - `code.forgejo.org`
+
+Recommended:
+
+- an OrbStack Pro license, since the `vind` path assumes OrbStack is the local
+  virtualization and domain layer
+- `jq`, `yq`, `curl`, and `perl`, which the bootstrap scripts use directly
+
+Optional, depending on the features you enable:
+
+- `GHCR_USERNAME` and `GHCR_TOKEN` or `GHCR_PASSWORD` for the auto-snapshots use case
+- a 1Password service account token if you want to finish the ESO setup after bootstrap
+
 ## Quickstart
 
 ```bash
@@ -152,13 +178,13 @@ LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
 ### Override the vCluster Platform Version
 
 The default vCluster Platform chart version for the self-contained `vind` path
-is `4.7.1`.
+is `4.8.0`.
 
 Use `--vcp-version` to override it, for example:
 
 ```bash
 LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
-  --vcp-version 4.8.0-rc.5
+  --vcp-version 4.8.1-rc.1
 ```
 
 Delete the environment cleanly:
@@ -269,6 +295,7 @@ Available use cases for the `vind` bootstrap:
 - `kyverno`
 - `mysql`
 - `namespace-sync`
+- `private-nodes`
 - `postgres`
 - `rancher`
 - `resolve-dns`

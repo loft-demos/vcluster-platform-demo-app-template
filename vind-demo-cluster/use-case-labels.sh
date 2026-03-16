@@ -14,6 +14,7 @@ flux|flux
 kyverno|kyverno
 mysql|mysql
 namespace-sync|namespaceSync
+private-nodes|privateNodes
 postgres|postgres
 rancher|rancher
 resolve-dns|resolveDNS
@@ -56,6 +57,9 @@ canonical_use_case_name() {
     namespace-sync|namespacesync|namespaceSync)
       printf '%s\n' "namespace-sync"
       ;;
+    private-nodes|privatenodes|privateNodes)
+      printf '%s\n' "private-nodes"
+      ;;
     postgres)
       printf '%s\n' "postgres"
       ;;
@@ -91,6 +95,7 @@ label_key_for_use_case() {
     kyverno) printf '%s\n' "kyverno" ;;
     mysql) printf '%s\n' "mysql" ;;
     namespace-sync) printf '%s\n' "namespaceSync" ;;
+    private-nodes) printf '%s\n' "privateNodes" ;;
     postgres) printf '%s\n' "postgres" ;;
     rancher) printf '%s\n' "rancher" ;;
     resolve-dns) printf '%s\n' "resolveDNS" ;;

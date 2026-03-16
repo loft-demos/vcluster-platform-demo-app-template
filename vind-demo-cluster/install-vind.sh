@@ -18,7 +18,7 @@ Usage:
 
   bash vind-demo-cluster/install-vind.sh \
     --license-token "$TOKEN" \
-    --vcp-version 4.7.1 \
+    --vcp-version 4.8.0 \
     --vcp-host vcp.local \
     --repo-name vcp-gitops \
     --worker-nodes 2 \
@@ -28,7 +28,7 @@ Options:
   --cluster-name NAME    Optional. Defaults to vcp.
   --values-file PATH     Optional. Defaults to vind-demo-cluster/vcluster.yaml.
   --license-token TOKEN  Required unless LICENSE_TOKEN is already exported.
-  --vcp-version VERSION  Optional. Defaults to 4.7.1.
+  --vcp-version VERSION  Optional. Defaults to 4.8.0.
   --repo-name NAME       Optional. Defaults to vcp-gitops.
   --org-name NAME        Optional. Defaults to vcluster-demos.
   --vcluster-name NAME   Optional. Defaults to repo name with trailing -app removed.
@@ -72,7 +72,7 @@ require_cmd() {
 CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
-VCP_VERSION="${VCP_VERSION:-4.7.1}"
+VCP_VERSION="${VCP_VERSION:-4.8.0}"
 REPO_NAME="vcp-gitops"
 ORG_NAME="vcluster-demos"
 VCLUSTER_NAME=""

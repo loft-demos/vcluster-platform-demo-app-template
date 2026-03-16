@@ -53,7 +53,7 @@ Main repo areas:
 | `namespace-sync` | Namespace sync plus Argo CD `Application` sync back to the host cluster. | [Repo](./vcluster-use-cases/namespace-sync/README.md), [Namespace sync](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/sync/to-host/advanced/namespaces) |
 | `pod-identity` | EKS Pod Identity with synced `PodIdentityAssociation` resources for AWS access from workloads in a vCluster. | [Repo](./vcluster-use-cases/pod-identity/eks/README.md) |
 | `pod-security-standards` | Enforces Pod Security Standards inside the vCluster API server with an admission configuration. | [Repo](./vcluster-use-cases/pod-security-standards/README.md) |
-| `private-nodes` | Attaches dedicated external compute to a vCluster instance with Private Nodes and auto-node patterns. | [Repo](./vcluster-use-cases/private-nodes/README.md) |
+| `private-nodes` | Manual Private Nodes flow for attaching dedicated external compute to a vCluster instance, including an OrbStack VM path for `vind`. | [Repo](./vcluster-use-cases/private-nodes/README.md) |
 | `rancher-integration` | Rancher integration examples for deploying and wiring Rancher alongside vCluster Platform. | [Repo](./vcluster-use-cases/rancher-integration/) |
 | `resolve-dns` | Cross-vCluster DNS resolution with embedded CoreDNS and `resolveDNS` mappings. | [Repo](./vcluster-use-cases/resolve-dns/README.md), [Resolve DNS](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/networking/resolve-dns) |
 | `tenant-observability` | Tenant-scoped Grafana, Loki, Prometheus, and Promtail inside each vCluster using Central HostPath Mapper for log access. | [Repo](./vcluster-use-cases/tenant-observability/README.md), [Central HostPath Mapper](https://www.vcluster.com/docs/platform/maintenance/monitoring/central-hostpath-mapper) |
@@ -94,6 +94,7 @@ kubectl -n argocd label secret cluster-local \
   argoCdInVcluster=true \
   connectedHostCluster=true \
   namespaceSync=true \
+  privateNodes=true \
   resolveDNS=true \
   tenantObservability=true \
   virtualScheduler=true \
@@ -119,6 +120,7 @@ The label keys currently used by the repo are:
 | `kyverno` | `kyverno` |
 | `mysql` | `mysql` |
 | `namespace-sync` | `namespaceSync` |
+| `private-nodes` | `privateNodes` |
 | `postgres` | `postgres` |
 | `rancher` | `rancher` |
 | `resolve-dns` | `resolveDNS` |

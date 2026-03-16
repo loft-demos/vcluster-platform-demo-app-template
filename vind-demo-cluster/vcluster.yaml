@@ -1,4 +1,4 @@
-# Use vCluster CLI 0.32.1 when creating or upgrading this vind cluster.
+# Use vCluster CLI 0.33.0 or newer when creating or upgrading this vind cluster.
 # The vCluster version is determined by the CLI release, while this file pins
 # the Kubernetes distro and the bootstrap add-on chart versions.
 # Treat this file as a template. Use install-vind.sh or
