@@ -1,23 +1,90 @@
 # vCluster Automatic Snapshots
 
-Snapshots are a built-in method to create backups of a vCluster as an OCI compliant image that may be pushed to an OCI compliant container registry or an S3 bucket.
+Snapshots are a built-in method to back up a vCluster as an OCI artifact that
+can be pushed to either:
 
-This use case demo is configured to create a Virtual Cluster Template, and a Virtual Cluster Instance based on that template, with `autoSnapshots` enabled and configured to push the snapshot OCI images to a GitHub container registry (GHCR) on a cron based schedule. It also creates a `Secret`, from a vCluster Platform Project Secret, in the vCluster host namespace with a GitHub username and personal access token (password) that has `write` permissions to the configured GHCR.
+- an OCI-compliant container registry
+- an S3 bucket
 
-Snapshots will be created and pushed to the respective GHCR Monday thru Friday at 15 minutes past the hour 7 AM until 5 PM.
+This demo configures a `VirtualClusterTemplate` and example
+`VirtualClusterInstance` with `autoSnapshots` enabled.
 
-Currently, the vCluster CLI is required to restore a given snapshot.
+## Registry Target By Deployment Mode
 
-Demo Steps:
+This use case now has two render paths:
 
-- Ensure that at least one snapshot has been created - it should be available at the following GHCR: https://github.com/orgs/{REPLACE_ORG_NAME}/packages/container/package/{REPLACE_REPO_NAME}
-- Delete the `demo-web` `Deployment`
-- Use the vCluster CLI to restore the snapshot (note that the tag will be different):
+- vCluster Platform Demo Generator / GitHub path:
+  snapshots are pushed to GHCR
+- self-contained `vind` path:
+  snapshots are rendered to the Forgejo OCI registry that is installed inside
+  the local `vind` cluster
 
-```
+The self-contained `vind` path does this so you do not need to introduce S3
+just to demonstrate snapshots locally.
+
+The OCI image location therefore depends on how the repo was rendered:
+
+- generator / GitHub:
+  `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
+- self-contained `vind`:
+  `oci://{REPLACE_OCI_REGISTRY_HOST}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
+
+The corresponding credential secret also differs by render path:
+
+- the original path keeps the GHCR-style secret naming
+- the self-contained path renders the projected secret name used by the Forgejo
+  registry bootstrap
+
+## Self-Contained vind Notes
+
+In the self-contained `vind` flow:
+
+- `bootstrap-self-contained.sh` builds and pushes the demo image to the Forgejo
+  container registry
+- the same bootstrap creates the default Platform `ProjectSecret` used for
+  registry auth
+- the local-contained overlay points the auto-snapshots manifests at the
+  self-contained version so Argo CD does not fight the populated registry
+  secret
+
+That keeps the `vind` path self-contained while leaving the original
+demo-generator / GitHub path unchanged.
+
+## Schedule
+
+Snapshots are configured to run Monday through Friday at 15 minutes past the
+hour from 7 AM through 5 PM.
+
+## Restore
+
+The vCluster CLI is still required to restore a given snapshot.
+
+Example:
+
+```bash
 vcluster platform login https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
-vcluster restore snappy oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}:snappy-20250826111511
+vcluster restore snappy oci://{REPLACE_OCI_REGISTRY_HOST}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}:snappy-20250826111511
 ```
 
-- Return to the Platform UI, the snappy vCluster should be restarting
-- Once the vCluster has restarted, show the the `demo-web` `Deployment` has been restored
+## Demo Flow
+
+1. Ensure that at least one snapshot has been created.
+2. Confirm the OCI artifact exists in the rendered registry location.
+3. Delete the `demo-web` `Deployment`.
+4. Restore the snapshot with the vCluster CLI.
+5. Return to the Platform UI and wait for the `snappy` vCluster instance to restart.
+6. Confirm that the `demo-web` `Deployment` has been restored.
+
+For the original GitHub-rendered path, the snapshot package is available in the
+GitHub package UI here:
+
+- `https://github.com/orgs/{REPLACE_ORG_NAME}/packages/container/package/{REPLACE_REPO_NAME}`
+
+For the self-contained `vind` path, use the Forgejo package UI instead:
+
+- `https://forgejo.vcp.local/{REPLACE_ORG_NAME}/-/packages/container/{REPLACE_REPO_NAME}`
+
+> [!IMPORTANT]
+> The self-contained `vind` path is wired to use the Forgejo OCI registry, but
+> the registry-backed snapshot flow has not been validated as thoroughly yet as
+> the Git hosting flow.

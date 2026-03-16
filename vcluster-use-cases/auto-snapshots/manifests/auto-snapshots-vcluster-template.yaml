@@ -239,7 +239,7 @@ spec:
                       credential:
                         secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
                         secretNamespace: {{ .Values.loft.virtualClusterNamespace }}
-                      repository: oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
+                      repository: oci://{REPLACE_OCI_REGISTRY_HOST}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
             sleep:
               auto:
                 afterInactivity: 35m
@@ -280,7 +280,7 @@ spec:
             metadata:
               name: {REPLACE_ORG_NAME}-ghcr-write-pat
               labels:
-                loft.sh/project-secret-name: {REPLACE_ORG_NAME}-ghcr-write-pat
+                loft.sh/project-secret-name: {REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}
                 org: {REPLACE_ORG_NAME}
                 repo: {REPLACE_REPO_NAME}
             type: Opaque
