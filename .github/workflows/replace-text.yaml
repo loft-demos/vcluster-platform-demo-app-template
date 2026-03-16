@@ -24,6 +24,8 @@ env:
   GIT_BASE_URL: https://github.com
   GIT_PUBLIC_URL: https://github.com
   IMAGE_REPOSITORY_PREFIX: ghcr.io/${{ github.repository_owner || 'loft-demos' }}
+  OCI_REGISTRY_HOST: ghcr.io
+  IMAGE_PULL_SOURCE_SECRET_NAME: ${{ github.repository_owner || 'loft-demos' }}-ghcr-write-pat
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -57,7 +59,9 @@ jobs:
               { "find": "{REPLACE_BASE_DOMAIN}", "replace": "${{ env.BASE_DOMAIN }}" },
               { "find": "{REPLACE_GIT_BASE_URL}", "replace": "${{ env.GIT_BASE_URL }}" },
               { "find": "{REPLACE_GIT_PUBLIC_URL}", "replace": "${{ env.GIT_PUBLIC_URL }}" },
-              { "find": "{REPLACE_IMAGE_REPOSITORY_PREFIX}", "replace": "${{ env.IMAGE_REPOSITORY_PREFIX }}" }
+              { "find": "{REPLACE_IMAGE_REPOSITORY_PREFIX}", "replace": "${{ env.IMAGE_REPOSITORY_PREFIX }}" },
+              { "find": "{REPLACE_OCI_REGISTRY_HOST}", "replace": "${{ env.OCI_REGISTRY_HOST }}" },
+              { "find": "{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}", "replace": "${{ env.IMAGE_PULL_SOURCE_SECRET_NAME }}" }
             ]
           prefix: ''
           suffix: ''

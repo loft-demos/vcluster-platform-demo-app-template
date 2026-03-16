@@ -1,0 +1,10 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: auto-snapshots-cluster
+  namespace: argocd
+spec:
+  template:
+    spec:
+      source:
+        path: vcluster-use-cases/auto-snapshots/apps/overlays/local-contained

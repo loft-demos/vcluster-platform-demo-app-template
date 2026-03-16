@@ -22,4 +22,5 @@ resources:
   - ../../virtual-scheduler-appset.yaml
   - ../../vnode-with-vcluster-appset.yaml
 patches:
+  - path: patch-autosnapshots-appset.yaml
   - path: patch-pr-apps-bootstrap.yaml

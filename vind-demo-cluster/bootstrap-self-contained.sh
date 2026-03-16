@@ -361,6 +361,8 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --git-base-url "$GIT_BASE_URL" \
     --git-public-url "$GIT_PUBLIC_URL" \
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
+    --oci-registry-host "$FORGEJO_HOST" \
+    --image-pull-source-secret-name "$IMAGE_PULL_SOURCE_SECRET_NAME" \
     --include-md
 fi
 
