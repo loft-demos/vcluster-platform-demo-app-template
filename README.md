@@ -59,6 +59,64 @@ Main repo areas:
 | `virtual-scheduler` | Enables the Kubernetes scheduler, or other schedulers, inside a vCluster. | [Repo](./vcluster-use-cases/virtual-scheduler/README.md), [Sync nodes from host](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/sync/from-host/nodes) |
 | `vnode-with-vcluster` | Uses vNode with vCluster for stronger workload isolation and breakout demos. | [Repo](./vcluster-use-cases/vnode-with-vcluster/README.md), [vNode docs](https://www.vnode.com/docs) |
 
+## Enable Use Cases Directly with `cluster-local`
+
+Both the Demo Generator path and the self-contained `vind` path use the Argo CD
+cluster secret named `cluster-local` in namespace `argocd` to decide which
+use-case `ApplicationSet`s should match the local management cluster.
+
+That means you can enable or disable use cases directly with `kubectl label`
+without rerunning the full bootstrap.
+
+Example:
+
+```bash
+kubectl -n argocd label secret cluster-local \
+  eso=true \
+  autoSnapshots=true \
+  flux=true \
+  crossplane=false \
+  rancher=false \
+  --overwrite
+```
+
+Disable a use case:
+
+```bash
+kubectl -n argocd label secret cluster-local postgres=false --overwrite
+```
+
+Typical flow:
+
+1. connect `kubectl` to the demo environment management cluster
+2. update one or more labels on `argocd/cluster-local`
+3. wait for Argo CD to refresh the matching `ApplicationSet`s and `Application`s
+
+The label keys currently used by the repo are:
+
+| Use case | `cluster-local` label |
+| --- | --- |
+| `argocd-in-vcluster` | `argoCdInVcluster` |
+| `auto-snapshots` | `autoSnapshots` |
+| `connected-host-cluster` | `connectedHostCluster` |
+| `crossplane` | `crossplane` |
+| `eso` | `eso` |
+| `flux` | `flux` |
+| `kyverno` | `kyverno` |
+| `mysql` | `mysql` |
+| `namespace-sync` | `namespaceSync` |
+| `postgres` | `postgres` |
+| `rancher` | `rancher` |
+| `resolve-dns` | `resolveDNS` |
+| `virtual-scheduler` | `virtualScheduler` |
+| `vnode` | `vnode` |
+
+Notes:
+
+- on the `vind` path, the bootstrap `--use-cases` flag writes these labels for you
+- on the Demo Generator path, the initial values usually come from template parameters and the generated cluster secret
+- changing the secret directly is the fastest way to test another combination after the environment already exists
+
 For the self-contained path, the Argo CD root app is:
 
 - [root-application.yaml](./vcluster-gitops/overlays/local-contained/root-application.yaml)

@@ -260,6 +260,7 @@ still depend on extra secrets or infrastructure by default.
 For the full use-case and feature list, see:
 
 - [top-level README use-case index](../README.md#available-use-cases)
+- [manual `cluster-local` editing](../README.md#enable-use-cases-directly-with-cluster-local)
 
 ## Secrets
 

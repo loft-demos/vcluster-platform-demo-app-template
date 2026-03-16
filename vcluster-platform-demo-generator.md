@@ -43,6 +43,12 @@ The **vCluster Platform Demo Generator** managed mode includes the following fea
 - Crossplane installed via a vCluster Platform App that is part of the _vCluster Platform Demo_ virtual cluster template (used to create GitHub webhooks and configure repo level GitHub Actions secrete and environment variables)
 - A dynamically generated Argo CD cluster `Secret` that controls what vCluster use case examples get installed into the vCluster Platform Demo environment
 
+After a demo environment already exists, the fastest way to change that
+selection is usually to edit the generated `argocd/cluster-local` secret
+directly. See:
+
+- [top-level README: enable use cases directly with `cluster-local`](./README.md#enable-use-cases-directly-with-cluster-local)
+
 ### `vind` Mode
 
 The `vind` path is the best fit when you want a self-contained demo environment
