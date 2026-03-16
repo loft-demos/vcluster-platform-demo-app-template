@@ -16,7 +16,7 @@ nameOverride: ""
 fullnameOverride: ""
 deployment:
   # used to specify commit sha in CI job
-  commit: 62c016441f71377512dd6acbaa88a791cbbf5d1f
+  commit: dea33d41347f5d6e0bfb83ab32730b33f9af9c51
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -29,7 +29,6 @@ podSecurityContext: {}
 # fsGroup: 2000
 
 securityContext: {}
-
 autoscaling:
   enabled: false
 service:
@@ -53,7 +52,6 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
-
 nodeSelector: {}
 tolerations: []
 affinity: {}
