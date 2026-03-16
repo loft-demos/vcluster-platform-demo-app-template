@@ -104,6 +104,18 @@ LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --worker-nodes 3
 ```
 
+### Override the vCluster Platform Version
+
+The default vCluster Platform chart version for the self-contained `vind` path
+is `4.7.1`.
+
+Use `--vcp-version` to override it, for example:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --vcp-version 4.8.0-rc.5
+```
+
 Delete the environment cleanly:
 
 ```bash
