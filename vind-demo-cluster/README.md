@@ -41,6 +41,8 @@ What the bootstrap does:
 - creates a default vCP `ProjectSecret` for registry auth in `p-default`
 - applies the root Argo CD `Application`
 - starts the OrbStack domain adapter
+- adds vCluster Platform navbar links for the Forgejo GitOps repo and, when
+  `flux` is enabled, the Flux UI
 
 The root Argo CD app is:
 
@@ -61,6 +63,8 @@ In practice that means:
   `forgejo.vcp.local/<org>/<repo>/<repo>-demo-app`
 - the bootstrap creates a default Platform `ProjectSecret` with Forgejo
   registry credentials for image pulls
+- the vCluster Platform UI includes a `Forgejo Repo` button that points at the
+  rendered GitOps repo
 
 Current intent for the self-contained path:
 
@@ -75,6 +79,10 @@ Current intent for the self-contained path:
 > through the most. The Forgejo container registry path is wired into the
 > bootstrap, including the self-contained auto-snapshots manifests, but it has
 > not been validated as thoroughly yet as the Git side.
+
+When `flux` is enabled in `--use-cases`, the vCluster Platform UI also gets a
+`Flux UI` button that points at the shared Flux Operator web UI host for this
+demo environment.
 
 ## Most Common Commands
 

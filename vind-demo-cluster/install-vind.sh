@@ -20,6 +20,7 @@ Usage:
     --license-token "$TOKEN" \
     --vcp-version 4.7.1 \
     --vcp-host vcp.local \
+    --repo-name vcp-gitops \
     --worker-nodes 2 \
     --use-cases eso,auto-snapshots
 
@@ -28,6 +29,9 @@ Options:
   --values-file PATH     Optional. Defaults to vind-demo-cluster/vcluster.yaml.
   --license-token TOKEN  Required unless LICENSE_TOKEN is already exported.
   --vcp-version VERSION  Optional. Defaults to 4.7.1.
+  --repo-name NAME       Optional. Defaults to vcp-gitops.
+  --org-name NAME        Optional. Defaults to vcluster-demos.
+  --vcluster-name NAME   Optional. Defaults to repo name with trailing -app removed.
   --control-plane-nodes COUNT
                          Optional. Defaults to 1. This vind config currently
                          supports exactly one control plane node.
@@ -69,6 +73,9 @@ CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
 VCP_VERSION="${VCP_VERSION:-4.7.1}"
+REPO_NAME="vcp-gitops"
+ORG_NAME="vcluster-demos"
+VCLUSTER_NAME=""
 CONTROL_PLANE_NODE_COUNT="${CONTROL_PLANE_NODE_COUNT:-1}"
 WORKER_NODE_COUNT="${WORKER_NODE_COUNT:-2}"
 VCP_HOST="${VCP_HOST:-vcp.local}"
@@ -99,6 +106,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --vcp-version)
       VCP_VERSION="${2:-}"
+      shift 2
+      ;;
+    --repo-name)
+      REPO_NAME="${2:-}"
+      shift 2
+      ;;
+    --org-name)
+      ORG_NAME="${2:-}"
+      shift 2
+      ;;
+    --vcluster-name)
+      VCLUSTER_NAME="${2:-}"
       shift 2
       ;;
     --control-plane-nodes)
@@ -193,6 +212,10 @@ if [[ -z "$ARGOCD_HOST" ]]; then
   ARGOCD_HOST="argocd.${VCP_HOST}"
 fi
 
+if [[ -z "$VCLUSTER_NAME" ]]; then
+  VCLUSTER_NAME="${REPO_NAME%-app}"
+fi
+
 if [[ -z "$FORGEJO_HOST" ]]; then
   FORGEJO_HOST="forgejo.${VCP_HOST}"
 fi
@@ -214,6 +237,22 @@ fi
 
 cluster_local_use_case_labels="$(render_cluster_local_use_case_labels "$USE_CASES" '            ')"
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
+selected_use_case_lines="$(resolve_use_case_selection "$USE_CASES")"
+
+vcp_ui_navbar_buttons="                  - link: https://www.vcluster.com/docs/platform/
+                    position: TopEnd
+                    text: vCluster Docs
+                  - link: https://${FORGEJO_HOST}/${ORG_NAME}/${REPO_NAME}
+                    icon: https://${FORGEJO_HOST}/assets/img/logo.svg
+                    position: TopEnd
+                    text: Forgejo Repo"
+
+if use_case_list_contains "$selected_use_case_lines" "flux"; then
+  vcp_ui_navbar_buttons="${vcp_ui_navbar_buttons}
+                  - link: https://flux-${VCLUSTER_NAME}.${VCP_HOST}
+                    position: TopEnd
+                    text: Flux UI"
+fi
 
 worker_nodes_yaml="      []"
 if [[ "$WORKER_NODE_COUNT" -gt 0 ]]; then
@@ -237,6 +276,7 @@ export LICENSE_TOKEN VCP_VERSION VCP_HOST FORGEJO_HOST FORGEJO_ADMIN_USER FORGEJ
 export VCP_DOMAIN_PREFIX="$vcp_domain_prefix" VCP_DOMAIN="$vcp_domain"
 export VIND_DOCKER_NODES="$worker_nodes_yaml"
 export CLUSTER_LOCAL_USE_CASE_LABELS="$cluster_local_use_case_labels"
+export REPO_NAME ORG_NAME VCLUSTER_NAME VCP_UI_NAVBAR_BUTTONS="$vcp_ui_navbar_buttons"
 perl -0pi -e '
   s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
@@ -248,12 +288,17 @@ perl -0pi -e '
   s/__FORGEJO_ADMIN_PASSWORD__/$ENV{FORGEJO_ADMIN_PASSWORD}/g;
   s/__VIND_DOCKER_NODES__/$ENV{VIND_DOCKER_NODES}/g;
   s/__CLUSTER_LOCAL_USE_CASE_LABELS__/$ENV{CLUSTER_LOCAL_USE_CASE_LABELS}/g;
+  s/__REPO_NAME__/$ENV{REPO_NAME}/g;
+  s/__ORG_NAME__/$ENV{ORG_NAME}/g;
+  s/__VCLUSTER_NAME__/$ENV{VCLUSTER_NAME}/g;
+  s/__VCP_UI_NAVBAR_BUTTONS__/$ENV{VCP_UI_NAVBAR_BUTTONS}/g;
 ' "$rendered_values"
 
 echo "[INFO] Creating or upgrading vind cluster '$CLUSTER_NAME'"
 echo "[INFO] Values file template: $VALUES_FILE"
 echo "[INFO] Rendered values file: $rendered_values"
 echo "[INFO] vCluster Platform version: $VCP_VERSION"
+echo "[INFO] Repo: $ORG_NAME/$REPO_NAME"
 echo "[INFO] Control plane nodes: $CONTROL_PLANE_NODE_COUNT"
 echo "[INFO] Worker nodes: $WORKER_NODE_COUNT"
 echo "[INFO] vCluster Platform host: $VCP_HOST"
