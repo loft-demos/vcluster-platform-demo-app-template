@@ -233,12 +233,33 @@ The bootstrap manages that secret for you. Use:
 - `--use-cases eso,auto-snapshots,flux`
 - `--use-cases all,-crossplane,-rancher`
 
+Available use cases for the `vind` bootstrap:
+
+- `argocd-in-vcluster`
+- `auto-snapshots`
+- `connected-host-cluster`
+- `crossplane`
+- `eso`
+- `flux`
+- `kyverno`
+- `mysql`
+- `namespace-sync`
+- `postgres`
+- `rancher`
+- `resolve-dns`
+- `virtual-scheduler`
+- `vnode`
+
 The current default is intentionally small:
 
 - `eso`
 
 That keeps the self-contained path lighter and avoids turning on use cases that
 still depend on extra secrets or infrastructure by default.
+
+For the full use-case and feature list, see:
+
+- [top-level README use-case index](../README.md#available-use-cases)
 
 ## Secrets
 

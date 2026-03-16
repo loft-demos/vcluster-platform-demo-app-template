@@ -225,6 +225,7 @@ EOF
 
 render_cluster_local_use_case_labels() {
   local spec="$1"
+  local indent="${2:-}"
   local enabled=""
   local use_case=""
   local label_key=""
@@ -238,7 +239,7 @@ render_cluster_local_use_case_labels() {
     if use_case_list_contains "$enabled" "$use_case"; then
       value="true"
     fi
-    printf '            %s: "%s"\n' "$label_key" "$value"
+    printf '%s%s: "%s"\n' "$indent" "$label_key" "$value"
   done <<EOF
 $(known_use_case_entries)
 EOF
