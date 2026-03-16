@@ -9,6 +9,9 @@ using:
 - Promtail
 - a small sample workload that emits logs and exposes Prometheus metrics
 
+Grafana also comes with a small default dashboard so the demo is usable
+immediately after sync.
+
 The important part is the deployment model:
 
 1. the `tenant-observability-vcluster` template creates a tenant vCluster
@@ -141,11 +144,12 @@ Create two tenant vClusters:
 Validation flow:
 
 1. open Grafana for `team-a`
-2. confirm Grafana datasources are only local Prometheus and local Loki
-3. query Loki for `tenant-observability demo message`
-4. query Prometheus for `tenant_observability_demo_messages_total`
-5. repeat the same checks in `team-b`
-6. confirm `team-a` data does not appear in `team-b`, and vice versa
+2. confirm the default `Tenant Observability Overview` dashboard loads
+3. confirm Grafana datasources are only local Prometheus and local Loki
+4. query Loki for `tenant-observability demo message`
+5. query Prometheus for `tenant_observability_demo_messages_total`
+6. repeat the same checks in `team-b`
+7. confirm `team-a` data does not appear in `team-b`, and vice versa
 
 The template adds `Grafana` and `Prometheus` custom links to the vCluster
 instance so those UIs are easy to open from the Platform UI.
@@ -154,6 +158,13 @@ For the `vind` local-domain path, those links use the wildcard hostname shape:
 
 - `grafana-<vcluster>.vcp.local`
 - `prometheus-<vcluster>.vcp.local`
+
+The default dashboard includes:
+
+- total demo messages
+- sample uptime
+- demo identity labels from Prometheus
+- recent demo logs from Loki
 
 ## Confirm HostPath Mapper Is Working
 
