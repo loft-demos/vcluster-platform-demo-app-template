@@ -514,6 +514,9 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --values-file "$VALUES_FILE" \
     --license-token "$LICENSE_TOKEN" \
     --vcp-version "$VCP_VERSION" \
+    --repo-name "$REPO_NAME" \
+    --org-name "$ORG_NAME" \
+    --vcluster-name "$VCLUSTER_NAME" \
     --control-plane-nodes "$CONTROL_PLANE_NODE_COUNT" \
     --worker-nodes "$WORKER_NODE_COUNT" \
     --use-cases "$USE_CASES" \

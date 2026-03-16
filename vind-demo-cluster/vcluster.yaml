@@ -9,9 +9,13 @@
 # - __VCP_LOFT_HOST__
 # - __VCP_DOMAIN_PREFIX__
 # - __VCP_DOMAIN__
+# - __ORG_NAME__
+# - __REPO_NAME__
+# - __VCLUSTER_NAME__
 # - __FORGEJO_HOST__
 # - __FORGEJO_ADMIN_USER__
 # - __FORGEJO_ADMIN_PASSWORD__
+# - __VCP_UI_NAVBAR_BUTTONS__
 # - worker node list for `experimental.docker.nodes`
 controlPlane:
   distro:
@@ -136,6 +140,13 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 enabled: false
               imageBuilder:
                 enabled: false
+              uiSettings:
+                externalURLs:
+                  allow:
+                    - vcluster
+                    - featurebase
+                navBarButtons:
+__VCP_UI_NAVBAR_BUTTONS__
         - chart:
             name: forgejo
             repo: oci://code.forgejo.org/forgejo-helm
