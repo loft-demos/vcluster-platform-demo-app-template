@@ -53,6 +53,11 @@ __VIND_DOCKER_NODES__
         apiVersion: v1
         kind: Namespace
         metadata:
+          name: ingress-nginx
+        ---
+        apiVersion: v1
+        kind: Namespace
+        metadata:
           name: forgejo
         ---
         apiVersion: v1
@@ -109,6 +114,26 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 enabled: false
               service:
                 type: LoadBalancer
+        - chart:
+            name: ingress-nginx
+            repo: https://kubernetes.github.io/ingress-nginx
+            version: 4.12.1
+          release:
+            name: ingress-nginx
+            namespace: ingress-nginx
+          timeout: 10m
+          values: |-
+            controller:
+              ingressClassResource:
+                name: nginx
+                enabled: true
+                default: true
+              ingressClass: nginx
+              watchIngressWithoutClass: false
+              service:
+                type: LoadBalancer
+              admissionWebhooks:
+                enabled: false
         - chart:
             name: external-secrets
             repo: https://charts.external-secrets.io

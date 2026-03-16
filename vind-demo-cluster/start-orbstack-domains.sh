@@ -52,6 +52,8 @@ FORGEJO_HOST=""
 VCP_UPSTREAM=""
 ARGOCD_UPSTREAM=""
 FORGEJO_UPSTREAM=""
+INGRESS_WILDCARD_HOST=""
+INGRESS_UPSTREAM=""
 ENV_FILE=""
 VIND_DOCKER_NETWORK=""
 TIMEOUT_SECONDS="120"
@@ -85,6 +87,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --forgejo-upstream)
       FORGEJO_UPSTREAM="${2:-}"
+      shift 2
+      ;;
+    --ingress-upstream)
+      INGRESS_UPSTREAM="${2:-}"
       shift 2
       ;;
     --env-file)
@@ -121,6 +127,10 @@ if [[ -z "$FORGEJO_HOST" ]]; then
   FORGEJO_HOST="forgejo.${VCP_HOST}"
 fi
 
+if [[ -z "$INGRESS_WILDCARD_HOST" ]]; then
+  INGRESS_WILDCARD_HOST="*.${VCP_HOST}"
+fi
+
 if [[ -z "$VIND_DOCKER_NETWORK" ]]; then
   VIND_DOCKER_NETWORK="vcluster.${CLUSTER_NAME}"
 fi
@@ -151,6 +161,10 @@ if [[ -z "$FORGEJO_UPSTREAM" ]]; then
   FORGEJO_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.forgejo-http.forgejo:3000"
 fi
 
+if [[ -z "$INGRESS_UPSTREAM" ]]; then
+  INGRESS_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.ingress-nginx-controller.ingress-nginx:80"
+fi
+
 mkdir -p "$(dirname "$ENV_FILE")"
 
 cat >"$ENV_FILE" <<EOF
@@ -159,15 +173,18 @@ VIND_DOCKER_NETWORK=${VIND_DOCKER_NETWORK}
 VCP_HOST=${VCP_HOST}
 ARGOCD_HOST=${ARGOCD_HOST}
 FORGEJO_HOST=${FORGEJO_HOST}
+INGRESS_WILDCARD_HOST=${INGRESS_WILDCARD_HOST}
 VCP_UPSTREAM=${VCP_UPSTREAM}
 ARGOCD_UPSTREAM=${ARGOCD_UPSTREAM}
 FORGEJO_UPSTREAM=${FORGEJO_UPSTREAM}
+INGRESS_UPSTREAM=${INGRESS_UPSTREAM}
 EOF
 
 echo "[INFO] Wrote ${ENV_FILE}"
 echo "[INFO] vCP upstream: ${VCP_UPSTREAM}"
 echo "[INFO] Argo CD upstream: ${ARGOCD_UPSTREAM}"
 echo "[INFO] Forgejo upstream: ${FORGEJO_UPSTREAM}"
+echo "[INFO] Wildcard ingress upstream: ${INGRESS_UPSTREAM}"
 
 docker compose \
   --project-directory "$COMPOSE_DIR" \
@@ -184,5 +201,6 @@ URLs:
 - https://${VCP_HOST}
 - https://${ARGOCD_HOST}
 - https://${FORGEJO_HOST}
+- https://<app>.${VCP_HOST}
 
 EOF

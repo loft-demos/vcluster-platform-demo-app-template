@@ -1,0 +1,12 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: tenant-observability-vc-instance
+  namespace: p-default
+spec:
+  owner:
+    team: api-framework
+  templateRef:
+    name: tenant-observability-vcluster
+  clusterRef:
+    cluster: loft-cluster

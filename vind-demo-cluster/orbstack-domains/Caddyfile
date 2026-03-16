@@ -17,3 +17,7 @@ http://{$VCP_HOST} {
 http://{$FORGEJO_HOST} {
   reverse_proxy http://{$FORGEJO_UPSTREAM}
 }
+
+http://{$INGRESS_WILDCARD_HOST} {
+  reverse_proxy http://{$INGRESS_UPSTREAM}
+}
