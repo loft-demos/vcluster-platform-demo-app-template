@@ -18,6 +18,7 @@ private-nodes|privateNodes
 postgres|postgres
 rancher|rancher
 resolve-dns|resolveDNS
+tenant-observability|tenantObservability
 virtual-scheduler|virtualScheduler
 vnode|vnode
 EOF
@@ -68,6 +69,9 @@ canonical_use_case_name() {
     resolve-dns|resolvedns|resolveDNS)
       printf '%s\n' "resolve-dns"
       ;;
+    tenant-observability|tenantobservability|tenantObservability)
+      printf '%s\n' "tenant-observability"
+      ;;
     virtual-scheduler|virtualscheduler|virtualScheduler)
       printf '%s\n' "virtual-scheduler"
       ;;
@@ -95,6 +99,7 @@ label_key_for_use_case() {
     postgres) printf '%s\n' "postgres" ;;
     rancher) printf '%s\n' "rancher" ;;
     resolve-dns) printf '%s\n' "resolveDNS" ;;
+    tenant-observability) printf '%s\n' "tenantObservability" ;;
     virtual-scheduler) printf '%s\n' "virtualScheduler" ;;
     vnode) printf '%s\n' "vnode" ;;
     *)

@@ -309,6 +309,7 @@ Available use cases for the `vind` bootstrap:
 - `postgres`
 - `rancher`
 - `resolve-dns`
+- `tenant-observability`
 - `virtual-scheduler`
 - `vnode`
 
@@ -323,11 +324,11 @@ Ubuntu VM for the example `private-node-demo` vCluster instance:
   from vCluster Platform and running it inside that VM
 
 > [!IMPORTANT]
-> `tenant-observability` is currently not supported on the OrbStack-backed
-> `vind` path. The standard design depends on Central HostPath Mapper and mount
-> propagation, and those mounts are not available in the current `vind`
-> runtime. The root [README](../README.md#available-use-cases) tracks `vind`
-> support status for the use cases.
+> `tenant-observability` is still experimental on the OrbStack-backed `vind`
+> path. The standard CHPM + Promtail log path does not work there, so any
+> `vind` support depends on a separate API-based collector design. The root
+> [README](../README.md#available-use-cases) tracks `vind` validation status for
+> the use cases.
 
 The current default is intentionally small:
 

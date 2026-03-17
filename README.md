@@ -44,7 +44,7 @@ Main repo areas:
 
 | Use case | What it demos | vCP Free | `vind` | Details / docs |
 | --- | --- | --- | --- | --- |
-| `argocd-in-vcluster` | Installs a dedicated Argo CD instance inside selected vCluster instances and feeds it Git-based values. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/argocd-in-vcluster/README.md), [vCP Argo CD integration](https://www.vcluster.com/docs/platform/integrations/argocd) |
+| `argocd-in-vcluster` | Installs a dedicated Argo CD instance inside selected vCluster instances and feeds it Git-based values. | `Enterprise` | `Yes` | [Repo](./vcluster-use-cases/argocd-in-vcluster/README.md), [vCP Argo CD integration](https://www.vcluster.com/docs/platform/integrations/argocd) |
 | `argocd-vcluster-add-ons` | Applies environment-specific add-ons to imported Argo CD clusters based on cluster labels like `dev`, `qa`, and `prod`. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/argocd-vcluster-add-ons/README.md), [vCP Argo CD integration](https://www.vcluster.com/docs/platform/integrations/argocd) |
 | `argocd-vcluster-pull-request-environments` | Creates ephemeral pull request environments with Argo CD, including preview apps and vCluster instances per PR. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/argocd-vcluster-pull-request-environments/README.md), [vCP Argo CD integration](https://www.vcluster.com/docs/platform/integrations/argocd) |
 | `auto-snapshots` | Automatic backup and restore of vCluster instances to an OCI registry such as GHCR or Forgejo. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/auto-snapshots/README.md), [Snapshots](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/snapshots) |
@@ -60,16 +60,16 @@ Main repo areas:
 | `namespace-sync` | Namespace sync plus Argo CD `Application` sync back to the host cluster. | `Yes` | `TBD` | [Repo](./vcluster-use-cases/namespace-sync/README.md), [Namespace sync](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/sync/to-host/advanced/namespaces) |
 | `pod-identity` | EKS Pod Identity with synced `PodIdentityAssociation` resources for AWS access from workloads in a vCluster. | `Depends` | `TBD` | [Repo](./vcluster-use-cases/pod-identity/eks/README.md) |
 | `pod-security-standards` | Enforces Pod Security Standards inside the vCluster API server with an admission configuration. | `Depends` | `TBD` | [Repo](./vcluster-use-cases/pod-security-standards/README.md) |
-| `private-nodes` | Manual Private Nodes flow for attaching dedicated external compute to a vCluster instance, including an OrbStack VM path for `vind`. | `Yes` | `TBD` | [Repo](./vcluster-use-cases/private-nodes/README.md) |
+| `private-nodes` | Manual Private Nodes flow for attaching dedicated external compute to a vCluster instance, including an OrbStack VM path for `vind`. | `Yes` | `Yes` | [Repo](./vcluster-use-cases/private-nodes/README.md) |
 | `rancher-integration` | Rancher integration examples for deploying and wiring Rancher alongside vCluster Platform. | `Depends` | `TBD` | [Repo](./vcluster-use-cases/rancher-integration/) |
 | `resolve-dns` | Cross-vCluster DNS resolution with embedded CoreDNS and `resolveDNS` mappings. | `Yes` | `TBD` | [Repo](./vcluster-use-cases/resolve-dns/README.md), [Resolve DNS](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/networking/resolve-dns) |
-| `tenant-observability` | Tenant-scoped Grafana, Loki, and Prometheus inside each vCluster, using CHPM + Promtail on the supported path. | `Enterprise` | `No` | [Repo](./vcluster-use-cases/tenant-observability/README.md), [Central HostPath Mapper](https://www.vcluster.com/docs/platform/maintenance/monitoring/central-hostpath-mapper) |
+| `tenant-observability` | Tenant-scoped Grafana, Loki, and Prometheus inside each vCluster. Metrics and dashboards are broadly portable, but the CHPM + Promtail log path is the supported design. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/tenant-observability/README.md), [Central HostPath Mapper](https://www.vcluster.com/docs/platform/maintenance/monitoring/central-hostpath-mapper) |
 | `virtual-scheduler` | Enables the Kubernetes scheduler, or other schedulers, inside a vCluster. | `Depends` | `TBD` | [Repo](./vcluster-use-cases/virtual-scheduler/README.md), [Sync nodes from host](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/sync/from-host/nodes) |
 | `vnode-with-vcluster` | Uses vNode with vCluster for stronger workload isolation and breakout demos. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/vnode-with-vcluster/README.md), [vNode docs](https://www.vnode.com/docs) |
 
 `vind` above is the current self-contained OrbStack-backed path:
 
-- `No` means the use case is currently not supported on `vind`
+- `Yes` means the use case has been validated on `vind`
 - `TBD` means it has not been fully validated on `vind` yet
 
 ## Enable Use Cases Directly with `cluster-local`

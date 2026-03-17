@@ -13,11 +13,19 @@ Grafana also comes with a small default dashboard so the demo is usable
 immediately after sync.
 
 > [!IMPORTANT]
-> This use case is currently not supported on the OrbStack-backed self-contained
-> `vind` path. The standard design depends on Central HostPath Mapper and host
-> mount propagation, and those mounts are not available in the current `vind`
-> runtime. Use the Generator or another Linux-backed host cluster if you need
-> to validate the real CHPM-based design.
+> The metrics and dashboard portions of this use case should be broadly
+> portable. The current unsupported or unvalidated part is the tenant log
+> collection path.
+>
+> On the OrbStack-backed self-contained `vind` path, the standard CHPM +
+> Promtail design is currently not supported because it depends on host mount
+> propagation and those mounts are not available in the current `vind`
+> runtime.
+>
+> The recommended validation target for the full design is a direct Linux-backed
+> host cluster. The Demo Generator path is also still unvalidated for the log
+> collection part of this use case, because its nested vCluster topology may
+> affect how CHPM resolves the final host log paths.
 
 The important part is the deployment model:
 
@@ -33,6 +41,7 @@ the whole observability stack directly in the `VirtualClusterTemplate`.
 ## What This Demonstrates
 
 - each tenant vCluster gets its own local Grafana, Loki, and Prometheus
+- metrics and dashboards should work anywhere the stack can run
 - the supported path uses Promtail plus Central HostPath Mapper for tenant log
   collection
 - the host Argo CD instance can manage add-ons inside imported tenant
@@ -41,6 +50,28 @@ the whole observability stack directly in the `VirtualClusterTemplate`.
   vCluster has its own stack and local datasources
 
 Promtail is the collector used for the supported path.
+
+## Recommended Validation Target
+
+Validate this use case first on a direct self-managed host cluster.
+
+That is the cleanest CHPM path:
+
+- host cluster
+- vCluster Platform management cluster
+- tenant vCluster instances
+
+The Demo Generator path is still unvalidated for this use case because it adds
+extra nesting:
+
+- parent host cluster
+- Generator vCluster
+- child vCluster Platform management vCluster
+- tenant vCluster instances
+
+Even if the final tenant pods land on the parent host nodes, that extra
+virtualization and sync depth may change how CHPM maps virtual pod identity
+back to the physical host log path.
 
 ## Host Prerequisites
 
