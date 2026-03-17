@@ -172,11 +172,9 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                     - featurebase
                 navBarButtons:
                   - link: https://www.vcluster.com/docs/platform/
-                    position: TopEnd
                     text: vCluster Docs
                   - link: https://__FORGEJO_HOST__/
                     icon: https://__FORGEJO_HOST__/assets/img/logo.svg
-                    position: TopEnd
                     text: Forgejo Repo
 __VCP_FLUX_NAVBAR_BUTTON__
         - chart:

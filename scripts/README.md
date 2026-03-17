@@ -1,6 +1,6 @@
 # Scripts
 
-This folder has six scripts that matter for the self-contained `vind` path.
+This folder has seven scripts that matter for the self-contained `vind` path.
 
 ## `replace-text-local.sh`
 
@@ -103,6 +103,29 @@ bash scripts/configure-forgejo-labels.sh \
   --label-name 'deploy/flux-vcluster-preview' \
   --label-color 'c5def5' \
   --label-description 'PR preview vCluster instances with a matrix of Kubernetes versions via Flux'
+```
+
+## `configure-flux-webhook.sh`
+
+Registers a Forgejo webhook for the Flux `pr-github-receiver`. Looks up the
+Receiver's dynamic webhook path from the cluster (`.status.webhookPath`), then
+calls `configure-forgejo-webhook.sh` with the full URL. Safe to re-run — if the
+webhook already exists it will be updated rather than duplicated.
+
+Use this script when flux is enabled after the initial bootstrap, or to
+re-register the webhook after the Receiver is recreated.
+
+Example:
+
+```bash
+bash scripts/configure-flux-webhook.sh \
+  --forgejo-url https://forgejo.vcp.local \
+  --username demo-admin \
+  --token "$FORGEJO_TOKEN" \
+  --owner vcluster-demos \
+  --repo vcp-gitops \
+  --vcluster-name vcp-gitops \
+  --base-domain vcp.local
 ```
 
 ## `update-templates.sh`

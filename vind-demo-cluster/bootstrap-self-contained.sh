@@ -887,41 +887,14 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
     flux_forgejo_token="$FORGEJO_PASSWORD"
   fi
 
-  flux_receiver_namespace="p-auth-core"
-  flux_receiver_name="pr-github-receiver"
-  flux_webhook_path=""
-
-  # Wait for the Flux Receiver to be created by Argo CD and report its webhook path
-  for _ in $(seq 1 60); do
-    if kubectl get namespace "$flux_receiver_namespace" >/dev/null 2>&1; then
-      break
-    fi
-    sleep 5
-  done
-
-  for _ in $(seq 1 60); do
-    flux_webhook_path="$(kubectl -n "$flux_receiver_namespace" get receiver "$flux_receiver_name" \
-      -o jsonpath='{.status.webhookPath}' 2>/dev/null || true)"
-    if [[ -n "$flux_webhook_path" ]]; then
-      break
-    fi
-    sleep 5
-  done
-
-  if [[ -n "$flux_webhook_path" ]]; then
-    flux_webhook_url="http://flux-webhook-${VCLUSTER_NAME}.${BASE_DOMAIN}${flux_webhook_path}"
-    bash scripts/configure-forgejo-webhook.sh \
-      --forgejo-url "$FORGEJO_URL" \
-      --username "$FORGEJO_USERNAME" \
-      --token "$flux_forgejo_token" \
-      --owner "$ORG_NAME" \
-      --repo "$REPO_NAME" \
-      --webhook-url "$flux_webhook_url" \
-      --type gitea \
-      --events push,pull_request
-  else
-    echo "[WARN] Could not retrieve Flux Receiver webhook path — skipping Flux webhook registration." >&2
-  fi
+  bash scripts/configure-flux-webhook.sh \
+    --forgejo-url "$FORGEJO_URL" \
+    --username "$FORGEJO_USERNAME" \
+    --token "$flux_forgejo_token" \
+    --owner "$ORG_NAME" \
+    --repo "$REPO_NAME" \
+    --vcluster-name "$VCLUSTER_NAME" \
+    --base-domain "$BASE_DOMAIN"
 fi
 
 if command -v kubectl >/dev/null 2>&1; then

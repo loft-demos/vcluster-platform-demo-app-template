@@ -242,7 +242,6 @@ selected_use_case_lines="$(resolve_use_case_selection "$USE_CASES")"
 vcp_flux_navbar_button=""
 if use_case_list_contains "$selected_use_case_lines" "flux"; then
   vcp_flux_navbar_button="                  - link: https://flux-${VCLUSTER_NAME}.${VCP_HOST}
-                    position: TopEnd
                     text: Flux UI"
 fi
 
