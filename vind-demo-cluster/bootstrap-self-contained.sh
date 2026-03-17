@@ -692,6 +692,14 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
   fi
 fi
 
+# The replace-text step dirtied the working tree with actual values so they
+# could be captured by --include-working-tree above. Restore now so the local
+# git repo stays clean and the replacements cannot be accidentally committed
+# back to the template on the upstream remote.
+if [[ "$SKIP_REPLACE" != "true" && "$SKIP_FORGEJO" != "true" ]]; then
+  git restore . >/dev/null 2>&1 || true
+fi
+
 if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
   if [[ "$WAIT_FOR_IMAGE_BUILD" == "true" ]]; then
     step "Build and push the demo image to Forgejo"
