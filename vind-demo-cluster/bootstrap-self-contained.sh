@@ -660,6 +660,14 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
   if [[ -n "$REPO_NAME" ]]; then
     declare -a forgejo_auth_args
     require_cmd curl
+    # Wait for the Forgejo pod to be Ready before polling the external URL —
+    # the k8s readiness check completes much sooner than the full ingress path.
+    if command -v kubectl >/dev/null 2>&1; then
+      kubectl -n forgejo wait --for=condition=Ready pod \
+        -l "app.kubernetes.io/name=forgejo" \
+        --timeout=300s >/dev/null 2>&1 || true
+    fi
+
     echo "[INFO] Waiting for Forgejo API at ${FORGEJO_URL}/api/healthz"
     for attempt in $(seq 1 60); do
       if curl -ksSf "${FORGEJO_URL}/api/healthz" >/dev/null 2>&1; then
@@ -867,23 +875,7 @@ EOF
       --events pull_request
 
     step "Configure Forgejo repo labels for PR workflows"
-    declare -A LABEL_COLORS=(
-      ["deploy/argocd-vcluster-preview"]="ee7d3b"
-      ["deploy/flux-vcluster-preview"]="c5def5"
-      ["e2e vCluster"]="ee7d3b"
-      ["create-pr-vcluster-external-argocd"]="ee7d3b"
-      ["preview"]="ee7d3b"
-      ["preview-cluster-ready"]="ee7d3b"
-    )
-    declare -A LABEL_DESCRIPTIONS=(
-      ["deploy/argocd-vcluster-preview"]="Creates PR preview vCluster instances with matrix of Kubernetes versions via Argo CD"
-      ["deploy/flux-vcluster-preview"]="PR preview vCluster instances with a matrix of Kubernetes versions via Flux"
-      ["e2e vCluster"]="Run e2e tests on PR with vCluster"
-      ["create-pr-vcluster-external-argocd"]="Triggers the creation of a vCluster for a Pull Request via Argo CD"
-      ["preview"]="Creates vCluster preview environment for a Pull Request with Argo CD"
-      ["preview-cluster-ready"]="Triggers Argo CD application set for PR"
-    )
-    for label_name in "${!LABEL_COLORS[@]}"; do
+    while IFS='|' read -r label_name label_color label_description; do
       bash scripts/configure-forgejo-labels.sh \
         --forgejo-url "$FORGEJO_URL" \
         --username "$FORGEJO_USERNAME" \
@@ -891,9 +883,16 @@ EOF
         --owner "$ORG_NAME" \
         --repo "$REPO_NAME" \
         --label-name "$label_name" \
-        --label-color "${LABEL_COLORS[$label_name]}" \
-        --label-description "${LABEL_DESCRIPTIONS[$label_name]}"
-    done
+        --label-color "$label_color" \
+        --label-description "$label_description"
+    done <<'LABELS'
+deploy/argocd-vcluster-preview|ee7d3b|Creates PR preview vCluster instances with matrix of Kubernetes versions via Argo CD
+deploy/flux-vcluster-preview|c5def5|PR preview vCluster instances with a matrix of Kubernetes versions via Flux
+e2e vCluster|ee7d3b|Run e2e tests on PR with vCluster
+create-pr-vcluster-external-argocd|ee7d3b|Triggers the creation of a vCluster for a Pull Request via Argo CD
+preview|ee7d3b|Creates vCluster preview environment for a Pull Request with Argo CD
+preview-cluster-ready|ee7d3b|Triggers Argo CD application set for PR
+LABELS
   fi
 fi
 
