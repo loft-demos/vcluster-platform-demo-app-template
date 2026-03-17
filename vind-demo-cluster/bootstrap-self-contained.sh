@@ -189,6 +189,40 @@ stringData:
 EOF
 }
 
+current_cluster_local_use_cases() {
+  local selected=""
+  local use_case=""
+  local label_key=""
+  local label_value=""
+
+  command -v kubectl >/dev/null 2>&1 || return 1
+  kubectl -n argocd get secret cluster-local >/dev/null 2>&1 || return 1
+
+  while IFS='|' read -r use_case label_key; do
+    [[ -z "$use_case" || -z "$label_key" ]] && continue
+    label_value="$(
+      kubectl -n argocd get secret cluster-local \
+        -o "jsonpath={.metadata.labels.${label_key}}" 2>/dev/null || true
+    )"
+    if [[ "$label_value" == "true" ]]; then
+      if [[ -z "$selected" ]]; then
+        selected="$use_case"
+      else
+        selected="${selected},${use_case}"
+      fi
+    fi
+  done <<EOF
+$(known_use_case_entries)
+EOF
+
+  if [[ -n "$selected" ]]; then
+    printf '%s\n' "$selected"
+    return 0
+  fi
+
+  return 1
+}
+
 CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 REPO_NAME="vcp-gitops"
@@ -227,6 +261,7 @@ GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 IMAGE_PLATFORM="auto"
 USE_CASES="${USE_CASES:-$DEFAULT_USE_CASE_SPEC}"
+USE_CASES_EXPLICIT="false"
 SKIP_ARGOCD_BOOTSTRAP="false"
 IMAGE_PULL_PROJECT_NAMESPACE="p-default"
 IMAGE_PULL_PROJECT_SECRET_NAME=""
@@ -361,6 +396,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --use-cases)
       USE_CASES="${2:-}"
+      USE_CASES_EXPLICIT="true"
       shift 2
       ;;
     --list-use-cases)
@@ -506,6 +542,13 @@ fi
 
 if [[ -z "$ONEPASSWORD_VAULT" ]]; then
   ONEPASSWORD_VAULT="$ORG_NAME"
+fi
+
+if [[ "$SKIP_VIND" == "true" && "$USE_CASES_EXPLICIT" != "true" ]]; then
+  existing_use_cases="$(current_cluster_local_use_cases || true)"
+  if [[ -n "$existing_use_cases" ]]; then
+    USE_CASES="$existing_use_cases"
+  fi
 fi
 
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"

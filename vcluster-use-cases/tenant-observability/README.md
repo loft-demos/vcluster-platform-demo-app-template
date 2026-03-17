@@ -13,19 +13,12 @@ Grafana also comes with a small default dashboard so the demo is usable
 immediately after sync.
 
 > [!IMPORTANT]
-> The metrics and dashboard portions of this use case should be broadly
-> portable. The current unsupported or unvalidated part is the tenant log
-> collection path.
+> This use case has been validated on the OrbStack-backed self-contained `vind`
+> path with the standard Central HostPath Mapper + Promtail design.
 >
-> On the OrbStack-backed self-contained `vind` path, the standard CHPM +
-> Promtail design is currently not supported because it depends on host mount
-> propagation and those mounts are not available in the current `vind`
-> runtime.
->
-> The recommended validation target for the full design is a direct Linux-backed
-> host cluster. The Demo Generator path is also still unvalidated for the log
-> collection part of this use case, because its nested vCluster topology may
-> affect how CHPM resolves the final host log paths.
+> The Demo Generator path is still unvalidated for the log collection part of
+> this use case, because its nested vCluster topology may affect how CHPM
+> resolves the final host log paths.
 
 The important part is the deployment model:
 
@@ -53,9 +46,10 @@ Promtail is the collector used for the supported path.
 
 ## Recommended Validation Target
 
-Validate this use case first on a direct self-managed host cluster.
+This use case is validated on `vind` and should also be validated on a direct
+self-managed host cluster.
 
-That is the cleanest CHPM path:
+That is still the cleanest CHPM path:
 
 - host cluster
 - vCluster Platform management cluster

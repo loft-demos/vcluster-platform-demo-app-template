@@ -324,11 +324,10 @@ Ubuntu VM for the example `private-node-demo` vCluster instance:
   from vCluster Platform and running it inside that VM
 
 > [!IMPORTANT]
-> `tenant-observability` is still experimental on the OrbStack-backed `vind`
-> path. The standard CHPM + Promtail log path does not work there, so any
-> `vind` support depends on a separate API-based collector design. The root
-> [README](../README.md#available-use-cases) tracks `vind` validation status for
-> the use cases.
+> `tenant-observability` has been validated on the OrbStack-backed `vind` path
+> with the standard Central HostPath Mapper + Promtail design. The root
+> [README](../README.md#available-use-cases) tracks current `vind` validation
+> status for the use cases.
 
 The current default is intentionally small:
 
