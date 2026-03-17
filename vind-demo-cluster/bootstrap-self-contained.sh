@@ -1027,6 +1027,7 @@ if command -v kubectl >/dev/null 2>&1; then
       '$existing + [{"link": $flux_link, "text": "Flux UI", "position": "TopEnd"}]')"
   fi
 
+  wait_for_create 60 5 get config loft
   kubectl patch config loft \
     --type=merge \
     --patch "$(jq -cn --argjson buttons "$navbar_buttons" \
@@ -1038,6 +1039,16 @@ if command -v kubectl >/dev/null 2>&1; then
   step "Apply cluster-local use case labels"
   require_cmd kubectl
   apply_cluster_local_secret "$VCP_HOST" "$vcp_domain_prefix" "$vcp_domain" "$USE_CASES"
+
+  step "Create the demo-admin-access-key ProjectSecret"
+  wait_for_create 60 5 get namespace p-auth-core
+  _access_key="$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 64)"
+  _connected_key="$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 64)"
+  kubectl create secret generic demo-admin-access-key \
+    --namespace p-auth-core \
+    --from-literal=accessKey="$_access_key" \
+    --from-literal=connectedHostClusterAccessKey="$_connected_key" \
+    --dry-run=client -o yaml | kubectl apply -f -
 
   step "Create the default Platform registry auth secrets"
   apply_registry_secrets
