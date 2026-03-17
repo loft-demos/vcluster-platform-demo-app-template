@@ -4,4 +4,4 @@ metadata:
   name: pr-github-receiver
   namespace: p-auth-core
 spec:
-  type: gitea
+  type: github

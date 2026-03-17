@@ -970,14 +970,37 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
     flux_forgejo_token="$FORGEJO_PASSWORD"
   fi
 
-  bash scripts/configure-flux-webhook.sh \
+  # Generate a random HMAC secret for the Flux Receiver and store it as a
+  # k8s Secret in p-auth-core. The same value is registered as the Forgejo
+  # webhook secret so Flux can verify incoming payloads. The token is never
+  # written to source control.
+  flux_receiver_token="$(openssl rand -hex 20)"
+  wait_for_create 60 5 get namespace p-auth-core
+  kubectl create secret generic pr-github-receiver-token \
+    --namespace p-auth-core \
+    --from-literal=token="$flux_receiver_token" \
+    --dry-run=client -o yaml | kubectl apply -f -
+
+  if ! bash scripts/configure-flux-webhook.sh \
     --forgejo-url "$FORGEJO_URL" \
     --username "$FORGEJO_USERNAME" \
     --token "$flux_forgejo_token" \
     --owner "$ORG_NAME" \
     --repo "$REPO_NAME" \
     --vcluster-name "$VCLUSTER_NAME" \
-    --base-domain "$BASE_DOMAIN"
+    --base-domain "$BASE_DOMAIN" \
+    --webhook-secret "$flux_receiver_token"; then
+    echo "[WARN] Flux webhook configuration did not complete — the Flux Receiver" >&2
+    echo "[WARN] may not be ready yet. Re-run once the cluster is healthy:" >&2
+    echo "[WARN]   bash scripts/configure-flux-webhook.sh \\" >&2
+    echo "[WARN]     --forgejo-url \"$FORGEJO_URL\" \\" >&2
+    echo "[WARN]     --username \"$FORGEJO_USERNAME\" \\" >&2
+    echo "[WARN]     --token \"\$FORGEJO_TOKEN\" \\" >&2
+    echo "[WARN]     --owner \"$ORG_NAME\" \\" >&2
+    echo "[WARN]     --repo \"$REPO_NAME\" \\" >&2
+    echo "[WARN]     --vcluster-name \"$VCLUSTER_NAME\" \\" >&2
+    echo "[WARN]     --base-domain \"$BASE_DOMAIN\"" >&2
+  fi
 fi
 
 if command -v kubectl >/dev/null 2>&1; then

@@ -30,7 +30,10 @@ Options:
   --base-domain DOMAIN     Base domain used in the ingress hostname
   --receiver-namespace NS  Namespace of the Flux Receiver. Default: p-auth-core
   --receiver-name NAME     Name of the Flux Receiver. Default: pr-github-receiver
-  --timeout SECONDS        Seconds to wait for the Receiver webhook path. Default: 300
+  --webhook-secret VALUE   Optional shared secret for HMAC signature verification.
+                           If provided, the Forgejo webhook and the Receiver secret
+                           must use the same value.
+  --timeout SECONDS        Seconds to wait for the Receiver webhook path. Default: 1800
   --help                   Show this message
 EOF
 }
@@ -53,7 +56,9 @@ VCLUSTER_NAME=""
 BASE_DOMAIN=""
 RECEIVER_NAMESPACE="p-auth-core"
 RECEIVER_NAME="pr-github-receiver"
-TIMEOUT=300
+RECEIVER_SECRET_NAME="pr-github-receiver-token"
+WEBHOOK_SECRET=""
+TIMEOUT=1800
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -95,6 +100,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --receiver-name)
       RECEIVER_NAME="${2:-}"
+      shift 2
+      ;;
+    --webhook-secret)
+      WEBHOOK_SECRET="${2:-}"
+      shift 2
+      ;;
+    --receiver-secret-name)
+      RECEIVER_SECRET_NAME="${2:-}"
       shift 2
       ;;
     --timeout)
@@ -154,11 +167,30 @@ done
 webhook_url="http://flux-webhook-${VCLUSTER_NAME}.${BASE_DOMAIN}${webhook_path}"
 echo "[INFO] Flux webhook URL: ${webhook_url}"
 
+# If no webhook secret was provided on the CLI, try to read the token that
+# bootstrap already stored in the cluster secret. This makes the script safe
+# to re-run after the initial bootstrap without needing to know the token.
+if [[ -z "$WEBHOOK_SECRET" ]]; then
+  WEBHOOK_SECRET="$(
+    kubectl -n "$RECEIVER_NAMESPACE" get secret "$RECEIVER_SECRET_NAME" \
+      -o jsonpath='{.data.token}' 2>/dev/null \
+      | base64 --decode 2>/dev/null || true
+  )"
+  if [[ -n "$WEBHOOK_SECRET" ]]; then
+    echo "[INFO] Loaded webhook secret from cluster secret ${RECEIVER_SECRET_NAME}."
+  fi
+fi
+
 auth_args=()
 if [[ -n "$TOKEN" ]]; then
   auth_args=(--token "$TOKEN")
 else
   auth_args=(--username "$USERNAME" --password "$PASSWORD")
+fi
+
+secret_args=()
+if [[ -n "$WEBHOOK_SECRET" ]]; then
+  secret_args=(--secret "$WEBHOOK_SECRET")
 fi
 
 bash "$(dirname "$0")/configure-forgejo-webhook.sh" \
@@ -168,4 +200,5 @@ bash "$(dirname "$0")/configure-forgejo-webhook.sh" \
   --repo "$REPO" \
   --webhook-url "$webhook_url" \
   --type gitea \
-  --events push,pull_request
+  --events push,pull_request \
+  "${secret_args[@]}"
