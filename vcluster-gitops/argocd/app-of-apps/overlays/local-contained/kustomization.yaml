@@ -19,7 +19,6 @@ resources:
   - ../../rancher-appset.yaml
   - repo-app-pr-appset.yaml
   - ../../resolve-dns-appset.yaml
-  - ../../tenant-observability-appset.yaml
   - ../../virtual-cluster-templates-app.yaml
   - ../../virtual-scheduler-appset.yaml
   - ../../vnode-with-vcluster-appset.yaml

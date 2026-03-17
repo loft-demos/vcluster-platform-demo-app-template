@@ -10,7 +10,7 @@ spec:
   source:
     kustomize:
     path: vcluster-gitops
-    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
+    repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
     targetRevision: HEAD
   syncPolicy:
     automated:

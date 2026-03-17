@@ -43,6 +43,6 @@ spec:
   # 
   values:
     agentOnly: true
-    url: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+    url: https://vcp-gitops.vcp.local
     token: "${connectedHostClusterAccessKey}"
     insecureSkipVerify: true

@@ -5,4 +5,4 @@ metadata:
 spec:
   argoCD:
     sso:
-      host: https://argocd.{REPLACE_BASE_DOMAIN}/
+      host: https://argocd.vcp.local/

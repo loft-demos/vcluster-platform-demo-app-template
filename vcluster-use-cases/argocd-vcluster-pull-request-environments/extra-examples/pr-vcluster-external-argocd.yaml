@@ -10,8 +10,8 @@ spec:
           appSecretName: loft-demo-org-cred
           labels:
             - create-pr-vcluster-external-argocd
-          owner: {REPLACE_ORG_NAME}
-          repo: {REPLACE_REPO_NAME}
+          owner: vcluster-demos
+          repo: vcp-gitops
         requeueAfterSeconds: 30
         template:
           metadata: {}
@@ -20,20 +20,20 @@ spec:
             project: ''
   template:
     metadata:
-      name: {REPLACE_REPO_NAME}-pr-{{number}}-vcluster
+      name: vcp-gitops-pr-{{number}}-vcluster
     spec:
       destination:
         name: in-cluster
         namespace: p-auth-core
       info:
         - name: PR vCluster Argo CD URL
-          value: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+          value: https://argocd-vcp-gitops.vcp.local
         - name: Pull Request
-          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}'
+          value: 'https://forgejo.vcp.local/vcluster-demos/vcp-gitops/pull/{{number}}'
       project: loft-auth-core
       source:
         kustomize:
-          namePrefix: {REPLACE_REPO_NAME}-pr-{{number}}-
+          namePrefix: vcp-gitops-pr-{{number}}-
           patches:
             - patch: |-
                 - op: add
@@ -41,10 +41,10 @@ spec:
                   value: auth-core
                 - op: add
                   path: /metadata/labels/vclusterName
-                  value: {REPLACE_REPO_NAME}-pr-{{number}}-vcluster
+                  value: vcp-gitops-pr-{{number}}-vcluster
                 - op: add
                   path: /metadata/labels/repo
-                  value: {REPLACE_REPO_NAME}
+                  value: vcp-gitops
                 - op: add
                   path: /metadata/labels/prLabel
                   value: 'create-pr-vcluster-external-argocd'
@@ -64,7 +64,7 @@ spec:
                 kind: VirtualClusterInstance
                 name: vcluster
         path: vcluster-use-cases/argocd-vcluster-pull-request-environments/kustomize
-        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
+        repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
         targetRevision: '{{branch}}'
       syncPolicy:
         automated:

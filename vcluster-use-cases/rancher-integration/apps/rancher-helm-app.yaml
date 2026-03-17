@@ -21,7 +21,7 @@ spec:
     helm:
       releaseName: rancher
       valuesObject:
-        hostname: rancher-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+        hostname: rancher-vcp-gitops.vcp.local
         agentTLSMode: "system-store"
         tls: "ingress"
         ingress:

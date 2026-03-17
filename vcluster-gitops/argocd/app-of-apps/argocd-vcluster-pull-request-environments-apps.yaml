@@ -14,7 +14,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops'
     targetRevision: HEAD
     path: vcluster-use-cases/argocd-vcluster-pull-request-environments/apps
   destination:

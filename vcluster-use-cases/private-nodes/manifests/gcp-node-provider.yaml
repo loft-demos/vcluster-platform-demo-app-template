@@ -1,16 +1,16 @@
 apiVersion: management.loft.sh/v1
 kind: NodeProvider
 metadata:
-  name: gcp-compute-{REPLACE_VCLUSTER_NAME}-node-provider
+  name: gcp-compute-vcp-gitops-node-provider
 spec:
   terraform:
     nodeTemplate:
       git:
-        repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
+        repository: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
         subPath: vcluster-use-cases/private-nodes/auto-nodes/gcp-terraform/node
     nodeEnvironmentTemplate:
       git:
-        repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
+        repository: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
         subPath: vcluster-use-cases/private-nodes/auto-nodes/gcp-terraform/environment
     nodeTypes:
       - properties:

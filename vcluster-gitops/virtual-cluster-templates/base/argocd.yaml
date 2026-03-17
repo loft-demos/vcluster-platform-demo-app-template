@@ -18,9 +18,9 @@ spec:
         annotations:
           loft.sh/custom-links: |-
             Argo-CD=https://{{ .Values.loft.virtualClusterName }}-{{ .Values.loft.project }}-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
-            GitOps-Repo={REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
+            GitOps-Repo=https://forgejo.vcp.local/vcluster-demos/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app/
     apps:
-      - name: argocd-{REPLACE_VCLUSTER_NAME}
+      - name: argocd-vcp-gitops
         version: 2.14.10
         parameters: |
           appValues: |-

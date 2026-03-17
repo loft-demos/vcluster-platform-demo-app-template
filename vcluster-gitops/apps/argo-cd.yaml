@@ -1,7 +1,7 @@
 kind: App
 apiVersion: management.loft.sh/v1
 metadata:
-  name: argocd-{REPLACE_VCLUSTER_NAME}
+  name: argocd-vcp-gitops
 spec:
   displayName: Argo CD
   description: Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes

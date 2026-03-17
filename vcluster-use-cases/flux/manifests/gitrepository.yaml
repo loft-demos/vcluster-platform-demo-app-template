@@ -1,11 +1,11 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: {REPLACE_REPO_NAME}
+  name: vcp-gitops
   namespace: p-auth-core
 spec:
   interval: 5m0s
-  url: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
+  url: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
   ref:
     branch: main
 ---
@@ -16,7 +16,7 @@ metadata:
   namespace: p-auth-core
 spec:
   type: githubdispatch
-  address: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+  address: 'https://forgejo.vcp.local/vcluster-demos/vcp-gitops'
   secretRef:
     name: loft-demo-org-cred
 ---

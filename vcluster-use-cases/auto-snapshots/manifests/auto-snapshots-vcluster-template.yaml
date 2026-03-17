@@ -29,9 +29,9 @@ spec:
               type: oci
               oci:
                 credential:
-                  secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
+                  secretName: vcluster-demos-ghcr-write-pat
                   secretNamespace: {{ .Values.loft.virtualClusterNamespace }}
-                repository: oci://{REPLACE_SNAPSHOT_OCI_REPOSITORY}
+                repository: oci://ghcr.io/vcluster-demos/vcp-gitops
         sleep:
           auto:
             afterInactivity: 35m
@@ -230,7 +230,7 @@ spec:
               kubernetes.io/ingress.class: nginx
           spec:
             rules:
-              - host: demo-web-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+              - host: demo-web-vcp-gitops.vcp.local
                 http:
                   paths:
                     - path: /
@@ -258,9 +258,9 @@ spec:
                   type: oci
                   oci:
                     credential:
-                      secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
+                      secretName: vcluster-demos-ghcr-write-pat
                       secretNamespace: {{ .Values.loft.virtualClusterNamespace }}
-                    repository: oci://{REPLACE_SNAPSHOT_OCI_REPOSITORY}
+                    repository: oci://ghcr.io/vcluster-demos/vcp-gitops
             sleep:
               auto:
                 afterInactivity: 35m
@@ -299,11 +299,11 @@ spec:
             apiVersion: v1
             kind: Secret
             metadata:
-              name: {REPLACE_ORG_NAME}-ghcr-write-pat
+              name: vcluster-demos-ghcr-write-pat
               labels:
-                loft.sh/project-secret-name: {REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}
-                org: {REPLACE_ORG_NAME}
-                repo: {REPLACE_REPO_NAME}
+                loft.sh/project-secret-name: vcluster-demos-ghcr-write
+                org: vcluster-demos
+                repo: vcp-gitops
             type: Opaque
       parameters:
         - variable: env

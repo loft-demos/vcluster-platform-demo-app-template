@@ -39,11 +39,11 @@ It uses the Argo CD Cluster generator three times with selectors for:
 For every matching imported cluster, it creates an Argo CD `Application` that:
 
 - targets the matching cluster server
-- deploys into the namespace `{REPLACE_REPO_NAME}-<env>`
+- deploys into the namespace `vcp-gitops-<env>`
 - reads manifests from `vcluster-use-cases/argocd-vcluster-add-ons/manifests/<env>/`
 
-The file includes the placeholders `{REPLACE_ORG_NAME}` and
-`{REPLACE_REPO_NAME}`, which must be replaced with the GitHub organization and
+The file includes the placeholders `vcluster-demos` and
+`vcp-gitops`, which must be replaced with the GitHub organization and
 repository that host the manifests.
 
 ### `manifests/dev/`

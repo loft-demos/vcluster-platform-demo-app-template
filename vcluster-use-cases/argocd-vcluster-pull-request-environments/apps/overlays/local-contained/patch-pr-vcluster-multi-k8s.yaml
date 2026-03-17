@@ -15,9 +15,9 @@ spec:
                   k8sVersionDNSLabel: 1-32-7
           - pullRequest:
               gitea:
-                owner: {REPLACE_ORG_NAME}
-                repo: {REPLACE_REPO_NAME}
-                api: "{REPLACE_GIT_BASE_URL}"
+                owner: vcluster-demos
+                repo: vcp-gitops
+                api: "http://forgejo-http.forgejo.svc.cluster.local:3000"
                 tokenRef:
                   secretName: loft-demo-org-cred
                   key: token
@@ -31,8 +31,8 @@ spec:
     spec:
       info:
         - name: PR vCluster Argo CD URL
-          value: https://argocd-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}
+          value: https://argocd-vcp-gitops.vcp.local
         - name: Pull Request
-          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pulls/{{number}}'
+          value: 'https://forgejo.vcp.local/vcluster-demos/vcp-gitops/pulls/{{number}}'
       source:
-        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
+        repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'

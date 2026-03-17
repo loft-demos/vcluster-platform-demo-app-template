@@ -63,7 +63,7 @@ This folder contains the top-level Argo CD `Application` resources.
   applies the provider package manifests in [`providers/`](./providers/)
 - [`komoplane-helm-app.yaml`](./apps/komoplane-helm-app.yaml)
   installs Komoplane and exposes it through an ingress at
-  `komoplane-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}`
+  `komoplane-vcp-gitops.vcp.local`
 - [`crossplane-manifests.yaml`](./apps/crossplane-manifests.yaml)
   applies the Crossplane XRDs, compositions, function, and `ProviderConfig`
   resources from [`manifests/`](./manifests/)
@@ -188,8 +188,8 @@ exist:
 - the vCluster Platform CRDs and API must already be reachable from the cluster
   because the Kubernetes provider creates `management.loft.sh/v1`
   `VirtualClusterInstance` objects
-- `{REPLACE_ORG_NAME}`, `{REPLACE_REPO_NAME}`, `{REPLACE_VCLUSTER_NAME}`, and
-  `{REPLACE_BASE_DOMAIN}` placeholders must be replaced where applicable
+- `vcluster-demos`, `vcp-gitops`, `vcp-gitops`, and
+  `vcp.local` placeholders must be replaced where applicable
 
 ## Notes
 

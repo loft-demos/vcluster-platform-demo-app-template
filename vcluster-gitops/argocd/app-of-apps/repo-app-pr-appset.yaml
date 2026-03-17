@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: {REPLACE_REPO_NAME}-pr
+  name: vcp-gitops-pr
   namespace: argocd
 spec:
   generators:
@@ -9,9 +9,9 @@ spec:
       github:
         appSecretName: loft-demo-org-cred
         # The GitHub organization or user.
-        owner: {REPLACE_ORG_NAME}
+        owner: vcluster-demos
         # The Github repository
-        repo: {REPLACE_REPO_NAME}
+        repo: vcp-gitops
         # (optional) use a GitHub App to access the API instead of a PAT.
         #appSecretName: github-app-repo-creds
         # Labels is used to filter the PRs that you want to target. (optional)
@@ -20,7 +20,7 @@ spec:
       requeueAfterSeconds: 30
   template:
     metadata:
-      name: '{REPLACE_REPO_NAME}-{{branch}}-pr{{number}}'
+      name: 'vcp-gitops-{{branch}}-pr{{number}}'
     spec:
       syncPolicy:
         automated:
@@ -28,19 +28,19 @@ spec:
         syncOptions:
           - CreateNamespace=true
       source:
-        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
+        repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
         targetRevision: '{{head_sha}}'
         path: helm-chart/
         helm:
           parameters:
           - name: "image.repository"
-            value: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app
+            value: forgejo.vcp.local/vcluster-demos/vcp-gitops/vcp-gitops-demo-app
           - name: "image.tag"
             value: "{{head_short_sha}}"
           - name: "image.args.text"
-            value: "Hello from {REPLACE_REPO_NAME} pr-{{number}} commit {{head_short_sha}}"
+            value: "Hello from vcp-gitops pr-{{number}} commit {{head_short_sha}}"
           - name: "ingress.hosts[0].host"
-            value: {REPLACE_REPO_NAME}-pr-{{number}}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+            value: vcp-gitops-pr-{{number}}-vcp-gitops.vcp.local
           - name: ingress.hosts[0].paths[0].backend.service.name
             value: juliet-app
           - name: ingress.hosts[0].paths[0].backend.service.port.name
@@ -50,15 +50,15 @@ spec:
           - name: ingress.hosts[0].paths[0].pathType
             value: prefix
           - name: "ingress.tls[0].hosts[0]"
-            value: {REPLACE_REPO_NAME}-pr-{{number}}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+            value: vcp-gitops-pr-{{number}}-vcp-gitops.vcp.local
       project: "default"
       destination:
-        server: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/kubernetes/project/default/virtualcluster/{REPLACE_REPO_NAME}-pr-{{number}}
+        server: https://vcp-gitops.vcp.local/kubernetes/project/default/virtualcluster/vcp-gitops-pr-{{number}}
         namespace: preview-hello-world-app
       info:
         - name: Preview App Link
           value: >-
-            https://{REPLACE_REPO_NAME}-pr-{{number}}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+            https://vcp-gitops-pr-{{number}}-vcp-gitops.vcp.local
         - name: GitHub PR
           value: >-
-            {REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/pull/{{number}}
+            https://forgejo.vcp.local/vcluster-demos/vcp-gitops/pull/{{number}}

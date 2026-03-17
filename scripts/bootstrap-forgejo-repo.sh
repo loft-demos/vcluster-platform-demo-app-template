@@ -182,7 +182,9 @@ push_refs() {
   fi
   auth_header="$(printf '%s' "$USERNAME:$auth_secret" | base64)"
 
-  if [[ "$CURRENT_BRANCH_ONLY" == "true" ]]; then
+  if [[ "$CURRENT_BRANCH_ONLY" == "true" && "$INCLUDE_WORKING_TREE" == "true" ]]; then
+    echo "[INFO] Skipping direct push for branch ${DEFAULT_BRANCH}; the working tree snapshot will update it."
+  elif [[ "$CURRENT_BRANCH_ONLY" == "true" ]]; then
     echo "[INFO] Pushing branch ${DEFAULT_BRANCH} to $REPO_URL"
     git -c "http.extraHeader=Authorization: Basic $auth_header" \
       push "$REPO_URL" "refs/heads/$DEFAULT_BRANCH:refs/heads/$DEFAULT_BRANCH"

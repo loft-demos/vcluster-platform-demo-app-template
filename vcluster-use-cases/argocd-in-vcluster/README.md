@@ -123,7 +123,7 @@ spec:
             valueFiles:
               - $values/vcluster-use-cases/argocd-in-vcluster/helm-values/argocd/values.yaml
               - '$values/vcluster-use-cases/argocd-in-vcluster/helm-values/argocd/{{ index .metadata.labels "vcluster.demo/deployment-env" }}/values.yaml'
-        - repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
+        - repoURL: https://github.com/vcluster-demos/vcp-gitops.git
           targetRevision: main
           ref: values
 ```

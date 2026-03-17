@@ -9,9 +9,9 @@ spec:
         generators:
           - pullRequest:
               gitea:
-                owner: {REPLACE_ORG_NAME}
-                repo: {REPLACE_REPO_NAME}
-                api: "{REPLACE_GIT_BASE_URL}"
+                owner: vcluster-demos
+                repo: vcp-gitops
+                api: "http://forgejo-http.forgejo.svc.cluster.local:3000"
                 tokenRef:
                   secretName: loft-demo-org-cred
                   key: token
@@ -25,7 +25,7 @@ spec:
                       - '{{number}}'
                 matchLabels:
                   prLabel: deploy-argocd-vcluster-preview
-                  repo: {REPLACE_REPO_NAME}
+                  repo: vcp-gitops
                   vcluster.loft.sh/ready: 'true'
   template:
     metadata:
@@ -35,12 +35,12 @@ spec:
     spec:
       info:
         - name: Pull Request
-          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/pulls/{{number}}'
+          value: 'https://forgejo.vcp.local/vcluster-demos/{{metadata.labels.repo}}/pulls/{{number}}'
       source:
         helm:
           parameters:
             - name: image.repository
-              value: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{{metadata.labels.repo}}-demo-app'
+              value: 'forgejo.vcp.local/vcluster-demos/vcp-gitops/{{metadata.labels.repo}}-demo-app'
             - name: image.tag
               value: '{{head_short_sha}}'
             - name: image.args.text
@@ -48,7 +48,7 @@ spec:
                 Hello from {{metadata.labels.vclusterName}} commit
                 {{head_short_sha}}
             - name: ingress.hosts[0].host
-              value: '{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}'
+              value: '{{metadata.labels.vclusterName}}.vcp.local'
             - name: ingress.hosts[0].paths[0].backend.service.name
               value: '{{metadata.labels.repo}}'
             - name: ingress.hosts[0].paths[0].backend.service.port.name
@@ -58,6 +58,6 @@ spec:
             - name: ingress.hosts[0].paths[0].pathType
               value: prefix
             - name: ingress.tls[0].hosts[0]
-              value: '{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}'
-        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git'
+              value: '{{metadata.labels.vclusterName}}.vcp.local'
+        repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/{{metadata.labels.repo}}.git'
         targetRevision: '{{head_sha}}'

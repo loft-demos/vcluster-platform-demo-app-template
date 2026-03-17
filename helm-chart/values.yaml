@@ -4,7 +4,7 @@
 
 replicaCount: 1
 image:
-  repository: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app
+  repository: forgejo.vcp.local/vcluster-demos/vcp-gitops/vcp-gitops-demo-app
   pullPolicy: IfNotPresent
   # use Chart appVersion if not set as value
   tag: ""

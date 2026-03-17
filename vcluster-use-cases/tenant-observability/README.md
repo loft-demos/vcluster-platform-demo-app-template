@@ -12,6 +12,13 @@ using:
 Grafana also comes with a small default dashboard so the demo is usable
 immediately after sync.
 
+> [!IMPORTANT]
+> This use case is currently not supported on the OrbStack-backed self-contained
+> `vind` path. The standard design depends on Central HostPath Mapper and host
+> mount propagation, and those mounts are not available in the current `vind`
+> runtime. Use the Generator or another Linux-backed host cluster if you need
+> to validate the real CHPM-based design.
+
 The important part is the deployment model:
 
 1. the `tenant-observability-vcluster` template creates a tenant vCluster
@@ -26,16 +33,14 @@ the whole observability stack directly in the `VirtualClusterTemplate`.
 ## What This Demonstrates
 
 - each tenant vCluster gets its own local Grafana, Loki, and Prometheus
-- Promtail runs inside the tenant vCluster and reads logs through Central
-  HostPath Mapper
+- the supported path uses Promtail plus Central HostPath Mapper for tenant log
+  collection
 - the host Argo CD instance can manage add-ons inside imported tenant
   vClusters
 - multiple tenant vClusters on the same host cluster stay isolated because each
   vCluster has its own stack and local datasources
 
-Promtail is the default collector for this PoV. An optional Grafana Alloy
-scaffold is included under [scaffolds/](./scaffolds), but it is not wired in by
-default.
+Promtail is the collector used for the supported path.
 
 ## Host Prerequisites
 
@@ -78,8 +83,8 @@ That `Application` installs:
 - repo: `https://charts.loft.sh/`
 - version: `0.3.0-rc.1`
 
-So for the normal Generator and `vind` GitOps flows, you do not need a separate
-manual install step for Central HostPath Mapper.
+So for the normal Generator and self-managed host-cluster flows, you do not
+need a separate manual install step for Central HostPath Mapper.
 
 For the `vind` path, the management cluster also needs an ingress controller if
 you want tenant UIs reachable from your laptop. The `vind` bootstrap installs
@@ -89,8 +94,6 @@ you want tenant UIs reachable from your laptop. The `vind` bootstrap installs
 
 The management-cluster Argo CD flow is:
 
-- [apps/tenant-observability-central-hostpath-mapper.yaml](./apps/tenant-observability-central-hostpath-mapper.yaml)
-  installs Central HostPath Mapper on the host cluster
 - [apps/tenant-observability-manifests.yaml](./apps/tenant-observability-manifests.yaml)
   applies the template and example instance manifests
 - [apps/tenant-observability-applicationsets.yaml](./apps/tenant-observability-applicationsets.yaml)
@@ -98,6 +101,11 @@ The management-cluster Argo CD flow is:
 - [applicationsets/tenant-observability-cluster-gen.yaml](./applicationsets/tenant-observability-cluster-gen.yaml)
   watches imported clusters labeled `addons.vcluster.demo/tenant-observability=true`
   and installs the stack into each one
+
+On the standard Generator / self-managed host-cluster path, Argo CD also
+installs:
+
+- [apps/tenant-observability-central-hostpath-mapper.yaml](./apps/tenant-observability-central-hostpath-mapper.yaml)
 
 The tenant stack itself lives here:
 
@@ -195,8 +203,8 @@ Then in Grafana Explore, query Loki for:
 
 - `tenant-observability demo message`
 
-If Central HostPath Mapper is missing, Promtail will usually start but the
-tenant workload logs will not show up in Loki.
+If Central HostPath Mapper is missing on the standard path, Promtail will
+usually start but the tenant workload logs will not show up in Loki.
 
 ## Scaling Notes
 
@@ -209,14 +217,6 @@ This is intentionally lightweight:
 
 Things to watch first:
 
-- one Promtail pod runs per node per tenant vCluster
+- one Promtail pod runs per node per tenant vCluster on the standard path
 - many tenant vClusters on the same host cluster will increase Promtail fanout
 - Loki, Prometheus, and Grafana state are ephemeral in this PoV
-
-## Collector Alternative
-
-Optional future collector scaffold:
-
-- [scaffolds/grafana-alloy.config.alloy](./scaffolds/grafana-alloy.config.alloy)
-
-Promtail remains the default collector for this demo.

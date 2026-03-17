@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 data:
   context: |
-    argocdUrl: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+    argocdUrl: https://argocd-vcp-gitops.vcp.local
   # Define the webhook service for vCluster Platform
   service.webhook.vcluster-platform: |
     url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local
@@ -33,7 +33,7 @@ data:
     message: |
       Application {{.app.metadata.name}} is now running new version of deployments manifests.
     github:
-      repoURLPath: "{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}"
+      repoURLPath: "https://forgejo.vcp.local/vcluster-demos/vcp-gitops"
       revisionPath: "{{.app.spec.source.targetRevision}}"
       pullRequestComment:
         content: |
@@ -45,9 +45,9 @@ data:
 
           commit {{$shortSha}}
           **Kubernetes Version:** {{$k8sVersion}}
-          **vCluster:** pull request [vCluster pods](https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/projects/{{$projectId}}/vclusters/{{$vclusterName}}/pods)  
+          **vCluster:** pull request [vCluster pods](https://vcp-gitops.vcp.local/projects/{{$projectId}}/vclusters/{{$vclusterName}}/pods)  
           **Argo CD:** pull request [Argo CD PR deployment Application]({{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true)  
-          **Deployed App:** application for this pull request has been deployed at: [{{.app.metadata.name}}](https://{{$vclusterName}}.{REPLACE_BASE_DOMAIN}/)
+          **Deployed App:** application for this pull request has been deployed at: [{{.app.metadata.name}}](https://{{$vclusterName}}.vcp.local/)
   trigger.on-deployed: |
     - description: Application is synced and healthy. Triggered once per commit.
       oncePer: app.status.operationState?.syncResult?.revision

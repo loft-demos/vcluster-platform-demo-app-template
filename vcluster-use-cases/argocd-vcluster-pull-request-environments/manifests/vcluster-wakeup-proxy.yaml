@@ -17,7 +17,7 @@ spec:
           ports: [{ containerPort: 8080 }]
           env:
             - name: UPSTREAM_BASE
-              value: "https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}"
+              value: "https://vcp-gitops.vcp.local"
             # Treat 502 & 504 as success; add others if you want
             - name: SUCCESS_ON
               value: "502,504"

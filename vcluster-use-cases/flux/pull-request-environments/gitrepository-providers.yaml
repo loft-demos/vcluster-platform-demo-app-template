@@ -5,7 +5,7 @@ metadata:
   namespace: p-auth-core
 spec:
   type: github
-  address: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+  address: 'https://forgejo.vcp.local/vcluster-demos/vcp-gitops'
   secretRef:
     name: loft-demo-org-cred
 ---
