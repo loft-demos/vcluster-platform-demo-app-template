@@ -148,8 +148,3 @@ For the self-contained path, the Argo CD root app is:
 The self-contained Git overlay is:
 
 - [vcluster-gitops/overlays/local-contained/README.md](./vcluster-gitops/overlays/local-contained/README.md)
-
-Notes:
-
-- use `vCluster instances` or `virtual clusters` in public docs
-- `0.32.0+` template sleep and deletion config in this repo has already been updated
