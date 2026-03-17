@@ -981,10 +981,13 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
     --from-literal=token="$flux_receiver_token" \
     --dry-run=client -o yaml | kubectl apply -f -
 
-  # Create the Forgejo API token secret in p-auth-core so Flux Providers and
-  # the ResourceSetInputProvider can authenticate with Forgejo's API.
+  # Create the Forgejo API credentials secret in p-auth-core so Flux Providers
+  # and the ResourceSetInputProvider can authenticate with Forgejo's API.
+  # GiteaPullRequest type requires both 'username' and 'password' fields.
   kubectl create secret generic loft-demo-org-cred \
     --namespace p-auth-core \
+    --from-literal=username="$FORGEJO_USERNAME" \
+    --from-literal=password="$flux_forgejo_token" \
     --from-literal=token="$flux_forgejo_token" \
     --dry-run=client -o yaml | kubectl apply -f -
 
@@ -1035,49 +1038,9 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
   fi
 fi
 
-if command -v kubectl >/dev/null 2>&1; then
-  step "Configure vCP nav bar buttons"
-
-  # Wait for the vCP platform deploy to exist and be available
-  wait_for_create 60 5 -n vcluster-platform get deploy/loft
-  kubectl -n vcluster-platform wait --for=condition=Available deploy/loft --timeout=300s >/dev/null 2>&1 || true
-
-  navbar_buttons="$(jq -cn \
-    --arg docs_link "https://www.vcluster.com/docs/platform/" \
-    --arg forgejo_link "https://${FORGEJO_HOST}/" \
-    --arg forgejo_icon "https://${FORGEJO_HOST}/assets/img/logo.svg" \
-    '[
-      {"link": $docs_link, "text": "vCluster Docs", "position": "TopEnd"},
-      {"link": $forgejo_link, "icon": $forgejo_icon, "text": "Forgejo Repo", "position": "TopEnd"}
-    ]')"
-
-  if use_case_list_contains "$resolved_use_case_selection" "flux"; then
-    flux_link="https://flux-${VCLUSTER_NAME}.${BASE_DOMAIN}"
-    flux_icon="${flux_link}/favicon.svg"
-    navbar_buttons="$(jq -cn \
-      --argjson existing "$navbar_buttons" \
-      --arg flux_link "$flux_link" \
-      --arg flux_icon "$flux_icon" \
-      '$existing + [{"link": $flux_link, "icon": $flux_icon, "text": "Flux UI", "position": "TopEnd"}]')"
-  fi
-
-  wait_for_create 60 5 get configs.management.loft.sh loft
-  navbar_patched="false"
-  for _attempt in $(seq 1 12); do
-    if kubectl patch configs.management.loft.sh loft \
-      --type=merge \
-      --patch "$(jq -cn --argjson buttons "$navbar_buttons" \
-        '{"spec":{"uiSettings":{"navBarButtons":$buttons}}}')" \
-      >/dev/null 2>&1; then
-      navbar_patched="true"
-      break
-    fi
-    sleep 5
-  done
-  if [[ "$navbar_patched" != "true" ]]; then
-    echo "[WARN] Could not patch vCP nav bar buttons — configure them via the vCP admin UI." >&2
-  fi
-fi
+  # vCP nav bar buttons (vCluster Docs, Forgejo Repo, Flux UI) are set via
+  # the vCluster Platform Helm values in vind-demo-cluster/vcluster.yaml and
+  # rendered at vind install time — no runtime patching needed.
 
 if command -v kubectl >/dev/null 2>&1; then
   step "Apply cluster-local use case labels"
