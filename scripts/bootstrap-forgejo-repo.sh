@@ -240,8 +240,8 @@ push_working_tree_snapshot() {
     rsync -a --delete --exclude '.git' "$repo_root"/ "$temp_repo"/
     git add -A
     if ! git diff --cached --quiet; then
-      git config user.name "Codex Bootstrap"
-      git config user.email "codex-bootstrap@local.invalid"
+      git config user.name "vind vCP Bootstrap"
+      git config user.email "vind-vcp-bootstrap@local.invalid"
       git commit -m "Bootstrap working tree snapshot" >/dev/null
     fi
     git -c "http.extraHeader=Authorization: Basic $auth_header" \
