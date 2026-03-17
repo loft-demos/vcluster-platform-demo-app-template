@@ -898,6 +898,42 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
 fi
 
 if command -v kubectl >/dev/null 2>&1; then
+  step "Configure vCP nav bar buttons"
+
+  # Wait for the vCP platform deploy to exist and be available
+  for _ in $(seq 1 60); do
+    if kubectl -n vcluster-platform get deploy/loft >/dev/null 2>&1; then
+      break
+    fi
+    sleep 5
+  done
+  kubectl -n vcluster-platform wait --for=condition=Available deploy/loft --timeout=300s >/dev/null 2>&1 || true
+
+  navbar_buttons="$(jq -cn \
+    --arg docs_link "https://www.vcluster.com/docs/platform/" \
+    --arg forgejo_link "https://${FORGEJO_HOST}/" \
+    --arg forgejo_icon "https://${FORGEJO_HOST}/assets/img/logo.svg" \
+    '[
+      {"link": $docs_link, "text": "vCluster Docs", "position": "TopEnd"},
+      {"link": $forgejo_link, "icon": $forgejo_icon, "text": "Forgejo Repo", "position": "TopEnd"}
+    ]')"
+
+  if use_case_list_contains "$resolved_use_case_selection" "flux"; then
+    flux_link="https://flux-${VCLUSTER_NAME}.${BASE_DOMAIN}"
+    navbar_buttons="$(jq -cn \
+      --argjson existing "$navbar_buttons" \
+      --arg flux_link "$flux_link" \
+      '$existing + [{"link": $flux_link, "text": "Flux UI", "position": "TopEnd"}]')"
+  fi
+
+  kubectl patch config loft \
+    --type=merge \
+    --patch "$(jq -cn --argjson buttons "$navbar_buttons" \
+      '{"spec":{"uiSettings":{"navBarButtons":$buttons}}}')" \
+    >/dev/null 2>&1 || echo "[WARN] Could not patch vCP nav bar buttons — configure them via the vCP admin UI." >&2
+fi
+
+if command -v kubectl >/dev/null 2>&1; then
   step "Apply cluster-local use case labels"
   require_cmd kubectl
   apply_cluster_local_secret "$VCP_HOST" "$vcp_domain_prefix" "$vcp_domain" "$USE_CASES"

@@ -15,7 +15,6 @@
 # - __FORGEJO_HOST__
 # - __FORGEJO_ADMIN_USER__
 # - __FORGEJO_ADMIN_PASSWORD__
-# - __VCP_FLUX_NAVBAR_BUTTON__
 # - worker node list for `experimental.docker.nodes`
 controlPlane:
   distro:
@@ -170,13 +169,6 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                   allow:
                     - vcluster
                     - featurebase
-                navBarButtons:
-                  - link: https://www.vcluster.com/docs/platform/
-                    text: vCluster Docs
-                  - link: https://__FORGEJO_HOST__/
-                    icon: https://__FORGEJO_HOST__/assets/img/logo.svg
-                    text: Forgejo Repo
-__VCP_FLUX_NAVBAR_BUTTON__
         - chart:
             name: forgejo
             repo: oci://code.forgejo.org/forgejo-helm
