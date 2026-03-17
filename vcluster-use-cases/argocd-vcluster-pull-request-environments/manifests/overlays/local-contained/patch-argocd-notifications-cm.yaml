@@ -6,7 +6,7 @@ metadata:
 data:
   $patch: replace
   context: |
-    argocdUrl: https://argocd-vcp-gitops.vcp.local
+    argocdUrl: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
   service.webhook.vcluster-platform: |
     url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local
     headers:

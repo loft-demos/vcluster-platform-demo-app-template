@@ -23,18 +23,18 @@ spec:
             env: prod
   template:
     metadata:
-      name: vcp-gitops-{{.name}}
+      name: {REPLACE_REPO_NAME}-{{.name}}
     spec:
       destination:
-        namespace: vcp-gitops-{{.metadata.labels.env}}
+        namespace: {REPLACE_REPO_NAME}-{{.metadata.labels.env}}
         server: '{{.server}}'
       info:
         - name: Git Repo
-          value: 'https://forgejo.vcp.local/vcluster-demos/vcp-gitops/'
+          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/'
       project: 'loft-{{ index .metadata.labels "demos.loft.sh/project" }}'
       source:
         path: vcluster-use-cases/argocd-vcluster-add-ons/manifests/{{.metadata.labels.env}}/
-        repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
         targetRevision: main
       syncPolicy:
         automated:

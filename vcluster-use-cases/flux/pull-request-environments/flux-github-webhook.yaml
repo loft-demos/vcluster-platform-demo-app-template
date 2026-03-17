@@ -4,7 +4,7 @@ metadata:
   name: flux-github-webhook
 spec:
   forProvider:
-    repository: vcp-gitops
+    repository: {REPLACE_REPO_NAME}
     active: true
     configuration:
     - contentType: json

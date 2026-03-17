@@ -109,7 +109,7 @@ spec:
                 toFieldPath: spec.forProvider.manifest.metadata.annotations["argoHost"]
                 transforms:
                   - string:
-                      fmt: https://argocd-%s.vcp.local
+                      fmt: https://argocd-%s.{REPLACE_BASE_DOMAIN}
                       type: Format
                     type: string
               - fromFieldPath: metadata.name
@@ -123,7 +123,7 @@ spec:
                 toFieldPath: spec.forProvider.manifest.stringData.redirectURIs
                 transforms:
                   - string:
-                      fmt: https://argocd-%s.vcp.local/auth/callback
+                      fmt: https://argocd-%s.{REPLACE_BASE_DOMAIN}/auth/callback
                       type: Format
                     type: string
       step: patch-and-transform

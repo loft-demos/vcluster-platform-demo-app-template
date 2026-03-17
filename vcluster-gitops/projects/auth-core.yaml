@@ -11,7 +11,7 @@ spec:
     namespace: argocd
     sso:
       enabled: true
-      host: https://argocd-vcp-gitops.vcp.local/
+      host: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/
       assignedRoles:
         - role:admin
     project:

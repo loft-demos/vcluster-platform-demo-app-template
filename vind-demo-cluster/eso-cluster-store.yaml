@@ -10,7 +10,7 @@ metadata:
 spec:
   provider:
     onepasswordSDK:
-      vault: "vcluster-demos"
+      vault: "{REPLACE_1PASSWORD_VAULT}"
       auth:
         serviceAccountSecretRef:
           name: one-password-sa-token

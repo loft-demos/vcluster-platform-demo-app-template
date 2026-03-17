@@ -67,7 +67,7 @@ spec:
     virtualClusterInstance: argocd
     namespace: argocd
     sso:
-      host: https://argocd-vcp-gitops.vcp.local
+      host: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
       assignedRoles:
         - role:admin
   namespacePattern:

@@ -119,13 +119,13 @@ secret, not the local cluster where Argo CD and Flux are running.
 
 Before using this example, make sure the following values are available:
 
-- `vcluster-demos` and `vcp-gitops` in the Argo CD `Application`
+- `{REPLACE_ORG_NAME}` and `{REPLACE_REPO_NAME}` in the Argo CD `Application`
   source repo references
-- `vcp-gitops` in the projected kubeconfig project secret label
-- `vcp.local` in
+- `{REPLACE_VCLUSTER_NAME}` in the projected kubeconfig project secret label
+- `{REPLACE_BASE_DOMAIN}` in
   [`flux-kustomize-manifests/vcp-helm.yaml`](./flux-kustomize-manifests/vcp-helm.yaml)
 - A project secret named
-  `vc-connected-host-cluster-vcp-gitops-connected-flux-kubeconfig`
+  `vc-connected-host-cluster-{REPLACE_VCLUSTER_NAME}-connected-flux-kubeconfig`
   that provides the remote cluster kubeconfig
 - A `demo-admin-access-key` secret in `p-vcluster-flux-demo` with a
   `connectedHostClusterAccessKey` value for Flux post-build substitution

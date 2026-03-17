@@ -21,9 +21,9 @@ This use case now has two render paths:
 The OCI image location therefore depends on how the repo was rendered:
 
 - generator / GitHub:
-  `oci://ghcr.io/vcluster-demos/vcp-gitops`
+  `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
 - self-contained `vind`:
-  `oci://ghcr.io/vcluster-demos/vcp-gitops`
+  `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
 
 The corresponding credential secret also differs by render path:
 
@@ -66,9 +66,9 @@ snapshots:
     storage:
       type: oci
       oci:
-        repository: oci://ghcr.io/vcluster-demos/vcp-gitops
+        repository: oci://{REPLACE_SNAPSHOT_OCI_REPOSITORY}
         credential:
-          secretName: vcluster-demos-ghcr-write-pat
+          secretName: {REPLACE_ORG_NAME}-ghcr-write-pat
           secretNamespace: <vcluster-host-namespace>
 ```
 
@@ -91,8 +91,8 @@ The vCluster CLI is still required to restore a given snapshot.
 Example:
 
 ```bash
-vcluster platform login https://vcp-gitops.vcp.local
-vcluster restore snappy oci://ghcr.io/vcluster-demos/vcp-gitops:snappy-20250826111511
+vcluster platform login https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
+vcluster restore snappy oci://{REPLACE_SNAPSHOT_OCI_REPOSITORY}:snappy-20250826111511
 ```
 
 ## Demo Flow
@@ -107,11 +107,11 @@ vcluster restore snappy oci://ghcr.io/vcluster-demos/vcp-gitops:snappy-202508261
 For the original GitHub-rendered path, the snapshot package is available in the
 GitHub package UI here:
 
-- `https://github.com/orgs/vcluster-demos/packages/container/package/vcp-gitops`
+- `https://github.com/orgs/{REPLACE_ORG_NAME}/packages/container/package/{REPLACE_REPO_NAME}`
 
 For the self-contained `vind` path, use the GitHub package UI instead:
 
-- `https://github.com/orgs/vcluster-demos/packages/container/package/vcp-gitops`
+- `https://github.com/orgs/{REPLACE_ORG_NAME}/packages/container/package/{REPLACE_REPO_NAME}`
 
 > [!IMPORTANT]
 > The self-contained `vind` path keeps snapshots on GHCR for now. A local

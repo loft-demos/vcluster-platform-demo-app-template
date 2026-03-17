@@ -1,11 +1,11 @@
 apiVersion: management.loft.sh/v1
 kind: ProjectSecret
 metadata:
-  name: vcluster-demos-ghcr-write-pat
+  name: {REPLACE_ORG_NAME}-ghcr-write-pat
   namespace: p-default
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   labels:
-    loft.sh/project-secret-name: vcluster-demos-ghcr-write
-    org: vcluster-demos
-    repo: vcp-gitops
+    loft.sh/project-secret-name: {REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}
+    org: {REPLACE_ORG_NAME}
+    repo: {REPLACE_REPO_NAME}

@@ -37,7 +37,7 @@ spec:
               value: 'https://{{ index .metadata.labels "vcluster.demo/argocd-hostname" }}'
             - name: "server.ingress.hostname"
               value: '{{ index .metadata.labels "vcluster.demo/argocd-hostname" }}'
-        - repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
+        - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
           targetRevision: main
           ref: values
       syncPolicy:

@@ -93,7 +93,7 @@ spec:
           - pullRequest:
               github:
                 # The GitHub organization or user.
-                owner: vcluster-demos
+                owner: {REPLACE_ORG_NAME}
                 # The Github repository
                 repo: {{ .Values.repoName }}
                 # (optional) use a GitHub App to access the API instead of a PAT.
@@ -115,13 +115,13 @@ spec:
                 syncOptions:
                   - CreateNamespace=true
               source:
-                repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/{{ .Values.repoName }}.git'
+                repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{ .Values.repoName }}.git'
                 targetRevision: '{{`{{head_sha}}`}}'
                 path: helm-chart/
                 helm:
                   parameters:
                   - name: "image.repository"
-                    value: forgejo.vcp.local/vcluster-demos/vcp-gitops/{{ .Values.repoName }}-demo-app
+                    value: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{{ .Values.repoName }}-demo-app
                   - name: "image.tag"
                     value: "{{`{{head_short_sha}}`}}"
                   - name: "image.args.text"
@@ -148,7 +148,7 @@ spec:
                     https://{{ .Values.loft.virtualClusterName }}.{{ .Values.loft.clusterAnnotations.domain }}
                 - name: GitHub PR
                   value: >-
-                    https://forgejo.vcp.local/vcluster-demos/{{ .Values.repoName }}/pull/{{`{{number}}`}}
+                    {REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{{ .Values.repoName }}/pull/{{`{{number}}`}}
         EOF
   parameters:
     - variable: vClusterName

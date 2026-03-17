@@ -14,8 +14,8 @@ spec:
                 appSecretName: loft-demo-org-cred
                 labels:
                   - 'deploy/argocd-vcluster-preview'
-                owner: vcluster-demos
-                repo: vcp-gitops
+                owner: {REPLACE_ORG_NAME}
+                repo: {REPLACE_REPO_NAME}
               requeueAfterSeconds: 30
           - clusters:
               selector:
@@ -26,7 +26,7 @@ spec:
                       - '{{number}}'
                 matchLabels:
                   prLabel: deploy-argocd-vcluster-preview
-                  repo: vcp-gitops
+                  repo: {REPLACE_REPO_NAME}
                   vcluster.loft.sh/ready: 'true'
   template:
     metadata:
@@ -46,13 +46,13 @@ spec:
         server: '{{server}}'
       info:
         - name: Git Repo
-          value: 'https://forgejo.vcp.local/vcluster-demos/{{metadata.labels.repo}}/'
+          value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/'
       project: loft-auth-core
       source:
         helm:
           parameters:
             - name: image.repository
-              value: 'forgejo.vcp.local/vcluster-demos/vcp-gitops/{{metadata.labels.repo}}-demo-app'
+              value: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{{metadata.labels.repo}}-demo-app'
             - name: image.tag
               value: '{{head_short_sha}}'
             - name: image.args.text
@@ -60,7 +60,7 @@ spec:
                 Hello from {{metadata.labels.vclusterName}} commit
                 {{head_short_sha}}
             - name: ingress.hosts[0].host
-              value: '{{metadata.labels.vclusterName}}.vcp.local'
+              value: '{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}'
             - name: ingress.hosts[0].paths[0].backend.service.name
               value: '{{metadata.labels.repo}}'
             - name: ingress.hosts[0].paths[0].backend.service.port.name
@@ -70,9 +70,9 @@ spec:
             - name: ingress.hosts[0].paths[0].pathType
               value: prefix
             - name: ingress.tls[0].hosts[0]
-              value: '{{metadata.labels.vclusterName}}.vcp.local'
+              value: '{{metadata.labels.vclusterName}}.{REPLACE_BASE_DOMAIN}'
         path: helm-chart/
-        repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/{{metadata.labels.repo}}.git'
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}.git'
         targetRevision: '{{head_sha}}'
       syncPolicy:
         automated:

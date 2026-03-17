@@ -69,11 +69,10 @@ data:
         with lock:
             counter += 1
             message_id = counter
-        message = (
-            f"tenant-observability demo message cluster={cluster_name} "
-            f"project={project_name} id={message_id}"
+        print(
+            f'tenant-observability demo message cluster={cluster_name} project={project_name} id={message_id}',
+            flush=True,
         )
-        print(message, flush=True)
         time.sleep(5)
 ---
 apiVersion: apps/v1

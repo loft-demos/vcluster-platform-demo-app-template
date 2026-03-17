@@ -26,13 +26,13 @@ spec:
           className: "nginx"
           annotations: {}
           hosts:
-            - host: komoplane-vcp-gitops.vcp.local
+            - host: komoplane-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
               paths:
                 - path: /
                   pathType: ImplementationSpecific
           tls:
             - hosts:
-                - komoplane-vcp-gitops.vcp.local
+                - komoplane-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
   syncPolicy:
     automated:
       prune: true

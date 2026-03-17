@@ -11,8 +11,8 @@ What it changes:
 - points the app-of-apps bootstrap at the local-contained app-of-apps overlay
 - switches the PR-oriented Argo CD generators to `gitea`
 - uses generic Git and image placeholders:
-  - `http://forgejo-http.forgejo.svc.cluster.local:3000`
-  - `forgejo.vcp.local/vcluster-demos/vcp-gitops`
+  - `{REPLACE_GIT_BASE_URL}`
+  - `{REPLACE_IMAGE_REPOSITORY_PREFIX}`
 - removes GitHub-specific PR notification/comment behavior from this path
 
 Current limits:

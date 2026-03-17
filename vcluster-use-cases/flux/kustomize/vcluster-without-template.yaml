@@ -107,7 +107,7 @@ spec:
                   value:
                     enabled: true
                     hosts:
-                      - host: podinfo-vcluster-deployed-with-flux-vcp-gitops.vcp.local
+                      - host: podinfo-vcluster-deployed-with-flux-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
                         paths:
                           - path: /
                             pathType: ImplementationSpecific

@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     path: vcluster-gitops/overlays/local-contained
-    repoURL: 'http://forgejo-http.forgejo.svc.cluster.local:3000/vcluster-demos/vcp-gitops.git'
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
     targetRevision: HEAD
   syncPolicy:
     automated:

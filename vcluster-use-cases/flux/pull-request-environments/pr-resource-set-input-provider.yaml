@@ -7,7 +7,7 @@ metadata:
     fluxcd.controlplane.io/reconcileEvery: "4h"
 spec:
   type: GitHubPullRequest
-  url: 'https://forgejo.vcp.local/vcluster-demos/vcp-gitops'
+  url: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
   secretRef:
     name: loft-demo-org-cred
   filter:

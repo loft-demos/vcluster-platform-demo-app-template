@@ -9,17 +9,17 @@ This script replaces the main template placeholders in local files so the repo
 can be used without creating a GitHub template copy first.
 
 Replacements:
-- vcp-gitops
-- vcluster-demos
-- vcp-gitops
-- vcp.local
-- http://forgejo-http.forgejo.svc.cluster.local:3000
-- https://forgejo.vcp.local
-- forgejo.vcp.local/vcluster-demos/vcp-gitops
-- forgejo.vcp.local
-- ghcr.io/vcluster-demos/vcp-gitops
-- vcluster-demos-ghcr-write
-- vcluster-demos
+- {REPLACE_REPO_NAME}
+- {REPLACE_ORG_NAME}
+- {REPLACE_VCLUSTER_NAME}
+- {REPLACE_BASE_DOMAIN}
+- {REPLACE_GIT_BASE_URL}
+- {REPLACE_GIT_PUBLIC_URL}
+- {REPLACE_IMAGE_REPOSITORY_PREFIX}
+- {REPLACE_OCI_REGISTRY_HOST}
+- {REPLACE_SNAPSHOT_OCI_REPOSITORY}
+- {REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}
+- {REPLACE_1PASSWORD_VAULT}
 
 Usage:
   bash scripts/replace-text-local.sh \

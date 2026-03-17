@@ -16,13 +16,13 @@ spec:
     kind: GitRepository
     metadata:
       # GitRepository resource for the vCluster instance
-      name: vcp-gitops-vcluster-<< inputs.id >>
+      name: {REPLACE_REPO_NAME}-vcluster-<< inputs.id >>
       # the vCluster Platfrom Auth Core project namespace
       namespace: p-auth-core
     spec:
       provider: generic # or 'github' if using GitHub App
       interval: 48h
-      url: https://forgejo.vcp.local/vcluster-demos/vcp-gitops
+      url: {REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
       ref:
         # configured to only watch the Pull Request branch as the vCluster does not need to be updated for each PR commit
         branch: << inputs.branch >> 
@@ -31,12 +31,12 @@ spec:
     apiVersion: source.toolkit.fluxcd.io/v1
     kind: GitRepository
     metadata:
-      name: vcp-gitops-preview-<< inputs.id >>
+      name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
       namespace: p-auth-core
     spec:
       provider: generic # or 'github' if using GitHub App
       interval: 48h
-      url: https://forgejo.vcp.local/vcluster-demos/vcp-gitops
+      url: {REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}
       ref:
         # using PR head sha will trigger update on every commit to PR head branch
         commit: << inputs.sha >>
@@ -53,7 +53,7 @@ spec:
       type: generic
       timeout: 2m
       # address is specific to the vCluster create for a given pull request id
-      address: https://vcp-gitops.vcp.local/kubernetes/project/auth-core/virtualcluster/pr-<< inputs.id >>-k8s-<< $v.name >>-flux
+      address: https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/kubernetes/project/auth-core/virtualcluster/pr-<< inputs.id >>-k8s-<< $v.name >>-flux
       secretRef:
         name: vcluster-platform-provider-headers
     ---
@@ -74,7 +74,7 @@ spec:
         - ".*commit.*"
       eventSources:
         - kind: GitRepository
-          name: 'vcp-gitops-preview-<< inputs.id >>'
+          name: '{REPLACE_REPO_NAME}-preview-<< inputs.id >>'
     ---
     apiVersion: kustomize.toolkit.fluxcd.io/v1
     kind: Kustomization
@@ -89,7 +89,7 @@ spec:
       targetNamespace: p-auth-core
       sourceRef:
         kind: GitRepository
-        name: vcp-gitops-vcluster-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-vcluster-<< inputs.id >>
       path: "./vcluster-use-cases/flux/pull-request-environments/kustomize"
       prune: true
       timeout: 5m
@@ -119,7 +119,7 @@ spec:
     apiVersion: notification.toolkit.fluxcd.io/v1beta3
     kind: Alert
     metadata:
-      name: github-status-vcp-gitops-pr-<< inputs.id >>-k8s-<< $v.name >>
+      name: github-status-{REPLACE_REPO_NAME}-pr-<< inputs.id >>-k8s-<< $v.name >>
       namespace: p-auth-core
     spec:
       providerRef:
@@ -134,7 +134,7 @@ spec:
     apiVersion: notification.toolkit.fluxcd.io/v1beta3
     kind: Alert
     metadata:
-      name: github-pr-comment-vcp-gitops-preview-<< inputs.id >>-k8s-<< $v.name >>
+      name: github-pr-comment-{REPLACE_REPO_NAME}-preview-<< inputs.id >>-k8s-<< $v.name >>
       namespace: p-auth-core
     spec:
       providerRef:
@@ -142,7 +142,7 @@ spec:
       eventSources:
         - kind: HelmRelease
           name: '*'
-          namespace: "auth-core-v-vcp-gitops-flux-preview-<< inputs.id >>-k8s-<< $v.name >>"
+          namespace: "auth-core-v-{REPLACE_REPO_NAME}-flux-preview-<< inputs.id >>-k8s-<< $v.name >>"
     ---
     # Kustomization wrapper for HelmRelease to allow use of dependsOn
     apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -164,7 +164,7 @@ spec:
       sourceRef:
         kind: GitRepository
         # using this GitRepository tied to the PR head commit sha
-        name: vcp-gitops-preview-<< inputs.id >>
+        name: {REPLACE_REPO_NAME}-preview-<< inputs.id >>
       patches:
         - target:
             kind: HelmRepository
@@ -183,7 +183,7 @@ spec:
               path: /metadata/annotations
               # the following annotations are used to populate notifications
               value:
-                event.toolkit.fluxcd.io/preview-url: "https://podinfo-pr-<< inputs.id >>-k8s-<< $v.name >>-flux.vcp.local"
+                event.toolkit.fluxcd.io/preview-url: "https://podinfo-pr-<< inputs.id >>-k8s-<< $v.name >>-flux.{REPLACE_BASE_DOMAIN}"
                 event.toolkit.fluxcd.io/pr-number: "<< inputs.id >>"
                 event.toolkit.fluxcd.io/sha: "<< inputs.sha >>"
                 event.toolkit.fluxcd.io/k8s-version: "<< $v.value >>"
@@ -211,7 +211,7 @@ spec:
               value:
                 enabled: true
                 hosts:
-                  - host: "podinfo-pr-<< inputs.id >>-k8s-<< $v.name >>-flux.vcp.local"
+                  - host: "podinfo-pr-<< inputs.id >>-k8s-<< $v.name >>-flux.{REPLACE_BASE_DOMAIN}"
                     paths:
                       - path: /
                         pathType: ImplementationSpecific
