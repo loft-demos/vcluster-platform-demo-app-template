@@ -1053,10 +1053,12 @@ if command -v kubectl >/dev/null 2>&1; then
 
   if use_case_list_contains "$resolved_use_case_selection" "flux"; then
     flux_link="https://flux-${VCLUSTER_NAME}.${BASE_DOMAIN}"
+    flux_icon="${flux_link}/favicon.svg"
     navbar_buttons="$(jq -cn \
       --argjson existing "$navbar_buttons" \
       --arg flux_link "$flux_link" \
-      '$existing + [{"link": $flux_link, "text": "Flux UI", "position": "TopEnd"}]')"
+      --arg flux_icon "$flux_icon" \
+      '$existing + [{"link": $flux_link, "icon": $flux_icon, "text": "Flux UI", "position": "TopEnd"}]')"
   fi
 
   wait_for_create 60 5 get configs.management.loft.sh loft
