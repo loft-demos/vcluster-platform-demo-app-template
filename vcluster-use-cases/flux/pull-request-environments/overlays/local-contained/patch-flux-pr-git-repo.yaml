@@ -1,0 +1,8 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: flux-pr-git-repo
+  namespace: p-auth-core
+spec:
+  secretRef:
+    name: forgejo-git-credentials

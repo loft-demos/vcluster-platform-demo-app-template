@@ -981,6 +981,13 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
     --from-literal=token="$flux_receiver_token" \
     --dry-run=client -o yaml | kubectl apply -f -
 
+  # Create the Forgejo API token secret in p-auth-core so Flux Providers and
+  # the ResourceSetInputProvider can authenticate with Forgejo's API.
+  kubectl create secret generic loft-demo-org-cred \
+    --namespace p-auth-core \
+    --from-literal=token="$flux_forgejo_token" \
+    --dry-run=client -o yaml | kubectl apply -f -
+
   # Create HTTP basic-auth credentials for Flux GitRepository resources so
   # they can clone the private Forgejo repo without TLS certificate errors.
   # The same secret is pre-created in p-vcluster-flux-demo (created by Argo CD
@@ -1052,12 +1059,22 @@ if command -v kubectl >/dev/null 2>&1; then
       '$existing + [{"link": $flux_link, "text": "Flux UI", "position": "TopEnd"}]')"
   fi
 
-  wait_for_create 60 5 get config loft
-  kubectl patch config loft \
-    --type=merge \
-    --patch "$(jq -cn --argjson buttons "$navbar_buttons" \
-      '{"spec":{"uiSettings":{"navBarButtons":$buttons}}}')" \
-    >/dev/null 2>&1 || echo "[WARN] Could not patch vCP nav bar buttons — configure them via the vCP admin UI." >&2
+  wait_for_create 60 5 get configs.management.loft.sh loft
+  navbar_patched="false"
+  for _attempt in $(seq 1 12); do
+    if kubectl patch configs.management.loft.sh loft \
+      --type=merge \
+      --patch "$(jq -cn --argjson buttons "$navbar_buttons" \
+        '{"spec":{"uiSettings":{"navBarButtons":$buttons}}}')" \
+      >/dev/null 2>&1; then
+      navbar_patched="true"
+      break
+    fi
+    sleep 5
+  done
+  if [[ "$navbar_patched" != "true" ]]; then
+    echo "[WARN] Could not patch vCP nav bar buttons — configure them via the vCP admin UI." >&2
+  fi
 fi
 
 if command -v kubectl >/dev/null 2>&1; then

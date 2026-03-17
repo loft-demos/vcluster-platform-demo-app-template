@@ -7,3 +7,4 @@ resources:
 patches:
   - path: patch-flux-manifests.yaml
   - path: patch-flux-pull-request-environments.yaml
+  - path: patch-flux-instance.yaml

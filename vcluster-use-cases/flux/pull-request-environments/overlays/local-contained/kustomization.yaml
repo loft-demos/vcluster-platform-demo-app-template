@@ -11,3 +11,4 @@ patches:
   - path: patch-pr-github-receiver.yaml
   - path: patch-gitrepository-providers.yaml
   - path: patch-resource-set-input-provider.yaml
+  - path: patch-flux-pr-git-repo.yaml
