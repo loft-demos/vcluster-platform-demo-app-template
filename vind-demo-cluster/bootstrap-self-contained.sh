@@ -808,7 +808,25 @@ stringData:
   token: ${argocd_token}
 EOF
 
-    kubectl apply -f vcluster-gitops/overlays/local-contained/root-application.yaml
+    cat <<EOF | kubectl apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vcluster-gitops
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: vcluster-gitops/overlays/local-contained
+    repoURL: ${GIT_BASE_URL}/${ORG_NAME}/${REPO_NAME}.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+EOF
 
     # The adapter deployment is created by Argo CD syncing the root application,
     # not by kubectl directly. Wait for the deployment to be created first, then
