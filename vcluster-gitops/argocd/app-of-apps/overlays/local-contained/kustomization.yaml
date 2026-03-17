@@ -27,3 +27,4 @@ patches:
   - path: patch-autosnapshots-appset.yaml
   - path: patch-pr-apps-bootstrap.yaml
   - path: patch-flux-appset.yaml
+  - path: patch-flux-operator-helm-app.yaml

@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../pr-github-receiver.yaml
+  - ../../pr-resource-set.yaml
+  - ../../pr-resource-set-input-provider.yaml
+  - ../../flux-pr-kustomization.yaml
+  - ../../gitrepository-providers.yaml
+  - forgejo-pr-secrets.yaml
+patches:
+  - path: patch-pr-github-receiver.yaml
+  - path: patch-gitrepository-providers.yaml
