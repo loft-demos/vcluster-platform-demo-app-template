@@ -1,6 +1,6 @@
 # Scripts
 
-This folder has four scripts that matter for the self-contained `vind` path.
+This folder has six scripts that matter for the self-contained `vind` path.
 
 ## `replace-text-local.sh`
 
@@ -65,6 +65,45 @@ It pushes:
 - the local git short SHA tag
 - the Helm chart `appVersion` tag
 - as image `forgejo.vcp.local/vcluster-demos/vcp-gitops/vcp-gitops-demo-app`
+
+## `configure-forgejo-webhook.sh`
+
+Creates or updates a Forgejo repository webhook for Argo CD or another in-cluster consumer.
+
+Example:
+
+```bash
+bash scripts/configure-forgejo-webhook.sh \
+  --forgejo-url https://forgejo.vcp.local \
+  --username demo-admin \
+  --token "$FORGEJO_TOKEN" \
+  --owner vcluster-demos \
+  --repo vcp-gitops \
+  --webhook-url http://argocd-applicationset-controller.argocd.svc.cluster.local:7000/api/webhook \
+  --type gitea \
+  --events pull_request
+```
+
+## `configure-forgejo-labels.sh`
+
+Creates or updates a single label in a Forgejo repository. Used during bootstrap
+to create the PR workflow labels that the `flux` and `argocd-vcluster-pull-request-environments`
+use cases rely on. This replaces the Crossplane `IssueLabels` resource, which requires the
+GitHub provider and is not available in the vind environment.
+
+Example:
+
+```bash
+bash scripts/configure-forgejo-labels.sh \
+  --forgejo-url https://forgejo.vcp.local \
+  --username demo-admin \
+  --token "$FORGEJO_TOKEN" \
+  --owner vcluster-demos \
+  --repo vcp-gitops \
+  --label-name 'deploy/flux-vcluster-preview' \
+  --label-color 'c5def5' \
+  --label-description 'PR preview vCluster instances with a matrix of Kubernetes versions via Flux'
+```
 
 ## `update-templates.sh`
 

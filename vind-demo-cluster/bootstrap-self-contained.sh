@@ -754,7 +754,11 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
   if [[ -z "$REPO_NAME" || -z "$ORG_NAME" ]]; then
     echo "[WARN] Skipping Argo CD bootstrap because --repo-name and --org-name were not provided." >&2
   else
+    argocd_api_webhook_url="http://argocd-server.argocd.svc.cluster.local/api/webhook"
+    argocd_appset_webhook_url="http://forgejo-pr-webhook-adapter.argocd.svc.cluster.local:8080/api/webhook"
+
     kubectl -n argocd wait --for=condition=Available deploy/argocd-server --timeout=300s >/dev/null 2>&1 || true
+    kubectl -n argocd wait --for=condition=Available deploy/argocd-applicationset-controller --timeout=300s >/dev/null 2>&1 || true
     kubectl wait --for=condition=Established crd/applications.argoproj.io --timeout=180s >/dev/null 2>&1 || true
 
     argocd_token="${FORGEJO_TOKEN:-}"
@@ -796,6 +800,73 @@ stringData:
 EOF
 
     kubectl apply -f vcluster-gitops/overlays/local-contained/root-application.yaml
+
+    # The adapter deployment is created by Argo CD syncing the root application,
+    # not by kubectl directly. Wait for the deployment to be created first, then
+    # wait for it to become Available.
+    for _ in $(seq 1 60); do
+      if kubectl -n argocd get deploy/forgejo-pr-webhook-adapter >/dev/null 2>&1; then
+        break
+      fi
+      sleep 5
+    done
+    kubectl -n argocd wait --for=condition=Available deploy/forgejo-pr-webhook-adapter --timeout=180s >/dev/null 2>&1 || true
+
+    # The webhook listener can miss server.secretkey on first startup in the
+    # self-contained path. Restart once so the listener comes up before we
+    # register Forgejo webhooks against it.
+    kubectl -n argocd rollout restart deploy/argocd-applicationset-controller >/dev/null 2>&1 || true
+    kubectl -n argocd rollout status deploy/argocd-applicationset-controller --timeout=180s >/dev/null 2>&1 || true
+
+    step "Configure Forgejo webhooks for Argo CD"
+    bash scripts/configure-forgejo-webhook.sh \
+      --forgejo-url "$FORGEJO_URL" \
+      --username "$FORGEJO_USERNAME" \
+      --token "$argocd_token" \
+      --owner "$ORG_NAME" \
+      --repo "$REPO_NAME" \
+      --webhook-url "$argocd_api_webhook_url" \
+      --type gogs \
+      --events push
+
+    bash scripts/configure-forgejo-webhook.sh \
+      --forgejo-url "$FORGEJO_URL" \
+      --username "$FORGEJO_USERNAME" \
+      --token "$argocd_token" \
+      --owner "$ORG_NAME" \
+      --repo "$REPO_NAME" \
+      --webhook-url "$argocd_appset_webhook_url" \
+      --type gitea \
+      --events pull_request
+
+    step "Configure Forgejo repo labels for PR workflows"
+    declare -A LABEL_COLORS=(
+      ["deploy/argocd-vcluster-preview"]="ee7d3b"
+      ["deploy/flux-vcluster-preview"]="c5def5"
+      ["e2e vCluster"]="ee7d3b"
+      ["create-pr-vcluster-external-argocd"]="ee7d3b"
+      ["preview"]="ee7d3b"
+      ["preview-cluster-ready"]="ee7d3b"
+    )
+    declare -A LABEL_DESCRIPTIONS=(
+      ["deploy/argocd-vcluster-preview"]="Creates PR preview vCluster instances with matrix of Kubernetes versions via Argo CD"
+      ["deploy/flux-vcluster-preview"]="PR preview vCluster instances with a matrix of Kubernetes versions via Flux"
+      ["e2e vCluster"]="Run e2e tests on PR with vCluster"
+      ["create-pr-vcluster-external-argocd"]="Triggers the creation of a vCluster for a Pull Request via Argo CD"
+      ["preview"]="Creates vCluster preview environment for a Pull Request with Argo CD"
+      ["preview-cluster-ready"]="Triggers Argo CD application set for PR"
+    )
+    for label_name in "${!LABEL_COLORS[@]}"; do
+      bash scripts/configure-forgejo-labels.sh \
+        --forgejo-url "$FORGEJO_URL" \
+        --username "$FORGEJO_USERNAME" \
+        --token "$argocd_token" \
+        --owner "$ORG_NAME" \
+        --repo "$REPO_NAME" \
+        --label-name "$label_name" \
+        --label-color "${LABEL_COLORS[$label_name]}" \
+        --label-description "${LABEL_DESCRIPTIONS[$label_name]}"
+    done
   fi
 fi
 

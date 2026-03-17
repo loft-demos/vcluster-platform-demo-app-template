@@ -3,6 +3,7 @@ apiVersion: management.loft.sh/v1
 metadata:
   name: argocd-in-vcluster-template
   annotations:
+    argocd.argoproj.io/sync-wave: "2"
     vcluster.com/template-icon: vcluster-box.svg
 spec:
   displayName: Argo CD in Virtual Cluster Template

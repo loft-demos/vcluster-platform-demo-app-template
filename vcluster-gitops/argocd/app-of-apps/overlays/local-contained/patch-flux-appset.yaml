@@ -1,0 +1,10 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: flux-cluster
+  namespace: argocd
+spec:
+  template:
+    spec:
+      source:
+        path: vcluster-use-cases/flux/apps/overlays/local-contained

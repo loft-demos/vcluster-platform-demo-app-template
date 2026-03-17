@@ -193,6 +193,10 @@ __VCP_FLUX_NAVBAR_BUTTON__
             persistence:
               enabled: true
               size: 20Gi
+            tolerations:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+                effect: NoSchedule
             service:
               http:
                 type: LoadBalancer
@@ -209,3 +213,5 @@ __VCP_FLUX_NAVBAR_BUTTON__
                   ENABLED: true
                 service:
                   DISABLE_REGISTRATION: true
+                webhook:
+                  ALLOWED_HOST_LIST: external,private,loopback

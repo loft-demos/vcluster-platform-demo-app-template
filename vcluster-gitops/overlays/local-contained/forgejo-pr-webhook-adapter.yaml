@@ -1,0 +1,147 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forgejo-pr-webhook-adapter
+  namespace: argocd
+data:
+  adapter.py: |
+    # Keep this adapter narrow on purpose. In the local-contained Forgejo path,
+    # Argo CD's ApplicationSet webhook decoder rejects repository.created_at as
+    # a string, even though Forgejo emits RFC3339 timestamps there. Normalize
+    # only the field we know breaks decoding so we do not accidentally mutate
+    # other timestamp fields that Argo CD still expects as strings.
+    import json
+    import os
+    from datetime import datetime
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from urllib.error import HTTPError, URLError
+    from urllib.request import Request, urlopen
+
+    TARGET_URL = os.environ.get(
+        "TARGET_URL",
+        "http://argocd-applicationset-controller.argocd.svc.cluster.local:7000/api/webhook",
+    )
+
+
+    def normalize(value, path=()):
+        if isinstance(value, dict):
+            return {k: normalize(v, path + (k,)) for k, v in value.items()}
+        if isinstance(value, list):
+            return [normalize(v, path) for v in value]
+        if isinstance(value, str) and path == ("repository", "created_at"):
+            candidate = value.replace("Z", "+00:00")
+            try:
+                return int(datetime.fromisoformat(candidate).timestamp())
+            except ValueError:
+                return value
+        return value
+
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path in ("/healthz", "/readyz"):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"ok")
+                return
+            self.send_response(404)
+            self.end_headers()
+
+        def do_POST(self):
+            length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(length)
+
+            try:
+                payload = json.loads(raw_body.decode("utf-8"))
+                outgoing_body = json.dumps(normalize(payload)).encode("utf-8")
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                outgoing_body = raw_body
+
+            forward_headers = {
+                key: value
+                for key, value in self.headers.items()
+                if key.lower().startswith("x-") or key.lower() == "content-type"
+            }
+            forward_headers["Content-Type"] = forward_headers.get("Content-Type", "application/json")
+
+            request = Request(TARGET_URL, data=outgoing_body, headers=forward_headers, method="POST")
+
+            try:
+                with urlopen(request, timeout=10) as response:
+                    body = response.read()
+                    self.send_response(response.status)
+                    self.end_headers()
+                    if body:
+                        self.wfile.write(body)
+            except HTTPError as error:
+                body = error.read()
+                self.send_response(error.code)
+                self.end_headers()
+                if body:
+                    self.wfile.write(body)
+            except URLError as error:
+                self.send_response(502)
+                self.end_headers()
+                self.wfile.write(str(error).encode("utf-8"))
+
+        def log_message(self, fmt, *args):
+            return
+
+
+    HTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo-pr-webhook-adapter
+  namespace: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: forgejo-pr-webhook-adapter
+  template:
+    metadata:
+      labels:
+        app: forgejo-pr-webhook-adapter
+    spec:
+      containers:
+        - name: adapter
+          image: python:3.12-alpine
+          command:
+            - python
+            - /app/adapter.py
+          env:
+            - name: TARGET_URL
+              value: http://argocd-applicationset-controller.argocd.svc.cluster.local:7000/api/webhook
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          volumeMounts:
+            - name: app
+              mountPath: /app
+      volumes:
+        - name: app
+          configMap:
+            name: forgejo-pr-webhook-adapter
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: forgejo-pr-webhook-adapter
+  namespace: argocd
+spec:
+  selector:
+    app: forgejo-pr-webhook-adapter
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
