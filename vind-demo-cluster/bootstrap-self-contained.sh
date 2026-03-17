@@ -981,6 +981,31 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
     --from-literal=token="$flux_receiver_token" \
     --dry-run=client -o yaml | kubectl apply -f -
 
+  # Create HTTP basic-auth credentials for Flux GitRepository resources so
+  # they can clone the private Forgejo repo without TLS certificate errors.
+  # The same secret is pre-created in p-vcluster-flux-demo (created by Argo CD
+  # wave-0) so the wave-2 GitRepository/vcluster-flux-demo can authenticate.
+  kubectl create secret generic forgejo-git-credentials \
+    --namespace p-auth-core \
+    --from-literal=username="$FORGEJO_USERNAME" \
+    --from-literal=password="$flux_forgejo_token" \
+    --dry-run=client -o yaml | kubectl apply -f -
+  wait_for_create 120 5 get namespace p-vcluster-flux-demo
+  if kubectl get namespace p-vcluster-flux-demo >/dev/null 2>&1; then
+    kubectl create secret generic forgejo-git-credentials \
+      --namespace p-vcluster-flux-demo \
+      --from-literal=username="$FORGEJO_USERNAME" \
+      --from-literal=password="$flux_forgejo_token" \
+      --dry-run=client -o yaml | kubectl apply -f -
+  else
+    echo "[WARN] p-vcluster-flux-demo not ready yet — forgejo-git-credentials will be missing there." >&2
+    echo "[WARN] Re-run after flux-manifests syncs to create it:" >&2
+    echo "[WARN]   kubectl create secret generic forgejo-git-credentials \\" >&2
+    echo "[WARN]     --namespace p-vcluster-flux-demo \\" >&2
+    echo "[WARN]     --from-literal=username=\"$FORGEJO_USERNAME\" \\" >&2
+    echo "[WARN]     --from-literal=password=\"\$FORGEJO_TOKEN\"" >&2
+  fi
+
   if ! bash scripts/configure-flux-webhook.sh \
     --forgejo-url "$FORGEJO_URL" \
     --username "$FORGEJO_USERNAME" \

@@ -5,3 +5,7 @@ resources:
   - ../../flux-notification-ingress.yaml
   - ../../generate-vcluster-kubeconfig.yaml
   - ../../flux-kustomization.yaml
+patches:
+  - path: patch-gitrepositories.yaml
+  - path: patch-gitrepository-flux-demo.yaml
+  - path: patch-github-dispatch.yaml
