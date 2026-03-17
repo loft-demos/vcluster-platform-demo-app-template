@@ -875,24 +875,24 @@ EOF
       --events pull_request
 
     step "Configure Forgejo repo labels for PR workflows"
-    while IFS='|' read -r label_name label_color label_description; do
+    _forgejo_label() {
       bash scripts/configure-forgejo-labels.sh \
         --forgejo-url "$FORGEJO_URL" \
         --username "$FORGEJO_USERNAME" \
         --token "$argocd_token" \
         --owner "$ORG_NAME" \
         --repo "$REPO_NAME" \
-        --label-name "$label_name" \
-        --label-color "$label_color" \
-        --label-description "$label_description"
-    done <<'LABELS'
-deploy/argocd-vcluster-preview|ee7d3b|Creates PR preview vCluster instances with matrix of Kubernetes versions via Argo CD
-deploy/flux-vcluster-preview|c5def5|PR preview vCluster instances with a matrix of Kubernetes versions via Flux
-e2e vCluster|ee7d3b|Run e2e tests on PR with vCluster
-create-pr-vcluster-external-argocd|ee7d3b|Triggers the creation of a vCluster for a Pull Request via Argo CD
-preview|ee7d3b|Creates vCluster preview environment for a Pull Request with Argo CD
-preview-cluster-ready|ee7d3b|Triggers Argo CD application set for PR
-LABELS
+        --label-name "$1" \
+        --label-color "$2" \
+        --label-description "$3"
+    }
+    _forgejo_label "deploy/argocd-vcluster-preview" "ee7d3b" "Creates PR preview vCluster instances with matrix of Kubernetes versions via Argo CD"
+    _forgejo_label "deploy/flux-vcluster-preview"   "c5def5" "PR preview vCluster instances with a matrix of Kubernetes versions via Flux"
+    _forgejo_label "e2e vCluster"                   "ee7d3b" "Run e2e tests on PR with vCluster"
+    _forgejo_label "create-pr-vcluster-external-argocd" "ee7d3b" "Triggers the creation of a vCluster for a Pull Request via Argo CD"
+    _forgejo_label "preview"                        "ee7d3b" "Creates vCluster preview environment for a Pull Request with Argo CD"
+    _forgejo_label "preview-cluster-ready"          "ee7d3b" "Triggers Argo CD application set for PR"
+    unset -f _forgejo_label
   fi
 fi
 
