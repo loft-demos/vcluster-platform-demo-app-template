@@ -655,6 +655,20 @@ fi
 
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 resolved_use_case_selection="$(resolve_use_case_selection "$USE_CASES")"
+
+# Warn about and remove vind-disabled use cases from the active selection.
+_active_use_cases=""
+while IFS= read -r _uc; do
+  [[ -z "$_uc" ]] && continue
+  if use_case_vind_disabled "$_uc"; then
+    echo "[WARN] Use case '$_uc' is temporarily disabled in vind and will not be activated."
+    echo "[WARN] The overlay code is preserved and can be re-enabled once the upstream blocker is resolved."
+  else
+    _active_use_cases="${_active_use_cases:+${_active_use_cases},}${_uc}"
+  fi
+done < <(printf '%s\n' "$resolved_use_case_selection" | tr ',' '\n')
+resolved_use_case_selection="$_active_use_cases"
+
 PRIVATE_NODES_ENABLED="false"
 AUTO_NODES_ENABLED="false"
 argocd_token=""

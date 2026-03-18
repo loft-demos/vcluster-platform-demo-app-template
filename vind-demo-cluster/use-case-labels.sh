@@ -3,6 +3,28 @@
 DEFAULT_USE_CASE_SPEC="default"
 DEFAULT_USE_CASES="eso"
 
+# Use cases listed here are excluded from vind activation.
+# The code and overlays remain in place; re-enable by removing the entry once the
+# underlying blocker is resolved.
+vind_disabled_use_cases() {
+  cat <<'EOF'
+# auto-snapshots: S3-compatible endpoint support broken in vCluster auto-snapshot controller
+# Tracking: https://github.com/loft-sh/vcluster/issues — targeted April release
+auto-snapshots
+EOF
+}
+
+# Returns 0 (true) if the given canonical use-case name is vind-disabled.
+use_case_vind_disabled() {
+  local name="$1"
+  while IFS= read -r line; do
+    [[ "$line" =~ ^# ]] && continue
+    [[ -z "$line" ]] && continue
+    [[ "$line" == "$name" ]] && return 0
+  done < <(vind_disabled_use_cases)
+  return 1
+}
+
 known_use_case_entries() {
   cat <<'EOF'
 argocd-in-vcluster|argoCdInVcluster
