@@ -1,0 +1,35 @@
+apiVersion: management.loft.sh/v1
+kind: NodeProvider
+metadata:
+  name: pod-node-provider
+spec:
+  displayName: Pod Node Provider
+  terraform:
+    nodeTemplate:
+      git:
+        repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/vcluster-auto-nodes-pod.git'
+        subPath: node
+    nodeEnvironmentTemplate:
+      infrastructure:
+        git:
+          repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/vcluster-auto-nodes-pod.git'
+          subPath: environment/infrastructure
+    nodeTypes:
+      - name: a-small
+        resources:
+          cpu: "500m"
+          memory: "256Mi"
+          pods: "10"
+        maxCapacity: 8
+      - name: b-medium
+        resources:
+          cpu: "750m"
+          memory: "512Mi"
+          pods: "20"
+        maxCapacity: 4
+      - name: c-large
+        resources:
+          cpu: "1"
+          memory: 1Gi
+          pods: "30"
+        maxCapacity: 2

@@ -1,0 +1,114 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: auto-nodes-template
+spec:
+  displayName: Auto Nodes Template
+  description: vCluster with Auto Nodes enabled — pod-backed worker nodes provisioned automatically via the pod-node-provider.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro:
+      enabled: true
+    helmRelease:
+      chart:
+        version: 0.32.1
+      values: |-
+        controlPlane:
+          backingStore:
+            etcd:
+              embedded:
+                enabled: true
+          statefulSet:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 250m
+                memory: 256Mi
+          distro:
+            k8s:
+              image:
+                tag: '{{ .Values.kubernetesVersion }}'
+        privateNodes:
+          enabled: true
+          autoNodes:
+            - provider: pod-node-provider
+              dynamic:
+                - name: node-pool-1
+                  limits:
+                    nodes: '{{ .Values.autoNodeCount }}'
+        networking:
+          podCIDR: 10.64.0.0/16
+          serviceCIDR: 10.128.0.0/16
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  parameters:
+    - variable: kubernetesVersion
+      label: Kubernetes Version
+      description: Kubernetes version for the vCluster control plane.
+      type: string
+      defaultValue: v1.33.0
+      section: Control Plane
+    - variable: autoNodeCount
+      label: Auto Node Pool Limit
+      description: Maximum number of auto-provisioned nodes in node-pool-1.
+      type: string
+      required: true
+      defaultValue: "3"
+      options:
+        - "1"
+        - "3"
+        - "5"
+      validation: ^(1|3|5)$
+      section: Auto Nodes
+  versions:
+    - version: 1.0.0
+      template:
+        metadata: {}
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.32.1
+          values: |-
+            controlPlane:
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              statefulSet:
+                resources:
+                  requests:
+                    cpu: 50m
+                    memory: 128Mi
+                  limits:
+                    cpu: 250m
+                    memory: 256Mi
+              distro:
+                k8s:
+                  image:
+                    tag: '{{ .Values.kubernetesVersion }}'
+            privateNodes:
+              enabled: true
+              autoNodes:
+                - provider: pod-node-provider
+                  dynamic:
+                    - name: node-pool-1
+                      limits:
+                        nodes: '{{ .Values.autoNodeCount }}'
+            networking:
+              podCIDR: 10.64.0.0/16
+              serviceCIDR: 10.128.0.0/16
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}

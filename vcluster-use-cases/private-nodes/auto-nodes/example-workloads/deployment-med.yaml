@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medium-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: medium-app
+  template:
+    metadata:
+      labels:
+        app: medium-app
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: medium-app
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: burn
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args: ["while true; do :; done"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "32Mi"

@@ -656,9 +656,13 @@ fi
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 resolved_use_case_selection="$(resolve_use_case_selection "$USE_CASES")"
 PRIVATE_NODES_ENABLED="false"
+AUTO_NODES_ENABLED="false"
 argocd_token=""
 if use_case_list_contains "$resolved_use_case_selection" "private-nodes"; then
   PRIVATE_NODES_ENABLED="true"
+fi
+if use_case_list_contains "$resolved_use_case_selection" "auto-nodes"; then
+  AUTO_NODES_ENABLED="true"
 fi
 
 vcp_domain_prefix="${VCP_HOST%%.*}"
@@ -768,6 +772,31 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       --current-branch-only \
       --skip-tags \
       --include-working-tree
+
+    if [[ "$AUTO_NODES_ENABLED" == "true" ]]; then
+      step "Mirror vcluster-auto-nodes-pod to Forgejo"
+      _demo_repo_dir="$(pwd)"
+      _pod_node_tf_dir="$(mktemp -d)"
+      if git clone --quiet --depth=1 \
+           https://github.com/loft-demos/vcluster-auto-nodes-pod.git \
+           "$_pod_node_tf_dir" 2>/dev/null; then
+        (
+          cd "$_pod_node_tf_dir"
+          bash "$_demo_repo_dir/scripts/bootstrap-forgejo-repo.sh" \
+            --forgejo-url "$FORGEJO_URL" \
+            --username "$FORGEJO_USERNAME" \
+            "${forgejo_auth_args[@]}" \
+            --owner "$FORGEJO_OWNER" \
+            --owner-type "$FORGEJO_OWNER_TYPE" \
+            --repo "vcluster-auto-nodes-pod" \
+            --current-branch-only \
+            --skip-tags
+        ) || echo "[WARN] Could not push vcluster-auto-nodes-pod to Forgejo — NodeProvider will reference GitHub directly."
+      else
+        echo "[WARN] Could not clone vcluster-auto-nodes-pod from GitHub — skipping Forgejo mirror."
+      fi
+      rm -rf "$_pod_node_tf_dir"
+    fi
   else
     echo "[INFO] Skipping Forgejo bootstrap because --repo-name was not provided."
   fi

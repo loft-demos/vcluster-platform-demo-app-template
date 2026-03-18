@@ -6,6 +6,7 @@ DEFAULT_USE_CASES="eso"
 known_use_case_entries() {
   cat <<'EOF'
 argocd-in-vcluster|argoCdInVcluster
+auto-nodes|autoNodes
 auto-snapshots|autoSnapshots
 connected-host-cluster|connectedHostCluster
 crossplane|crossplane
@@ -32,6 +33,9 @@ canonical_use_case_name() {
   case "$1" in
     argocd-in-vcluster|argocdinvcluster|argoCdInVcluster)
       printf '%s\n' "argocd-in-vcluster"
+      ;;
+    auto-nodes|autonodes|autoNodes)
+      printf '%s\n' "auto-nodes"
       ;;
     auto-snapshots|autosnapshots|autoSnapshots)
       printf '%s\n' "auto-snapshots"
@@ -87,6 +91,7 @@ canonical_use_case_name() {
 label_key_for_use_case() {
   case "$1" in
     argocd-in-vcluster) printf '%s\n' "argoCdInVcluster" ;;
+    auto-nodes) printf '%s\n' "autoNodes" ;;
     auto-snapshots) printf '%s\n' "autoSnapshots" ;;
     connected-host-cluster) printf '%s\n' "connectedHostCluster" ;;
     crossplane) printf '%s\n' "crossplane" ;;
@@ -272,6 +277,7 @@ print_known_use_cases() {
 Supported use cases for the vind cluster-local secret:
 
 - argocd-in-vcluster
+- auto-nodes
 - auto-snapshots
 - connected-host-cluster
 - crossplane

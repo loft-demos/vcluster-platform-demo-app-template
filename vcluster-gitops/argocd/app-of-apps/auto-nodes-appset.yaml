@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: auto-nodes-cluster
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            autoNodes: 'true'
+  template:
+    metadata:
+      name: auto-nodes-apps
+      labels:
+        feature.demos.loft.sh: auto-nodes
+    spec:
+      destination:
+        server: '{{server}}'
+        namespace: argocd
+      project: default
+      source:
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+        targetRevision: HEAD
+        path: vcluster-use-cases/private-nodes/auto-nodes/apps
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - Replace=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 20s
+            factor: 2
+            maxDuration: 3m

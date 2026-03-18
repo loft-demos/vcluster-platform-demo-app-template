@@ -14,6 +14,7 @@ resources:
   - ../../kyverno-appset.yaml
   - ../../mysql-appset.yaml
   - ../../namespace-sync-appset.yaml
+  - ../../auto-nodes-appset.yaml
   - ../../private-nodes-appset.yaml
   - ../../postgres-appset.yaml
   - ../../rancher-appset.yaml

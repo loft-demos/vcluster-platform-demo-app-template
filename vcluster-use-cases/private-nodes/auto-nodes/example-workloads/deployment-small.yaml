@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: small-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: small-app
+  template:
+    metadata:
+      labels:
+        app: small-app
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: small-app
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: burn
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args: ["while true; do :; done"]
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "16Mi"
+            limits:
+              cpu: "50m"
+              memory: "16Mi"
