@@ -101,3 +101,22 @@ The older provider artifacts are still present for follow-up work:
 - [manifests/gcp-node-provider.yaml](./manifests/gcp-node-provider.yaml)
 
 Auto Nodes can be added next as a separate step following the workshop model.
+
+## Auto Nodes (vind only)
+
+The `auto-nodes` sub-use-case in [`auto-nodes/`](./auto-nodes/) uses
+[vcluster-auto-nodes-pod](https://github.com/loft-demos/vcluster-auto-nodes-pod)
+— a Terraform-based `NodeProvider` that provisions pod-nodes (privileged pods
+acting as kubelet worker nodes).
+
+> **Cluster requirement:** Pod-nodes rely on nested container runtimes inside a
+> privileged pod. This only works on **container-based clusters** such as `vind`
+> or `kind`. It will not work on standard VM-based clusters (EKS, GKE, AKS,
+> bare-metal) where the host does not support the required nesting.
+
+Enable it during `vind` bootstrap:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --use-cases auto-nodes
+```
