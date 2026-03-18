@@ -9,11 +9,27 @@ spec:
       git:
         repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/vcluster-auto-nodes-pod.git'
         subPath: node
+        username:
+          secretName: forgejo-node-provider-cred
+          secretNamespace: vcluster-platform
+          key: username
+        password:
+          secretName: forgejo-node-provider-cred
+          secretNamespace: vcluster-platform
+          key: password
     nodeEnvironmentTemplate:
       infrastructure:
         git:
           repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/vcluster-auto-nodes-pod.git'
           subPath: environment/infrastructure
+          username:
+            secretName: forgejo-node-provider-cred
+            secretNamespace: vcluster-platform
+            key: username
+          password:
+            secretName: forgejo-node-provider-cred
+            secretNamespace: vcluster-platform
+            key: password
     nodeTypes:
       - name: a-small
         resources:

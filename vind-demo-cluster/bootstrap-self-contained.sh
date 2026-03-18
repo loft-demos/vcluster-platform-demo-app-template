@@ -1165,6 +1165,16 @@ if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
     --background
 fi
 
+if [[ "$AUTO_NODES_ENABLED" == "true" ]] && command -v kubectl >/dev/null 2>&1; then
+  step "Create Forgejo git credential secret for the NodeProvider"
+  wait_for_create 60 5 get namespace vcluster-platform
+  kubectl create secret generic forgejo-node-provider-cred \
+    --namespace vcluster-platform \
+    --from-literal=username="$FORGEJO_USERNAME" \
+    --from-literal=password="${FORGEJO_PASSWORD:-$FORGEJO_TOKEN}" \
+    --dry-run=client -o yaml | kubectl apply -f -
+fi
+
 minio_access_key=""
 minio_secret_key=""
 if use_case_list_contains "$resolved_use_case_selection" "auto-snapshots" && command -v kubectl >/dev/null 2>&1; then
