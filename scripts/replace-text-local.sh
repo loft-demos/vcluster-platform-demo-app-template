@@ -14,6 +14,7 @@ Replacements:
 - {REPLACE_VCLUSTER_NAME}
 - {REPLACE_BASE_DOMAIN}
 - {REPLACE_GIT_BASE_URL}
+- {REPLACE_GIT_BASE_URL_AUTHED}
 - {REPLACE_GIT_PUBLIC_URL}
 - {REPLACE_IMAGE_REPOSITORY_PREFIX}
 - {REPLACE_OCI_REGISTRY_HOST}
@@ -33,6 +34,8 @@ Options:
   --vcluster-name NAME    Optional. Defaults to repo name with trailing -app removed.
   --base-domain DOMAIN    Optional. Defaults to VCP_HOST or vcp.local.
   --git-base-url URL      Optional. Defaults to https://forgejo.vcp.local.
+  --git-base-url-authed URL
+                          Optional. Defaults to http://user:pass@forgejo-http.forgejo.svc.cluster.local:3000.
   --git-public-url URL    Optional. Defaults to https://forgejo.vcp.local.
   --image-repository-prefix PREFIX
                           Optional. Defaults to forgejo.vcp.local/<org-name>/<repo-name>.
@@ -63,6 +66,7 @@ ORG_NAME="vcluster-demos"
 VCLUSTER_NAME=""
 BASE_DOMAIN=""
 GIT_BASE_URL=""
+GIT_BASE_URL_AUTHED=""
 GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 OCI_REGISTRY_HOST=""
@@ -92,6 +96,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --git-base-url)
       GIT_BASE_URL="${2:-}"
+      shift 2
+      ;;
+    --git-base-url-authed)
+      GIT_BASE_URL_AUTHED="${2:-}"
       shift 2
       ;;
     --git-public-url)
@@ -150,7 +158,14 @@ if [[ -z "$VCLUSTER_NAME" ]]; then
 fi
 
 if [[ -z "$GIT_BASE_URL" ]]; then
-  GIT_BASE_URL="http://${FORGEJO_SERVICE_HOST:-forgejo-http.forgejo.svc.cluster.local:3000}"
+  GIT_BASE_URL="https://${FORGEJO_HOST:-forgejo.vcp.local}"
+fi
+
+if [[ -z "$GIT_BASE_URL_AUTHED" ]]; then
+  _forgejo_user="${FORGEJO_ADMIN_USER:-${FORGEJO_USERNAME:-demo-admin}}"
+  _forgejo_pass="${FORGEJO_ADMIN_PASSWORD:-${FORGEJO_PASSWORD:-vcluster-demo-admin}}"
+  _forgejo_service_host="${FORGEJO_SERVICE_HOST:-forgejo-http.forgejo.svc.cluster.local:3000}"
+  GIT_BASE_URL_AUTHED="http://${_forgejo_user}:${_forgejo_pass}@${_forgejo_service_host}"
 fi
 
 if [[ -z "$GIT_PUBLIC_URL" ]]; then
@@ -188,7 +203,7 @@ while IFS= read -r file; do
   files+=("$file")
 done < <(
   rg -l \
-    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}' \
+    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_BASE_URL_AUTHED\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}' \
     . \
     "${globs[@]}" \
     --glob '!.git/*'
@@ -204,6 +219,7 @@ echo "[INFO] Org name: $ORG_NAME"
 echo "[INFO] vCluster name: $VCLUSTER_NAME"
 echo "[INFO] Base domain: $BASE_DOMAIN"
 echo "[INFO] Git base URL: $GIT_BASE_URL"
+echo "[INFO] Git base URL (authed): ${GIT_BASE_URL_AUTHED//:*@/:***@}"
 echo "[INFO] Git public URL: $GIT_PUBLIC_URL"
 echo "[INFO] Image repository prefix: $IMAGE_REPOSITORY_PREFIX"
 echo "[INFO] OCI registry host: $OCI_REGISTRY_HOST"
@@ -217,7 +233,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
-export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT
+export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_BASE_URL_AUTHED GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT
 
 for file in "${files[@]}"; do
   perl -0pi -e '
@@ -226,6 +242,7 @@ for file in "${files[@]}"; do
     s/\{REPLACE_VCLUSTER_NAME\}/$ENV{VCLUSTER_NAME}/g;
     s/\{REPLACE_BASE_DOMAIN\}/$ENV{BASE_DOMAIN}/g;
     s/\{REPLACE_GIT_BASE_URL\}/$ENV{GIT_BASE_URL}/g;
+    s/\{REPLACE_GIT_BASE_URL_AUTHED\}/$ENV{GIT_BASE_URL_AUTHED}/g;
     s/\{REPLACE_GIT_PUBLIC_URL\}/$ENV{GIT_PUBLIC_URL}/g;
     s/\{REPLACE_IMAGE_REPOSITORY_PREFIX\}/$ENV{IMAGE_REPOSITORY_PREFIX}/g;
     s/\{REPLACE_OCI_REGISTRY_HOST\}/$ENV{OCI_REGISTRY_HOST}/g;

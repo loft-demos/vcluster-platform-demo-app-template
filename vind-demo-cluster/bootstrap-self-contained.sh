@@ -359,6 +359,7 @@ FORGEJO_PASSWORD="${FORGEJO_PASSWORD:-${FORGEJO_ADMIN_PASSWORD:-vcluster-demo-ad
 FORGEJO_OWNER="${FORGEJO_OWNER:-}"
 FORGEJO_OWNER_TYPE="${FORGEJO_OWNER_TYPE:-}"
 GIT_BASE_URL=""
+GIT_BASE_URL_AUTHED=""
 GIT_PUBLIC_URL=""
 IMAGE_REPOSITORY_PREFIX=""
 IMAGE_PLATFORM="auto"
@@ -623,7 +624,14 @@ if [[ -z "$FORGEJO_OWNER_TYPE" ]]; then
 fi
 
 if [[ -z "$GIT_BASE_URL" ]]; then
-  GIT_BASE_URL="http://forgejo-http.forgejo.svc.cluster.local:3000"
+  # Use the public Forgejo URL so Argo CD app source URLs match webhook payloads.
+  GIT_BASE_URL="${FORGEJO_URL%/}"
+fi
+
+if [[ -z "$GIT_BASE_URL_AUTHED" ]]; then
+  # Internal URL with embedded credentials for contexts that cannot use HTTPS
+  # (e.g. vCluster Platform NodeProvider Terraform clone).
+  GIT_BASE_URL_AUTHED="http://${FORGEJO_USERNAME}:${FORGEJO_PASSWORD}@forgejo-http.forgejo.svc.cluster.local:3000"
 fi
 
 if [[ -z "$GIT_PUBLIC_URL" ]]; then
@@ -723,6 +731,7 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --vcluster-name "$VCLUSTER_NAME" \
     --base-domain "$BASE_DOMAIN" \
     --git-base-url "$GIT_BASE_URL" \
+    --git-base-url-authed "$GIT_BASE_URL_AUTHED" \
     --git-public-url "$GIT_PUBLIC_URL" \
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
     --oci-registry-host "$FORGEJO_HOST" \
@@ -950,6 +959,16 @@ EOF
     # wait for it to become Available.
     wait_for_create 60 5 -n argocd get deploy/forgejo-pr-webhook-adapter
     kubectl -n argocd wait --for=condition=Available deploy/forgejo-pr-webhook-adapter --timeout=180s >/dev/null 2>&1 || true
+
+    # Trust the OrbStack self-signed CA so argocd-repo-server can clone from
+    # the public Forgejo HTTPS URL (forgejo.vcp.local).
+    _orbstack_ca="$(security find-certificate -c "OrbStack" -p 2>/dev/null || true)"
+    if [[ -n "$_orbstack_ca" ]]; then
+      kubectl create configmap argocd-tls-certs-cm \
+        --namespace argocd \
+        --from-literal="${FORGEJO_HOST}=${_orbstack_ca}" \
+        --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+    fi
 
     # The webhook listener can miss server.secretkey on first startup in the
     # self-contained path. Restart once so the listener comes up before we
