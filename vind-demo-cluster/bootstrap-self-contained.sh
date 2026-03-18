@@ -672,7 +672,8 @@ while IFS= read -r _uc; do
     echo "[WARN] Use case '$_uc' is temporarily disabled in vind and will not be activated."
     echo "[WARN] The overlay code is preserved and can be re-enabled once the upstream blocker is resolved."
   else
-    _active_use_cases="${_active_use_cases:+${_active_use_cases},}${_uc}"
+    _active_use_cases="${_active_use_cases:+${_active_use_cases}
+}${_uc}"
   fi
 done < <(printf '%s\n' "$resolved_use_case_selection" | tr ',' '\n')
 resolved_use_case_selection="$_active_use_cases"
@@ -920,7 +921,11 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
       kubectl create configmap argocd-tls-certs-cm \
         --namespace argocd \
         --from-literal="${FORGEJO_HOST}=${_orbstack_ca}" \
-        --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+        --dry-run=client -o yaml | kubectl apply -f - >/dev/null 2>&1 || true
+      # Restart repo-server so it picks up the new cert immediately rather than
+      # waiting for its configmap watch to fire.
+      kubectl -n argocd rollout restart deploy/argocd-repo-server >/dev/null 2>&1 || true
+      kubectl -n argocd rollout status deploy/argocd-repo-server --timeout=60s >/dev/null 2>&1 || true
     fi
 
     cat <<EOF | kubectl apply -f -
