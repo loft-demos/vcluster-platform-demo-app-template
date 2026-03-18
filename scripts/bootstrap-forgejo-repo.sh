@@ -184,8 +184,10 @@ push_refs() {
 
   if [[ "$CURRENT_BRANCH_ONLY" == "true" ]]; then
     echo "[INFO] Pushing branch ${DEFAULT_BRANCH} to $REPO_URL"
+    # Use HEAD: as the source so this works from both a checked-out branch and
+    # a detached HEAD state (e.g. after `git submodule update --init`).
     git -c "http.extraHeader=Authorization: Basic $auth_header" \
-      push "$REPO_URL" "refs/heads/$DEFAULT_BRANCH:refs/heads/$DEFAULT_BRANCH"
+      push "$REPO_URL" "HEAD:refs/heads/$DEFAULT_BRANCH"
   else
     echo "[INFO] Pushing branches to $REPO_URL"
     while IFS= read -r branch; do
