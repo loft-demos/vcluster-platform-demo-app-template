@@ -7,14 +7,14 @@ spec:
   terraform:
     nodeTemplate:
       git:
-        repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/vcluster-auto-nodes-pod.git'
+        repository: 'http://forgejo-http.forgejo.svc.cluster.local:3000/{REPLACE_ORG_NAME}/vcluster-auto-nodes-pod.git'
         subPath: node
         credentials:
           secretName: forgejo-node-provider-cred
     nodeEnvironmentTemplate:
       infrastructure:
         git:
-          repository: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/vcluster-auto-nodes-pod.git'
+          repository: 'http://forgejo-http.forgejo.svc.cluster.local:3000/{REPLACE_ORG_NAME}/vcluster-auto-nodes-pod.git'
           subPath: environment/infrastructure
           credentials:
             secretName: forgejo-node-provider-cred
