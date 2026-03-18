@@ -911,6 +911,18 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
       )"
     fi
 
+    # Trust the OrbStack self-signed CA before applying the root application so
+    # argocd-repo-server can immediately clone from the public Forgejo HTTPS URL
+    # (forgejo.vcp.local). Without this, the root app sync fails with an x509
+    # error and the bootstrap hangs waiting for forgejo-pr-webhook-adapter.
+    _orbstack_ca="$(security find-certificate -c "OrbStack" -p 2>/dev/null || true)"
+    if [[ -n "$_orbstack_ca" ]]; then
+      kubectl create configmap argocd-tls-certs-cm \
+        --namespace argocd \
+        --from-literal="${FORGEJO_HOST}=${_orbstack_ca}" \
+        --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+    fi
+
     cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
@@ -959,16 +971,6 @@ EOF
     # wait for it to become Available.
     wait_for_create 60 5 -n argocd get deploy/forgejo-pr-webhook-adapter
     kubectl -n argocd wait --for=condition=Available deploy/forgejo-pr-webhook-adapter --timeout=180s >/dev/null 2>&1 || true
-
-    # Trust the OrbStack self-signed CA so argocd-repo-server can clone from
-    # the public Forgejo HTTPS URL (forgejo.vcp.local).
-    _orbstack_ca="$(security find-certificate -c "OrbStack" -p 2>/dev/null || true)"
-    if [[ -n "$_orbstack_ca" ]]; then
-      kubectl create configmap argocd-tls-certs-cm \
-        --namespace argocd \
-        --from-literal="${FORGEJO_HOST}=${_orbstack_ca}" \
-        --dry-run=client -o yaml | kubectl apply -f - >/dev/null
-    fi
 
     # The webhook listener can miss server.secretkey on first startup in the
     # self-contained path. Restart once so the listener comes up before we
