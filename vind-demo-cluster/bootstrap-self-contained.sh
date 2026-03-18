@@ -112,7 +112,7 @@ apply_registry_secrets() {
           --arg username "$SNAPSHOT_REGISTRY_USERNAME" \
           --arg password "$project_secret_password" \
           --arg auth "$ghcr_auth_b64" \
-          '{auths: {"ghcr.io": {username: $username, password: $password, auth: $auth}}}'
+          '{auths: {"forgejo-http.forgejo.svc.cluster.local:3000": {username: $username, password: $password, auth: $auth}}}'
       )"
       ghcr_dockerconfigjson_b64="$(printf '%s' "$ghcr_dockerconfigjson" | base64 | tr -d '\n')"
       if kubectl get namespace p-api-framework >/dev/null 2>&1 && kubectl get namespace p-auth-core >/dev/null 2>&1; then
@@ -370,9 +370,9 @@ IMAGE_PULL_PROJECT_SECRET_NAME=""
 IMAGE_PULL_SOURCE_SECRET_NAME=""
 ONEPASSWORD_VAULT=""
 PRIVATE_NODE_VM_NAME="${PRIVATE_NODE_VM_NAME:-private-node-demo-worker-1}"
-SNAPSHOT_REGISTRY_USERNAME="${SNAPSHOT_REGISTRY_USERNAME:-${GHCR_USERNAME:-}}"
-SNAPSHOT_REGISTRY_TOKEN="${SNAPSHOT_REGISTRY_TOKEN:-${GHCR_TOKEN:-}}"
-SNAPSHOT_REGISTRY_PASSWORD="${SNAPSHOT_REGISTRY_PASSWORD:-${GHCR_PASSWORD:-}}"
+SNAPSHOT_REGISTRY_USERNAME="${SNAPSHOT_REGISTRY_USERNAME:-${FORGEJO_USERNAME}}"
+SNAPSHOT_REGISTRY_TOKEN="${SNAPSHOT_REGISTRY_TOKEN:-${FORGEJO_TOKEN:-}}"
+SNAPSHOT_REGISTRY_PASSWORD="${SNAPSHOT_REGISTRY_PASSWORD:-${FORGEJO_PASSWORD}}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -708,6 +708,7 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --git-public-url "$GIT_PUBLIC_URL" \
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
     --oci-registry-host "$FORGEJO_HOST" \
+    --snapshot-oci-repository "forgejo-http.forgejo.svc.cluster.local:3000/${FORGEJO_OWNER}/${REPO_NAME}" \
     --image-pull-source-secret-name "$IMAGE_PULL_SOURCE_SECRET_NAME" \
     --onepassword-vault "$ONEPASSWORD_VAULT" \
     --include-md

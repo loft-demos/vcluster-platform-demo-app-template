@@ -170,9 +170,6 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                     - vcluster
                     - featurebase
                 navBarButtons:
-                  - link: "https://www.vcluster.com/docs/platform/"
-                    text: "vCluster Docs"
-                    position: TopEnd
                   - link: "https://__FORGEJO_HOST__/"
                     icon: "https://__FORGEJO_HOST__/assets/img/logo.svg"
                     text: "Forgejo Repo"
@@ -180,6 +177,9 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                   - link: "https://flux-__VCLUSTER_NAME__.__VCP_LOFT_HOST__/"
                     icon: "https://flux-__VCLUSTER_NAME__.__VCP_LOFT_HOST__/favicon.svg"
                     text: "Flux UI"
+                    position: TopEnd
+                  - link: "https://www.vcluster.com/docs/platform/"
+                    text: "vCluster Docs"
                     position: TopEnd
         - chart:
             name: forgejo
