@@ -1,6 +1,6 @@
 - op: replace
   path: /spec/versions/0/template/helmRelease/chart/version
-  value: "0.32.1"
+  value: "0.33.0"
   # insert k8sVersion at index 0
 - op: add
   path: /spec/versions/0/parameters/0
