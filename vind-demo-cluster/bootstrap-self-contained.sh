@@ -776,26 +776,19 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
     if [[ "$AUTO_NODES_ENABLED" == "true" ]]; then
       step "Mirror vcluster-auto-nodes-pod to Forgejo"
       _demo_repo_dir="$(pwd)"
-      _pod_node_tf_dir="$(mktemp -d)"
-      if git clone --quiet --depth=1 \
-           https://github.com/loft-demos/vcluster-auto-nodes-pod.git \
-           "$_pod_node_tf_dir" 2>/dev/null; then
-        (
-          cd "$_pod_node_tf_dir"
-          bash "$_demo_repo_dir/scripts/bootstrap-forgejo-repo.sh" \
-            --forgejo-url "$FORGEJO_URL" \
-            --username "$FORGEJO_USERNAME" \
-            "${forgejo_auth_args[@]}" \
-            --owner "$FORGEJO_OWNER" \
-            --owner-type "$FORGEJO_OWNER_TYPE" \
-            --repo "vcluster-auto-nodes-pod" \
-            --current-branch-only \
-            --skip-tags
-        ) || echo "[WARN] Could not push vcluster-auto-nodes-pod to Forgejo — NodeProvider will reference GitHub directly."
-      else
-        echo "[WARN] Could not clone vcluster-auto-nodes-pod from GitHub — skipping Forgejo mirror."
-      fi
-      rm -rf "$_pod_node_tf_dir"
+      git submodule update --init vcluster-auto-nodes-pod
+      (
+        cd "$_demo_repo_dir/vcluster-auto-nodes-pod"
+        bash "$_demo_repo_dir/scripts/bootstrap-forgejo-repo.sh" \
+          --forgejo-url "$FORGEJO_URL" \
+          --username "$FORGEJO_USERNAME" \
+          "${forgejo_auth_args[@]}" \
+          --owner "$FORGEJO_OWNER" \
+          --owner-type "$FORGEJO_OWNER_TYPE" \
+          --repo "vcluster-auto-nodes-pod" \
+          --current-branch-only \
+          --skip-tags
+      ) || echo "[WARN] Could not push vcluster-auto-nodes-pod to Forgejo."
     fi
   else
     echo "[INFO] Skipping Forgejo bootstrap because --repo-name was not provided."
@@ -1092,7 +1085,7 @@ if command -v kubectl >/dev/null 2>&1; then
 fi
 
 if use_case_list_contains "$resolved_use_case_selection" "auto-snapshots" && command -v kubectl >/dev/null 2>&1; then
-  step "Create MinIO credentials for auto-snapshots S3 storage"
+  step "Create MinIO root credentials for auto-snapshots S3 storage"
   _minio_access_key="$(openssl rand -base64 20 | tr -dc 'a-zA-Z0-9' | head -c 20)"
   _minio_secret_key="$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)"
 
@@ -1105,15 +1098,47 @@ if use_case_list_contains "$resolved_use_case_selection" "auto-snapshots" && com
     --from-literal=secret-key="$_minio_secret_key" \
     --dry-run=client -o yaml | kubectl apply -f -
 
-  # ProjectSecret for the vCluster snapshot controller (AWS SDK env var keys).
+  step "Create MinIO snapshot service account and ProjectSecret"
+  # Wait for MinIO to be deployed and ready by Argo CD before creating the service account.
+  wait_for_create 120 5 get deployment minio -n minio
+  kubectl rollout status deployment/minio -n minio --timeout=120s || true
+
+  _snapshot_access_key="$(openssl rand -base64 20 | tr -dc 'a-zA-Z0-9' | head -c 20)"
+  _snapshot_secret_key="$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)"
+
+  kubectl run mc-svcacct -n minio --image=quay.io/minio/mc:RELEASE.2024-07-31T15-58-33Z --restart=Never \
+    --command -- /bin/sh -c "
+      mc alias set local http://minio.minio.svc.cluster.local:9000 '$_minio_access_key' '$_minio_secret_key'
+      mc admin user svcacct add local '$_minio_access_key' \
+        --access-key '$_snapshot_access_key' \
+        --secret-key '$_snapshot_secret_key' \
+        --description 'vCluster auto-snapshot controller'
+      echo DONE
+    "
+  wait_for_create 60 3 get pod mc-svcacct -n minio
+  kubectl wait pod/mc-svcacct -n minio --for=condition=Ready --timeout=30s 2>/dev/null || true
+  kubectl wait pod/mc-svcacct -n minio --for=jsonpath='{.status.phase}'=Succeeded --timeout=60s 2>/dev/null || true
+  kubectl logs -n minio mc-svcacct 2>/dev/null || true
+  kubectl delete pod -n minio mc-svcacct --ignore-not-found
+
+  # ProjectSecret backed by a plain Secret — patch .data directly.
   # AWS_SESSION_TOKEN is unused by MinIO but required by the vCluster credential format.
-  wait_for_create 60 5 get namespace p-auth-core
+  _snapshot_access_key_b64="$(printf '%s' "$_snapshot_access_key" | base64 | tr -d '\n')"
+  _snapshot_secret_key_b64="$(printf '%s' "$_snapshot_secret_key" | base64 | tr -d '\n')"
+  wait_for_create 60 5 get namespace p-default
+  # Create as a plain Secret (the management.loft.sh ProjectSecret is backed by v1/Secret).
   kubectl create secret generic minio-snapshot-cred \
-    --namespace p-auth-core \
-    --from-literal=AWS_ACCESS_KEY_ID="$_minio_access_key" \
-    --from-literal=AWS_SECRET_ACCESS_KEY="$_minio_secret_key" \
+    --namespace p-default \
+    --from-literal=AWS_ACCESS_KEY_ID="$_snapshot_access_key" \
+    --from-literal=AWS_SECRET_ACCESS_KEY="$_snapshot_secret_key" \
     --from-literal=AWS_SESSION_TOKEN="" \
     --dry-run=client -o yaml | kubectl apply -f -
+  kubectl label secret minio-snapshot-cred -n p-default \
+    loft.sh/project-secret-name=minio-snapshot-cred \
+    loft.sh/project-secret=true --overwrite
+  kubectl annotate secret minio-snapshot-cred -n p-default \
+    loft.sh/project-secret-displayname=minio-snapshot-cred \
+    loft.sh/project-secret-description="" --overwrite
 fi
 
 if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
@@ -1123,6 +1148,15 @@ if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
   bash vcluster-use-cases/private-nodes/create-orbstack-private-node.sh \
     --machine "$PRIVATE_NODE_VM_NAME" \
     --background
+fi
+
+minio_access_key=""
+minio_secret_key=""
+if use_case_list_contains "$resolved_use_case_selection" "auto-snapshots" && command -v kubectl >/dev/null 2>&1; then
+  minio_access_key="$(kubectl get secret minio-auth -n minio -o jsonpath='{.data.access-key}' 2>/dev/null | base64 -d || true)"
+  minio_secret_key="$(kubectl get secret minio-auth -n minio -o jsonpath='{.data.secret-key}' 2>/dev/null | base64 -d || true)"
+  minio_snapshot_access_key="$(kubectl get secret minio-snapshot-cred -n p-default -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' 2>/dev/null | base64 -d || true)"
+  minio_snapshot_secret_key="$(kubectl get secret minio-snapshot-cred -n p-default -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' 2>/dev/null | base64 -d || true)"
 fi
 
 argocd_password=""
@@ -1144,12 +1178,28 @@ cat <<EOF
 
 Recommended next steps:
 1. Argo CD login:
+   - url:      https://${ARGOCD_HOST}
    - username: admin
    - password: ${argocd_password:-<not available yet>}
 2. Open the local URLs:
-   - https://${VCP_HOST}
-   - https://${ARGOCD_HOST}
-   - https://${FORGEJO_HOST}
+   - vCluster Platform: https://${VCP_HOST}
+   - Argo CD:           https://${ARGOCD_HOST}
+   - Forgejo:           https://${FORGEJO_HOST}
+EOF
+
+if [[ -n "$minio_access_key" ]]; then
+  cat <<EOF
+   - MinIO console:     https://minio.${VCP_HOST}
+MinIO root credentials (console login):
+   - access key: ${minio_access_key}
+   - secret key: ${minio_secret_key}
+MinIO snapshot service account (S3 access key for vCluster snapshots):
+   - access key: ${minio_snapshot_access_key:-<created during bootstrap>}
+   - secret key: ${minio_snapshot_secret_key:-<created during bootstrap>}
+EOF
+fi
+
+cat <<EOF
 3. Configure 1Password + ESO:
    - vind-demo-cluster/eso-cluster-store.yaml
    - vind-demo-cluster/bootstrap-external-secrets.yaml

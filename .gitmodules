@@ -1,0 +1,3 @@
+[submodule "vcluster-auto-nodes-pod"]
+	path = vcluster-auto-nodes-pod
+	url = https://github.com/loft-demos/vcluster-auto-nodes-pod.git

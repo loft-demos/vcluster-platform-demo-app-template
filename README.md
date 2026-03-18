@@ -47,6 +47,7 @@ Main repo areas:
 | `argocd-in-vcluster` | Installs a dedicated Argo CD instance inside selected vCluster instances and feeds it Git-based values. | `Enterprise` | `Yes` | [Repo](./vcluster-use-cases/argocd-in-vcluster/README.md), [vCP Argo CD integration](https://www.vcluster.com/docs/platform/integrations/argocd) |
 | `argocd-vcluster-add-ons` | Applies environment-specific add-ons to imported Argo CD clusters based on cluster labels like `dev`, `qa`, and `prod`. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/argocd-vcluster-add-ons/README.md), [vCP Argo CD integration](https://www.vcluster.com/docs/platform/integrations/argocd) |
 | `argocd-vcluster-pull-request-environments` | Creates ephemeral pull request environments with Argo CD, including preview apps and vCluster instances per PR. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/argocd-vcluster-pull-request-environments/README.md), [vCP Argo CD integration](https://www.vcluster.com/docs/platform/integrations/argocd) |
+| `auto-nodes` | Auto-provisions pod-backed worker nodes for vCluster instances using the vCluster Platform Auto Nodes feature and the pod-node Terraform provider. | `Enterprise` | `Yes` | [Repo](./vcluster-use-cases/private-nodes/auto-nodes/) |
 | `auto-snapshots` | Automatic backup and restore of vCluster instances to an OCI registry such as GHCR or Forgejo. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/auto-snapshots/README.md), [Snapshots](https://www.vcluster.com/docs/platform/use-platform/virtual-clusters/key-features/snapshots) |
 | `central-admission-control` | Centralized policy enforcement with Kyverno and host-level admission control for virtual clusters. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/central-admission-control/) |
 | `connected-host-cluster` | Registers another cluster, or another vCluster instance, as an additional host cluster for vCluster Platform. | `Yes` | `TBD` | [Repo](./vcluster-use-cases/connected-host-cluster/README.md), [Connect a cluster](https://www.vcluster.com/docs/platform/next/administer/clusters/connect-cluster) |
@@ -124,6 +125,7 @@ The label keys currently used by the repo are:
 | Use case | `cluster-local` label |
 | --- | --- |
 | `argocd-in-vcluster` | `argoCdInVcluster` |
+| `auto-nodes` | `autoNodes` |
 | `auto-snapshots` | `autoSnapshots` |
 | `connected-host-cluster` | `connectedHostCluster` |
 | `crossplane` | `crossplane` |

@@ -7,6 +7,7 @@ resources:
   - minio/pvc.yaml
   - minio/deployment.yaml
   - minio/service.yaml
+  - minio/ingress.yaml
   - minio/bucket-init-job.yaml
 patches:
   - path: patch-snapshot-storage.yaml
