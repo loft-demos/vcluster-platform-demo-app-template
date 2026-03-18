@@ -3,3 +3,10 @@ kind: Kustomization
 resources:
   - ../../auto-snapshots-vcluster-template.yaml
   - ../../auto-snapshots-vcluster.yaml
+  - minio/namespace.yaml
+  - minio/pvc.yaml
+  - minio/deployment.yaml
+  - minio/service.yaml
+  - minio/bucket-init-job.yaml
+patches:
+  - path: patch-snapshot-storage.yaml

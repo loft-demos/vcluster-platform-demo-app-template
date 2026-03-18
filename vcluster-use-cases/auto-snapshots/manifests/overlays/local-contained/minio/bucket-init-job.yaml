@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-create-bucket
+  namespace: minio
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: quay.io/minio/mc:RELEASE.2024-07-31T15-58-33Z
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until mc alias set local http://minio.minio.svc.cluster.local:9000 \
+                "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" 2>/dev/null; do
+                echo "Waiting for MinIO to be ready..."
+                sleep 3
+              done
+              mc mb --ignore-existing local/vcluster-snapshots
+              echo "Bucket vcluster-snapshots ready."
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-auth
+                  key: access-key
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-auth
+                  key: secret-key
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi

@@ -1,0 +1,120 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterTemplate
+metadata:
+  name: auto-snapshot-vcluster
+spec:
+  template:
+    helmRelease:
+      values: |+
+        snapshots:
+          auto:
+            schedule: "15 7-17/3 * * 1-5"
+            retention:
+              period: 5
+              maxSnapshots: 4
+            timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
+            storage:
+              type: s3
+              s3:
+                # url query param is base64(http://minio.minio.svc.cluster.local:9000)
+                url: 's3://vcluster-snapshots?url=aHR0cDovL21pbmlvLm1pbmlvLnN2Yy5jbHVzdGVyLmxvY2FsOjkwMDA=&force-path-style=true'
+                credential:
+                  secretName: minio-snapshot-cred
+                  secretNamespace: {{ .Values.loft.virtualClusterNamespace }}
+        sleep:
+          auto:
+            afterInactivity: 35m
+            timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
+            wakeup:
+              schedule: 11 7-17 * * 1-5
+        deletion:
+          auto:
+            afterInactivity: 500h
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+  versions:
+    - version: 1.0.0
+      template:
+        metadata:
+          annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+          labels:
+            loft.sh/import-argocd: 'true'
+        instanceTemplate:
+          metadata:
+            labels:
+              env: '{{ .Values.env }}'
+              team: '{{ .Values.loft.project }}'
+        objects: |-
+          ---
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: minio-snapshot-cred
+            labels:
+              loft.sh/project-secret-name: minio-snapshot-cred
+          type: Opaque
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.32.1
+          values: |+
+            snapshots:
+              auto:
+                schedule: "15 7-17/3 * * 1-5"
+                retention:
+                  period: 5
+                  maxSnapshots: 4
+                timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
+                storage:
+                  type: s3
+                  s3:
+                    # url query param is base64(http://minio.minio.svc.cluster.local:9000)
+                    url: 's3://vcluster-snapshots?url=aHR0cDovL21pbmlvLm1pbmlvLnN2Yy5jbHVzdGVyLmxvY2FsOjkwMDA=&force-path-style=true'
+                    credential:
+                      secretName: minio-snapshot-cred
+                      secretNamespace: {{ .Values.loft.virtualClusterNamespace }}
+            sleep:
+              auto:
+                afterInactivity: 35m
+                timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
+                wakeup:
+                  schedule: 11 7-17 * * 1-5
+            deletion:
+              auto:
+                afterInactivity: 500h
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            controlPlane:
+              statefulSet:
+                labels:
+                  env: '{{ .Values.env }}'
+                  team: '{{ .Values.loft.project }}'
+                resources:
+                  limits:
+                    ephemeral-storage: 8Gi
+                    memory: 2Gi
+                    cpu: 1
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+          objects: |
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: minio-snapshot-cred
+              labels:
+                loft.sh/project-secret-name: minio-snapshot-cred
+            type: Opaque

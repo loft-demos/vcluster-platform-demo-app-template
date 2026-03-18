@@ -1091,6 +1091,31 @@ if command -v kubectl >/dev/null 2>&1; then
   apply_registry_secrets
 fi
 
+if use_case_list_contains "$resolved_use_case_selection" "auto-snapshots" && command -v kubectl >/dev/null 2>&1; then
+  step "Create MinIO credentials for auto-snapshots S3 storage"
+  _minio_access_key="$(openssl rand -base64 20 | tr -dc 'a-zA-Z0-9' | head -c 20)"
+  _minio_secret_key="$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)"
+
+  # minio namespace is created by ArgoCD from the auto-snapshots local-contained overlay;
+  # pre-create it here so the minio-auth secret is ready before the MinIO pod starts.
+  kubectl create namespace minio --dry-run=client -o yaml | kubectl apply -f -
+  kubectl create secret generic minio-auth \
+    --namespace minio \
+    --from-literal=access-key="$_minio_access_key" \
+    --from-literal=secret-key="$_minio_secret_key" \
+    --dry-run=client -o yaml | kubectl apply -f -
+
+  # ProjectSecret for the vCluster snapshot controller (AWS SDK env var keys).
+  # AWS_SESSION_TOKEN is unused by MinIO but required by the vCluster credential format.
+  wait_for_create 60 5 get namespace p-auth-core
+  kubectl create secret generic minio-snapshot-cred \
+    --namespace p-auth-core \
+    --from-literal=AWS_ACCESS_KEY_ID="$_minio_access_key" \
+    --from-literal=AWS_SECRET_ACCESS_KEY="$_minio_secret_key" \
+    --from-literal=AWS_SESSION_TOKEN="" \
+    --dry-run=client -o yaml | kubectl apply -f -
+fi
+
 if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
   step "Create the default OrbStack VM for the private-nodes demo"
   require_cmd orb
