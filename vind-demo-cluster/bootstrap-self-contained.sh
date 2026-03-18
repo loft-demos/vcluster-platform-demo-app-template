@@ -800,6 +800,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
           --owner "$FORGEJO_OWNER" \
           --owner-type "$FORGEJO_OWNER_TYPE" \
           --repo "vcluster-auto-nodes-pod" \
+          --visibility public \
           --current-branch-only \
           --skip-tags
       ) || echo "[WARN] Could not push vcluster-auto-nodes-pod to Forgejo."

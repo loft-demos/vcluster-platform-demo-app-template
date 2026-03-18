@@ -179,12 +179,8 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                     text: "Flux UI"
                     position: TopEnd
                   - link: "https://argocd.__VCP_LOFT_HOST__/"
-                    icon: "https://argocd.__VCP_LOFT_HOST__/favicon.png"
+                    icon: "https://argocd.__VCP_LOFT_HOST__/assets/favicon/favicon-32x32.png"
                     text: "Argo CD"
-                    position: TopEnd
-                  - link: "https://minio.__VCP_LOFT_HOST__/"
-                    icon: "https://minio.__VCP_LOFT_HOST__/favicon.ico"
-                    text: "MinIO"
                     position: TopEnd
                   - link: "https://www.vcluster.com/docs/platform/"
                     text: "vCluster Docs"
