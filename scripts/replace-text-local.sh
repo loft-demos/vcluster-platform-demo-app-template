@@ -21,6 +21,7 @@ Replacements:
 - {REPLACE_SNAPSHOT_OCI_REPOSITORY}
 - {REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}
 - {REPLACE_1PASSWORD_VAULT}
+- {REPLACE_DB_CONNECTOR_PASSWORD}
 
 Usage:
   bash scripts/replace-text-local.sh \
@@ -47,6 +48,8 @@ Options:
                           Optional. Defaults to <org-name>-ghcr-write.
   --onepassword-vault NAME
                           Optional. Defaults to <org-name>.
+  --db-connector-password PASS
+                          Optional. Defaults to vcluster-demo-postgres.
   --include-md            Also replace in Markdown files.
   --dry-run               Print matching files but do not modify them.
   --help                  Show this message.
@@ -73,6 +76,7 @@ OCI_REGISTRY_HOST=""
 SNAPSHOT_OCI_REPOSITORY=""
 IMAGE_PULL_SOURCE_SECRET_NAME=""
 ONEPASSWORD_VAULT=""
+DB_CONNECTOR_PASSWORD=""
 INCLUDE_MD="false"
 DRY_RUN="false"
 
@@ -124,6 +128,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --onepassword-vault)
       ONEPASSWORD_VAULT="${2:-}"
+      shift 2
+      ;;
+    --db-connector-password)
+      DB_CONNECTOR_PASSWORD="${2:-}"
       shift 2
       ;;
     --include-md)
@@ -192,6 +200,10 @@ if [[ -z "$ONEPASSWORD_VAULT" ]]; then
   ONEPASSWORD_VAULT="${ORG_NAME}"
 fi
 
+if [[ -z "$DB_CONNECTOR_PASSWORD" ]]; then
+  DB_CONNECTOR_PASSWORD="vcluster-demo-postgres"
+fi
+
 declare -a globs
 globs+=(--glob '*.yaml' --glob '*.yml' --glob '*.sh')
 if [[ "$INCLUDE_MD" == "true" ]]; then
@@ -203,7 +215,7 @@ while IFS= read -r file; do
   files+=("$file")
 done < <(
   rg -l \
-    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_BASE_URL_AUTHED\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}' \
+    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_BASE_URL_AUTHED\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_DB_CONNECTOR_PASSWORD\}' \
     . \
     "${globs[@]}" \
     --glob '!.git/*'
@@ -226,6 +238,7 @@ echo "[INFO] OCI registry host: $OCI_REGISTRY_HOST"
 echo "[INFO] Snapshot OCI repository: $SNAPSHOT_OCI_REPOSITORY"
 echo "[INFO] Image pull source secret name: $IMAGE_PULL_SOURCE_SECRET_NAME"
 echo "[INFO] 1Password vault: $ONEPASSWORD_VAULT"
+echo "[INFO] DB connector password: (set)"
 echo "[INFO] Files: ${#files[@]}"
 
 if [[ "$DRY_RUN" == "true" ]]; then
@@ -233,7 +246,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
-export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_BASE_URL_AUTHED GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT
+export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_BASE_URL_AUTHED GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT DB_CONNECTOR_PASSWORD
 
 for file in "${files[@]}"; do
   perl -0pi -e '
@@ -249,6 +262,7 @@ for file in "${files[@]}"; do
     s/\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}/$ENV{SNAPSHOT_OCI_REPOSITORY}/g;
     s/\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}/$ENV{IMAGE_PULL_SOURCE_SECRET_NAME}/g;
     s/\{REPLACE_1PASSWORD_VAULT\}/$ENV{ONEPASSWORD_VAULT}/g;
+    s/\{REPLACE_DB_CONNECTOR_PASSWORD\}/$ENV{DB_CONNECTOR_PASSWORD}/g;
   ' "$file"
 done
 

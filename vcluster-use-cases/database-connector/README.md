@@ -14,6 +14,7 @@ vcluster-use-cases/database-connector/
 │   ├── cnpg-helm-app.yaml
 │   └── cnpg-manifests.yaml
 └── manifests/
+    ├── cnpg-admin-secret.yaml
     ├── cnpg-cluster.yaml
     ├── database-connector-secret.yaml
     ├── database-connector-vcluster.yaml
@@ -33,13 +34,22 @@ vcluster-use-cases/database-connector/
 
 ### `manifests/`
 
+#### PostgreSQL Admin Secret
+
+[`manifests/cnpg-admin-secret.yaml`](./manifests/cnpg-admin-secret.yaml)
+creates a `Secret` named `cnpg-postgres-admin` in `cnpg-system` with the superuser
+credentials for the PostgreSQL cluster.
+
+The password field uses the `{REPLACE_DB_CONNECTOR_PASSWORD}` placeholder, which is
+substituted by `scripts/replace-text-local.sh` (vind path) or your secret manager
+(managed path) before the manifest is pushed to Git.
+
 #### PostgreSQL Cluster
 
 [`manifests/cnpg-cluster.yaml`](./manifests/cnpg-cluster.yaml)
 creates a CNPG `Cluster` named `postgres-cluster` with 1 instance and a `5Gi` PVC.
-
-CNPG auto-generates and manages the superuser credentials in the secret
-`postgres-cluster-superuser` in the `cnpg-system` namespace.
+It references `cnpg-postgres-admin` as the `superuserSecret` so CNPG uses the
+pre-provisioned credentials rather than auto-generating a random password.
 
 This PostgreSQL cluster is the shared external database service that the platform
 database connector provisions isolated databases on for each vCluster.
@@ -79,12 +89,14 @@ in the `p-default` project namespace using the `db-connector-vcluster` template.
 
 ## Secrets Contract
 
-CNPG fully manages superuser credentials. The operator auto-generates the
-`postgres-cluster-superuser` secret in `cnpg-system` with a random password.
+Both `cnpg-postgres-admin` (CNPG superuser) and `postgres-database-connector`
+(vCP connector) share the same password via the `{REPLACE_DB_CONNECTOR_PASSWORD}`
+placeholder. This avoids any runtime credential sync.
 
-**vind / local path**: `bootstrap-self-contained.sh` waits for CNPG to create
-`postgres-cluster-superuser`, then patches `postgres-database-connector` in
-`vcluster-platform` with the auto-generated password so vCP can authenticate.
+**vind / local path**: `scripts/replace-text-local.sh` substitutes the placeholder
+with `vcluster-demo-postgres` (or a value passed via `--db-connector-password`) in
+both secrets before the repo is pushed to Forgejo. No bootstrap patching is needed.
 
-**Managed Generator path**: 1Password / ESO reads `postgres-cluster-superuser`
-and provides the credentials to `postgres-database-connector` in `vcluster-platform`.
+**Managed Generator path**: your secret manager (1Password / ESO) provides the same
+password value for both `cnpg-postgres-admin` in `cnpg-system` and
+`postgres-database-connector` in `vcluster-platform`.
