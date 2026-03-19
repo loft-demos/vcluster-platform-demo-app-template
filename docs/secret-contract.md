@@ -46,7 +46,7 @@ These should be added after the base bootstrap is working.
 | `oidc-secret` | `p-auth-core` | Argo CD OIDC client secret for PR environments | `clientSecret` |
 | `loft-demo-org-cred` | project namespaces | GitHub token or app credential for Flux / PR automation | `token` or org-specific app credential data |
 | `database-connector` | `vcluster-platform` or projected project scope | vCluster Platform shared database connector config | connector-specific keys |
-| `innodb-cluster-creds` | `mysql-operator` | MySQL root/admin credentials | MySQL operator expected keys |
+| `postgres-cluster-superuser` | `cnpg-system` | CNPG PostgreSQL superuser credentials | `username`, `password` (type `kubernetes.io/basic-auth`) |
 | `{REPLACE_ORG_NAME}-ghcr-write-pat` | project namespace such as `p-default` | GHCR write auth for auto snapshots | org-specific credentials |
 
 ## Same-Org vs Different-Org

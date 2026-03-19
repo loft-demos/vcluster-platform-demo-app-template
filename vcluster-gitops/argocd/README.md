@@ -18,7 +18,7 @@ metadata:
     eso: 'true'
     kyverno: 'true'
     postgres: ''
-    mysql: ''
+    databaseConnector: ''
     rancher: ''
   name: cluster-local
   namespace: argocd

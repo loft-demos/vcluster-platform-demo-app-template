@@ -133,7 +133,7 @@ The label keys currently used by the repo are:
 | `eso` | `eso` |
 | `flux` | `flux` |
 | `kyverno` | `kyverno` |
-| `mysql` | `mysql` |
+| `database-connector` | `databaseConnector` |
 | `namespace-sync` | `namespaceSync` |
 | `private-nodes` | `privateNodes` |
 | `postgres` | `postgres` |

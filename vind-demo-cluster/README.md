@@ -303,7 +303,7 @@ Available use cases for the `vind` bootstrap:
 - `eso`
 - `flux`
 - `kyverno`
-- `mysql`
+- `database-connector`
 - `namespace-sync`
 - `private-nodes`
 - `postgres`

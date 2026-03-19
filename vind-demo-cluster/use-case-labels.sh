@@ -35,7 +35,7 @@ crossplane|crossplane
 eso|eso
 flux|flux
 kyverno|kyverno
-mysql|mysql
+database-connector|databaseConnector
 namespace-sync|namespaceSync
 private-nodes|privateNodes
 postgres|postgres
@@ -77,8 +77,8 @@ canonical_use_case_name() {
     kyverno)
       printf '%s\n' "kyverno"
       ;;
-    mysql)
-      printf '%s\n' "mysql"
+    database-connector|databaseconnector|databaseConnector|cnpg)
+      printf '%s\n' "database-connector"
       ;;
     namespace-sync|namespacesync|namespaceSync)
       printf '%s\n' "namespace-sync"
@@ -120,7 +120,7 @@ label_key_for_use_case() {
     eso) printf '%s\n' "eso" ;;
     flux) printf '%s\n' "flux" ;;
     kyverno) printf '%s\n' "kyverno" ;;
-    mysql) printf '%s\n' "mysql" ;;
+    database-connector) printf '%s\n' "databaseConnector" ;;
     namespace-sync) printf '%s\n' "namespaceSync" ;;
     private-nodes) printf '%s\n' "privateNodes" ;;
     postgres) printf '%s\n' "postgres" ;;
@@ -306,7 +306,7 @@ Supported use cases for the vind cluster-local secret:
 - eso
 - flux
 - kyverno
-- mysql
+- database-connector
 - namespace-sync
 - postgres
 - rancher

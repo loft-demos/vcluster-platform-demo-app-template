@@ -8,7 +8,7 @@ spec:
     - clusters:
         selector:
           matchLabels:
-            database-connector: 'true'
+            databaseConnector: 'true'
   template:
     metadata:
       name: 'database-connector-apps'
