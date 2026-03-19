@@ -69,6 +69,23 @@ require_cmd() {
   fi
 }
 
+if [[ -t 1 ]] && [[ "${NO_COLOR:-}" != "1" ]]; then
+  _CR='\033[0m'      # reset
+  _CDIM='\033[2m'    # dim (timestamps)
+  _CINFO='\033[32m'  # green (info)
+  _CDONE='\033[92m'  # bright green (done)
+  _CWARN='\033[33m'  # yellow (warn)
+  _CERR='\033[91m'   # bright red (error)
+else
+  _CR='' _CDIM='' _CINFO='' _CDONE='' _CWARN='' _CERR=''
+fi
+
+_ts()      { date '+%H:%M:%S'; }
+log_info()  { printf "${_CDIM}%s${_CR} ${_CINFO}info${_CR}  %s\n"  "$(_ts)" "$*"; }
+log_done()  { printf "${_CDIM}%s${_CR} ${_CDONE}done${_CR}  %s\n"  "$(_ts)" "$*"; }
+log_warn()  { printf "${_CDIM}%s${_CR} ${_CWARN}warn${_CR}  %s\n"  "$(_ts)" "$*" >&2; }
+log_error() { printf "${_CDIM}%s${_CR} ${_CERR}error${_CR} %s\n"   "$(_ts)" "$*" >&2; }
+
 CLUSTER_NAME="vcp"
 VALUES_FILE="vind-demo-cluster/vcluster.yaml"
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
@@ -278,36 +295,36 @@ perl -0pi -e '
   s/__VCLUSTER_NAME__/$ENV{VCLUSTER_NAME}/g;
 ' "$rendered_values"
 
-echo "[INFO] Creating or upgrading vind cluster '$CLUSTER_NAME'"
-echo "[INFO] Values file template: $VALUES_FILE"
-echo "[INFO] Rendered values file: $rendered_values"
-echo "[INFO] vCluster Platform version: $VCP_VERSION"
-echo "[INFO] Repo: $ORG_NAME/$REPO_NAME"
-echo "[INFO] Control plane nodes: $CONTROL_PLANE_NODE_COUNT"
-echo "[INFO] Worker nodes: $WORKER_NODE_COUNT"
-echo "[INFO] vCluster Platform host: $VCP_HOST"
-echo "[INFO] Forgejo host: $FORGEJO_HOST"
-echo "[INFO] Forgejo admin user: $FORGEJO_ADMIN_USER"
-echo "[INFO] Sleep time zone: $SLEEP_TIME_ZONE"
-echo "[INFO] Enabled use cases: $selected_use_cases"
+log_info "Creating or upgrading vind cluster '$CLUSTER_NAME'"
+log_info "Values file template: $VALUES_FILE"
+log_info "Rendered values file: $rendered_values"
+log_info "vCluster Platform version: $VCP_VERSION"
+log_info "Repo: $ORG_NAME/$REPO_NAME"
+log_info "Control plane nodes: $CONTROL_PLANE_NODE_COUNT"
+log_info "Worker nodes: $WORKER_NODE_COUNT"
+log_info "vCluster Platform host: $VCP_HOST"
+log_info "Forgejo host: $FORGEJO_HOST"
+log_info "Forgejo admin user: $FORGEJO_ADMIN_USER"
+log_info "Sleep time zone: $SLEEP_TIME_ZONE"
+log_info "Enabled use cases: $selected_use_cases"
 
 vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
 
 if [[ "$SKIP_CLUSTER_ANNOTATION" != "true" ]]; then
-  echo "[INFO] Annotating cluster/loft-cluster"
-  echo "[INFO] Waiting for vCluster Platform deployment to become available"
+  log_info "Annotating cluster/loft-cluster"
+  log_info "Waiting for vCluster Platform deployment to become available"
   for attempt in $(seq 1 30); do
     if kubectl -n vcluster-platform wait --for=condition=Available deploy/loft --timeout=10s >/dev/null 2>&1; then
-      echo "[INFO] vCluster Platform deployment is available"
+      log_info "vCluster Platform deployment is available"
       break
     fi
     if (( attempt % 3 == 0 )); then
-      echo "[INFO] Still waiting for deploy/loft (${attempt}/30)"
+      log_info "Still waiting for deploy/loft (${attempt}/30)"
       kubectl get deploy,pods -n vcluster-platform --no-headers 2>/dev/null || true
     fi
   done
 
-  echo "[INFO] Waiting for clusters.management.loft.sh/loft-cluster"
+  log_info "Waiting for clusters.management.loft.sh/loft-cluster"
   cluster_annotated="false"
   for attempt in $(seq 1 60); do
     if kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
@@ -319,15 +336,15 @@ if [[ "$SKIP_CLUSTER_ANNOTATION" != "true" ]]; then
       break
     fi
     if (( attempt % 5 == 0 )); then
-      echo "[INFO] Still waiting for cluster/loft-cluster (${attempt}/60)"
+      log_info "Still waiting for cluster/loft-cluster (${attempt}/60)"
     fi
     sleep 2
   done
 
   if [[ "$cluster_annotated" == "true" ]]; then
-    echo "[INFO] Annotated cluster/loft-cluster"
+    log_done "Annotated cluster/loft-cluster"
   elif ! kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
-    echo "[WARN] Could not find cluster/loft-cluster to annotate yet." >&2
+    log_warn "Could not find cluster/loft-cluster to annotate yet."
   fi
 fi
 
@@ -338,8 +355,8 @@ if [[ "$SKIP_ORBSTACK_DOMAINS" != "true" ]]; then
     --argocd-host "$ARGOCD_HOST" \
     --forgejo-host "$FORGEJO_HOST" \
     --env-file "$ORBSTACK_ENV_FILE"; then
-    echo "[WARN] Automatic OrbStack domain setup failed." >&2
-    echo "[WARN] You can rerun vind-demo-cluster/start-orbstack-domains.sh after the services are ready." >&2
+    log_warn "Automatic OrbStack domain setup failed."
+    log_warn "You can rerun vind-demo-cluster/start-orbstack-domains.sh after the services are ready."
   fi
 fi
 
@@ -347,9 +364,9 @@ if [[ "$SKIP_SUMMARY" == "true" ]]; then
   exit 0
 fi
 
-cat <<EOF
+log_done "vind cluster '$CLUSTER_NAME' is ready."
 
-[INFO] vind cluster '$CLUSTER_NAME' is ready.
+cat <<EOF
 
 The OrbStack container domain for the vind control plane will usually look like:
   https://vcluster.cp.${CLUSTER_NAME}.orb.local
