@@ -188,7 +188,7 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 navBarButtons:
                   - link: "https://__FORGEJO_HOST__/"
                     icon: "https://__FORGEJO_HOST__/assets/img/logo.svg"
-                    text: "Forgejo Repo"
+                    text: "Forgejo"
                     position: TopEnd
                   - link: "https://flux-__VCLUSTER_NAME__.__VCP_LOFT_HOST__/"
                     icon: "https://flux-__VCLUSTER_NAME__.__VCP_LOFT_HOST__/favicon.svg"

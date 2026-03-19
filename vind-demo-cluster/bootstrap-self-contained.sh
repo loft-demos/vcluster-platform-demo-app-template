@@ -78,16 +78,28 @@ require_cmd() {
   fi
 }
 
+if [[ -t 1 ]] && [[ "${NO_COLOR:-}" != "1" ]]; then
+  _CR='\033[0m'      # reset
+  _CDIM='\033[2m'    # dim (timestamps)
+  _CINFO='\033[32m'  # green (info)
+  _CDONE='\033[92m'  # bright green (done)
+  _CWARN='\033[33m'  # yellow (warn)
+  _CERR='\033[91m'   # bright red (error)
+  _CSTEP='\033[1m'   # bold (step label)
+else
+  _CR='' _CDIM='' _CINFO='' _CDONE='' _CWARN='' _CERR='' _CSTEP=''
+fi
+
 _ts()      { date '+%H:%M:%S'; }
-log_info()  { printf '%s info %s\n'  "$(_ts)" "$*"; }
-log_done()  { printf '%s done %s\n'  "$(_ts)" "$*"; }
-log_warn()  { printf '%s warn %s\n'  "$(_ts)" "$*" >&2; }
-log_error() { printf '%s error %s\n' "$(_ts)" "$*" >&2; }
+log_info()  { printf "${_CDIM}%s${_CR} ${_CINFO}info${_CR}  %s\n"  "$(_ts)" "$*"; }
+log_done()  { printf "${_CDIM}%s${_CR} ${_CDONE}done${_CR}  %s\n"  "$(_ts)" "$*"; }
+log_warn()  { printf "${_CDIM}%s${_CR} ${_CWARN}warn${_CR}  %s\n"  "$(_ts)" "$*" >&2; }
+log_error() { printf "${_CDIM}%s${_CR} ${_CERR}error${_CR} %s\n"   "$(_ts)" "$*" >&2; }
 
 step() {
   STEP_INDEX=$((STEP_INDEX + 1))
   echo
-  printf '%s info [STEP %s] %s\n' "$(_ts)" "$STEP_INDEX" "$1"
+  printf "${_CDIM}%s${_CR} ${_CINFO}info${_CR}  ${_CSTEP}[STEP %s] %s${_CR}\n" "$(_ts)" "$STEP_INDEX" "$1"
 }
 
 wait_for_create() {
