@@ -69,15 +69,13 @@ require_cmd() {
   fi
 }
 
-if [[ -t 1 ]] && [[ "${NO_COLOR:-}" != "1" ]]; then
-  _CR='\033[0m'      # reset
-  _CDIM='\033[2m'    # dim (timestamps)
-  _CINFO='\033[32m'  # green (info)
-  _CDONE='\033[92m'  # bright green (done)
-  _CWARN='\033[33m'  # yellow (warn)
-  _CERR='\033[91m'   # bright red (error)
-else
-  _CR='' _CDIM='' _CINFO='' _CDONE='' _CWARN='' _CERR=''
+if [[ -z "${_CR+set}" ]]; then
+  # Not inherited from a parent script — detect tty ourselves
+  if [[ -t 1 ]] && [[ "${NO_COLOR:-}" != "1" ]]; then
+    _CR='\033[0m' _CDIM='\033[2m' _CINFO='\033[32m' _CDONE='\033[92m' _CWARN='\033[33m' _CERR='\033[91m'
+  else
+    _CR='' _CDIM='' _CINFO='' _CDONE='' _CWARN='' _CERR=''
+  fi
 fi
 
 _ts()      { date '+%H:%M:%S'; }

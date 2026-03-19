@@ -89,6 +89,7 @@ if [[ -t 1 ]] && [[ "${NO_COLOR:-}" != "1" ]]; then
 else
   _CR='' _CDIM='' _CINFO='' _CDONE='' _CWARN='' _CERR='' _CSTEP=''
 fi
+export _CR _CDIM _CINFO _CDONE _CWARN _CERR _CSTEP
 
 _ts()      { date '+%H:%M:%S'; }
 log_info()  { printf "${_CDIM}%s${_CR} ${_CINFO}info${_CR}  %s\n"  "$(_ts)" "$*"; }
