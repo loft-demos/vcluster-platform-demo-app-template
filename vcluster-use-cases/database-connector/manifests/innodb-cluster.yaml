@@ -1,18 +1,13 @@
-apiVersion: mysql.oracle.com/v2
-kind: InnoDBCluster
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
 metadata:
-  name: mysql-cluster
+  name: postgres-cluster
+  namespace: cnpg-system
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  secretName: innodb-cluster-creds
-  tlsUseSelfSigned: true
-  instances: 3
-  router:
-    instances: 1
-  datadirVolumeClaimTemplate:
-    accessModes: [ "ReadWriteOnce" ]
-    resources:
-      requests:
-        # should be enough to support 3 vCluster instances
-        storage: 16Gi
+  instances: 1
+  superuserSecret:
+    name: postgres-cluster-superuser
+  storage:
+    size: 5Gi

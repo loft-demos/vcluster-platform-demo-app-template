@@ -12,7 +12,7 @@ resources:
   - ../../flux-operator-helm-app.yaml
   - ../../global-project.yaml
   - ../../kyverno-appset.yaml
-  - ../../mysql-appset.yaml
+  - ../../database-connector-appset.yaml
   - ../../namespace-sync-appset.yaml
   - ../../auto-nodes-appset.yaml
   - ../../private-nodes-appset.yaml

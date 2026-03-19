@@ -6,7 +6,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   displayName: Database Connector Virtual Cluster
-  description: This virtual cluster template enables scalable and secure virtual cluster management by automatically provisioning isolated databases and non-privileged users on a centralized MySQL database server for each vCluster backing store.
+  description: This virtual cluster template enables scalable and secure virtual cluster management by automatically provisioning isolated databases and non-privileged users on a centralized PostgreSQL (CloudNative PG) database server for each vCluster backing store.
   owner:
     team: loft-admins
   template:
@@ -60,9 +60,6 @@ spec:
                   enabled: true
                 secrets:
                   all: true
-                customResources:
-                  innodbclusters.mysql.oracle.com:
-                    enabled: true
             controlPlane:
               statefulSet:
                 labels:
@@ -78,7 +75,7 @@ spec:
                 database:
                   external:
                     enabled: true
-                    connector: mysql-database-connector
+                    connector: postgres-database-connector
               distro:
                 k8s:
                   version: "{{ .Values.k8sVersion }}"

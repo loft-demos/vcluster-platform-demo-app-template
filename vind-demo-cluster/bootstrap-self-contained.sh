@@ -73,15 +73,21 @@ EOF
 require_cmd() {
   local cmd="$1"
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "[ERROR] Required command not found: $cmd" >&2
+    log_error "Required command not found: $cmd" >&2
     exit 1
   fi
 }
 
+_ts()      { date '+%H:%M:%S'; }
+log_info()  { printf '%s info %s\n'  "$(_ts)" "$*"; }
+log_done()  { printf '%s done %s\n'  "$(_ts)" "$*"; }
+log_warn()  { printf '%s warn %s\n'  "$(_ts)" "$*" >&2; }
+log_error() { printf '%s error %s\n' "$(_ts)" "$*" >&2; }
+
 step() {
   STEP_INDEX=$((STEP_INDEX + 1))
   echo
-  echo "[STEP ${STEP_INDEX}] $1"
+  printf '%s info [STEP %s] %s\n' "$(_ts)" "$STEP_INDEX" "$1"
 }
 
 wait_for_create() {
@@ -151,10 +157,10 @@ spec:
   displayName: ghcr-login-secret
 EOF
       else
-        echo "[WARN] Could not find p-api-framework and p-auth-core to create ghcr-login-secret projections." >&2
+        log_warn "Could not find p-api-framework and p-auth-core to create ghcr-login-secret projections." >&2
       fi
     else
-      echo "[WARN] Could not find namespace vcluster-platform to create ghcr-login-secret." >&2
+      log_warn "Could not find namespace vcluster-platform to create ghcr-login-secret." >&2
     fi
 
     wait_for_create 60 2 get namespace "$IMAGE_PULL_PROJECT_NAMESPACE"
@@ -179,10 +185,10 @@ spec:
     password: ${project_secret_password_b64}
 EOF
     else
-      echo "[WARN] Could not find namespace ${IMAGE_PULL_PROJECT_NAMESPACE} to create ${IMAGE_PULL_SOURCE_SECRET_NAME}." >&2
+      log_warn "Could not find namespace ${IMAGE_PULL_PROJECT_NAMESPACE} to create ${IMAGE_PULL_SOURCE_SECRET_NAME}." >&2
     fi
   else
-    echo "[WARN] Skipping GHCR shared secret and ${IMAGE_PULL_SOURCE_SECRET_NAME} ProjectSecret creation because snapshot registry credentials were not provided." >&2
+    log_warn "Skipping GHCR shared secret and ${IMAGE_PULL_SOURCE_SECRET_NAME} ProjectSecret creation because snapshot registry credentials were not provided." >&2
   fi
 }
 
@@ -192,19 +198,19 @@ annotate_loft_cluster() {
   local sleep_time_zone="$3"
   local cluster_annotated="false"
 
-  echo "[INFO] Waiting for vCluster Platform deployment to become available"
+  log_info "Waiting for vCluster Platform deployment to become available"
   for attempt in $(seq 1 30); do
     if kubectl -n vcluster-platform wait --for=condition=Available deploy/loft --timeout=10s >/dev/null 2>&1; then
-      echo "[INFO] vCluster Platform deployment is available"
+      log_info "vCluster Platform deployment is available"
       break
     fi
     if (( attempt % 3 == 0 )); then
-      echo "[INFO] Still waiting for deploy/loft (${attempt}/30)"
+      log_info "Still waiting for deploy/loft (${attempt}/30)"
       kubectl get deploy,pods -n vcluster-platform --no-headers 2>/dev/null || true
     fi
   done
 
-  echo "[INFO] Waiting for clusters.management.loft.sh/loft-cluster"
+  log_info "Waiting for clusters.management.loft.sh/loft-cluster"
   for attempt in $(seq 1 60); do
     if kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
       kubectl annotate --overwrite clusters.management.loft.sh loft-cluster \
@@ -215,15 +221,15 @@ annotate_loft_cluster() {
       break
     fi
     if (( attempt % 5 == 0 )); then
-      echo "[INFO] Still waiting for cluster/loft-cluster (${attempt}/60)"
+      log_info "Still waiting for cluster/loft-cluster (${attempt}/60)"
     fi
     sleep 2
   done
 
   if [[ "$cluster_annotated" == "true" ]]; then
-    echo "[INFO] Annotated cluster/loft-cluster"
+    log_info "Annotated cluster/loft-cluster"
   else
-    echo "[WARN] Could not find cluster/loft-cluster to annotate yet." >&2
+    log_warn "Could not find cluster/loft-cluster to annotate yet." >&2
   fi
 }
 
@@ -250,12 +256,12 @@ taint_control_plane_node() {
       kubectl taint nodes "$control_plane_node" \
         node-role.kubernetes.io/control-plane=:NoSchedule \
         --overwrite >/dev/null
-      echo "[INFO] Applied NoSchedule taint to node ${control_plane_node}"
+      log_info "Applied NoSchedule taint to node ${control_plane_node}"
     else
-      echo "[WARN] Could not find a control plane node to taint." >&2
+      log_warn "Could not find a control plane node to taint." >&2
     fi
   else
-    echo "[WARN] Timed out waiting for nodes to become ready before tainting the control plane node." >&2
+    log_warn "Timed out waiting for nodes to become ready before tainting the control plane node." >&2
   fi
 }
 
@@ -563,7 +569,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      echo "[ERROR] Unknown argument: $1" >&2
+      log_error "Unknown argument: $1" >&2
       usage >&2
       exit 1
       ;;
@@ -573,17 +579,17 @@ done
 require_cmd bash
 
 if [[ "$SKIP_VIND" != "true" && -z "$LICENSE_TOKEN" ]]; then
-  echo "[ERROR] --license-token or LICENSE_TOKEN is required unless --skip-vind is used." >&2
+  log_error "--license-token or LICENSE_TOKEN is required unless --skip-vind is used." >&2
   exit 1
 fi
 
 if [[ ! "$CONTROL_PLANE_NODE_COUNT" =~ ^[0-9]+$ || "$CONTROL_PLANE_NODE_COUNT" -ne 1 ]]; then
-  echo "[ERROR] --control-plane-nodes must be 1 for this vind configuration." >&2
+  log_error "--control-plane-nodes must be 1 for this vind configuration." >&2
   exit 1
 fi
 
 if [[ ! "$WORKER_NODE_COUNT" =~ ^[0-9]+$ ]]; then
-  echo "[ERROR] --worker-nodes must be a non-negative integer." >&2
+  log_error "--worker-nodes must be a non-negative integer." >&2
   exit 1
 fi
 
@@ -669,8 +675,8 @@ _active_use_cases=""
 while IFS= read -r _uc; do
   [[ -z "$_uc" ]] && continue
   if use_case_vind_disabled "$_uc"; then
-    echo "[WARN] Use case '$_uc' is temporarily disabled in vind and will not be activated."
-    echo "[WARN] The overlay code is preserved and can be re-enabled once the upstream blocker is resolved."
+    log_warn "Use case '$_uc' is temporarily disabled in vind and will not be activated."
+    log_warn "The overlay code is preserved and can be re-enabled once the upstream blocker is resolved."
   else
     _active_use_cases="${_active_use_cases:+${_active_use_cases}
 }${_uc}"
@@ -768,14 +774,14 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
         --timeout=300s >/dev/null 2>&1 || true
     fi
 
-    echo "[INFO] Waiting for Forgejo API at ${FORGEJO_URL}/api/healthz"
+    log_info "Waiting for Forgejo API at ${FORGEJO_URL}/api/healthz"
     for attempt in $(seq 1 60); do
       if curl -ksSf "${FORGEJO_URL}/api/healthz" >/dev/null 2>&1; then
-        echo "[INFO] Forgejo API is reachable"
+        log_info "Forgejo API is reachable"
         break
       fi
       if (( attempt % 5 == 0 )); then
-        echo "[INFO] Still waiting for Forgejo API (${attempt}/60)"
+        log_info "Still waiting for Forgejo API (${attempt}/60)"
       fi
       sleep 2
     done
@@ -813,10 +819,10 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
           --visibility public \
           --current-branch-only \
           --skip-tags
-      ) || echo "[WARN] Could not push vcluster-auto-nodes-pod to Forgejo."
+      ) || log_warn "Could not push vcluster-auto-nodes-pod to Forgejo."
     fi
   else
-    echo "[INFO] Skipping Forgejo bootstrap because --repo-name was not provided."
+    log_info "Skipping Forgejo bootstrap because --repo-name was not provided."
   fi
 fi
 
@@ -867,9 +873,9 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
     IMAGE_BUILD_LOG="vind-demo-cluster/logs/image-build-${CLUSTER_NAME}-$(date +%Y%m%d-%H%M%S).log"
     nohup "${image_build_cmd[@]}" >"$IMAGE_BUILD_LOG" 2>&1 &
     IMAGE_BUILD_PID="$!"
-    echo "[INFO] Image build running in background."
-    echo "[INFO] PID: $IMAGE_BUILD_PID"
-    echo "[INFO] Log: $IMAGE_BUILD_LOG"
+    log_info "Image build running in background."
+    log_info "PID: $IMAGE_BUILD_PID"
+    log_info "Log: $IMAGE_BUILD_LOG"
   fi
 fi
 
@@ -888,7 +894,7 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
   require_cmd curl
 
   if [[ -z "$REPO_NAME" || -z "$ORG_NAME" ]]; then
-    echo "[WARN] Skipping Argo CD bootstrap because --repo-name and --org-name were not provided." >&2
+    log_warn "Skipping Argo CD bootstrap because --repo-name and --org-name were not provided." >&2
   else
     argocd_api_webhook_url="http://argocd-server.argocd.svc.cluster.local/api/webhook"
     argocd_appset_webhook_url="http://forgejo-pr-webhook-adapter.argocd.svc.cluster.local:8080/api/webhook"
@@ -1072,12 +1078,12 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
       --from-literal=password="$flux_forgejo_token" \
       --dry-run=client -o yaml | kubectl apply -f -
   else
-    echo "[WARN] p-vcluster-flux-demo not ready yet — forgejo-git-credentials will be missing there." >&2
-    echo "[WARN] Re-run after flux-manifests syncs to create it:" >&2
-    echo "[WARN]   kubectl create secret generic forgejo-git-credentials \\" >&2
-    echo "[WARN]     --namespace p-vcluster-flux-demo \\" >&2
-    echo "[WARN]     --from-literal=username=\"$FORGEJO_USERNAME\" \\" >&2
-    echo "[WARN]     --from-literal=password=\"\$FORGEJO_TOKEN\"" >&2
+    log_warn "p-vcluster-flux-demo not ready yet — forgejo-git-credentials will be missing there." >&2
+    log_warn "Re-run after flux-manifests syncs to create it:" >&2
+    log_warn "  kubectl create secret generic forgejo-git-credentials \\" >&2
+    log_warn "    --namespace p-vcluster-flux-demo \\" >&2
+    log_warn "    --from-literal=username=\"$FORGEJO_USERNAME\" \\" >&2
+    log_warn "    --from-literal=password=\"\$FORGEJO_TOKEN\"" >&2
   fi
 
   if ! bash scripts/configure-flux-webhook.sh \
@@ -1089,16 +1095,16 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
     --vcluster-name "$VCLUSTER_NAME" \
     --base-domain "$BASE_DOMAIN" \
     --webhook-secret "$flux_receiver_token"; then
-    echo "[WARN] Flux webhook configuration did not complete — the Flux Receiver" >&2
-    echo "[WARN] may not be ready yet. Re-run once the cluster is healthy:" >&2
-    echo "[WARN]   bash scripts/configure-flux-webhook.sh \\" >&2
-    echo "[WARN]     --forgejo-url \"$FORGEJO_URL\" \\" >&2
-    echo "[WARN]     --username \"$FORGEJO_USERNAME\" \\" >&2
-    echo "[WARN]     --token \"\$FORGEJO_TOKEN\" \\" >&2
-    echo "[WARN]     --owner \"$ORG_NAME\" \\" >&2
-    echo "[WARN]     --repo \"$REPO_NAME\" \\" >&2
-    echo "[WARN]     --vcluster-name \"$VCLUSTER_NAME\" \\" >&2
-    echo "[WARN]     --base-domain \"$BASE_DOMAIN\"" >&2
+    log_warn "Flux webhook configuration did not complete — the Flux Receiver" >&2
+    log_warn "may not be ready yet. Re-run once the cluster is healthy:" >&2
+    log_warn "  bash scripts/configure-flux-webhook.sh \\" >&2
+    log_warn "    --forgejo-url \"$FORGEJO_URL\" \\" >&2
+    log_warn "    --username \"$FORGEJO_USERNAME\" \\" >&2
+    log_warn "    --token \"\$FORGEJO_TOKEN\" \\" >&2
+    log_warn "    --owner \"$ORG_NAME\" \\" >&2
+    log_warn "    --repo \"$REPO_NAME\" \\" >&2
+    log_warn "    --vcluster-name \"$VCLUSTER_NAME\" \\" >&2
+    log_warn "    --base-domain \"$BASE_DOMAIN\"" >&2
   fi
 fi
 
@@ -1212,7 +1218,7 @@ fi
 
 argocd_password=""
 if command -v kubectl >/dev/null 2>&1; then
-  echo "[INFO] Looking up the Argo CD initial admin password"
+  log_info "Looking up the Argo CD initial admin password"
   for _ in $(seq 1 60); do
     secret_b64="$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' 2>/dev/null || true)"
     if [[ -n "$secret_b64" ]]; then

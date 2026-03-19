@@ -90,6 +90,42 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
           server: https://kubernetes.default.svc
       helm:
         - chart:
+            name: forgejo
+            repo: oci://code.forgejo.org/forgejo-helm
+            version: 16.0.2
+          release:
+            name: forgejo
+            namespace: forgejo
+          timeout: 15m
+          values: |-
+            strategy:
+              type: Recreate
+            persistence:
+              enabled: true
+              size: 20Gi
+            tolerations:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+                effect: NoSchedule
+            service:
+              http:
+                type: LoadBalancer
+            ingress:
+              enabled: false
+            gitea:
+              admin:
+                existingSecret: forgejo-admin-secret
+                email: demo-admin@__VCP_LOFT_HOST__
+              config:
+                server:
+                  ROOT_URL: https://__FORGEJO_HOST__/
+                packages:
+                  ENABLED: true
+                service:
+                  DISABLE_REGISTRATION: true
+                webhook:
+                  ALLOWED_HOST_LIST: external,private,loopback
+        - chart:
             name: argo-cd
             repo: https://argoproj.github.io/argo-helm
             version: 9.4.7
@@ -113,26 +149,6 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 enabled: false
               service:
                 type: LoadBalancer
-        - chart:
-            name: ingress-nginx
-            repo: https://kubernetes.github.io/ingress-nginx
-            version: 4.12.1
-          release:
-            name: ingress-nginx
-            namespace: ingress-nginx
-          timeout: 10m
-          values: |-
-            controller:
-              ingressClassResource:
-                name: nginx
-                enabled: true
-                default: true
-              ingressClass: nginx
-              watchIngressWithoutClass: false
-              service:
-                type: LoadBalancer
-              admissionWebhooks:
-                enabled: false
         - chart:
             name: external-secrets
             repo: https://charts.external-secrets.io
@@ -186,38 +202,22 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                     text: "vCluster Docs"
                     position: TopEnd
         - chart:
-            name: forgejo
-            repo: oci://code.forgejo.org/forgejo-helm
-            version: 16.0.2
+            name: ingress-nginx
+            repo: https://kubernetes.github.io/ingress-nginx
+            version: 4.12.1
           release:
-            name: forgejo
-            namespace: forgejo
-          timeout: 15m
+            name: ingress-nginx
+            namespace: ingress-nginx
+          timeout: 10m
           values: |-
-            strategy:
-              type: Recreate
-            persistence:
-              enabled: true
-              size: 20Gi
-            tolerations:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-                effect: NoSchedule
-            service:
-              http:
+            controller:
+              ingressClassResource:
+                name: nginx
+                enabled: true
+                default: true
+              ingressClass: nginx
+              watchIngressWithoutClass: false
+              service:
                 type: LoadBalancer
-            ingress:
-              enabled: false
-            gitea:
-              admin:
-                existingSecret: forgejo-admin-secret
-                email: demo-admin@__VCP_LOFT_HOST__
-              config:
-                server:
-                  ROOT_URL: https://__FORGEJO_HOST__/
-                packages:
-                  ENABLED: true
-                service:
-                  DISABLE_REGISTRATION: true
-                webhook:
-                  ALLOWED_HOST_LIST: external,private,loopback
+              admissionWebhooks:
+                enabled: false
