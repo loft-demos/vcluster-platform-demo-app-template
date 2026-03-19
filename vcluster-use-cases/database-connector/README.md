@@ -14,11 +14,10 @@ vcluster-use-cases/database-connector/
 │   ├── cnpg-helm-app.yaml
 │   └── cnpg-manifests.yaml
 └── manifests/
+    ├── cnpg-cluster.yaml
     ├── database-connector-secret.yaml
     ├── database-connector-vcluster.yaml
-    ├── db-connected-vcluster-template.yaml
-    ├── innodb-cluster-creds.yaml
-    └── innodb-cluster.yaml
+    └── db-connected-vcluster-template.yaml
 ```
 
 ## What Each Folder Does
@@ -34,13 +33,13 @@ vcluster-use-cases/database-connector/
 
 ### `manifests/`
 
-#### PostgreSQL Credentials and Cluster
+#### PostgreSQL Cluster
 
-- [`manifests/innodb-cluster-creds.yaml`](./manifests/innodb-cluster-creds.yaml)
-  creates the `postgres-cluster-superuser` secret in `cnpg-system`
-  (type `kubernetes.io/basic-auth`) used by CNPG to bootstrap the superuser.
-- [`manifests/innodb-cluster.yaml`](./manifests/innodb-cluster.yaml)
-  creates a CNPG `Cluster` named `postgres-cluster` with 1 instance and a `5Gi` PVC.
+[`manifests/cnpg-cluster.yaml`](./manifests/cnpg-cluster.yaml)
+creates a CNPG `Cluster` named `postgres-cluster` with 1 instance and a `5Gi` PVC.
+
+CNPG auto-generates and manages the superuser credentials in the secret
+`postgres-cluster-superuser` in the `cnpg-system` namespace.
 
 This PostgreSQL cluster is the shared external database service that the platform
 database connector provisions isolated databases on for each vCluster.
@@ -52,6 +51,9 @@ creates a secret named `postgres-database-connector` in the `vcluster-platform` 
 
 The secret has the label `loft.sh/connector-type: shared-database` and contains
 `endpoint`, `port`, `user`, `password`, and `type: postgres` fields.
+
+The `password` field is set to a placeholder at deploy time and patched by the bootstrap
+script after CNPG generates the superuser credentials (see **Secrets Contract** below).
 
 #### Database-Backed vCluster Template
 
@@ -77,10 +79,12 @@ in the `p-default` project namespace using the `db-connector-vcluster` template.
 
 ## Secrets Contract
 
-The `{REPLACE_DB_CONNECTOR_PASSWORD}` placeholder appears in both
-`innodb-cluster-creds.yaml` and `database-connector-secret.yaml`.
+CNPG fully manages superuser credentials. The operator auto-generates the
+`postgres-cluster-superuser` secret in `cnpg-system` with a random password.
 
-- **vind / local path**: `scripts/replace-text-local.sh` substitutes the demo
-  password (`vcluster-demo-postgres`) at bootstrap time.
-- **Managed Generator path**: 1Password / ESO provides the real password via the
-  project secret for the `vcluster-platform` namespace.
+**vind / local path**: `bootstrap-self-contained.sh` waits for CNPG to create
+`postgres-cluster-superuser`, then patches `postgres-database-connector` in
+`vcluster-platform` with the auto-generated password so vCP can authenticate.
+
+**Managed Generator path**: 1Password / ESO reads `postgres-cluster-superuser`
+and provides the credentials to `postgres-database-connector` in `vcluster-platform`.

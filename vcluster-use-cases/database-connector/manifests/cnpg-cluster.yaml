@@ -7,7 +7,5 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   instances: 1
-  superuserSecret:
-    name: postgres-cluster-superuser
   storage:
     size: 5Gi

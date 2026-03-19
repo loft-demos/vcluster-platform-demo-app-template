@@ -1200,6 +1200,30 @@ if use_case_list_contains "$resolved_use_case_selection" "auto-snapshots" && com
     loft.sh/project-secret-description="" --overwrite
 fi
 
+if use_case_list_contains "$resolved_use_case_selection" "database-connector" && command -v kubectl >/dev/null 2>&1; then
+  step "Sync CNPG superuser credentials to the database connector secret"
+  # CNPG auto-generates postgres-cluster-superuser with a random password.
+  # Wait for it, then patch the connector secret so vCP can authenticate.
+  log_info "Waiting for CNPG to create postgres-cluster-superuser..."
+  if wait_for_create 180 10 -n cnpg-system get secret/postgres-cluster-superuser; then
+    _cnpg_pass="$(kubectl -n cnpg-system get secret postgres-cluster-superuser \
+      -o jsonpath='{.data.password}' 2>/dev/null | base64 -d || true)"
+    if [[ -n "$_cnpg_pass" ]]; then
+      _cnpg_pass_b64="$(printf '%s' "$_cnpg_pass" | base64 | tr -d '\n')"
+      wait_for_create 60 5 -n vcluster-platform get secret/postgres-database-connector
+      kubectl -n vcluster-platform patch secret postgres-database-connector \
+        --type='json' \
+        -p="[{\"op\":\"replace\",\"path\":\"/data/password\",\"value\":\"${_cnpg_pass_b64}\"}]" \
+        >/dev/null 2>&1
+      log_done "Patched postgres-database-connector with CNPG superuser password."
+    else
+      log_warn "Could not read CNPG superuser password — postgres-database-connector may not authenticate."
+    fi
+  else
+    log_warn "Timed out waiting for postgres-cluster-superuser — database-connector vCluster will not start until CNPG is ready."
+  fi
+fi
+
 if [[ "$PRIVATE_NODES_ENABLED" == "true" ]]; then
   step "Create the default OrbStack VM for the private-nodes demo"
   require_cmd orb
