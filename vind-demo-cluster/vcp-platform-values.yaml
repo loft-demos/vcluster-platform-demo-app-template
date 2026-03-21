@@ -6,7 +6,7 @@
 # - __VCLUSTER_NAME__
 # - __KARGO_OIDC_SECRET__
 # - __FORGEJO_OIDC_SECRET__
-# - __KARGO_NAV_BUTTON__  (optional nav button entry, rendered conditionally)
+# - <KARGO_NAV_BUTTON>  (optional nav button entry, rendered conditionally)
 env:
   LICENSE_TOKEN: __VCP_LICENSE_TOKEN__
 service:
