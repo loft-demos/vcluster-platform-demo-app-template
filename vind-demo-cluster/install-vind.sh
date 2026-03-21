@@ -253,6 +253,16 @@ else
   vcp_domain="local"
 fi
 
+# vcp-platform-values.yaml always embeds OIDC client secrets. Generate them
+# here when not supplied by the caller (e.g. when running install-vind.sh
+# standalone rather than via bootstrap-self-contained.sh).
+if [[ -z "$KARGO_OIDC_SECRET" ]]; then
+  KARGO_OIDC_SECRET="$(openssl rand -base64 32 | tr -d '\n')"
+fi
+if [[ -z "$FORGEJO_OIDC_SECRET" ]]; then
+  FORGEJO_OIDC_SECRET="$(openssl rand -base64 32 | tr -d '\n')"
+fi
+
 if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
   if [[ "$CLUSTER_NAME" == "vcp" ]]; then
     ORBSTACK_ENV_FILE="vind-demo-cluster/orbstack-domains/.env"

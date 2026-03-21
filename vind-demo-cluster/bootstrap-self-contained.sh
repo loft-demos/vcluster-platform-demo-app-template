@@ -718,15 +718,16 @@ STEP_INDEX=0
 IMAGE_BUILD_LOG=""
 IMAGE_BUILD_PID=""
 
+# Always generate OIDC secrets — vcp-platform-values.yaml embeds them for the
+# vCP OIDC provider regardless of which use cases are enabled.
+_kargo_oidc_secret="$(openssl rand -base64 32 | tr -d '\n')"
+_forgejo_oidc_secret="$(openssl rand -base64 32 | tr -d '\n')"
+
 _kargo_admin_password_hash=""
 _kargo_token_signing_key=""
-_kargo_oidc_secret=""
-_forgejo_oidc_secret=""
 if use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
   log_info "Generating Kargo credentials..."
   _kargo_token_signing_key="$(openssl rand -base64 32 | tr -d '\n')"
-  _kargo_oidc_secret="$(openssl rand -base64 32 | tr -d '\n')"
-  _forgejo_oidc_secret="$(openssl rand -base64 32 | tr -d '\n')"
   if command -v htpasswd >/dev/null 2>&1; then
     _kargo_admin_password_hash="$(htpasswd -bnBC 10 "" kargo-demo-admin | tr -d ':\n' | sed 's/$2y/$2a/')"
   elif command -v python3 >/dev/null 2>&1 && python3 -c "import bcrypt" 2>/dev/null; then
