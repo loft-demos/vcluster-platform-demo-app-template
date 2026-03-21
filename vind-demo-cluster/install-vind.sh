@@ -214,6 +214,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_cmd vcluster
+require_cmd helm
 require_cmd perl
 require_cmd mktemp
 
@@ -264,13 +265,6 @@ cluster_local_use_case_labels="$(render_cluster_local_use_case_labels "$USE_CASE
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 selected_use_case_lines="$(resolve_use_case_selection "$USE_CASES")"
 
-kargo_nav_button=""
-if use_case_list_contains "$selected_use_case_lines" "continuous-promotion"; then
-  kargo_nav_button="- link: \"https://kargo.${VCP_HOST}/\"
-                    text: \"Kargo\"
-                    position: TopEnd"
-fi
-
 worker_nodes_yaml="      []"
 if [[ "$WORKER_NODE_COUNT" -gt 0 ]]; then
   worker_nodes_yaml=""
@@ -295,23 +289,16 @@ export VIND_DOCKER_NODES="$worker_nodes_yaml"
 export CLUSTER_LOCAL_USE_CASE_LABELS="$cluster_local_use_case_labels"
 export REPO_NAME ORG_NAME VCLUSTER_NAME
 export KARGO_OIDC_SECRET FORGEJO_OIDC_SECRET
-export KARGO_NAV_BUTTON="$kargo_nav_button"
 perl -0pi -e '
-  s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
-  s/__VCP_LOFT_HOST__/$ENV{VCP_HOST}/g;
   s/__VCP_DOMAIN_PREFIX__/$ENV{VCP_DOMAIN_PREFIX}/g;
   s/__VCP_DOMAIN__/$ENV{VCP_DOMAIN}/g;
-  s/__FORGEJO_HOST__/$ENV{FORGEJO_HOST}/g;
   s/__FORGEJO_ADMIN_USER__/$ENV{FORGEJO_ADMIN_USER}/g;
   s/__FORGEJO_ADMIN_PASSWORD__/$ENV{FORGEJO_ADMIN_PASSWORD}/g;
   s/__VIND_DOCKER_NODES__/$ENV{VIND_DOCKER_NODES}/g;
   s/__CLUSTER_LOCAL_USE_CASE_LABELS__/$ENV{CLUSTER_LOCAL_USE_CASE_LABELS}/g;
   s/__REPO_NAME__/$ENV{REPO_NAME}/g;
   s/__ORG_NAME__/$ENV{ORG_NAME}/g;
-  s/__KARGO_OIDC_SECRET__/$ENV{KARGO_OIDC_SECRET}/g;
-  s/__FORGEJO_OIDC_SECRET__/$ENV{FORGEJO_OIDC_SECRET}/g;
-  s/__KARGO_NAV_BUTTON__/$ENV{KARGO_NAV_BUTTON}/g;
   s/__VCLUSTER_NAME__/$ENV{VCLUSTER_NAME}/g;
 ' "$rendered_values"
 
@@ -330,8 +317,61 @@ log_info "Enabled use cases: $selected_use_cases"
 
 vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
 
+# Render the vCP Helm values from its dedicated template file.
+_vcp_values_tmpl="$(dirname "$VALUES_FILE")/vcp-platform-values.yaml"
+_vcp_values_rendered="$(mktemp "${TMPDIR:-/tmp}/vcp-platform-values.XXXXXX")"
+trap 'rm -f "$rendered_values" "$_vcp_values_rendered"' EXIT
+
+_kargo_nav_button=""
+if use_case_list_contains "$selected_use_case_lines" "continuous-promotion"; then
+  _kargo_nav_button="- link: \"https://kargo.${VCP_HOST}/\"
+        text: \"Kargo\"
+        position: TopEnd"
+fi
+export KARGO_NAV_BUTTON="$_kargo_nav_button"
+
+cp "$_vcp_values_tmpl" "$_vcp_values_rendered"
+perl -0pi -e '
+  s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
+  s/__VCP_LOFT_HOST__/$ENV{VCP_HOST}/g;
+  s/__FORGEJO_HOST__/$ENV{FORGEJO_HOST}/g;
+  s/__VCLUSTER_NAME__/$ENV{VCLUSTER_NAME}/g;
+  s/__KARGO_OIDC_SECRET__/$ENV{KARGO_OIDC_SECRET}/g;
+  s/__FORGEJO_OIDC_SECRET__/$ENV{FORGEJO_OIDC_SECRET}/g;
+  s/__KARGO_NAV_BUTTON__/$ENV{KARGO_NAV_BUTTON}/g;
+' "$_vcp_values_rendered"
+
+# Install vCluster Platform in the background so OrbStack domain setup and
+# other post-create work can run in parallel.
+log_info "Installing vCluster Platform ${VCP_VERSION} via Helm (background)"
+helm upgrade --install vcluster-platform \
+  oci://ghcr.io/loft-sh/vcluster-charts/vcluster-platform \
+  --version "$VCP_VERSION" \
+  --namespace vcluster-platform \
+  --create-namespace \
+  --values "$_vcp_values_rendered" \
+  --timeout 15m \
+  --wait &
+_vcp_helm_pid=$!
+
+if [[ "$SKIP_ORBSTACK_DOMAINS" != "true" ]]; then
+  if ! bash vind-demo-cluster/start-orbstack-domains.sh \
+    --cluster-name "$CLUSTER_NAME" \
+    --vcp-host "$VCP_HOST" \
+    --argocd-host "$ARGOCD_HOST" \
+    --forgejo-host "$FORGEJO_HOST" \
+    --env-file "$ORBSTACK_ENV_FILE"; then
+    log_warn "Automatic OrbStack domain setup failed."
+    log_warn "You can rerun vind-demo-cluster/start-orbstack-domains.sh after the services are ready."
+  fi
+fi
+
+log_info "Waiting for vCluster Platform Helm install to complete"
+if ! wait "$_vcp_helm_pid"; then
+  log_warn "vCluster Platform Helm install exited non-zero — check the output above."
+fi
+
 if [[ "$SKIP_CLUSTER_ANNOTATION" != "true" ]]; then
-  log_info "Annotating cluster/loft-cluster"
   log_info "Waiting for vCluster Platform deployment to become available"
   for attempt in $(seq 1 30); do
     if kubectl -n vcluster-platform wait --for=condition=Available deploy/loft --timeout=10s >/dev/null 2>&1; then
@@ -365,18 +405,6 @@ if [[ "$SKIP_CLUSTER_ANNOTATION" != "true" ]]; then
     log_done "Annotated cluster/loft-cluster"
   elif ! kubectl get clusters.management.loft.sh loft-cluster >/dev/null 2>&1; then
     log_warn "Could not find cluster/loft-cluster to annotate yet."
-  fi
-fi
-
-if [[ "$SKIP_ORBSTACK_DOMAINS" != "true" ]]; then
-  if ! bash vind-demo-cluster/start-orbstack-domains.sh \
-    --cluster-name "$CLUSTER_NAME" \
-    --vcp-host "$VCP_HOST" \
-    --argocd-host "$ARGOCD_HOST" \
-    --forgejo-host "$FORGEJO_HOST" \
-    --env-file "$ORBSTACK_ENV_FILE"; then
-    log_warn "Automatic OrbStack domain setup failed."
-    log_warn "You can rerun vind-demo-cluster/start-orbstack-domains.sh after the services are ready."
   fi
 fi
 

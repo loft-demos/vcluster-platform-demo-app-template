@@ -1,0 +1,56 @@
+# vCluster Platform Helm chart values template.
+# Placeholders rendered by install-vind.sh before helm install:
+# - __VCP_LICENSE_TOKEN__
+# - __VCP_LOFT_HOST__
+# - __FORGEJO_HOST__
+# - __VCLUSTER_NAME__
+# - __KARGO_OIDC_SECRET__
+# - __FORGEJO_OIDC_SECRET__
+# - __KARGO_NAV_BUTTON__  (optional nav button entry, rendered conditionally)
+env:
+  LICENSE_TOKEN: __VCP_LICENSE_TOKEN__
+service:
+  type: LoadBalancer
+ingress:
+  enabled: false
+config:
+  loftHost: __VCP_LOFT_HOST__
+  costControl:
+    enabled: false
+  imageBuilder:
+    enabled: false
+  oidc:
+    enabled: true
+    clients:
+      - name: Kargo
+        clientId: kargo
+        clientSecret: __KARGO_OIDC_SECRET__
+        redirectURIs:
+          - https://kargo.__VCP_LOFT_HOST__/auth/callback
+      - name: vcluster-platform
+        clientId: forgejo
+        clientSecret: __FORGEJO_OIDC_SECRET__
+        redirectURIs:
+          - https://__FORGEJO_HOST__/user/oauth2/vcluster-platform/callback
+  uiSettings:
+    externalURLs:
+      allow:
+        - vcluster
+        - featurebase
+    navBarButtons:
+      - link: "https://__FORGEJO_HOST__/"
+        icon: "https://__FORGEJO_HOST__/assets/img/logo.svg"
+        text: "Forgejo"
+        position: TopEnd
+      - link: "https://flux-__VCLUSTER_NAME__.__VCP_LOFT_HOST__/"
+        icon: "https://flux-__VCLUSTER_NAME__.__VCP_LOFT_HOST__/favicon.svg"
+        text: "Flux UI"
+        position: TopEnd
+      - link: "https://argocd.__VCP_LOFT_HOST__/"
+        icon: "https://argocd.__VCP_LOFT_HOST__/assets/favicon/favicon-32x32.png"
+        text: "Argo CD"
+        position: TopEnd
+      - link: "https://www.vcluster.com/docs/platform/"
+        text: "vCluster Docs"
+        position: TopEnd
+      __KARGO_NAV_BUTTON__
