@@ -15,6 +15,9 @@
 # - __FORGEJO_HOST__
 # - __FORGEJO_ADMIN_USER__
 # - __FORGEJO_ADMIN_PASSWORD__
+# - __KARGO_OIDC_SECRET__
+# - __FORGEJO_OIDC_SECRET__
+# - __KARGO_NAV_BUTTON__
 # - worker node list for `experimental.docker.nodes`
 controlPlane:
   distro:
@@ -116,6 +119,13 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
               admin:
                 existingSecret: forgejo-admin-secret
                 email: demo-admin@__VCP_LOFT_HOST__
+              oauth:
+                - name: vcluster-platform
+                  provider: openidConnect
+                  key: forgejo
+                  secret: __FORGEJO_OIDC_SECRET__
+                  autoDiscoverUrl: https://__VCP_LOFT_HOST__/oidc/.well-known/openid-configuration
+                  scopes: openid email profile
               config:
                 server:
                   ROOT_URL: https://__FORGEJO_HOST__/
@@ -180,6 +190,19 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 enabled: false
               imageBuilder:
                 enabled: false
+              oidc:
+                enabled: true
+                clients:
+                  - name: Kargo
+                    clientId: kargo
+                    clientSecret: __KARGO_OIDC_SECRET__
+                    redirectURIs:
+                      - https://kargo.__VCP_LOFT_HOST__/auth/callback
+                  - name: vcluster-platform
+                    clientId: forgejo
+                    clientSecret: __FORGEJO_OIDC_SECRET__
+                    redirectURIs:
+                      - https://__FORGEJO_HOST__/user/oauth2/vcluster-platform/callback
               uiSettings:
                 externalURLs:
                   allow:
@@ -201,6 +224,7 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                   - link: "https://www.vcluster.com/docs/platform/"
                     text: "vCluster Docs"
                     position: TopEnd
+                  __KARGO_NAV_BUTTON__
         - chart:
             name: ingress-nginx
             repo: https://kubernetes.github.io/ingress-nginx

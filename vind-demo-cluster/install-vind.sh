@@ -104,6 +104,8 @@ ORBSTACK_ENV_FILE=""
 SKIP_ORBSTACK_DOMAINS="false"
 SKIP_CLUSTER_ANNOTATION="false"
 SKIP_SUMMARY="false"
+KARGO_OIDC_SECRET=""
+FORGEJO_OIDC_SECRET=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -191,6 +193,14 @@ while [[ $# -gt 0 ]]; do
       SKIP_SUMMARY="true"
       shift
       ;;
+    --kargo-oidc-secret)
+      KARGO_OIDC_SECRET="${2:-}"
+      shift 2
+      ;;
+    --forgejo-oidc-secret)
+      FORGEJO_OIDC_SECRET="${2:-}"
+      shift 2
+      ;;
     --help|-h)
       usage
       exit 0
@@ -254,6 +264,13 @@ cluster_local_use_case_labels="$(render_cluster_local_use_case_labels "$USE_CASE
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 selected_use_case_lines="$(resolve_use_case_selection "$USE_CASES")"
 
+kargo_nav_button=""
+if use_case_list_contains "$selected_use_case_lines" "continuous-promotion"; then
+  kargo_nav_button="- link: \"https://kargo.${VCP_HOST}/\"
+                    text: \"Kargo\"
+                    position: TopEnd"
+fi
+
 worker_nodes_yaml="      []"
 if [[ "$WORKER_NODE_COUNT" -gt 0 ]]; then
   worker_nodes_yaml=""
@@ -277,6 +294,8 @@ export VCP_DOMAIN_PREFIX="$vcp_domain_prefix" VCP_DOMAIN="$vcp_domain"
 export VIND_DOCKER_NODES="$worker_nodes_yaml"
 export CLUSTER_LOCAL_USE_CASE_LABELS="$cluster_local_use_case_labels"
 export REPO_NAME ORG_NAME VCLUSTER_NAME
+export KARGO_OIDC_SECRET FORGEJO_OIDC_SECRET
+export KARGO_NAV_BUTTON="$kargo_nav_button"
 perl -0pi -e '
   s/__VCP_LICENSE_TOKEN__/$ENV{LICENSE_TOKEN}/g;
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
@@ -290,6 +309,9 @@ perl -0pi -e '
   s/__CLUSTER_LOCAL_USE_CASE_LABELS__/$ENV{CLUSTER_LOCAL_USE_CASE_LABELS}/g;
   s/__REPO_NAME__/$ENV{REPO_NAME}/g;
   s/__ORG_NAME__/$ENV{ORG_NAME}/g;
+  s/__KARGO_OIDC_SECRET__/$ENV{KARGO_OIDC_SECRET}/g;
+  s/__FORGEJO_OIDC_SECRET__/$ENV{FORGEJO_OIDC_SECRET}/g;
+  s/__KARGO_NAV_BUTTON__/$ENV{KARGO_NAV_BUTTON}/g;
   s/__VCLUSTER_NAME__/$ENV{VCLUSTER_NAME}/g;
 ' "$rendered_values"
 

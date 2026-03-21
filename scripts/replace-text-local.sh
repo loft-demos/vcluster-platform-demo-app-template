@@ -23,6 +23,8 @@ Replacements:
 - {REPLACE_1PASSWORD_VAULT}
 - {REPLACE_KARGO_ADMIN_PASSWORD_HASH}
 - {REPLACE_KARGO_TOKEN_SIGNING_KEY}
+- {REPLACE_KARGO_OIDC_SECRET}
+- {REPLACE_FORGEJO_OIDC_SECRET}
 
 Usage:
   bash scripts/replace-text-local.sh \
@@ -57,6 +59,12 @@ Options:
                           Optional. Random string used to sign Kargo API tokens.
                           Generate with: openssl rand -base64 32
                           Defaults to empty string.
+  --kargo-oidc-secret SECRET
+                          Optional. OIDC client secret for Kargo ↔ vCP SSO.
+                          Defaults to empty string (OIDC disabled).
+  --forgejo-oidc-secret SECRET
+                          Optional. OIDC client secret for Forgejo ↔ vCP SSO.
+                          Defaults to empty string (OIDC disabled).
   --include-md            Also replace in Markdown files.
   --dry-run               Print matching files but do not modify them.
   --help                  Show this message.
@@ -85,6 +93,8 @@ IMAGE_PULL_SOURCE_SECRET_NAME=""
 ONEPASSWORD_VAULT=""
 KARGO_ADMIN_PASSWORD_HASH=""
 KARGO_TOKEN_SIGNING_KEY=""
+KARGO_OIDC_SECRET=""
+FORGEJO_OIDC_SECRET=""
 INCLUDE_MD="false"
 DRY_RUN="false"
 
@@ -144,6 +154,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --kargo-token-signing-key)
       KARGO_TOKEN_SIGNING_KEY="${2:-}"
+      shift 2
+      ;;
+    --kargo-oidc-secret)
+      KARGO_OIDC_SECRET="${2:-}"
+      shift 2
+      ;;
+    --forgejo-oidc-secret)
+      FORGEJO_OIDC_SECRET="${2:-}"
       shift 2
       ;;
     --include-md)
@@ -223,7 +241,7 @@ while IFS= read -r file; do
   files+=("$file")
 done < <(
   rg -l \
-    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_BASE_URL_AUTHED\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_ADMIN_PASSWORD_HASH\}|\{REPLACE_KARGO_TOKEN_SIGNING_KEY\}' \
+    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_BASE_URL_AUTHED\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_ADMIN_PASSWORD_HASH\}|\{REPLACE_KARGO_TOKEN_SIGNING_KEY\}|\{REPLACE_KARGO_OIDC_SECRET\}|\{REPLACE_FORGEJO_OIDC_SECRET\}' \
     . \
     "${globs[@]}" \
     --glob '!.git/*'
@@ -253,7 +271,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
-export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_BASE_URL_AUTHED GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT KARGO_ADMIN_PASSWORD_HASH KARGO_TOKEN_SIGNING_KEY
+export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_BASE_URL_AUTHED GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT KARGO_ADMIN_PASSWORD_HASH KARGO_TOKEN_SIGNING_KEY KARGO_OIDC_SECRET FORGEJO_OIDC_SECRET
 
 for file in "${files[@]}"; do
   perl -0pi -e '
@@ -271,6 +289,8 @@ for file in "${files[@]}"; do
     s/\{REPLACE_1PASSWORD_VAULT\}/$ENV{ONEPASSWORD_VAULT}/g;
     do { my $v = $ENV{KARGO_ADMIN_PASSWORD_HASH}; $v =~ s/\$/\\\$/g; s/\{REPLACE_KARGO_ADMIN_PASSWORD_HASH\}/$v/g; };
     s/\{REPLACE_KARGO_TOKEN_SIGNING_KEY\}/$ENV{KARGO_TOKEN_SIGNING_KEY}/g;
+    s/\{REPLACE_KARGO_OIDC_SECRET\}/$ENV{KARGO_OIDC_SECRET}/g;
+    s/\{REPLACE_FORGEJO_OIDC_SECRET\}/$ENV{FORGEJO_OIDC_SECRET}/g;
   ' "$file"
 done
 

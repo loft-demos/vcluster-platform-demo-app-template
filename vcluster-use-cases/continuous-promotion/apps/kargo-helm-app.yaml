@@ -6,7 +6,7 @@ metadata:
   labels:
     use-case.demos.vcluster.com: continuous-promotion
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -31,6 +31,18 @@ spec:
             passwordHash: '{REPLACE_KARGO_ADMIN_PASSWORD_HASH}'
             # Generate with: openssl rand -base64 29 | tr -d "=+/" | cut -c1-32
             tokenSigningKey: '{REPLACE_KARGO_TOKEN_SIGNING_KEY}'
+
+          oidc:
+            enabled: true
+            issuerURL: "https://{REPLACE_BASE_DOMAIN}/oidc"
+            clientID: "kargo"
+            clientSecret: "{REPLACE_KARGO_OIDC_SECRET}"
+            redirectURL: "https://kargo.{REPLACE_BASE_DOMAIN}/auth/callback"
+            scopes:
+              - openid
+              - email
+              - profile
+              - groups
 
           # TLS terminated by nginx ingress — disable pod-level TLS but tell
           # Kargo to still generate https:// URLs

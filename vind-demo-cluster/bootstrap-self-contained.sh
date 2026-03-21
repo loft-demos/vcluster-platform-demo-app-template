@@ -718,6 +718,25 @@ STEP_INDEX=0
 IMAGE_BUILD_LOG=""
 IMAGE_BUILD_PID=""
 
+_kargo_admin_password_hash=""
+_kargo_token_signing_key=""
+_kargo_oidc_secret=""
+_forgejo_oidc_secret=""
+if use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
+  log_info "Generating Kargo credentials..."
+  _kargo_token_signing_key="$(openssl rand -base64 32 | tr -d '\n')"
+  _kargo_oidc_secret="$(openssl rand -base64 32 | tr -d '\n')"
+  _forgejo_oidc_secret="$(openssl rand -base64 32 | tr -d '\n')"
+  if command -v htpasswd >/dev/null 2>&1; then
+    _kargo_admin_password_hash="$(htpasswd -bnBC 10 "" kargo-demo-admin | tr -d ':\n' | sed 's/$2y/$2a/')"
+  elif command -v python3 >/dev/null 2>&1 && python3 -c "import bcrypt" 2>/dev/null; then
+    _kargo_admin_password_hash="$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'kargo-demo-admin', bcrypt.gensalt(10)).decode())")"
+  else
+    log_warn "Cannot generate Kargo admin password hash — htpasswd or python3-bcrypt required."
+    log_warn "Kargo UI admin login will not work. Install htpasswd (apache2-utils) or python3-bcrypt and re-run."
+  fi
+fi
+
 if [[ "$SKIP_VIND" != "true" ]]; then
   step "Create or upgrade the vind cluster"
   bash vind-demo-cluster/install-vind.sh \
@@ -737,6 +756,8 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --forgejo-host "$FORGEJO_HOST" \
     --forgejo-admin-user "$FORGEJO_USERNAME" \
     --forgejo-admin-password "$FORGEJO_PASSWORD" \
+    --kargo-oidc-secret "$_kargo_oidc_secret" \
+    --forgejo-oidc-secret "$_forgejo_oidc_secret" \
     --orbstack-env-file "$ORBSTACK_ENV_FILE" \
     --skip-cluster-annotation \
     --skip-orbstack-domains \
@@ -745,21 +766,6 @@ fi
 
 if [[ "$SKIP_REPLACE" != "true" ]]; then
   step "Render repo placeholders for the self-contained path"
-
-  _kargo_admin_password_hash=""
-  _kargo_token_signing_key=""
-  if use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
-    log_info "Generating Kargo credentials..."
-    _kargo_token_signing_key="$(openssl rand -base64 32 | tr -d '\n')"
-    if command -v htpasswd >/dev/null 2>&1; then
-      _kargo_admin_password_hash="$(htpasswd -bnBC 10 "" kargo-demo-admin | tr -d ':\n' | sed 's/$2y/$2a/')"
-    elif command -v python3 >/dev/null 2>&1 && python3 -c "import bcrypt" 2>/dev/null; then
-      _kargo_admin_password_hash="$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'kargo-demo-admin', bcrypt.gensalt(10)).decode())")"
-    else
-      log_warn "Cannot generate Kargo admin password hash — htpasswd or python3-bcrypt required."
-      log_warn "Kargo UI admin login will not work. Install htpasswd (apache2-utils) or python3-bcrypt and re-run."
-    fi
-  fi
 
   bash scripts/replace-text-local.sh \
     --repo-name "$REPO_NAME" \
@@ -776,6 +782,8 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --onepassword-vault "$ONEPASSWORD_VAULT" \
     --kargo-admin-password-hash "$_kargo_admin_password_hash" \
     --kargo-token-signing-key "$_kargo_token_signing_key" \
+    --kargo-oidc-secret "$_kargo_oidc_secret" \
+    --forgejo-oidc-secret "$_forgejo_oidc_secret" \
     --include-md
 fi
 
