@@ -346,8 +346,8 @@ perl -0pi -e '
 # Install vCluster Platform in the background so OrbStack domain setup and
 # other post-create work can run in parallel.
 log_info "Installing vCluster Platform ${VCP_VERSION} via Helm (background)"
-helm upgrade --install vcluster-platform \
-  oci://ghcr.io/loft-sh/vcluster-charts/vcluster-platform \
+helm upgrade --install vcluster-platform vcluster-platform \
+  --repo https://charts.loft.sh/ \
   --version "$VCP_VERSION" \
   --namespace vcluster-platform \
   --create-namespace \
