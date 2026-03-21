@@ -116,13 +116,6 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
               admin:
                 existingSecret: forgejo-admin-secret
                 email: demo-admin@__VCP_LOFT_HOST__
-              oauth:
-                - name: vcluster-platform
-                  provider: openidConnect
-                  key: forgejo
-                  secret: __FORGEJO_OIDC_SECRET__
-                  autoDiscoverUrl: https://__VCP_LOFT_HOST__/oidc/.well-known/openid-configuration
-                  scopes: openid email profile
               config:
                 server:
                   ROOT_URL: https://__FORGEJO_HOST__/
