@@ -152,6 +152,13 @@ EOF
   fi
 fi
 
+# Pre-stop all Docker containers for this cluster so vcluster delete doesn't
+# hang waiting for graceful Kubernetes node shutdown.
+_containers="$(docker ps --filter "name=vcluster.*${CLUSTER_NAME}" --format '{{.Names}}' 2>/dev/null || true)"
+if [[ -n "$_containers" ]]; then
+  echo "$_containers" | xargs -r docker stop --time 10 >/dev/null 2>&1 || true
+fi
+
 vcluster delete "$CLUSTER_NAME"
 
 if [[ "$KEEP_ORBSTACK_ENV" != "true" && -f "$ORBSTACK_ENV_FILE" ]]; then
