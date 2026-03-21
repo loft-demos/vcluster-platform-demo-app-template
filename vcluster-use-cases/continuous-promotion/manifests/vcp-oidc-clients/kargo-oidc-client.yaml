@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oidc-client-kargo
+  namespace: vcluster-platform
+  labels:
+    clientID: kargo
+    component: oidcServer
+stringData:
+  name: Kargo
+  clientID: kargo
+  clientSecret: "{REPLACE_KARGO_OIDC_SECRET}"
+  redirectURIs: "https://kargo.{REPLACE_BASE_DOMAIN}/auth/callback"

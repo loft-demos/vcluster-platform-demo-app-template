@@ -757,8 +757,6 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --forgejo-host "$FORGEJO_HOST" \
     --forgejo-admin-user "$FORGEJO_USERNAME" \
     --forgejo-admin-password "$FORGEJO_PASSWORD" \
-    --kargo-oidc-secret "$_kargo_oidc_secret" \
-    --forgejo-oidc-secret "$_forgejo_oidc_secret" \
     --orbstack-env-file "$ORBSTACK_ENV_FILE" \
     --skip-cluster-annotation \
     --skip-orbstack-domains \
@@ -1069,6 +1067,32 @@ EOF
     _forgejo_label "preview"                        "ee7d3b" "Creates vCluster preview environment for a Pull Request with Argo CD"
     _forgejo_label "preview-cluster-ready"          "ee7d3b" "Triggers Argo CD application set for PR"
     unset -f _forgejo_label
+  fi
+fi
+
+if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
+  step "Configure Forgejo OAuth2 source for vCluster Platform SSO"
+  # Add vCluster Platform as an OAuth2 authentication source in Forgejo so
+  # users can log in to Forgejo with their vCP credentials.
+  # Runs inside the Forgejo pod via the forgejo admin CLI.
+  _forgejo_pod="$(kubectl get pod -n forgejo -l app.kubernetes.io/name=forgejo -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+  if [[ -n "$_forgejo_pod" ]]; then
+    if kubectl exec -n forgejo "$_forgejo_pod" -- \
+        forgejo admin auth list 2>/dev/null | grep -q "vCluster Platform"; then
+      log_info "Forgejo OAuth2 source 'vCluster Platform' already exists — skipping."
+    else
+      kubectl exec -n forgejo "$_forgejo_pod" -- \
+        forgejo admin auth add-oauth \
+          --name "vCluster Platform" \
+          --provider openid-connect \
+          --key forgejo \
+          --secret "$_forgejo_oidc_secret" \
+          --auto-discover-url "https://${VCP_HOST}/oidc" \
+        && log_done "Configured Forgejo OAuth2 source for vCluster Platform SSO" \
+        || log_warn "Failed to configure Forgejo OAuth2 source — configure manually via Forgejo admin UI."
+    fi
+  else
+    log_warn "Could not find Forgejo pod — skipping OAuth2 source configuration."
   fi
 fi
 

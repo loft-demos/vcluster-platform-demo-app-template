@@ -104,8 +104,6 @@ ORBSTACK_ENV_FILE=""
 SKIP_ORBSTACK_DOMAINS="false"
 SKIP_CLUSTER_ANNOTATION="false"
 SKIP_SUMMARY="false"
-KARGO_OIDC_SECRET=""
-FORGEJO_OIDC_SECRET=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -193,14 +191,6 @@ while [[ $# -gt 0 ]]; do
       SKIP_SUMMARY="true"
       shift
       ;;
-    --kargo-oidc-secret)
-      KARGO_OIDC_SECRET="${2:-}"
-      shift 2
-      ;;
-    --forgejo-oidc-secret)
-      FORGEJO_OIDC_SECRET="${2:-}"
-      shift 2
-      ;;
     --help|-h)
       usage
       exit 0
@@ -253,15 +243,6 @@ else
   vcp_domain="local"
 fi
 
-# vcp-platform-values.yaml always embeds OIDC client secrets. Generate them
-# here when not supplied by the caller (e.g. when running install-vind.sh
-# standalone rather than via bootstrap-self-contained.sh).
-if [[ -z "$KARGO_OIDC_SECRET" ]]; then
-  KARGO_OIDC_SECRET="$(openssl rand -base64 32 | tr -d '\n')"
-fi
-if [[ -z "$FORGEJO_OIDC_SECRET" ]]; then
-  FORGEJO_OIDC_SECRET="$(openssl rand -base64 32 | tr -d '\n')"
-fi
 
 if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
   if [[ "$CLUSTER_NAME" == "vcp" ]]; then
@@ -298,7 +279,6 @@ export VCP_DOMAIN_PREFIX="$vcp_domain_prefix" VCP_DOMAIN="$vcp_domain"
 export VIND_DOCKER_NODES="$worker_nodes_yaml"
 export CLUSTER_LOCAL_USE_CASE_LABELS="$cluster_local_use_case_labels"
 export REPO_NAME ORG_NAME VCLUSTER_NAME
-export KARGO_OIDC_SECRET FORGEJO_OIDC_SECRET
 perl -0pi -e '
   s/__VCP_PLATFORM_VERSION__/$ENV{VCP_VERSION}/g;
   s/__VCP_LOFT_HOST__/$ENV{VCP_HOST}/g;
@@ -337,6 +317,7 @@ trap 'rm -f "$rendered_values" "$_vcp_values_rendered"' EXIT
 _kargo_nav_button=""
 if use_case_list_contains "$selected_use_case_lines" "continuous-promotion"; then
   _kargo_nav_button="- link: \"https://kargo.${VCP_HOST}/\"
+        icon: \"https://kargo.${VCP_HOST}/kargo-logo-white.png\"
         text: \"Kargo\"
         position: TopEnd"
 fi
@@ -348,8 +329,6 @@ perl -0pi -e '
   s/__VCP_LOFT_HOST__/$ENV{VCP_HOST}/g;
   s/__FORGEJO_HOST__/$ENV{FORGEJO_HOST}/g;
   s/__VCLUSTER_NAME__/$ENV{VCLUSTER_NAME}/g;
-  s/__KARGO_OIDC_SECRET__/$ENV{KARGO_OIDC_SECRET}/g;
-  s/__FORGEJO_OIDC_SECRET__/$ENV{FORGEJO_OIDC_SECRET}/g;
   s/__KARGO_NAV_BUTTON__/$ENV{KARGO_NAV_BUTTON}/g;
 ' "$_vcp_values_rendered"
 

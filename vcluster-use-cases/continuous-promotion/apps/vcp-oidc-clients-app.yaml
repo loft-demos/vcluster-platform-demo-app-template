@@ -1,31 +1,32 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kargo-pre-prod-gate
+  name: vcp-oidc-clients
   namespace: argocd
   labels:
     use-case.demos.vcluster.com: continuous-promotion
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    # Must run after kargo-operator (wave 1) so the vCP OIDC provider is up,
+    # and before kargo manifests (wave 3) which need the clients registered.
+    argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vcluster-platform
   project: default
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
     targetRevision: HEAD
-    path: vcluster-use-cases/continuous-promotion/manifests/pre-prod-gate
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: pre-prod-gate
+    path: vcluster-use-cases/continuous-promotion/manifests/vcp-oidc-clients
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions: []
     retry:
-      limit: 10
+      limit: 5
       backoff:
-        duration: 10s
+        duration: 20s
         factor: 2
         maxDuration: 3m

@@ -4,9 +4,11 @@
 # - __VCP_LOFT_HOST__
 # - __FORGEJO_HOST__
 # - __VCLUSTER_NAME__
-# - __KARGO_OIDC_SECRET__
-# - __FORGEJO_OIDC_SECRET__
 # - <KARGO_NAV_BUTTON>  (optional nav button entry, rendered conditionally)
+#
+# OIDC clients are NOT configured here. They are deployed as Kubernetes Secrets
+# in the vcluster-platform namespace (see continuous-promotion/manifests/vcp-oidc-clients/)
+# so that client secrets are managed independently of the platform Helm release.
 env:
   LICENSE_TOKEN: __VCP_LICENSE_TOKEN__
 service:
@@ -21,17 +23,6 @@ config:
     enabled: false
   oidc:
     enabled: true
-    clients:
-      - name: Kargo
-        clientId: kargo
-        clientSecret: __KARGO_OIDC_SECRET__
-        redirectURIs:
-          - https://kargo.__VCP_LOFT_HOST__/auth/callback
-      - name: vcluster-platform
-        clientId: forgejo
-        clientSecret: __FORGEJO_OIDC_SECRET__
-        redirectURIs:
-          - https://__FORGEJO_HOST__/user/oauth2/vcluster-platform/callback
   uiSettings:
     externalURLs:
       allow:
