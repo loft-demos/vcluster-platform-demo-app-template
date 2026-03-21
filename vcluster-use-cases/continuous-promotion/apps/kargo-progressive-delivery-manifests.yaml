@@ -6,7 +6,7 @@ metadata:
   labels:
     use-case.demos.vcluster.com: continuous-promotion
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "3"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -25,8 +25,8 @@ spec:
     syncOptions:
       - CreateNamespace=true
     retry:
-      limit: 5
+      limit: 10
       backoff:
-        duration: 5s
+        duration: 10s
         factor: 2
-        maxDuration: 1m
+        maxDuration: 3m

@@ -1,32 +1,37 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kargo-pre-prod-gate
+  name: argo-rollouts
   namespace: argocd
   labels:
     use-case.demos.vcluster.com: continuous-promotion
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
-  source:
-    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-    targetRevision: HEAD
-    path: vcluster-use-cases/continuous-promotion/manifests/pre-prod-gate
   destination:
     server: https://kubernetes.default.svc
-    namespace: pre-prod-gate
+    namespace: argo-rollouts
+  project: default
+  source:
+    chart: argo-rollouts
+    repoURL: https://argoproj.github.io/argo-helm
+    # Check https://github.com/argoproj/argo-rollouts/releases for latest version
+    targetRevision: 2.40.8
+    helm:
+      values: |
+        installCRDs: true
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
     retry:
-      limit: 10
+      limit: 5
       backoff:
-        duration: 10s
+        duration: 20s
         factor: 2
         maxDuration: 3m
