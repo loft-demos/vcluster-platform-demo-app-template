@@ -23,6 +23,7 @@ resources:
   - ../../tenant-observability-appset.yaml
   - ../../virtual-cluster-templates-app.yaml
   - ../../virtual-scheduler-appset.yaml
+  - ../../continuous-promotion-appset.yaml
   - ../../vnode-with-vcluster-appset.yaml
 patches:
   - path: patch-autosnapshots-appset.yaml

@@ -1,0 +1,84 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: kargo-pre-prod-template
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    vcluster.com/template-icon: vcluster-box.svg
+spec:
+  displayName: Kargo Pre-Prod vCluster Template
+  description: |
+    Long-lived pre-production vCluster used as a testing gate in Kargo promotion
+    pipelines. Runs on the same underlying cluster hardware as production, providing
+    production-equivalent testing without dedicated infrastructure. Scales to zero
+    when idle to minimise cost, waking automatically when a new Promotion arrives.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.24.0
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+        # Checkout https://vcluster.com/pro/docs/ for more config options
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata:
+          annotations:
+            loft.sh/import-argocd: 'true'
+            sleepmode.loft.sh/ignore-user-agents: argo*
+        instanceTemplate:
+          metadata:
+            annotations:
+              loft.sh/custom-links: >-
+                Guestbook=https://guestbook-pre-prod-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.24.0
+          values: |-
+            sleep:
+              auto:
+                # Scale to zero quickly when Kargo is not actively promoting
+                afterInactivity: "10m"
+                timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
+            deletion:
+              auto:
+                # Long-lived instance — only delete after extended inactivity
+                afterInactivity: 720h
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            controlPlane:
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin

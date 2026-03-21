@@ -14,7 +14,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'postgres-apps'
       labels:
-        postgres.demos.loft.sh: postgres
+        use-case.demos.vcluster.com: postgres
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

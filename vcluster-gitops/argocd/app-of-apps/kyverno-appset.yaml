@@ -14,7 +14,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'kyverno-apps'
       labels:
-        kyverno.demos.loft.sh: kyverno
+        use-case.demos.vcluster.com: kyverno
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

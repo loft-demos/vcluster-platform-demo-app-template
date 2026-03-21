@@ -6,7 +6,7 @@ metadata:
   name: app-of-apps-bootstrap
   namespace: argocd
   labels:
-    argocd.demos.loft.sh: bootstrap
+    use-case.demos.vcluster.com: bootstrap
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

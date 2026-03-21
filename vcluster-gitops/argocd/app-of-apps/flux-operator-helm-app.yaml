@@ -4,7 +4,7 @@ metadata:
   name: flux-operator-helm-app
   namespace: argocd
   labels:
-    flux.demos.loft.sh: flux
+    use-case.demos.vcluster.com: flux
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
   finalizers:

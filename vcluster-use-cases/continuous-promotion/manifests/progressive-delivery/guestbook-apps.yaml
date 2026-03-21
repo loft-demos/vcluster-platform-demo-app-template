@@ -1,0 +1,81 @@
+# ArgoCD Applications that deploy the guestbook into each stage vCluster.
+# Kargo uses argocd-update to set kustomize image overrides on these Applications
+# as freight moves through the pipeline — no git commits required.
+#
+# destination.name matches the VirtualClusterInstance name, which becomes the
+# ArgoCD cluster entry name when loft.sh/import-argocd: 'true' is set on the VCT.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-dev
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/dev
+  destination:
+    name: pd-dev
+    namespace: guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-staging
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/staging
+  destination:
+    name: pd-staging
+    namespace: guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-prod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/prod
+  destination:
+    name: pd-prod
+    namespace: guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

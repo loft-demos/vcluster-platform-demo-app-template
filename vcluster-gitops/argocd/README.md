@@ -47,7 +47,7 @@ spec:
     metadata:
       name: 'eso-apps'
       labels:
-        eso.demos.loft.sh: eso
+        use-case.demos.vcluster.com: eso
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

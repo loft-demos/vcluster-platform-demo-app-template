@@ -98,6 +98,6 @@ vCluster instances.
 - The `env` label is the routing key that maps a cluster to the `dev`, `qa`,
   or `prod` sub-folder.
 - The `project` field in the generated `Application` uses the imported cluster
-  label `demos.loft.sh/project`.
+  label `use-case.demos.vcluster.com/project`.
 - You can extend the example by adding more manifests under each environment
   folder without changing the `ApplicationSet` structure.

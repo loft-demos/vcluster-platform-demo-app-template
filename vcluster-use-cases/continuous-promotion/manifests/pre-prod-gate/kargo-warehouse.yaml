@@ -1,0 +1,13 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: guestbook
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  subscriptions:
+    - image:
+        repoURL: ghcr.io/akuity/guestbook
+        semverConstraint: ">=0.1.0"
+        discoveryLimit: 5

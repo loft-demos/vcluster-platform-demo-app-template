@@ -4,7 +4,7 @@ metadata:
   name: private-nodes-manifests
   namespace: argocd
   labels:
-    feature.demos.vcluster.com: private-nodes
+    use-case.demos.vcluster.com: private-nodes
   annotations:
     argocd.argoproj.io/sync-wave: "5"
   finalizers:

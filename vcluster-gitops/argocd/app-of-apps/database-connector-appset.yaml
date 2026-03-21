@@ -13,7 +13,7 @@ spec:
     metadata:
       name: 'database-connector-apps'
       labels:
-        cnpg.demos.loft.sh: cnpg
+        use-case.demos.vcluster.com: database-connector
     spec:
       destination:
         server: '{{server}}'

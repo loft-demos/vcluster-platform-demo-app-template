@@ -4,7 +4,7 @@ metadata:
   name: vnode-with-vcluster-manifests
   namespace: argocd
   labels:
-    feature.demos.loft.sh: vnode-with-vcluster
+    use-case.demos.vcluster.com: vnode-with-vcluster
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

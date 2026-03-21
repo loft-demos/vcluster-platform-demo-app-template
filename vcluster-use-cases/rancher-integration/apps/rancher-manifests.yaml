@@ -4,7 +4,7 @@ metadata:
   name: rancher-integration-manifests
   namespace: argocd
   labels:
-    demos.loft.sh: rancher-integration
+    use-case.demos.vcluster.com: rancher-integration
   annotations:
     argocd.argoproj.io/sync-wave: "3"
   finalizers:

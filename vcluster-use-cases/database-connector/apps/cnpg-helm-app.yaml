@@ -4,7 +4,7 @@ metadata:
   name: cnpg-operator
   namespace: argocd
   labels:
-    cnpg.demos.loft.sh: cnpg
+    use-case.demos.vcluster.com: cnpg
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   finalizers:

@@ -4,7 +4,7 @@ metadata:
   name: eso-manifests
   namespace: argocd
   labels:
-    eso.demos.loft.sh: eso
+    use-case.demos.vcluster.com: eso
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

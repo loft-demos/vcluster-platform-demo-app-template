@@ -14,7 +14,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'connected-host-cluster-apps'
       labels:
-        feature.demos.loft.sh: connected-host-cluster
+        use-case.demos.vcluster.com: connected-host-cluster
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

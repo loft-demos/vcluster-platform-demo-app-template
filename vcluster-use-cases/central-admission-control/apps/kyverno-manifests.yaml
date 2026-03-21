@@ -4,7 +4,7 @@ metadata:
   name: kyverno-manifests
   namespace: argocd
   labels:
-    kyverno.demos.loft.sh: kyverno
+    use-case.demos.vcluster.com: centralAdmission
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

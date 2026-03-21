@@ -4,7 +4,7 @@ metadata:
   name: crossplane-helm-app
   namespace: argocd
   labels:
-    demos.loft.sh: crossplane
+    use-case.demos.vcluster.com: crossplane
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   finalizers:

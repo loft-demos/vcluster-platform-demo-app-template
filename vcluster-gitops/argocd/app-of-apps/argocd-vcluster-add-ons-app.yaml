@@ -6,7 +6,7 @@ metadata:
   name: argocd-vcluster-add-ons-app
   namespace: argocd
   labels:
-    pr.argocd.demos.loft.sh: bootstrap
+    use-case.demos.vcluster.com: bootstrap
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: innodb-cluster-creds
+  namespace: mysql-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    loft.sh/project-secret-name: innodb-cluster-creds
+type: Opaque

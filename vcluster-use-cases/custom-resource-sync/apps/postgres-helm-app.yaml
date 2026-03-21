@@ -4,7 +4,7 @@ metadata:
   name: postgres-helm-app
   namespace: argocd
   labels:
-    postgres.demos.loft.sh: postgres
+    use-case.demos.vcluster.com: postgres
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   finalizers:

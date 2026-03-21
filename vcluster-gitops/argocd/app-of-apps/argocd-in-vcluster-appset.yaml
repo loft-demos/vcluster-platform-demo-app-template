@@ -29,7 +29,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'argocd-in-vcluster-apps'
       labels:
-        feature.demos.loft.sh: argocd-in-vcluster
+        use-case.demos.vcluster.com: argocd-in-vcluster
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

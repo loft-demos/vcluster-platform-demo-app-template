@@ -4,7 +4,7 @@ metadata:
   name: rancher-helm-app
   namespace: argocd
   labels:
-    demos.loft.sh: rancher
+    use-case.demos.vcluster.com: rancher
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   finalizers:

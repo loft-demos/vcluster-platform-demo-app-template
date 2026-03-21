@@ -98,7 +98,7 @@ spec:
                       enabled: true
                       selector:
                         matchLabels:
-                          demos.loft.sh/eso-demo-cluster-store: 'true'
+                          use-case.demos.vcluster.com/eso-demo-cluster-store: 'true'
 
             controlPlane:
               statefulSet:

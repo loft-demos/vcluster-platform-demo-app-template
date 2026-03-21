@@ -13,7 +13,7 @@ spec:
     metadata:
       name: auto-nodes-apps
       labels:
-        feature.demos.loft.sh: auto-nodes
+        use-case.demos.vcluster.com: auto-nodes
     spec:
       destination:
         server: '{{server}}'

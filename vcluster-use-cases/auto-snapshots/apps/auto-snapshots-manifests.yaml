@@ -4,7 +4,7 @@ metadata:
   name: auto-snapshots-manifests
   namespace: argocd
   labels:
-    feature.demos.loft.sh: auto-snapshots
+    use-case.demos.vcluster.com: auto-snapshots
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

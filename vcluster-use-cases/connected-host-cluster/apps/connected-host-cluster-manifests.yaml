@@ -4,7 +4,7 @@ metadata:
   name: connected-host-cluster-manifests
   namespace: argocd
   labels:
-    feature.demos.loft.sh: connected-host-cluster
+    use-case.demos.vcluster.com: connected-host-cluster
   annotations:
     argocd.argoproj.io/sync-wave: "4"
   finalizers:

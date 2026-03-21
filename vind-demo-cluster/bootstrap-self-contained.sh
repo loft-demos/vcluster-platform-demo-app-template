@@ -745,6 +745,22 @@ fi
 
 if [[ "$SKIP_REPLACE" != "true" ]]; then
   step "Render repo placeholders for the self-contained path"
+
+  _kargo_admin_password_hash=""
+  _kargo_token_signing_key=""
+  if use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
+    log_info "Generating Kargo credentials..."
+    _kargo_token_signing_key="$(openssl rand -base64 32 | tr -d '\n')"
+    if command -v htpasswd >/dev/null 2>&1; then
+      _kargo_admin_password_hash="$(htpasswd -bnBC 10 "" kargo-demo-admin | tr -d ':\n' | sed 's/$2y/$2a/')"
+    elif command -v python3 >/dev/null 2>&1 && python3 -c "import bcrypt" 2>/dev/null; then
+      _kargo_admin_password_hash="$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'kargo-demo-admin', bcrypt.gensalt(10)).decode())")"
+    else
+      log_warn "Cannot generate Kargo admin password hash — htpasswd or python3-bcrypt required."
+      log_warn "Kargo UI admin login will not work. Install htpasswd (apache2-utils) or python3-bcrypt and re-run."
+    fi
+  fi
+
   bash scripts/replace-text-local.sh \
     --repo-name "$REPO_NAME" \
     --org-name "$ORG_NAME" \
@@ -758,6 +774,8 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --snapshot-oci-repository "forgejo-http.forgejo.svc.cluster.local:3000/${FORGEJO_OWNER}/${REPO_NAME}" \
     --image-pull-source-secret-name "$IMAGE_PULL_SOURCE_SECRET_NAME" \
     --onepassword-vault "$ONEPASSWORD_VAULT" \
+    --kargo-admin-password-hash "$_kargo_admin_password_hash" \
+    --kargo-token-signing-key "$_kargo_token_signing_key" \
     --include-md
 fi
 

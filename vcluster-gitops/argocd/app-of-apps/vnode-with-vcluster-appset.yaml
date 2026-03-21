@@ -14,7 +14,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'vnode-with-vcluster-apps'
       labels:
-        use-case.demos.loft.sh: vnode-with-vcluster
+        use-case.demos.vcluster.com: vnode-with-vcluster
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

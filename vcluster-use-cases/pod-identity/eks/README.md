@@ -46,7 +46,7 @@ When a Cluster has the annotation:
 ```yaml
 metadata:
   annotations:
-    demos.vcluster.com/eks-cluster-name: vcp-eks
+    use-case.demos.vcluster.com/eks-cluster-name: vcp-eks
 ```
 
 …the rendered VirtualClusterInstance will include:

@@ -14,7 +14,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'auto-snapshots-apps'
       labels:
-        feature.demos.loft.sh: auto-snapshots
+        use-case.demos.vcluster.com: auto-snapshots
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

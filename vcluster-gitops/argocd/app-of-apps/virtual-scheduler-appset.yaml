@@ -14,7 +14,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'virtual-scheduler-apps'
       labels:
-        virtual-scheduler.demos.loft.sh: virtual-scheduler
+        use-case.demos.vcluster.com: virtual-scheduler
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

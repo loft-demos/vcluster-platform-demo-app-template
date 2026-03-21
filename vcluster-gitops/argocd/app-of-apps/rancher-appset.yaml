@@ -14,7 +14,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'rancher'
       labels:
-        rancher.demos.loft.sh: rancher
+        use-case.demos.vcluster.com: rancher
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

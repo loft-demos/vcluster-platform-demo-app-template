@@ -4,7 +4,7 @@ metadata:
   name: argocd-in-vcluster-applicationsets
   namespace: argocd
   labels:
-    demos.loft.sh: argocd-in-vcluster
+    use-case.demos.vcluster.com: argocd-in-vcluster
   annotations:
     argocd.argoproj.io/sync-wave: "4"
   finalizers:

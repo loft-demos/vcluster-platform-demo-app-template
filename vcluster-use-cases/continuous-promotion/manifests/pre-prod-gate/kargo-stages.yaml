@@ -1,0 +1,116 @@
+# ProjectConfig enables auto-promotion for the stage Stage only.
+# pre-prod-vcluster and prod require manual promotion in the Kargo UI.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ProjectConfig
+metadata:
+  name: pre-prod-gate
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  promotionPolicies:
+    - stageSelector:
+        name: stage
+      autoPromotionEnabled: true
+---
+# stage: auto-promotes from Warehouse; deploys to the host cluster namespace
+# (represents the upstream stage cluster before pre-prod testing)
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: stage
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: guestbook
+      sources:
+        direct: true
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: argocd-update
+          config:
+            apps:
+              - name: guestbook-stage
+                sources:
+                  - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+                    kustomize:
+                      images:
+                        - repoURL: ghcr.io/akuity/guestbook
+                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}
+---
+# pre-prod-vcluster: promotes from stage; deploys into the pre-prod vCluster.
+# The vCluster scales to zero when idle and wakes automatically when Kargo promotes.
+# Integration tests run here — freight only proceeds to prod on pass.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: pre-prod-vcluster
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: guestbook
+      sources:
+        stages:
+          - stage
+  verification:
+    analysisTemplates:
+      - name: integration-test
+    args:
+      - name: app-url
+        value: "https://guestbook-pre-prod.{REPLACE_BASE_DOMAIN}"
+      - name: image-tag
+        value: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: argocd-update
+          config:
+            apps:
+              - name: guestbook-pre-prod
+                sources:
+                  - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+                    kustomize:
+                      images:
+                        - repoURL: ghcr.io/akuity/guestbook
+                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}
+---
+# prod: requires manual approval in Kargo UI; only eligible after pre-prod tests pass.
+# Soak time ensures freight has been running in pre-prod for at least 10 minutes.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: guestbook
+      sources:
+        stages:
+          - pre-prod-vcluster
+        requiredSoakTime: 10m
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: argocd-update
+          config:
+            apps:
+              - name: guestbook-prod-ppg
+                sources:
+                  - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+                    kustomize:
+                      images:
+                        - repoURL: ghcr.io/akuity/guestbook
+                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}

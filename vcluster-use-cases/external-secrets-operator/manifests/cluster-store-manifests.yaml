@@ -47,7 +47,7 @@ kind: ClusterSecretStore
 metadata:
   name: eso-demo-cluster-secret-store
   labels:
-    demos.loft.sh/eso-demo-cluster-store: 'true'
+    use-case.demos.vcluster.com/eso-demo-cluster-store: 'true'
 spec:
   provider:
     kubernetes:

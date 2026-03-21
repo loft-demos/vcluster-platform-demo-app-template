@@ -4,7 +4,7 @@ metadata:
   name: eso-helm-app
   namespace: argocd
   labels:
-    eso.demos.loft.sh: eso
+    use-case.demos.vcluster.com: eso
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   finalizers:

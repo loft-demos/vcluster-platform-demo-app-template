@@ -4,7 +4,7 @@ metadata:
   name: namespace-sync-manifests
   namespace: argocd
   labels:
-    feature.demos.loft.sh: namespace-sync
+    use-case.demos.vcluster.com: namespace-sync
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

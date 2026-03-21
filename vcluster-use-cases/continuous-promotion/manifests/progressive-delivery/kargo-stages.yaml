@@ -1,0 +1,112 @@
+# ProjectConfig enables auto-promotion per stage (replaces the removed PromotionPolicy CRD)
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ProjectConfig
+metadata:
+  name: progressive-delivery
+  namespace: progressive-delivery
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  promotionPolicies:
+    # dev and staging auto-promote; prod requires manual approval in the Kargo UI
+    - stageSelector:
+        name: dev
+      autoPromotionEnabled: true
+    - stageSelector:
+        name: staging
+      autoPromotionEnabled: true
+---
+# dev: auto-promotes directly from the Warehouse (always latest)
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: dev
+  namespace: progressive-delivery
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: guestbook
+      sources:
+        direct: true
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: argocd-update
+          config:
+            apps:
+              - name: guestbook-dev
+                sources:
+                  - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+                    kustomize:
+                      images:
+                        - repoURL: ghcr.io/akuity/guestbook
+                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}
+---
+# staging: promotes from dev, runs health-check verification before prod is eligible
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: staging
+  namespace: progressive-delivery
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: guestbook
+      sources:
+        stages:
+          - dev
+  verification:
+    analysisTemplates:
+      - name: guestbook-health
+    args:
+      - name: app-url
+        value: "https://guestbook-staging.{REPLACE_BASE_DOMAIN}"
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: argocd-update
+          config:
+            apps:
+              - name: guestbook-staging
+                sources:
+                  - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+                    kustomize:
+                      images:
+                        - repoURL: ghcr.io/akuity/guestbook
+                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}
+---
+# prod: requires manual approval in the Kargo UI; only eligible after staging verification passes
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: progressive-delivery
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: guestbook
+      sources:
+        stages:
+          - staging
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: argocd-update
+          config:
+            apps:
+              - name: guestbook-prod
+                sources:
+                  - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+                    kustomize:
+                      images:
+                        - repoURL: ghcr.io/akuity/guestbook
+                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}

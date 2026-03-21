@@ -4,7 +4,7 @@ metadata:
   name: virtual-scheduler-manifests
   namespace: argocd
   labels:
-    feature.demos.loft.sh: virtual-scheduler
+    use-case.demos.vcluster.com: virtual-scheduler
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

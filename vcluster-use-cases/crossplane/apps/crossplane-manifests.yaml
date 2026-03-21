@@ -4,7 +4,7 @@ metadata:
   name: crossplane-manifests
   namespace: argocd
   labels:
-    demos.loft.sh: crossplane
+    use-case.demos.vcluster.com: crossplane
   annotations:
     argocd.argoproj.io/sync-wave: "3"
   finalizers:

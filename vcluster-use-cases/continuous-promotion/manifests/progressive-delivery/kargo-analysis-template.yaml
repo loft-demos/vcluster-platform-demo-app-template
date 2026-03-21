@@ -1,0 +1,36 @@
+# AnalysisTemplate used by the staging Stage to verify the guestbook is healthy
+# before freight is eligible for promotion to prod.
+# Runs a curl job against the guestbook ingress URL.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: guestbook-health
+  namespace: progressive-delivery
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  args:
+    - name: app-url
+  metrics:
+    - name: health-check
+      count: 3
+      interval: 15s
+      failureLimit: 1
+      provider:
+        job:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: health-check
+                    image: curlimages/curl:latest
+                    command:
+                      - sh
+                      - -c
+                      - |
+                        echo "Checking guestbook health at {{ args.app-url }}"
+                        curl -sf --retry 3 --retry-delay 5 "{{ args.app-url }}" \
+                          && echo "Health check passed" \
+                          || { echo "Health check failed"; exit 1; }
+                restartPolicy: Never
+            backoffLimit: 1

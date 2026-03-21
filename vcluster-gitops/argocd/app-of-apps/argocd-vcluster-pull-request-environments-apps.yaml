@@ -8,7 +8,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
   labels:
-    pr.argocd.demos.loft.sh: bootstrap
+    use-case.demos.vcluster.com: argocd-vcluster-pull-request-environments
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

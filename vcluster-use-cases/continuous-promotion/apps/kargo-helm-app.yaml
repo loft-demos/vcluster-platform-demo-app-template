@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kargo-operator
+  namespace: argocd
+  labels:
+    use-case.demos.vcluster.com: continuous-promotion
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kargo
+  project: default
+  source:
+    chart: kargo
+    repoURL: ghcr.io/akuity/kargo-charts
+    # Check https://github.com/akuity/kargo/pkgs/container/kargo-charts%2Fkargo for latest version
+    targetRevision: 1.9.5
+    helm:
+      values: |
+        api:
+          # Domain only — no protocol prefix
+          host: kargo.{REPLACE_BASE_DOMAIN}
+
+          adminAccount:
+            enabled: true
+            # Generate with: htpasswd -bnBC 10 "" <password> | tr -d ':\n' | sed 's/$2y/$2a/'
+            passwordHash: '{REPLACE_KARGO_ADMIN_PASSWORD_HASH}'
+            # Generate with: openssl rand -base64 29 | tr -d "=+/" | cut -c1-32
+            tokenSigningKey: '{REPLACE_KARGO_TOKEN_SIGNING_KEY}'
+
+          # TLS terminated by nginx ingress — disable pod-level TLS but tell
+          # Kargo to still generate https:// URLs
+          tls:
+            enabled: false
+            terminatedUpstream: false
+
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              nginx.ingress.kubernetes.io/ssl-redirect: "false"
+            tls:
+              enabled: false
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - Replace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 20s
+        factor: 2
+        maxDuration: 3m

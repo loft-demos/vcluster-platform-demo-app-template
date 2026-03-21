@@ -4,7 +4,7 @@ metadata:
   name: argo-pr-preview-manifests
   namespace: argocd
   labels:
-    argocd.demos.loft.sh: argocd-pr-env
+    use-case.demos.vcluster.com: argocd-pr-env
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

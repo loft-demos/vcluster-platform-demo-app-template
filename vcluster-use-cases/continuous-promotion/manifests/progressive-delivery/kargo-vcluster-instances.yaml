@@ -1,0 +1,41 @@
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: pd-dev
+  namespace: p-default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  templateRef:
+    name: kargo-stage-template
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+---
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: pd-staging
+  namespace: p-default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  templateRef:
+    name: kargo-stage-template
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+---
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: pd-prod
+  namespace: p-default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  templateRef:
+    name: kargo-stage-template
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster

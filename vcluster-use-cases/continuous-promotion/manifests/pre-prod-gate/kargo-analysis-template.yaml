@@ -1,0 +1,50 @@
+# AnalysisTemplate used by the pre-prod-vcluster Stage.
+# Runs a real integration test Job inside the cluster against the app deployed
+# in the pre-prod vCluster via its ingress URL. Exit 0 = pass, freight eligible
+# for prod. Exit 1 = fail, promotion to prod is blocked.
+#
+# This models the CoreWeave pattern: test on production-equivalent hardware
+# (same underlying cluster) before promoting to real prod clusters.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: integration-test
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  args:
+    - name: app-url
+    - name: image-tag
+  metrics:
+    - name: integration-test
+      provider:
+        job:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: integration-test
+                    image: curlimages/curl:latest
+                    command:
+                      - sh
+                      - -c
+                      - |
+                        echo "Running integration tests against pre-prod vCluster"
+                        echo "Image tag under test: {{ args.image-tag }}"
+                        echo "App URL: {{ args.app-url }}"
+
+                        # Wait for app to become available (handles vCluster wake-up time)
+                        for i in $(seq 1 12); do
+                          echo "Attempt $i/12..."
+                          if curl -sf --max-time 10 "{{ args.app-url }}"; then
+                            echo "Integration test passed — app is healthy"
+                            exit 0
+                          fi
+                          sleep 10
+                        done
+
+                        echo "Integration test failed — app did not become healthy"
+                        exit 1
+                restartPolicy: Never
+            backoffLimit: 0

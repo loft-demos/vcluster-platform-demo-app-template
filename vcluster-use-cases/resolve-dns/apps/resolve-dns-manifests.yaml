@@ -4,7 +4,7 @@ metadata:
   name: resolve-dns-manifests
   namespace: argocd
   labels:
-    feature.demos.loft.sh: resolve-dns
+    use-case.demos.vcluster.com: resolve-dns
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

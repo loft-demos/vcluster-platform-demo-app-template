@@ -4,7 +4,7 @@ metadata:
   name: crossplane-providers
   namespace: argocd
   labels:
-    demos.loft.sh: crossplane-providers
+    use-case.demos.vcluster.com: crossplane-providers
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

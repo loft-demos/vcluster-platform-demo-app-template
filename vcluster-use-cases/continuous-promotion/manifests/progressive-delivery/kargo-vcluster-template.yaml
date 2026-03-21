@@ -1,0 +1,76 @@
+kind: VirtualClusterTemplate
+apiVersion: management.loft.sh/v1
+metadata:
+  name: kargo-stage-template
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    vcluster.com/template-icon: vcluster-box.svg
+spec:
+  displayName: Kargo Stage vCluster Template
+  description: Lightweight vCluster for Kargo promotion stage environments. Registered with ArgoCD so Kargo can promote freight directly into the vCluster.
+  owner:
+    team: loft-admins
+  template:
+    metadata: {}
+    instanceTemplate:
+      metadata: {}
+    pro: {}
+    helmRelease:
+      chart:
+        version: 0.24.0
+      values: |-
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
+        # Checkout https://vcluster.com/pro/docs/ for more config options
+    accessPoint:
+      ingress: {}
+    spaceTemplate:
+      metadata: {}
+  versions:
+    - version: 1.0.0
+      template:
+        metadata:
+          annotations:
+            # Register this vCluster as an ArgoCD cluster destination
+            loft.sh/import-argocd: 'true'
+            sleepmode.loft.sh/ignore-user-agents: argo*
+        instanceTemplate:
+          metadata: {}
+        pro:
+          enabled: true
+        helmRelease:
+          chart:
+            version: 0.24.0
+          values: |-
+            sleep:
+              auto:
+                afterInactivity: "60m"
+                timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
+            deletion:
+              auto:
+                afterInactivity: 72h
+            sync:
+              toHost:
+                ingresses:
+                  enabled: true
+            controlPlane:
+              backingStore:
+                etcd:
+                  embedded:
+                    enabled: true
+              coredns:
+                embedded: true
+            # Checkout https://vcluster.com/pro/docs/ for more config options
+        accessPoint:
+          ingress: {}
+        spaceTemplate:
+          metadata: {}
+  access:
+    - verbs:
+        - '*'
+      subresources:
+        - '*'
+      users:
+        - admin

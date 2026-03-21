@@ -4,7 +4,7 @@ metadata:
   name: tenant-observability-manifests
   namespace: argocd
   labels:
-    feature.demos.loft.sh: tenant-observability
+    use-case.demos.vcluster.com: tenant-observability
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   finalizers:

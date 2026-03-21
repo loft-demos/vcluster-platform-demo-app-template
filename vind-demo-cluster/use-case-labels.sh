@@ -35,6 +35,7 @@ crossplane|crossplane
 eso|eso
 flux|flux
 kyverno|kyverno
+continuous-promotion|continuousPromotion
 database-connector|databaseConnector
 namespace-sync|namespaceSync
 private-nodes|privateNodes
@@ -76,6 +77,9 @@ canonical_use_case_name() {
       ;;
     kyverno)
       printf '%s\n' "kyverno"
+      ;;
+    continuous-promotion|continuouspromotion|continuousPromotion|kargo)
+      printf '%s\n' "continuous-promotion"
       ;;
     database-connector|databaseconnector|databaseConnector|cnpg)
       printf '%s\n' "database-connector"
@@ -120,6 +124,7 @@ label_key_for_use_case() {
     eso) printf '%s\n' "eso" ;;
     flux) printf '%s\n' "flux" ;;
     kyverno) printf '%s\n' "kyverno" ;;
+    continuous-promotion) printf '%s\n' "continuousPromotion" ;;
     database-connector) printf '%s\n' "databaseConnector" ;;
     namespace-sync) printf '%s\n' "namespaceSync" ;;
     private-nodes) printf '%s\n' "privateNodes" ;;

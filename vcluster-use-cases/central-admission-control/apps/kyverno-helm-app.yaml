@@ -4,7 +4,7 @@ metadata:
   name: kyverno-helm-app
   namespace: argocd
   labels:
-    kyverno.demos.loft.sh: kyverno
+    use-case.demos.vcluster.com: centralAdmission
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   finalizers:

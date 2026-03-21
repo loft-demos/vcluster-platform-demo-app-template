@@ -14,7 +14,7 @@ spec:
       # name is the name of the kubernetes cluster as selected by the spec above
       name: 'namespace-sync-apps'
       labels:
-        feature.demos.loft.sh: namespace-sync
+        use-case.demos.vcluster.com: namespace-sync
     spec:
       destination:
         # server is the url of the cluster as selected by the spec above

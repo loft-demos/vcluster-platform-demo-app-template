@@ -1,0 +1,83 @@
+# ArgoCD Applications for the pre-prod-gate pipeline.
+# Kargo updates the image tag on these Applications via argocd-update promotion steps.
+#
+# guestbook-stage:    targets host cluster namespace (represents upstream stage cluster)
+# guestbook-pre-prod: targets the pre-prod vCluster (ppg-pre-prod VCI)
+# guestbook-prod-ppg: targets production (update destination to a real prod cluster)
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-stage
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook-stage
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-pre-prod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/pre-prod
+  destination:
+    # ArgoCD cluster name matches the VirtualClusterInstance name
+    name: ppg-pre-prod
+    namespace: guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# TODO: Update destination to point at a real production cluster
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-prod-ppg
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

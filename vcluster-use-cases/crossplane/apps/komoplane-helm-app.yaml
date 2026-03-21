@@ -4,7 +4,7 @@ metadata:
   name: komoplane-helm-app
   namespace: argocd
   labels:
-    demos.loft.sh: komoplane
+    use-case.demos.vcluster.com: komoplane
   annotations:
     argocd.argoproj.io/sync-wave: "2"
   finalizers:

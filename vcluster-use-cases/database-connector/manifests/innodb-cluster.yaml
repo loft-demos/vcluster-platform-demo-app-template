@@ -1,0 +1,18 @@
+apiVersion: mysql.oracle.com/v2
+kind: InnoDBCluster
+metadata:
+  name: mysql-cluster
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  secretName: innodb-cluster-creds
+  tlsUseSelfSigned: true
+  instances: 3
+  router:
+    instances: 1
+  datadirVolumeClaimTemplate:
+    accessModes: [ "ReadWriteOnce" ]
+    resources:
+      requests:
+        # should be enough to support 3 vCluster instances
+        storage: 16Gi

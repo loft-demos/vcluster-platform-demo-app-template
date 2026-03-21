@@ -96,15 +96,15 @@ spec:
                 retention:
                   period: {{ .Values.retentionPeriod }}
                   maxSnapshots: {{ .Values.maxSnapshots }}
-                timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
+                timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "use-case.demos.vcluster.com/timezone") }}'
                 storage:
                   type: s3
                   s3:
-                    url: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/s3-url" }}'
+                    url: '{{ index .Values.loft.clusterAnnotations "use-case.demos.vcluster.com/s3-url" }}'
             sleep:
               auto:
                 afterInactivity: 35m
-                timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "demos.vcluster.com/timezone") }}'
+                timezone: '{{ default "America/New_York" (index .Values.loft.clusterAnnotations "use-case.demos.vcluster.com/timezone") }}'
                 wakeup:
                   schedule: 10 7-17 * * 1-5
             deletion:
@@ -124,10 +124,10 @@ spec:
             metadata:
               name: vc-{{ .Values.loft.virtualClusterName }}-snapshot-pod-identity
             spec:
-              clusterName: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/eks-cluster-name" }}'
+              clusterName: '{{ index .Values.loft.clusterAnnotations "use-case.demos.vcluster.com/eks-cluster-name" }}'
               namespace: {{ .Values.loft.virtualClusterNamespace }}
               serviceAccount: vc-{{ .Values.loft.virtualClusterName }}
-              roleARN: '{{ index .Values.loft.clusterAnnotations "demos.vcluster.com/vcluster-snapshots-arn" }}'
+              roleARN: '{{ index .Values.loft.clusterAnnotations "use-case.demos.vcluster.com/vcluster-snapshots-arn" }}'
       parameters:
         - variable: maxSnapshots
           label: Maximum vCluster Snapshots
@@ -179,7 +179,7 @@ spec:
 - **ServiceAccount naming:** The vCluster control plane’s service account defaults to `vc-<vclusterName>`.  
   Adjust the template if you use a different name.  
 - **S3 pathing:** You can use a shared S3 bucket with per-vCluster folder prefixes or separate buckets per tenant.  
-- **Timezone default:** If the `demos.vcluster.com/timezone` annotation is missing, the template falls back to `"America/New_York"`.
+- **Timezone default:** If the `use-case.demos.vcluster.com/timezone` annotation is missing, the template falls back to `"America/New_York"`.
 
 ## IAM & S3 Permissions Example
 
