@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: act-runner-data
+  name: forgejo-runner-data
   namespace: forgejo
 spec:
   accessModes:
@@ -13,17 +13,17 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: act-runner
+  name: forgejo-runner
   namespace: forgejo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: act-runner
+      app: forgejo-runner
   template:
     metadata:
       labels:
-        app: act-runner
+        app: forgejo-runner
     spec:
       initContainers:
         - name: register
@@ -43,7 +43,7 @@ spec:
             - name: RUNNER_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: act-runner-offline-registration
+                  name: forgejo-runner-offline-registration
                   key: secret
                   optional: false
           volumeMounts:
@@ -82,9 +82,9 @@ spec:
       volumes:
         - name: runner-data
           persistentVolumeClaim:
-            claimName: act-runner-data
+            claimName: forgejo-runner-data
         - name: runner-config
           configMap:
-            name: act-runner-config
+            name: forgejo-runner-config
         - name: docker-sock
           emptyDir: {}

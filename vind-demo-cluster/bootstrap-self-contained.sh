@@ -1103,7 +1103,7 @@ if command -v kubectl >/dev/null 2>&1; then
   require_cmd jq
   require_cmd openssl
 
-  _runner_secret_name="act-runner-offline-registration"
+  _runner_secret_name="forgejo-runner-offline-registration"
   _runner_name="vind-${CLUSTER_NAME}-${REPO_NAME}-runner"
   _runner_scope="${ORG_NAME}/${REPO_NAME}"
   _runner_instance="http://forgejo-http.forgejo.svc.cluster.local:3000"
@@ -1135,9 +1135,9 @@ if command -v kubectl >/dev/null 2>&1; then
         && log_done "Registered Forgejo runner and created ${_runner_secret_name} secret in forgejo namespace" \
         || log_warn "Runner registered in Forgejo, but failed to create ${_runner_secret_name} secret."
 
-      if kubectl -n forgejo get deploy/act-runner >/dev/null 2>&1; then
-        kubectl -n forgejo rollout restart deploy/act-runner >/dev/null 2>&1 || true
-        kubectl -n forgejo rollout status deploy/act-runner --timeout=180s >/dev/null 2>&1 || true
+      if kubectl -n forgejo get deploy/forgejo-runner >/dev/null 2>&1; then
+        kubectl -n forgejo rollout restart deploy/forgejo-runner >/dev/null 2>&1 || true
+        kubectl -n forgejo rollout status deploy/forgejo-runner --timeout=180s >/dev/null 2>&1 || true
       fi
     else
       log_warn "Could not register Forgejo runner via forgejo-cli — the Forgejo runner deployment will not start automatically." >&2
