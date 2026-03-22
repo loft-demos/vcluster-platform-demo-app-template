@@ -38,7 +38,9 @@ spec:
             # Register this vCluster as an ArgoCD cluster destination
             loft.sh/import-argocd: 'true'
         instanceTemplate:
-          metadata: {}
+          metadata:
+            labels:
+              kargo-pipeline: progressive-delivery
         pro:
           enabled: true
         helmRelease:

@@ -1,0 +1,45 @@
+# ApplicationSet for the progressive-delivery guestbook pipeline.
+# Uses the cluster generator so Applications are only created once the vCluster
+# is registered with ArgoCD — no race condition with VCI provisioning.
+#
+# Cluster selection: VCIs created from kargo-stage-template carry
+#   kargo-pipeline: progressive-delivery  (from VCT instanceTemplate.metadata.labels)
+#   kargo-stage: dev | staging | prod      (from each VCI metadata.labels)
+# vCP propagates these labels to the ArgoCD cluster Secret on import.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook-progressive-delivery
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            kargo-pipeline: progressive-delivery
+  template:
+    metadata:
+      name: 'guestbook-{{metadata.labels.kargo-stage}}'
+      namespace: argocd
+      annotations:
+        argocd.argoproj.io/sync-wave: "3"
+        kargo.akuity.io/authorized-stage: 'progressive-delivery:{{metadata.labels.kargo-stage}}'
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+        targetRevision: HEAD
+        path: 'vcluster-use-cases/continuous-promotion/guestbook/stages/{{metadata.labels.kargo-stage}}'
+      destination:
+        name: '{{name}}'
+        namespace: guestbook
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

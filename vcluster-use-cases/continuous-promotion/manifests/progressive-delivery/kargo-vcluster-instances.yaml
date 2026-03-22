@@ -5,6 +5,8 @@ metadata:
   namespace: p-default
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+  labels:
+    kargo-stage: dev
 spec:
   owner:
     team: loft-admins
@@ -21,6 +23,8 @@ metadata:
   namespace: p-default
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+  labels:
+    kargo-stage: staging
 spec:
   owner:
     team: loft-admins
@@ -37,6 +41,8 @@ metadata:
   namespace: p-default
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+  labels:
+    kargo-stage: prod
 spec:
   owner:
     team: loft-admins
