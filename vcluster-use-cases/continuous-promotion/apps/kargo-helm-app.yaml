@@ -49,6 +49,11 @@ spec:
               - groups
             dex:
               enabled: true
+              tls:
+                # Dex requires TLS; selfSignedCert generates a cert Secret
+                # automatically. Kargo trusts it because it manages both sides.
+                selfSignedCert: true
+                certSecretName: kargo-dex-tls
               connectors:
                 - type: oidc
                   id: vcp

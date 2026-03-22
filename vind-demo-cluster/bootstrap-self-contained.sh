@@ -1071,27 +1071,6 @@ EOF
 fi
 
 if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
-  step "Create vCP CA bundle ConfigMap for Kargo OIDC TLS trust"
-  # Kargo has no TLS skip-verify flag for OIDC providers. Instead, the chart
-  # supports api.cabundle.configMapName which adds a custom CA to the API pod.
-  # Extract the vCP self-signed CA cert and drop it into a ConfigMap in the
-  # kargo namespace so the Kargo API pod can verify vcp.local's TLS cert.
-  wait_for_create 60 5 get secret loft-cert -n vcluster-platform
-  _vcp_ca_cert="$(kubectl get secret loft-cert -n vcluster-platform \
-    -o jsonpath='{.data.ca\.crt}' 2>/dev/null | base64 -d || true)"
-  if [[ -n "$_vcp_ca_cert" ]]; then
-    kubectl create namespace kargo --dry-run=client -o yaml | kubectl apply -f - 2>/dev/null || true
-    kubectl create configmap vcp-ca-bundle \
-      --namespace kargo \
-      --from-literal=ca.crt="$_vcp_ca_cert" \
-      --dry-run=client -o yaml | kubectl apply -f -
-    log_done "Created vcp-ca-bundle ConfigMap in kargo namespace"
-  else
-    log_warn "Could not extract vCP CA cert — Kargo OIDC may fail TLS verification."
-  fi
-fi
-
-if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
   step "Configure Forgejo OAuth2 source for vCluster Platform SSO"
   # Add vCluster Platform as an OAuth2 authentication source in Forgejo so
   # users can log in to Forgejo with their vCP credentials.

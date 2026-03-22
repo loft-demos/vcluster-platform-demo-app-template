@@ -21,7 +21,7 @@ metadata:
   name: stage
   namespace: pre-prod-gate
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "4"
 spec:
   requestedFreight:
     - origin:
@@ -52,7 +52,7 @@ metadata:
   name: pre-prod-vcluster
   namespace: pre-prod-gate
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "4"
 spec:
   requestedFreight:
     - origin:
@@ -91,7 +91,7 @@ metadata:
   name: prod
   namespace: pre-prod-gate
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "4"
 spec:
   requestedFreight:
     - origin:

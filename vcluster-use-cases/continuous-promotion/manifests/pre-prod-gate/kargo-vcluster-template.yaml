@@ -37,8 +37,9 @@ spec:
       template:
         metadata:
           annotations:
-            loft.sh/import-argocd: 'true'
             sleepmode.loft.sh/ignore-user-agents: argo*
+          labels:
+            loft.sh/import-argocd: 'true'
         instanceTemplate:
           metadata:
             annotations:

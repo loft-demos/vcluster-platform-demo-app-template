@@ -33,9 +33,10 @@ spec:
       template:
         metadata:
           annotations:
+            sleepmode.loft.sh/ignore-user-agents: argo*
+          labels:
             # Register this vCluster as an ArgoCD cluster destination
             loft.sh/import-argocd: 'true'
-            sleepmode.loft.sh/ignore-user-agents: argo*
         instanceTemplate:
           metadata: {}
         pro:

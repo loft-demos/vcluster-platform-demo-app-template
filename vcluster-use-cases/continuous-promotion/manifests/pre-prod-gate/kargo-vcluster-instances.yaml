@@ -8,6 +8,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
+  owner:
+    team: loft-admins
   templateRef:
     name: kargo-pre-prod-template
     version: 1.0.x

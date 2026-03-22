@@ -2,8 +2,8 @@
 # Kargo uses argocd-update to set kustomize image overrides on these Applications
 # as freight moves through the pipeline — no git commits required.
 #
-# destination.name matches the VirtualClusterInstance name, which becomes the
-# ArgoCD cluster entry name when loft.sh/import-argocd: 'true' is set on the VCT.
+# destination.name uses the format loft-<project>-vcluster-<VCI name>, which is
+# the ArgoCD cluster entry name vCP creates when loft.sh/import-argocd: 'true' is set.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -22,7 +22,7 @@ spec:
     targetRevision: HEAD
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/dev
   destination:
-    name: pd-dev
+    name: loft-default-vcluster-pd-dev
     namespace: guestbook
   syncPolicy:
     automated:
@@ -48,7 +48,7 @@ spec:
     targetRevision: HEAD
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/staging
   destination:
-    name: pd-staging
+    name: loft-default-vcluster-pd-staging
     namespace: guestbook
   syncPolicy:
     automated:
@@ -74,7 +74,7 @@ spec:
     targetRevision: HEAD
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/prod
   destination:
-    name: pd-prod
+    name: loft-default-vcluster-pd-prod
     namespace: guestbook
   syncPolicy:
     automated:

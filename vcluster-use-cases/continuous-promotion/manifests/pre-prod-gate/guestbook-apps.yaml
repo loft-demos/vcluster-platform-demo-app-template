@@ -1,9 +1,11 @@
 # ArgoCD Applications for the pre-prod-gate pipeline.
 # Kargo updates the image tag on these Applications via argocd-update promotion steps.
 #
-# guestbook-stage:    targets host cluster namespace (represents upstream stage cluster)
-# guestbook-pre-prod: targets the pre-prod vCluster (ppg-pre-prod VCI)
+# guestbook-stage:    targets the ppg-pre-prod vCluster (stage namespace)
+# guestbook-pre-prod: targets the ppg-pre-prod vCluster (guestbook namespace, with verification)
 # guestbook-prod-ppg: targets production (update destination to a real prod cluster)
+#
+# Sync wave 3 ensures VCIs (wave 2) are registered with ArgoCD before these Apps are created.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -22,7 +24,7 @@ spec:
     targetRevision: HEAD
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/staging
   destination:
-    server: https://kubernetes.default.svc
+    name: loft-default-vcluster-ppg-pre-prod
     namespace: guestbook-stage
   syncPolicy:
     automated:
@@ -48,8 +50,7 @@ spec:
     targetRevision: HEAD
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/pre-prod
   destination:
-    # ArgoCD cluster name matches the VirtualClusterInstance name
-    name: ppg-pre-prod
+    name: loft-default-vcluster-ppg-pre-prod
     namespace: guestbook
   syncPolicy:
     automated:
