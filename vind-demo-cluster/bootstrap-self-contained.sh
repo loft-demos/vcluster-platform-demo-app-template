@@ -78,14 +78,14 @@ require_cmd() {
   fi
 }
 
-if [[ -t 1 ]] && [[ "${NO_COLOR:-}" != "1" ]]; then
-  _CR='\033[0m'      # reset
-  _CDIM='\033[2m'    # dim (timestamps)
-  _CINFO='\033[32m'  # green (info)
-  _CDONE='\033[92m'  # bright green (done)
-  _CWARN='\033[33m'  # yellow (warn)
-  _CERR='\033[91m'   # bright red (error)
-  _CSTEP='\033[1m'   # bold (step label)
+if [[ "${NO_COLOR:-}" != "1" ]] && [[ "${TERM:-}" != "dumb" ]] && [[ -t 1 || -t 2 ]]; then
+  _CR=$'\033[0m'      # reset
+  _CDIM=$'\033[2m'    # dim (timestamps)
+  _CINFO=$'\033[32m'  # green (info)
+  _CDONE=$'\033[92m'  # bright green (done)
+  _CWARN=$'\033[33m'  # yellow (warn)
+  _CERR=$'\033[91m'   # bright red (error)
+  _CSTEP=$'\033[1m'   # bold (step label)
 else
   _CR='' _CDIM='' _CINFO='' _CDONE='' _CWARN='' _CERR='' _CSTEP=''
 fi

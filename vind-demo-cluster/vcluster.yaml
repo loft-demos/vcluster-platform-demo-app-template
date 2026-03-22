@@ -125,6 +125,8 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                   DISABLE_REGISTRATION: true
                 webhook:
                   ALLOWED_HOST_LIST: external,private,loopback
+                actions:
+                  ENABLED: true
         - chart:
             name: argo-cd
             repo: https://argoproj.github.io/argo-helm

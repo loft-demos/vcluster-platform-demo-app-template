@@ -140,12 +140,14 @@ EOF
     env_file_for_down="$temp_env_file"
   fi
 
+  echo "[INFO] Stopping OrbStack/Caddy adapter (vind-local-domains-${CLUSTER_NAME})..."
   docker compose \
     --project-directory "$COMPOSE_DIR" \
     --project-name "vind-local-domains-${CLUSTER_NAME}" \
     --env-file "$env_file_for_down" \
     -f "${COMPOSE_DIR}/compose.yaml" \
     down --remove-orphans >/dev/null 2>&1 || true
+  echo "[INFO] OrbStack/Caddy adapter stopped."
 
   if [[ -n "$temp_env_file" ]]; then
     rm -f "$temp_env_file"
@@ -156,9 +158,12 @@ fi
 # hang waiting for graceful Kubernetes node shutdown.
 _containers="$(docker ps --filter "name=vcluster.*${CLUSTER_NAME}" --format '{{.Names}}' 2>/dev/null || true)"
 if [[ -n "$_containers" ]]; then
+  echo "[INFO] Stopping Docker containers for cluster '${CLUSTER_NAME}'..."
   echo "$_containers" | xargs -r docker stop --time 10 >/dev/null 2>&1 || true
+  echo "[INFO] Docker containers stopped."
 fi
 
+echo "[INFO] Deleting vind cluster '${CLUSTER_NAME}'..."
 vcluster delete "$CLUSTER_NAME"
 
 if [[ "$KEEP_ORBSTACK_ENV" != "true" && -f "$ORBSTACK_ENV_FILE" ]]; then
