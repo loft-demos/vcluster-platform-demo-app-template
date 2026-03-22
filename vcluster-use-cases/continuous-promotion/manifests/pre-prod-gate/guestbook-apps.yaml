@@ -22,7 +22,7 @@ spec:
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
     targetRevision: HEAD
-    path: vcluster-use-cases/continuous-promotion/guestbook/stages/staging
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/ppg-stage
   destination:
     name: loft-default-vcluster-ppg-pre-prod
     namespace: guestbook-stage
