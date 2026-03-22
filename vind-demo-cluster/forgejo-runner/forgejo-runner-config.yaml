@@ -10,6 +10,11 @@ data:
     runner:
       file: /data/.runner
       capacity: 2
+      labels:
+        - docker:docker://node:20-bookworm
+        - ubuntu-latest:docker://node:20-bookworm
+        - ubuntu-22.04:docker://node:20-bookworm
+        - ubuntu-20.04:docker://node:18-bullseye
       envs: {}
       timeout: 3h
       insecure: false

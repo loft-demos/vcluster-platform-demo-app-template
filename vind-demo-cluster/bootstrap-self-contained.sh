@@ -1107,7 +1107,7 @@ if command -v kubectl >/dev/null 2>&1; then
   _runner_name="vind-${CLUSTER_NAME}-${REPO_NAME}-runner"
   _runner_scope="${ORG_NAME}/${REPO_NAME}"
   _runner_instance="http://forgejo-http.forgejo.svc.cluster.local:3000"
-  _runner_labels="ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-20.04:docker://node:18-bullseye"
+  _runner_labels="docker,ubuntu-latest,ubuntu-22.04,ubuntu-20.04"
 
   _runner_secret="$(
     kubectl get secret "$_runner_secret_name" \
