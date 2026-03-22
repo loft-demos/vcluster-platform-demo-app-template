@@ -4,7 +4,7 @@ metadata:
   name: forgejo-runner
   namespace: argocd
   labels:
-    use-case.demos.vcluster.com: continuous-promotion
+    bootstrap.demos.vcluster.com: vind-self-contained
   annotations:
     argocd.argoproj.io/sync-wave: "2"
   finalizers:
@@ -14,7 +14,7 @@ spec:
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
     targetRevision: HEAD
-    path: vcluster-use-cases/continuous-promotion/manifests/forgejo-runner
+    path: vind-demo-cluster/forgejo-runner
   destination:
     server: https://kubernetes.default.svc
     namespace: forgejo

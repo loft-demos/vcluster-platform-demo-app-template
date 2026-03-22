@@ -35,19 +35,16 @@ spec:
                 echo "Runner already registered — skipping."
                 exit 0
               fi
-              forgejo-runner register \
-                --config /config/config.yaml \
-                --no-interactive \
+              cd /data
+              forgejo-runner create-runner-file \
                 --instance http://forgejo-http.forgejo.svc.cluster.local:3000 \
-                --token "$RUNNER_TOKEN" \
-                --name vind-k8s-runner \
-                --labels "ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-20.04:docker://node:18-bullseye"
+                --secret "$RUNNER_SECRET"
           env:
-            - name: RUNNER_TOKEN
+            - name: RUNNER_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: act-runner-registration-token
-                  key: token
+                  name: act-runner-offline-registration
+                  key: secret
                   optional: false
           volumeMounts:
             - name: runner-data

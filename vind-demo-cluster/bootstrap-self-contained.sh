@@ -1096,43 +1096,61 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
   fi
 fi
 
-if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
-  step "Register Forgejo Actions runner (act_runner)"
-  # Get an instance-level runner registration token from the Forgejo admin API
-  # and store it as a Kubernetes Secret. The act_runner init container reads
-  # this Secret on first start to register itself with Forgejo, then the runner
-  # daemon picks up Forgejo Actions jobs (e.g. image builds).
-  _runner_reg_token=""
-  _runner_forgejo_token="${argocd_token:-${FORGEJO_TOKEN:-}}"
-  if [[ -z "$_runner_forgejo_token" ]]; then
-    _runner_forgejo_token="$FORGEJO_PASSWORD"
-  fi
+if command -v kubectl >/dev/null 2>&1; then
+  step "Register Forgejo Actions runner"
+  # Use Forgejo's offline registration flow so the runner can be recreated from
+  # a stable shared secret instead of depending on a one-time registration token.
+  require_cmd jq
+  require_cmd openssl
 
-  if [[ -n "$_runner_forgejo_token" ]]; then
-    _runner_reg_token="$(
-      curl -fsS \
-        -X POST \
-        -H "Content-Type: application/json" \
-        -H "Authorization: token ${_runner_forgejo_token}" \
-        "${FORGEJO_URL%/}/api/v1/admin/runners/registration-token" \
-        | jq -r '.token // empty'
-    )" || true
-  fi
+  _runner_secret_name="act-runner-offline-registration"
+  _runner_name="vind-${CLUSTER_NAME}-${REPO_NAME}-runner"
+  _runner_scope="${ORG_NAME}/${REPO_NAME}"
+  _runner_instance="http://forgejo-http.forgejo.svc.cluster.local:3000"
+  _runner_labels="ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-20.04:docker://node:18-bullseye"
 
-  if [[ -n "$_runner_reg_token" ]]; then
-    kubectl create secret generic act-runner-registration-token \
+  _runner_secret="$(
+    kubectl get secret "$_runner_secret_name" \
       --namespace forgejo \
-      --from-literal=token="$_runner_reg_token" \
-      --dry-run=client -o yaml | kubectl apply -f - \
-      && log_done "Created act-runner-registration-token secret in forgejo namespace" \
-      || log_warn "Failed to create act-runner-registration-token secret."
+      -o json 2>/dev/null | jq -r '.data.secret // empty | @base64d'
+  )" || true
+
+  if [[ -z "$_runner_secret" ]]; then
+    _runner_secret="$(openssl rand -hex 20 | tr -d '\n')"
+  fi
+
+  _forgejo_pod="${_forgejo_pod:-$(kubectl get pod -n forgejo -l app.kubernetes.io/name=forgejo -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)}"
+  if [[ -n "$_forgejo_pod" ]]; then
+    if kubectl exec -n forgejo "$_forgejo_pod" -- \
+        forgejo forgejo-cli actions register \
+          --name "$_runner_name" \
+          --scope "$_runner_scope" \
+          --labels "$_runner_labels" \
+          --secret "$_runner_secret"; then
+      kubectl create secret generic "$_runner_secret_name" \
+        --namespace forgejo \
+        --from-literal=secret="$_runner_secret" \
+        --from-literal=instance="$_runner_instance" \
+        --dry-run=client -o yaml | kubectl apply -f - \
+        && log_done "Registered Forgejo runner and created ${_runner_secret_name} secret in forgejo namespace" \
+        || log_warn "Runner registered in Forgejo, but failed to create ${_runner_secret_name} secret."
+
+      if kubectl -n forgejo get deploy/act-runner >/dev/null 2>&1; then
+        kubectl -n forgejo rollout restart deploy/act-runner >/dev/null 2>&1 || true
+        kubectl -n forgejo rollout status deploy/act-runner --timeout=180s >/dev/null 2>&1 || true
+      fi
+    else
+      log_warn "Could not register Forgejo runner via forgejo-cli — the Forgejo runner deployment will not start automatically." >&2
+      log_warn "Re-run after Forgejo is ready:" >&2
+      log_warn "  secret=\$(openssl rand -hex 20)" >&2
+      log_warn "  kubectl exec -n forgejo deploy/forgejo -- \\" >&2
+      log_warn "    forgejo forgejo-cli actions register --name \"${_runner_name}\" --scope \"${_runner_scope}\" \\" >&2
+      log_warn "    --labels \"${_runner_labels}\" --secret \"\$secret\"" >&2
+      log_warn "  kubectl create secret generic ${_runner_secret_name} \\" >&2
+      log_warn "    --namespace forgejo --from-literal=secret=\"\$secret\" --from-literal=instance=\"${_runner_instance}\"" >&2
+    fi
   else
-    log_warn "Could not obtain runner registration token from Forgejo — act_runner will not register automatically." >&2
-    log_warn "Re-run after Forgejo is ready:" >&2
-    log_warn "  token=\$(curl -fsS -X POST -H 'Authorization: token \$FORGEJO_TOKEN' \\" >&2
-    log_warn "    ${FORGEJO_URL%/}/api/v1/admin/runners/registration-token | jq -r '.token')" >&2
-    log_warn "  kubectl create secret generic act-runner-registration-token \\" >&2
-    log_warn "    --namespace forgejo --from-literal=token=\"\$token\"" >&2
+    log_warn "Could not find Forgejo pod — skipping runner registration." >&2
   fi
 fi
 

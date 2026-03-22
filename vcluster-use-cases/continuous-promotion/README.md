@@ -21,7 +21,7 @@ kubectl -n argocd label secret cluster-local continuousPromotion=true --overwrit
 ## What gets deployed
 
 - **Kargo operator** — installed via Helm into the `kargo` namespace; UI available at `https://kargo.{BASE_DOMAIN}`
-- **Forgejo act_runner** — CI runner in the `forgejo` namespace; builds and pushes the demo app image on every commit to `src/` or `helm-chart/`
+- **Forgejo runner (vind self-contained only)** — shared CI runner in the `forgejo` namespace; builds and pushes the demo app image on every commit to `src/` or `helm-chart/`
 - **Progressive Delivery demo** — classic dev → staging → prod pipeline
 - **Pre-Prod Gate demo** — stage → pre-prod vCluster → prod pipeline (CoreWeave pattern)
 
@@ -29,7 +29,9 @@ kubectl -n argocd label secret cluster-local continuousPromotion=true --overwrit
 
 ## CI / Image pipeline
 
-The demo app image (`{REPO_NAME}-demo-app`) is built and pushed automatically by a Forgejo Actions workflow (`.forgejo/workflows/build-push.yaml`) whenever `src/` or `helm-chart/` changes land on `main`. The workflow runs on the `act_runner` deployed into the `forgejo` namespace.
+The demo app image (`{REPO_NAME}-demo-app`) is built and pushed automatically by a Forgejo Actions workflow (`.forgejo/workflows/build-push.yaml`) whenever `src/` or `helm-chart/` changes land on `main`.
+
+In the `vind` self-contained path, that workflow runs on the shared Forgejo runner deployed into the `forgejo` namespace from [../../vind-demo-cluster/forgejo-runner/act-runner.yaml](../../vind-demo-cluster/forgejo-runner/act-runner.yaml). Managed and self-managed installs need their own Forgejo runner deployment.
 
 The image is tagged with the `appVersion` from `helm-chart/Chart.yaml` and pushed to the Forgejo container registry. The Kargo Warehouse for both demos watches this registry and triggers promotion automatically when a new semver tag appears.
 
@@ -40,8 +42,8 @@ To trigger a new build manually, bump `appVersion` in `helm-chart/Chart.yaml` an
 | File | Purpose |
 |---|---|
 | [.forgejo/workflows/build-push.yaml](/.forgejo/workflows/build-push.yaml) | Forgejo Actions workflow — builds `src/Dockerfile` and pushes to Forgejo registry |
-| [manifests/forgejo-runner/act-runner.yaml](manifests/forgejo-runner/act-runner.yaml) | act_runner Deployment + DinD sidecar |
-| [apps/forgejo-runner-app.yaml](apps/forgejo-runner-app.yaml) | ArgoCD Application deploying the runner |
+| [../../vind-demo-cluster/forgejo-runner/act-runner.yaml](../../vind-demo-cluster/forgejo-runner/act-runner.yaml) | Shared vind runner Deployment + DinD sidecar |
+| [../../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml) | Argo CD Application deploying the shared vind runner |
 
 ---
 
@@ -124,16 +126,24 @@ Warehouse ({REPO_NAME}-demo-app from Forgejo registry)
 
 Check [github.com/akuity/kargo/releases](https://github.com/akuity/kargo/releases) for the latest chart version and update `targetRevision` in [apps/kargo-helm-app.yaml](apps/kargo-helm-app.yaml).
 
-### act_runner registration
+### Forgejo runner registration
 
-The bootstrap script calls `POST /api/v1/admin/runners/registration-token` and stores the token as a Kubernetes Secret (`act-runner-registration-token`) in the `forgejo` namespace. The act_runner init container reads this Secret on first start to self-register. If the Secret is missing, the runner pod will fail to start — re-run the bootstrap or create the Secret manually:
+In the `vind` self-contained path, the bootstrap script uses Forgejo offline registration. It registers a repo-scoped runner from inside the Forgejo pod with `forgejo forgejo-cli actions register`, stores the shared 40-character hex secret in `act-runner-offline-registration`, and the runner init container recreates `/data/.runner` with `forgejo-runner create-runner-file` when needed.
+
+If the Secret is missing, re-run bootstrap or recreate it manually:
 
 ```bash
-token=$(curl -fsS -X POST \
-  -H "Authorization: token $FORGEJO_TOKEN" \
-  https://forgejo.{BASE_DOMAIN}/api/v1/admin/runners/registration-token | jq -r '.token')
-kubectl create secret generic act-runner-registration-token \
-  --namespace forgejo --from-literal=token="$token"
+secret="$(openssl rand -hex 20)"
+kubectl exec -n forgejo deploy/forgejo -- \
+  forgejo forgejo-cli actions register \
+    --name "vind-${CLUSTER_NAME}-${REPO_NAME}-runner" \
+    --scope "${ORG_NAME}/${REPO_NAME}" \
+    --labels "ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-20.04:docker://node:18-bullseye" \
+    --secret "$secret"
+kubectl create secret generic act-runner-offline-registration \
+  --namespace forgejo \
+  --from-literal=secret="$secret" \
+  --from-literal=instance="http://forgejo-http.forgejo.svc.cluster.local:3000"
 ```
 
 ### ArgoCD cluster names

@@ -58,6 +58,7 @@ What the bootstrap does:
 
 - creates or upgrades the `vind` cluster
 - installs vCluster Platform, Argo CD, ESO, and Forgejo
+- registers the shared Forgejo Actions runner via offline registration and stores its secret in-cluster
 - annotates `clusters.management.loft.sh/loft-cluster` with `domainPrefix`, `domain`, and `sleepTimeZone`
 - runs local placeholder replacement
 - pushes the repo into Forgejo
@@ -87,6 +88,7 @@ In practice that means:
 - this repo is pushed into Forgejo instead of relying on a GitHub template copy
 - Argo CD reads the repo from the in-cluster Forgejo service URL
 - browser-facing links still use <https://forgejo.vcp.local>
+- the shared self-contained Forgejo runner is declared in [forgejo-runner/](./forgejo-runner/) and deployed by [../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml)
 - the demo app image from `src/` is built and pushed to the Forgejo container
   registry as `<repo>-demo-app`, under the repo-scoped prefix
   `forgejo.vcp.local/<org>/<repo>/<repo>-demo-app`
