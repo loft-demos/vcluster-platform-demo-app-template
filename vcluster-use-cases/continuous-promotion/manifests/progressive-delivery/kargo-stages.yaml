@@ -42,8 +42,8 @@ spec:
                   - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
                     kustomize:
                       images:
-                        - repoURL: ghcr.io/akuity/guestbook
-                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}
+                        - repoURL: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+                          tag: '${{ imageFrom("{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app").Tag }}'
 ---
 # staging: promotes from dev, runs health-check verification before prod is eligible
 apiVersion: kargo.akuity.io/v1alpha1
@@ -78,8 +78,8 @@ spec:
                   - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
                     kustomize:
                       images:
-                        - repoURL: ghcr.io/akuity/guestbook
-                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}
+                        - repoURL: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+                          tag: '${{ imageFrom("{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app").Tag }}'
 ---
 # prod: requires manual approval in the Kargo UI; only eligible after staging verification passes
 apiVersion: kargo.akuity.io/v1alpha1
@@ -108,5 +108,5 @@ spec:
                   - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
                     kustomize:
                       images:
-                        - repoURL: ghcr.io/akuity/guestbook
-                          tag: ${{ imageFrom("ghcr.io/akuity/guestbook").Tag }}
+                        - repoURL: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+                          tag: '${{ imageFrom("{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app").Tag }}'

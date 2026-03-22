@@ -8,6 +8,7 @@ metadata:
 spec:
   subscriptions:
     - image:
-        repoURL: ghcr.io/akuity/guestbook
-        semverConstraint: ">=0.1.0"
+        repoURL: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+        semverConstraint: ">=0.0.1"
         discoveryLimit: 5
+        insecureSkipTLSVerify: true

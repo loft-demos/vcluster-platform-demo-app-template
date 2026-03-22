@@ -1096,6 +1096,46 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
   fi
 fi
 
+if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
+  step "Register Forgejo Actions runner (act_runner)"
+  # Get an instance-level runner registration token from the Forgejo admin API
+  # and store it as a Kubernetes Secret. The act_runner init container reads
+  # this Secret on first start to register itself with Forgejo, then the runner
+  # daemon picks up Forgejo Actions jobs (e.g. image builds).
+  _runner_reg_token=""
+  _runner_forgejo_token="${argocd_token:-${FORGEJO_TOKEN:-}}"
+  if [[ -z "$_runner_forgejo_token" ]]; then
+    _runner_forgejo_token="$FORGEJO_PASSWORD"
+  fi
+
+  if [[ -n "$_runner_forgejo_token" ]]; then
+    _runner_reg_token="$(
+      curl -fsS \
+        -X POST \
+        -H "Content-Type: application/json" \
+        -H "Authorization: token ${_runner_forgejo_token}" \
+        "${FORGEJO_URL%/}/api/v1/admin/runners/registration-token" \
+        | jq -r '.token // empty'
+    )" || true
+  fi
+
+  if [[ -n "$_runner_reg_token" ]]; then
+    kubectl create secret generic act-runner-registration-token \
+      --namespace forgejo \
+      --from-literal=token="$_runner_reg_token" \
+      --dry-run=client -o yaml | kubectl apply -f - \
+      && log_done "Created act-runner-registration-token secret in forgejo namespace" \
+      || log_warn "Failed to create act-runner-registration-token secret."
+  else
+    log_warn "Could not obtain runner registration token from Forgejo — act_runner will not register automatically." >&2
+    log_warn "Re-run after Forgejo is ready:" >&2
+    log_warn "  token=\$(curl -fsS -X POST -H 'Authorization: token \$FORGEJO_TOKEN' \\" >&2
+    log_warn "    ${FORGEJO_URL%/}/api/v1/admin/runners/registration-token | jq -r '.token')" >&2
+    log_warn "  kubectl create secret generic act-runner-registration-token \\" >&2
+    log_warn "    --namespace forgejo --from-literal=token=\"\$token\"" >&2
+  fi
+fi
+
 if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_case_selection" "flux"; then
   step "Configure Forgejo webhook for Flux"
 

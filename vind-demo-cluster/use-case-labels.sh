@@ -307,6 +307,7 @@ Supported use cases for the vind cluster-local secret:
 - auto-nodes
 - auto-snapshots
 - connected-host-cluster
+- continuous-promotion
 - crossplane
 - eso
 - flux

@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: act-runner-config
+  namespace: forgejo
+data:
+  config.yaml: |
+    log:
+      level: info
+    runner:
+      file: /data/.runner
+      capacity: 2
+      envs: {}
+      timeout: 3h
+      insecure: false
+      fetch_timeout: 5s
+      fetch_interval: 2s
+    cache:
+      enabled: true
+      dir: /data/cache
+    container:
+      network: bridge
+      privileged: false
+      valid_volumes: []
+      docker_host: unix:///var/run/docker.sock
+      force_pull: false
+    host:
+      workdir_parent: /data/workdir
