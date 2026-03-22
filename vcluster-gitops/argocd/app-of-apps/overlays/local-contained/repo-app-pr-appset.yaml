@@ -10,6 +10,7 @@ spec:
           owner: "{REPLACE_ORG_NAME}"
           repo: "{REPLACE_REPO_NAME}"
           api: "{REPLACE_GIT_BASE_URL}"
+          insecure: true
           tokenRef:
             secretName: loft-demo-org-cred
             key: token
