@@ -12,6 +12,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
+    kargo.akuity.io/authorized-stage: pre-prod-gate:stage
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -37,6 +38,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
+    kargo.akuity.io/authorized-stage: pre-prod-gate:pre-prod-vcluster
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -64,6 +66,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
+    kargo.akuity.io/authorized-stage: pre-prod-gate:prod
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

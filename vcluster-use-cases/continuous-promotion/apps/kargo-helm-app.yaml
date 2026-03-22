@@ -32,17 +32,33 @@ spec:
             # Generate with: openssl rand -base64 29 | tr -d "=+/" | cut -c1-32
             tokenSigningKey: '{REPLACE_KARGO_TOKEN_SIGNING_KEY}'
 
+          argocd:
+            urls:
+              "": "https://argocd.{REPLACE_BASE_DOMAIN}"
+
           oidc:
             enabled: true
-            issuerURL: "https://{REPLACE_BASE_DOMAIN}/oidc"
+            # issuerURL points at the Dex sidecar, which brokers to vCP.
+            # Dex handles the client secret and self-signed TLS cert so Kargo
+            # does not need a clientSecret field or a TLS skip flag.
+            issuerURL: "https://kargo.{REPLACE_BASE_DOMAIN}/dex"
             clientID: "kargo"
-            clientSecret: "{REPLACE_KARGO_OIDC_SECRET}"
-            redirectURL: "https://kargo.{REPLACE_BASE_DOMAIN}/auth/callback"
-            scopes:
-              - openid
+            additionalScopes:
               - email
               - profile
               - groups
+            dex:
+              enabled: true
+              connectors:
+                - type: oidc
+                  id: vcp
+                  name: vCluster Platform
+                  config:
+                    issuer: "https://{REPLACE_BASE_DOMAIN}/oidc"
+                    clientID: "kargo"
+                    clientSecret: "{REPLACE_KARGO_OIDC_SECRET}"
+                    insecureSkipVerify: true
+                    redirectURI: "https://kargo.{REPLACE_BASE_DOMAIN}/dex/callback"
 
           # TLS terminated by nginx ingress — disable pod-level TLS but tell
           # Kargo to still generate https:// URLs
