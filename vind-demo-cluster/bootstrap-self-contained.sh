@@ -1098,6 +1098,26 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
 fi
 
 if command -v kubectl >/dev/null 2>&1; then
+  step "Configure Forgejo runner registry trust"
+  if command -v security >/dev/null 2>&1; then
+    _orbstack_ca="$(security find-certificate -c "OrbStack" -p 2>/dev/null || true)"
+    if [[ -n "$_orbstack_ca" ]]; then
+      _runner_ca_tmp="$(mktemp)"
+      printf '%s\n' "$_orbstack_ca" >"$_runner_ca_tmp"
+      kubectl create configmap forgejo-runner-registry-ca \
+        --namespace forgejo \
+        --from-file=ca.crt="$_runner_ca_tmp" \
+        --dry-run=client -o yaml | kubectl apply -f - >/dev/null 2>&1 \
+        && log_done "Configured forgejo-runner-registry-ca in forgejo namespace" \
+        || log_warn "Failed to configure forgejo-runner-registry-ca; Docker pushes may fail on Forgejo TLS." >&2
+      rm -f "$_runner_ca_tmp"
+    else
+      log_warn "Could not find the OrbStack CA in the local keychain — skipping forgejo-runner-registry-ca creation." >&2
+    fi
+  else
+    log_warn "The macOS security CLI is not available — skipping forgejo-runner-registry-ca creation." >&2
+  fi
+
   step "Register Forgejo Actions runner"
   # Use Forgejo's offline registration flow so the runner can be recreated from
   # a stable shared secret instead of depending on a one-time registration token.

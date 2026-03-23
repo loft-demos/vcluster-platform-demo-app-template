@@ -68,6 +68,9 @@ spec:
               mountPath: /config
             - name: docker-sock
               mountPath: /var/run
+            - name: registry-certs
+              mountPath: /etc/docker/certs.d
+              readOnly: true
         - name: dind
           image: docker:dind
           securityContext:
@@ -82,6 +85,9 @@ spec:
               mountPath: /var/run
             - name: runner-data
               mountPath: /data
+            - name: registry-certs
+              mountPath: /etc/docker/certs.d
+              readOnly: true
       volumes:
         - name: runner-data
           persistentVolumeClaim:
@@ -91,3 +97,10 @@ spec:
             name: forgejo-runner-config
         - name: docker-sock
           emptyDir: {}
+        - name: registry-certs
+          configMap:
+            name: forgejo-runner-registry-ca
+            optional: true
+            items:
+              - key: ca.crt
+                path: {REPLACE_FORGEJO_HOST}/ca.crt
