@@ -17,7 +17,7 @@ Requirements:
 
 Usage:
   bash scripts/bootstrap-forgejo-repo.sh \
-    --forgejo-url https://forgejo.vcp.local \
+    --forgejo-url http://forgejo.vcp.local \
     --username demo-admin \
     --password "$FORGEJO_ADMIN_PASSWORD" \
     --owner demo-admin \
@@ -25,7 +25,7 @@ Usage:
     --repo vcluster-platform-demo-app-template
 
 Options:
-  --forgejo-url URL        Base URL for Forgejo, for example https://forgejo.vcp.local
+  --forgejo-url URL        Base URL for Forgejo, for example http://forgejo.vcp.local
   --username NAME          Forgejo username used for git HTTP auth
   --token VALUE            Forgejo personal access token. Defaults to FORGEJO_TOKEN
   --password VALUE         Forgejo password for basic auth. Defaults to FORGEJO_PASSWORD
@@ -435,6 +435,8 @@ fi
 
 echo "[INFO] Forgejo bootstrap complete."
 echo "[INFO] Suggested local-contained placeholders:"
-echo "  REPLACE_GIT_BASE_URL=http://forgejo-http.forgejo.svc.cluster.local:3000"
+echo "  REPLACE_GIT_BASE_URL=$FORGEJO_URL"
 echo "  REPLACE_GIT_PUBLIC_URL=$FORGEJO_URL"
-echo "  REPLACE_IMAGE_REPOSITORY_PREFIX=${FORGEJO_URL#https://}/$OWNER/$REPO"
+_forgejo_registry_host="${FORGEJO_URL#http://}"
+_forgejo_registry_host="${_forgejo_registry_host#https://}"
+echo "  REPLACE_IMAGE_REPOSITORY_PREFIX=${_forgejo_registry_host}/$OWNER/$REPO"

@@ -117,8 +117,6 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 existingSecret: forgejo-admin-secret
                 email: demo-admin@__VCP_LOFT_HOST__
               config:
-                server:
-                  ROOT_URL: https://__FORGEJO_HOST__/
                 packages:
                   ENABLED: true
                 service:
@@ -127,6 +125,8 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                   ALLOWED_HOST_LIST: external,private,loopback
                 actions:
                   ENABLED: true
+                server:
+                  ROOT_URL: http://__FORGEJO_HOST__/
         - chart:
             name: argo-cd
             repo: https://argoproj.github.io/argo-helm

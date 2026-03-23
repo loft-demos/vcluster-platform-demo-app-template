@@ -163,7 +163,7 @@ cat <<EOF
 URLs:
 - https://${VCP_HOST}
 - https://${ARGOCD_HOST}
-- https://${FORGEJO_HOST}
+- http://${FORGEJO_HOST}
 - https://<app>.${VCP_HOST}
 
 EOF

@@ -26,7 +26,7 @@ Usage:
     --org-name vcluster-demos
 
 Default Forgejo bootstrap:
-  --forgejo-url https://forgejo.vcp.local
+  --forgejo-url http://forgejo.vcp.local
   --forgejo-username demo-admin
   --forgejo-password "$FORGEJO_ADMIN_PASSWORD"
   --forgejo-owner vcluster-demos
@@ -611,7 +611,7 @@ if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
 fi
 
 if [[ -z "$FORGEJO_URL" ]]; then
-  FORGEJO_URL="https://${FORGEJO_HOST}"
+  FORGEJO_URL="http://${FORGEJO_HOST}"
 fi
 
 if [[ -z "$FORGEJO_OWNER" ]]; then
@@ -955,20 +955,18 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
       )"
     fi
 
-    # Trust the OrbStack self-signed CA before applying the root application so
-    # argocd-repo-server can immediately clone from the public Forgejo HTTPS URL
-    # (forgejo.vcp.local). Without this, the root app sync fails with an x509
-    # error and the bootstrap hangs waiting for forgejo-pr-webhook-adapter.
-    _orbstack_ca="$(security find-certificate -c "OrbStack" -p 2>/dev/null || true)"
-    if [[ -n "$_orbstack_ca" ]]; then
-      kubectl create configmap argocd-tls-certs-cm \
-        --namespace argocd \
-        --from-literal="${FORGEJO_HOST}=${_orbstack_ca}" \
-        --dry-run=client -o yaml | kubectl apply -f - >/dev/null 2>&1 || true
-      # Restart repo-server so it picks up the new cert immediately rather than
-      # waiting for its configmap watch to fire.
-      kubectl -n argocd rollout restart deploy/argocd-repo-server >/dev/null 2>&1 || true
-      kubectl -n argocd rollout status deploy/argocd-repo-server --timeout=60s >/dev/null 2>&1 || true
+    if [[ "${GIT_BASE_URL}" == https://* ]]; then
+      # Trust the OrbStack self-signed CA before applying the root application
+      # when Argo CD is cloning from the public Forgejo HTTPS URL.
+      _orbstack_ca="$(security find-certificate -c "OrbStack" -p 2>/dev/null || true)"
+      if [[ -n "$_orbstack_ca" ]]; then
+        kubectl create configmap argocd-tls-certs-cm \
+          --namespace argocd \
+          --from-literal="${FORGEJO_HOST}=${_orbstack_ca}" \
+          --dry-run=client -o yaml | kubectl apply -f - >/dev/null 2>&1 || true
+        kubectl -n argocd rollout restart deploy/argocd-repo-server >/dev/null 2>&1 || true
+        kubectl -n argocd rollout status deploy/argocd-repo-server --timeout=60s >/dev/null 2>&1 || true
+      fi
     fi
 
     cat <<EOF | kubectl apply -f -
@@ -1096,24 +1094,26 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
 fi
 
 if command -v kubectl >/dev/null 2>&1; then
-  step "Configure Forgejo runner registry trust"
-  if command -v security >/dev/null 2>&1; then
-    _orbstack_ca="$(security find-certificate -c "OrbStack" -p 2>/dev/null || true)"
-    if [[ -n "$_orbstack_ca" ]]; then
-      _runner_ca_tmp="$(mktemp)"
-      printf '%s\n' "$_orbstack_ca" >"$_runner_ca_tmp"
-      kubectl create configmap forgejo-runner-registry-ca \
-        --namespace forgejo \
-        --from-file=ca.crt="$_runner_ca_tmp" \
-        --dry-run=client -o yaml | kubectl apply -f - >/dev/null 2>&1 \
-        && log_done "Configured forgejo-runner-registry-ca in forgejo namespace" \
-        || log_warn "Failed to configure forgejo-runner-registry-ca; Docker pushes may fail on Forgejo TLS." >&2
-      rm -f "$_runner_ca_tmp"
+  if [[ "${FORGEJO_URL}" == https://* ]]; then
+    step "Configure Forgejo runner registry trust"
+    if command -v security >/dev/null 2>&1; then
+      _orbstack_ca="$(security find-certificate -c "OrbStack" -p 2>/dev/null || true)"
+      if [[ -n "$_orbstack_ca" ]]; then
+        _runner_ca_tmp="$(mktemp)"
+        printf '%s\n' "$_orbstack_ca" >"$_runner_ca_tmp"
+        kubectl create configmap forgejo-runner-registry-ca \
+          --namespace forgejo \
+          --from-file=ca.crt="$_runner_ca_tmp" \
+          --dry-run=client -o yaml | kubectl apply -f - >/dev/null 2>&1 \
+          && log_done "Configured forgejo-runner-registry-ca in forgejo namespace" \
+          || log_warn "Failed to configure forgejo-runner-registry-ca; Docker pushes may fail on Forgejo TLS." >&2
+        rm -f "$_runner_ca_tmp"
+      else
+        log_warn "Could not find the OrbStack CA in the local keychain — skipping forgejo-runner-registry-ca creation." >&2
+      fi
     else
-      log_warn "Could not find the OrbStack CA in the local keychain — skipping forgejo-runner-registry-ca creation." >&2
+      log_warn "The macOS security CLI is not available — skipping forgejo-runner-registry-ca creation." >&2
     fi
-  else
-    log_warn "The macOS security CLI is not available — skipping forgejo-runner-registry-ca creation." >&2
   fi
 
   step "Register Forgejo Actions runner"
@@ -1425,7 +1425,7 @@ Recommended next steps:
 2. Open the local URLs:
    - vCluster Platform: https://${VCP_HOST}
    - Argo CD:           https://${ARGOCD_HOST}
-   - Forgejo:           https://${FORGEJO_HOST}
+   - Forgejo:           http://${FORGEJO_HOST}
 EOF
 
 if [[ -n "$kargo_admin_password" ]]; then

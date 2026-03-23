@@ -29,8 +29,8 @@ config:
         - vcluster
         - featurebase
     navBarButtons:
-      - link: "https://__FORGEJO_HOST__/"
-        icon: "https://__FORGEJO_HOST__/assets/img/logo.svg"
+      - link: "http://__FORGEJO_HOST__/"
+        icon: "http://__FORGEJO_HOST__/assets/img/logo.svg"
         text: "Forgejo"
         position: TopEnd
       - link: "https://flux-__VCLUSTER_NAME__.__VCP_LOFT_HOST__/"
@@ -41,7 +41,7 @@ config:
         icon: "https://argocd.__VCP_LOFT_HOST__/assets/favicon/favicon-32x32.png"
         text: "Argo CD"
         position: TopEnd
+      __KARGO_NAV_BUTTON__
       - link: "https://www.vcluster.com/docs/platform/"
         text: "vCluster Docs"
         position: TopEnd
-      __KARGO_NAV_BUTTON__

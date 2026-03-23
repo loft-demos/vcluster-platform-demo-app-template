@@ -37,10 +37,10 @@ Options:
   --org-name NAME         Optional. Defaults to vcluster-demos.
   --vcluster-name NAME    Optional. Defaults to repo name with trailing -app removed.
   --base-domain DOMAIN    Optional. Defaults to VCP_HOST or vcp.local.
-  --git-base-url URL      Optional. Defaults to https://forgejo.vcp.local.
+  --git-base-url URL      Optional. Defaults to http://forgejo.vcp.local.
   --git-base-url-authed URL
                           Optional. Defaults to http://user:pass@forgejo-http.forgejo.svc.cluster.local:3000.
-  --git-public-url URL    Optional. Defaults to https://forgejo.vcp.local.
+  --git-public-url URL    Optional. Defaults to http://forgejo.vcp.local.
   --forgejo-host HOST     Optional. Defaults to forgejo.vcp.local.
   --image-repository-prefix PREFIX
                           Optional. Defaults to forgejo.vcp.local/<org-name>/<repo-name>.
@@ -202,7 +202,7 @@ if [[ -z "$VCLUSTER_NAME" ]]; then
 fi
 
 if [[ -z "$GIT_BASE_URL" ]]; then
-  GIT_BASE_URL="https://${FORGEJO_HOST:-forgejo.vcp.local}"
+  GIT_BASE_URL="http://${FORGEJO_HOST:-forgejo.vcp.local}"
 fi
 
 if [[ -z "$GIT_BASE_URL_AUTHED" ]]; then
@@ -213,7 +213,7 @@ if [[ -z "$GIT_BASE_URL_AUTHED" ]]; then
 fi
 
 if [[ -z "$GIT_PUBLIC_URL" ]]; then
-  GIT_PUBLIC_URL="https://${FORGEJO_HOST:-forgejo.vcp.local}"
+  GIT_PUBLIC_URL="http://${FORGEJO_HOST:-forgejo.vcp.local}"
 fi
 
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then

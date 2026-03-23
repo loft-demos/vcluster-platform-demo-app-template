@@ -49,7 +49,7 @@ Default behavior:
 - local URLs:
   - <https://vcp.local>
   - <https://argocd.vcp.local>
-  - <https://forgejo.vcp.local>
+  - <http://forgejo.vcp.local>
 - cluster shape: `1` control plane node, `2` worker nodes
 - control plane taint: `node-role.kubernetes.io/control-plane=:NoSchedule`
 - enabled use cases: `eso`
@@ -87,7 +87,7 @@ In practice that means:
 
 - this repo is pushed into Forgejo instead of relying on a GitHub template copy
 - Argo CD reads the repo from the in-cluster Forgejo service URL
-- browser-facing links still use <https://forgejo.vcp.local>
+- local Forgejo uses <http://forgejo.vcp.local> so registry auth stays on plain HTTP inside the self-contained path
 - the shared self-contained Forgejo runner is declared in [forgejo-runner/](./forgejo-runner/) and deployed by [../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml)
 - the demo app image from `src/` is built and pushed to the Forgejo container
   registry as `<repo>-demo-app`, under the repo-scoped prefix
@@ -103,13 +103,13 @@ Current intent for the self-contained path:
   instead of GHCR
 - [vcluster-use-cases/auto-snapshots](../vcluster-use-cases/auto-snapshots)
   still uses GHCR for snapshots in the self-contained path, because the local
-  `forgejo.vcp.local` certificate is not trusted by the in-cluster snapshot job
+  Forgejo snapshot registry flow has not been validated yet
 
 > [!IMPORTANT]
 > The Git hosting flow is the primary path and is the part that has been worked
 > through the most. Forgejo is the default Git host for `vind`, but snapshots
-> currently stay on GHCR until there is a trusted local registry endpoint for
-> the in-cluster snapshot client.
+> currently stay on GHCR until the local Forgejo registry path is validated for
+> the in-cluster snapshot client too.
 
 When `flux` is enabled in `--use-cases`, the vCluster Platform UI also gets a
 `Flux UI` button that points at the shared Flux Operator web UI host for this
@@ -238,7 +238,7 @@ Default local hostnames:
 
 - <https://vcp.local>
 - <https://argocd.vcp.local>
-- <https://forgejo.vcp.local>
+- <http://forgejo.vcp.local>
 
 This setup uses a small [Caddy adapter](https://caddyserver.com/docs/quick-starts/reverse-proxy) under [orbstack-domains/](./orbstack-domains) because `vind` and OrbStack solve two different parts of the problem:
 

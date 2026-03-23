@@ -426,7 +426,7 @@ Recommended next steps:
 2. Start vind-demo-cluster/orbstack-domains if you want friendly desktop browser hostnames:
    - https://$VCP_HOST
    - https://$ARGOCD_HOST
-   - https://$FORGEJO_HOST
+   - http://$FORGEJO_HOST
    - Docker network: vcluster.$CLUSTER_NAME
    - Env file: $ORBSTACK_ENV_FILE
    This is started automatically unless --skip-orbstack-domains was used.

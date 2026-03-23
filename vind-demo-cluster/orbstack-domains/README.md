@@ -5,7 +5,7 @@ hostnames like:
 
 - <https://vcp.local>
 - <https://argocd.vcp.local>
-- <https://forgejo.vcp.local>
+- <http://forgejo.vcp.local>
 
 instead of relying on:
 
@@ -92,7 +92,7 @@ docker compose \
 
 - <https://vcp.local>
 - <https://argocd.vcp.local>
-- <https://forgejo.vcp.local>
+- <http://forgejo.vcp.local>
 
 ## Manual Overrides
 

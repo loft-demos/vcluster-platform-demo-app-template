@@ -10,4 +10,4 @@ stringData:
   name: Forgejo
   clientID: forgejo
   clientSecret: "{REPLACE_FORGEJO_OIDC_SECRET}"
-  redirectURIs: "https://forgejo.{REPLACE_BASE_DOMAIN}/user/oauth2/vcluster-platform/callback"
+  redirectURIs: "http://forgejo.{REPLACE_BASE_DOMAIN}/user/oauth2/vcluster-platform/callback"

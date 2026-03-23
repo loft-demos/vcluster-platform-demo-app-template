@@ -45,8 +45,8 @@ In the self-contained `vind` flow:
   secret
 
 The demo app image flow uses Forgejo. Snapshot storage stays on GHCR for the
-local `vind` path because the in-cluster snapshot client does not trust the
-local `forgejo.vcp.local` certificate.
+local `vind` path because the local Forgejo snapshot registry flow has not been
+validated for the in-cluster snapshot client yet.
 
 ## Schedule
 
@@ -116,7 +116,7 @@ For the self-contained `vind` path, use the GitHub package UI instead:
 > [!IMPORTANT]
 > The self-contained `vind` path keeps snapshots on GHCR for now. A local
 > Forgejo OCI registry endpoint is not a good default here yet because the
-> in-cluster snapshot job does not trust the local OrbStack/Caddy certificate.
+> in-cluster snapshot job path has not been validated end to end.
 
 Official docs:
 

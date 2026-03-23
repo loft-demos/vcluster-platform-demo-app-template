@@ -7,7 +7,7 @@ Create or update a Forgejo/Gitea-compatible repository webhook.
 
 Usage:
   bash scripts/configure-forgejo-webhook.sh \
-    --forgejo-url https://forgejo.vcp.local \
+    --forgejo-url http://forgejo.vcp.local \
     --username demo-admin \
     --token "$FORGEJO_TOKEN" \
     --owner vcluster-demos \
@@ -17,7 +17,7 @@ Usage:
     --events pull_request
 
 Options:
-  --forgejo-url URL        Base URL for Forgejo, for example https://forgejo.vcp.local
+  --forgejo-url URL        Base URL for Forgejo, for example http://forgejo.vcp.local
   --username NAME          Forgejo username used for auth when --password is used
   --token VALUE            Forgejo personal access token. Defaults to FORGEJO_TOKEN
   --password VALUE         Forgejo password for basic auth. Defaults to FORGEJO_PASSWORD
@@ -204,4 +204,3 @@ else
   echo "[INFO] Creating webhook for ${OWNER}/${REPO} -> ${WEBHOOK_URL}"
   api_request POST "$HOOKS_URL" "$payload" >/dev/null
 fi
-

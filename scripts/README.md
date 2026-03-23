@@ -21,8 +21,8 @@ Defaults:
 - repo: `vcp-gitops`
 - org: `vcluster-demos`
 - base domain: `vcp.local`
-- git base URL: `http://forgejo-http.forgejo.svc.cluster.local:3000`
-- git public URL: `https://forgejo.vcp.local`
+- git base URL: `http://forgejo.vcp.local`
+- git public URL: `http://forgejo.vcp.local`
 - image repository prefix: `forgejo.vcp.local/vcluster-demos/vcp-gitops`
 
 ## `bootstrap-forgejo-repo.sh`
@@ -33,7 +33,7 @@ Example:
 
 ```bash
 bash scripts/bootstrap-forgejo-repo.sh \
-  --forgejo-url https://forgejo.vcp.local \
+  --forgejo-url http://forgejo.vcp.local \
   --username demo-admin \
   --password "$FORGEJO_ADMIN_PASSWORD" \
   --owner vcluster-demos \
@@ -80,7 +80,7 @@ Example:
 
 ```bash
 bash scripts/configure-forgejo-webhook.sh \
-  --forgejo-url https://forgejo.vcp.local \
+  --forgejo-url http://forgejo.vcp.local \
   --username demo-admin \
   --token "$FORGEJO_TOKEN" \
   --owner vcluster-demos \
@@ -101,7 +101,7 @@ Example:
 
 ```bash
 bash scripts/configure-forgejo-labels.sh \
-  --forgejo-url https://forgejo.vcp.local \
+  --forgejo-url http://forgejo.vcp.local \
   --username demo-admin \
   --token "$FORGEJO_TOKEN" \
   --owner vcluster-demos \
@@ -125,7 +125,7 @@ Example:
 
 ```bash
 bash scripts/configure-flux-webhook.sh \
-  --forgejo-url https://forgejo.vcp.local \
+  --forgejo-url http://forgejo.vcp.local \
   --username demo-admin \
   --token "$FORGEJO_TOKEN" \
   --owner vcluster-demos \
