@@ -55,6 +55,9 @@ spec:
         - name: runner
           image: code.forgejo.org/forgejo/runner:12
           command: ["forgejo-runner", "daemon", "--config", "/config/config.yaml"]
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
           env:
             - name: DOCKER_HOST
               value: unix:///var/run/docker.sock

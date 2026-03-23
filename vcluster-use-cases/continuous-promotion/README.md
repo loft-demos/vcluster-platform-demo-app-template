@@ -35,6 +35,8 @@ In the `vind` self-contained path, that workflow runs on the shared Forgejo runn
 
 The image is tagged with the `appVersion` from `helm-chart/Chart.yaml` and pushed to the Forgejo container registry. The Kargo Warehouse for both demos watches this registry and triggers promotion automatically when a new semver tag appears.
 
+In the `vind` self-contained path, bootstrap also creates a `forgejo-image-credentials` Secret in the `progressive-delivery` and `pre-prod-gate` namespaces so Kargo can authenticate to the private Forgejo registry.
+
 To trigger a new build manually, bump `appVersion` in `helm-chart/Chart.yaml` and push to `main`.
 
 **Key files:**
@@ -43,6 +45,7 @@ To trigger a new build manually, bump `appVersion` in `helm-chart/Chart.yaml` an
 |---|---|
 | [.forgejo/workflows/build-push.yaml](/.forgejo/workflows/build-push.yaml) | Forgejo Actions workflow — builds `src/Dockerfile` and pushes to Forgejo registry |
 | [../../vind-demo-cluster/forgejo-runner/forgejo-runner.yaml](../../vind-demo-cluster/forgejo-runner/forgejo-runner.yaml) | Shared vind runner Deployment + DinD sidecar |
+| [../../vind-demo-cluster/forgejo-runner/forgejo-runner-config.yaml](../../vind-demo-cluster/forgejo-runner/forgejo-runner-config.yaml) | Runner label mappings used by the daemon |
 | [../../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml) | Argo CD Application deploying the shared vind runner |
 
 ---
@@ -128,7 +131,7 @@ Check [github.com/akuity/kargo/releases](https://github.com/akuity/kargo/release
 
 ### Forgejo runner registration
 
-In the `vind` self-contained path, the bootstrap script uses Forgejo offline registration. It registers a repo-scoped runner from inside the Forgejo pod with `forgejo forgejo-cli actions register`, stores the shared 40-character hex secret in `forgejo-runner-offline-registration`, and the runner init container recreates `/data/.runner` with `forgejo-runner create-runner-file` when needed.
+In the `vind` self-contained path, the bootstrap script uses Forgejo offline registration. It registers a repo-scoped runner from inside the Forgejo pod with `forgejo forgejo-cli actions register`, stores the shared 40-character hex secret in `forgejo-runner-offline-registration`, and the runner init container recreates `/data/.runner` with `forgejo-runner create-runner-file` when needed. The Forgejo-side registration uses plain label names, while the runnable label mappings live in [../../vind-demo-cluster/forgejo-runner/forgejo-runner-config.yaml](../../vind-demo-cluster/forgejo-runner/forgejo-runner-config.yaml).
 
 If the Secret is missing, re-run bootstrap or recreate it manually:
 
@@ -138,7 +141,7 @@ kubectl exec -n forgejo deploy/forgejo -- \
   forgejo forgejo-cli actions register \
     --name "vind-${CLUSTER_NAME}-${REPO_NAME}-runner" \
     --scope "${ORG_NAME}/${REPO_NAME}" \
-    --labels "ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-20.04:docker://node:18-bullseye" \
+    --labels "docker,ubuntu-latest,ubuntu-22.04,ubuntu-20.04" \
     --secret "$secret"
 kubectl create secret generic forgejo-runner-offline-registration \
   --namespace forgejo \

@@ -1154,6 +1154,39 @@ if command -v kubectl >/dev/null 2>&1; then
   fi
 fi
 
+if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_case_selection" "continuous-promotion"; then
+  step "Create Kargo image registry credentials"
+  _kargo_registry_password="${argocd_token:-${FORGEJO_TOKEN:-}}"
+  if [[ -z "$_kargo_registry_password" ]]; then
+    _kargo_registry_password="$FORGEJO_PASSWORD"
+  fi
+  _kargo_image_repo="${IMAGE_REPOSITORY_PREFIX}/${REPO_NAME}-demo-app"
+
+  for _kargo_ns in progressive-delivery pre-prod-gate; do
+    wait_for_create 60 5 get namespace "$_kargo_ns"
+    if kubectl get namespace "$_kargo_ns" >/dev/null 2>&1; then
+      cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: forgejo-image-credentials
+  namespace: ${_kargo_ns}
+  labels:
+    kargo.akuity.io/cred-type: image
+type: Opaque
+stringData:
+  repoURL: ${_kargo_image_repo}
+  username: ${FORGEJO_USERNAME}
+  password: ${_kargo_registry_password}
+EOF
+      log_done "Created forgejo-image-credentials secret in ${_kargo_ns}"
+    else
+      log_warn "Namespace ${_kargo_ns} not ready yet — forgejo-image-credentials will be missing there." >&2
+      log_warn "Re-run bootstrap after the Kargo project namespace exists." >&2
+    fi
+  done
+fi
+
 if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_case_selection" "flux"; then
   step "Configure Forgejo webhook for Flux"
 

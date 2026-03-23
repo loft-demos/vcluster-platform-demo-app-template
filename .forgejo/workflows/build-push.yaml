@@ -45,5 +45,5 @@ jobs:
           docker push "$IMAGE_BASE:$APP_VERSION"
           docker push "$IMAGE_BASE:latest"
         env:
-          FORGEJO_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           IMAGE_BASE: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
