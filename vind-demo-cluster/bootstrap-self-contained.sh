@@ -976,9 +976,11 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
   require_cmd kubectl
   annotate_loft_cluster "$vcp_domain_prefix" "$vcp_domain" "$SLEEP_TIME_ZONE"
 
-  step "Configure in-cluster DNS for the vCP OIDC host"
+  step "Configure in-cluster DNS for local browser hostnames"
   require_cmd kubectl
   ensure_coredns_host_alias "$VCP_HOST" "vcluster-platform" "loft"
+  ensure_coredns_host_alias "$ARGOCD_HOST" "argocd" "argocd-server"
+  ensure_coredns_host_alias "$FORGEJO_HOST" "forgejo" "forgejo-local-http"
 
   step "Create Argo CD credentials and apply the root application"
   require_cmd kubectl

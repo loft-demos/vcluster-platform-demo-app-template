@@ -70,6 +70,22 @@ __VIND_DOCKER_NODES__
           password: __FORGEJO_ADMIN_PASSWORD__
         ---
         apiVersion: v1
+        kind: Service
+        metadata:
+          name: forgejo-local-http
+          namespace: forgejo
+        spec:
+          type: ClusterIP
+          selector:
+            app.kubernetes.io/instance: forgejo
+            app.kubernetes.io/name: forgejo
+          ports:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetPort: http
+        ---
+        apiVersion: v1
         kind: Secret
         metadata:
           name: cluster-local

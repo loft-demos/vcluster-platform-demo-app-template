@@ -91,6 +91,8 @@ In practice that means:
 - the local-domain adapter also publishes `vcp.local`, `argocd.vcp.local`, and
   `forgejo.vcp.local` as Docker-network aliases on `vcluster.<name>`, so the
   runner, Kargo, and node containers can reach those same hostnames locally
+- bootstrap also teaches the embedded CoreDNS to resolve those hostnames to the
+  matching in-cluster services, so pod-network clients use the same names too
 - the shared self-contained Forgejo runner is declared in [forgejo-runner/](./forgejo-runner/) and deployed by [../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml)
 - the demo app image from `src/` is built and pushed to the Forgejo container
   registry as `<repo>-demo-app`, under the repo-scoped prefix
