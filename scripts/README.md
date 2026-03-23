@@ -12,6 +12,7 @@ Default example:
 bash scripts/replace-text-local.sh \
   --repo-name vcp-gitops \
   --org-name vcluster-demos \
+  --forgejo-host forgejo.vcp.local \
   --include-md
 ```
 
@@ -43,6 +44,11 @@ bash scripts/bootstrap-forgejo-repo.sh \
 
 `--include-working-tree` is what makes the local replacement output show up in
 Forgejo without committing local changes first.
+
+Use this from the rendered `vind` runtime checkout, not from the template-style
+source checkout with unresolved `{REPLACE_*}` placeholders. The script now
+refuses to push a working-tree snapshot if critical runtime files such as the
+Forgejo build workflow still contain unresolved placeholders.
 
 ## `build-push-forgejo-image.sh`
 

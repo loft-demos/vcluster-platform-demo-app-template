@@ -56,6 +56,34 @@ require_cmd() {
   fi
 }
 
+check_critical_placeholders() {
+  local repo_root unresolved=0
+  local critical_files=(
+    ".forgejo/workflows/build-push.yaml"
+    "helm-chart/values.yaml"
+    "vcluster-use-cases/continuous-promotion/guestbook/base/deploy.yaml"
+    "vcluster-use-cases/continuous-promotion/manifests/progressive-delivery/kargo-warehouse.yaml"
+    "vcluster-use-cases/continuous-promotion/manifests/pre-prod-gate/kargo-warehouse.yaml"
+  )
+
+  repo_root="$(git rev-parse --show-toplevel)"
+
+  for file in "${critical_files[@]}"; do
+    [[ -f "$repo_root/$file" ]] || continue
+    if rg -n '\{REPLACE_[A-Z0-9_]+\}' "$repo_root/$file" >/dev/null 2>&1; then
+      echo "[ERROR] Unresolved placeholders found in $file" >&2
+      rg -n '\{REPLACE_[A-Z0-9_]+\}' "$repo_root/$file" >&2 || true
+      unresolved=1
+    fi
+  done
+
+  if [[ "$unresolved" == "1" ]]; then
+    echo "[ERROR] Refusing to push a working-tree snapshot with unresolved placeholders in runtime-critical files." >&2
+    echo "[ERROR] Re-run scripts/replace-text-local.sh from the rendered runtime checkout, then push again." >&2
+    exit 1
+  fi
+}
+
 detect_default_branch() {
   local branch=""
   branch="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)"
@@ -400,6 +428,7 @@ fi
 push_refs
 
 if [[ "$INCLUDE_WORKING_TREE" == "true" ]]; then
+  check_critical_placeholders
   echo "[INFO] Pushing working tree snapshot to $DEFAULT_BRANCH"
   push_working_tree_snapshot
 fi

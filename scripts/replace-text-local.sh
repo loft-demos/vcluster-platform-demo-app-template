@@ -41,6 +41,7 @@ Options:
   --git-base-url-authed URL
                           Optional. Defaults to http://user:pass@forgejo-http.forgejo.svc.cluster.local:3000.
   --git-public-url URL    Optional. Defaults to https://forgejo.vcp.local.
+  --forgejo-host HOST     Optional. Defaults to forgejo.vcp.local.
   --image-repository-prefix PREFIX
                           Optional. Defaults to forgejo.vcp.local/<org-name>/<repo-name>.
   --oci-registry-host HOST
@@ -86,6 +87,7 @@ BASE_DOMAIN=""
 GIT_BASE_URL=""
 GIT_BASE_URL_AUTHED=""
 GIT_PUBLIC_URL=""
+FORGEJO_HOST=""
 IMAGE_REPOSITORY_PREFIX=""
 OCI_REGISTRY_HOST=""
 SNAPSHOT_OCI_REPOSITORY=""
@@ -126,6 +128,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --git-public-url)
       GIT_PUBLIC_URL="${2:-}"
+      shift 2
+      ;;
+    --forgejo-host)
+      FORGEJO_HOST="${2:-}"
       shift 2
       ;;
     --image-repository-prefix)
@@ -241,6 +247,7 @@ while IFS= read -r file; do
   files+=("$file")
 done < <(
   rg -l \
+    --hidden \
     '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_BASE_URL_AUTHED\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_ADMIN_PASSWORD_HASH\}|\{REPLACE_KARGO_TOKEN_SIGNING_KEY\}|\{REPLACE_KARGO_OIDC_SECRET\}|\{REPLACE_FORGEJO_OIDC_SECRET\}|\{REPLACE_FORGEJO_HOST\}' \
     . \
     "${globs[@]}" \

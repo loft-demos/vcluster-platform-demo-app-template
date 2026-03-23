@@ -774,6 +774,7 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --git-base-url "$GIT_BASE_URL" \
     --git-base-url-authed "$GIT_BASE_URL_AUTHED" \
     --git-public-url "$GIT_PUBLIC_URL" \
+    --forgejo-host "$FORGEJO_HOST" \
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
     --oci-registry-host "$FORGEJO_HOST" \
     --snapshot-oci-repository "forgejo-http.forgejo.svc.cluster.local:3000/${FORGEJO_OWNER}/${REPO_NAME}" \
@@ -1163,7 +1164,11 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
   _kargo_image_repo="${IMAGE_REPOSITORY_PREFIX}/${REPO_NAME}-demo-app"
 
   for _kargo_ns in progressive-delivery pre-prod-gate; do
-    wait_for_create 60 5 get namespace "$_kargo_ns"
+    wait_for_create 60 5 get namespace "$_kargo_ns" &
+  done
+  wait
+
+  for _kargo_ns in progressive-delivery pre-prod-gate; do
     if kubectl get namespace "$_kargo_ns" >/dev/null 2>&1; then
       cat <<EOF | kubectl apply -f -
 apiVersion: v1
