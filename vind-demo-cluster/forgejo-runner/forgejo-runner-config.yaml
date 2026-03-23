@@ -9,13 +9,14 @@ data:
       level: info
     runner:
       file: /data/.runner
-      capacity: 2
+      capacity: 1
       labels:
         - docker:docker://node:20-bookworm
         - ubuntu-latest:docker://node:20-bookworm
         - ubuntu-22.04:docker://node:20-bookworm
         - ubuntu-20.04:docker://node:18-bullseye
-      envs: {}
+      envs:
+        DOCKER_HOST: unix:///var/run/docker.sock
       timeout: 3h
       insecure: false
       fetch_timeout: 5s
