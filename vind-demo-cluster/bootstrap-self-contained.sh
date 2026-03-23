@@ -821,9 +821,11 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --control-plane-nodes "$CONTROL_PLANE_NODE_COUNT"
     --worker-nodes "$WORKER_NODE_COUNT"
   )
+  set +u
   for docker_arg in "${_docker_args_copy[@]}"; do
     _install_vind_args+=(--docker-arg "$docker_arg")
   done
+  set -u
   _install_vind_args+=(
     --use-cases "$USE_CASES"
     --sleep-time-zone "$SLEEP_TIME_ZONE"
@@ -924,6 +926,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
     _forgejo_auth_args_copy=("${forgejo_auth_args[@]}")
     set -u
 
+    set +u
     bash scripts/bootstrap-forgejo-repo.sh \
       --forgejo-url "$FORGEJO_URL" \
       --username "$FORGEJO_USERNAME" \
@@ -934,8 +937,10 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       --current-branch-only \
       --skip-tags \
       --include-working-tree
+    set -u
 
     if [[ -n "$FORGEJO_PASSWORD" ]]; then
+      set +u
       bash scripts/configure-forgejo-actions-secret.sh \
         --forgejo-url "$FORGEJO_URL" \
         --username "$FORGEJO_USERNAME" \
@@ -944,9 +949,11 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
         --repo "$REPO_NAME" \
         --secret-name FORGEJO_PASSWORD \
         --secret-value "$FORGEJO_PASSWORD"
+      set -u
     fi
 
     if [[ -n "$FORGEJO_TOKEN" ]]; then
+      set +u
       bash scripts/configure-forgejo-actions-secret.sh \
         --forgejo-url "$FORGEJO_URL" \
         --username "$FORGEJO_USERNAME" \
@@ -955,6 +962,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
         --repo "$REPO_NAME" \
         --secret-name FORGEJO_TOKEN \
         --secret-value "$FORGEJO_TOKEN"
+      set -u
     fi
 
     if [[ "$AUTO_NODES_ENABLED" == "true" ]]; then
@@ -963,6 +971,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       git submodule update --init vcluster-auto-nodes-pod
       (
         cd "$_demo_repo_dir/vcluster-auto-nodes-pod"
+        set +u
         bash "$_demo_repo_dir/scripts/bootstrap-forgejo-repo.sh" \
           --forgejo-url "$FORGEJO_URL" \
           --username "$FORGEJO_USERNAME" \
@@ -973,6 +982,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
           --visibility public \
           --current-branch-only \
           --skip-tags
+        set -u
       ) || log_warn "Could not push vcluster-auto-nodes-pod to Forgejo."
     fi
   else
@@ -1006,6 +1016,7 @@ if [[ "$SKIP_RUNNER_JOB_IMAGE_BUILD" != "true" ]]; then
   step "Build and push the Forgejo runner job image"
   require_cmd docker
 
+  set +u
   bash scripts/build-push-forgejo-image.sh \
     --registry "$FORGEJO_HOST" \
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
@@ -1018,6 +1029,7 @@ if [[ "$SKIP_RUNNER_JOB_IMAGE_BUILD" != "true" ]]; then
     --dockerfile vind-demo-cluster/forgejo-runner/job-image/Dockerfile \
     --platform "$IMAGE_PLATFORM" \
     --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
+  set -u
 fi
 
 if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
@@ -1030,6 +1042,7 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
   require_cmd nohup
 
   declare -a image_build_cmd
+  set +u
   image_build_cmd=(
     bash scripts/build-push-forgejo-image.sh
     --registry "$FORGEJO_HOST"
@@ -1041,6 +1054,7 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
     --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
     --skip-cache
   )
+  set -u
 
   if [[ "$WAIT_FOR_IMAGE_BUILD" == "true" ]]; then
     "${image_build_cmd[@]}"

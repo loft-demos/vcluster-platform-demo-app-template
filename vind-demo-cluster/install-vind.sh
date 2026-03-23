@@ -289,10 +289,12 @@ docker_args_yaml=""
 if [[ "${#docker_args_copy[@]}" -gt 0 ]]; then
   docker_args_yaml="    args:
 "
+  set +u
   for docker_arg in "${docker_args_copy[@]}"; do
     docker_args_yaml="${docker_args_yaml}      - \"$(yaml_escape "$docker_arg")\"
 "
   done
+  set -u
   docker_args_yaml="${docker_args_yaml%$'\n'}"
 fi
 
@@ -304,10 +306,12 @@ if [[ "$WORKER_NODE_COUNT" -gt 0 ]]; then
     if [[ "${#docker_args_copy[@]}" -gt 0 ]]; then
       worker_nodes_yaml="${worker_nodes_yaml}        args:
 "
+      set +u
       for docker_arg in "${docker_args_copy[@]}"; do
         worker_nodes_yaml="${worker_nodes_yaml}          - \"$(yaml_escape "$docker_arg")\"
 "
       done
+      set -u
     fi
   done
   worker_nodes_yaml="${worker_nodes_yaml%$'\n'}"
