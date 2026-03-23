@@ -12,7 +12,7 @@
 env:
   LICENSE_TOKEN: __VCP_LICENSE_TOKEN__
 service:
-  type: ClusterIP
+  type: LoadBalancer
 ingress:
   enabled: false
 config:

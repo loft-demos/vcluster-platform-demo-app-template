@@ -109,7 +109,7 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 effect: NoSchedule
             service:
               http:
-                type: ClusterIP
+                type: LoadBalancer
             ingress:
               enabled: false
             gitea:
