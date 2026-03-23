@@ -60,17 +60,22 @@ jobs:
           docker build \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             -t "$IMAGE_BASE:$APP_VERSION" \
+            -t "$IMAGE_PUSH_BASE:$APP_VERSION" \
             -t "$IMAGE_BASE:latest" \
+            -t "$IMAGE_PUSH_BASE:latest" \
             ./src
         env:
           IMAGE_BASE: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+          IMAGE_PUSH_BASE: '{REPLACE_SNAPSHOT_OCI_REPOSITORY}/{REPLACE_REPO_NAME}-demo-app'
 
       - name: Log in to Forgejo Container Registry and push
         run: |
-          echo "$FORGEJO_TOKEN" | docker login '{REPLACE_FORGEJO_HOST}' \
+          REGISTRY_HOST="${IMAGE_PUSH_BASE%%/*}"
+          echo "$FORGEJO_TOKEN" | docker login "$REGISTRY_HOST" \
             --username "$GITHUB_ACTOR" --password-stdin
-          docker push "$IMAGE_BASE:$APP_VERSION"
-          docker push "$IMAGE_BASE:latest"
+          docker push "$IMAGE_PUSH_BASE:$APP_VERSION"
+          docker push "$IMAGE_PUSH_BASE:latest"
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           IMAGE_BASE: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+          IMAGE_PUSH_BASE: '{REPLACE_SNAPSHOT_OCI_REPOSITORY}/{REPLACE_REPO_NAME}-demo-app'

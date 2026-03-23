@@ -80,6 +80,7 @@ spec:
               value: ""
           args:
             - "--insecure-registry={REPLACE_FORGEJO_HOST}"
+            - "--insecure-registry=forgejo-http.forgejo.svc.cluster.local:3000"
           volumeMounts:
             - name: docker-sock
               mountPath: /var/run
