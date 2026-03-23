@@ -278,13 +278,18 @@ fi
 cluster_local_use_case_labels="$(render_cluster_local_use_case_labels "$USE_CASES" '            ')"
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 selected_use_case_lines="$(resolve_use_case_selection "$USE_CASES")"
+declare -a docker_args_copy=()
+
+set +u
+docker_args_copy=("${DOCKER_ARGS[@]}")
+set -u
 
 worker_nodes_yaml="      []"
 docker_args_yaml=""
-if [[ "${#DOCKER_ARGS[@]}" -gt 0 ]]; then
+if [[ "${#docker_args_copy[@]}" -gt 0 ]]; then
   docker_args_yaml="    args:
 "
-  for docker_arg in "${DOCKER_ARGS[@]}"; do
+  for docker_arg in "${docker_args_copy[@]}"; do
     docker_args_yaml="${docker_args_yaml}      - \"$(yaml_escape "$docker_arg")\"
 "
   done
@@ -296,10 +301,10 @@ if [[ "$WORKER_NODE_COUNT" -gt 0 ]]; then
   for worker_index in $(seq 1 "$WORKER_NODE_COUNT"); do
     worker_nodes_yaml="${worker_nodes_yaml}      - name: worker-${worker_index}
 "
-    if [[ "${#DOCKER_ARGS[@]}" -gt 0 ]]; then
+    if [[ "${#docker_args_copy[@]}" -gt 0 ]]; then
       worker_nodes_yaml="${worker_nodes_yaml}        args:
 "
-      for docker_arg in "${DOCKER_ARGS[@]}"; do
+      for docker_arg in "${docker_args_copy[@]}"; do
         worker_nodes_yaml="${worker_nodes_yaml}          - \"$(yaml_escape "$docker_arg")\"
 "
       done
@@ -344,8 +349,8 @@ log_info "vCluster Platform version: $VCP_VERSION"
 log_info "Repo: $ORG_NAME/$REPO_NAME"
 log_info "Control plane nodes: $CONTROL_PLANE_NODE_COUNT"
 log_info "Worker nodes: $WORKER_NODE_COUNT"
-if [[ "${#DOCKER_ARGS[@]}" -gt 0 ]]; then
-  log_info "Experimental docker args: ${DOCKER_ARGS[*]}"
+if [[ "${#docker_args_copy[@]}" -gt 0 ]]; then
+  log_info "Experimental docker args: ${docker_args_copy[*]}"
 fi
 log_info "vCluster Platform host: $VCP_HOST"
 log_info "Forgejo host: $FORGEJO_HOST"

@@ -233,7 +233,12 @@ build_args=(
   --tag "${image_ref}:${chart_app_version}"
 )
 
-for extra_tag in "${EXTRA_TAGS[@]}"; do
+declare -a extra_tags_copy=()
+set +u
+extra_tags_copy=("${EXTRA_TAGS[@]}")
+set -u
+
+for extra_tag in "${extra_tags_copy[@]}"; do
   build_args+=(
     --tag "${image_ref}:${extra_tag}"
   )

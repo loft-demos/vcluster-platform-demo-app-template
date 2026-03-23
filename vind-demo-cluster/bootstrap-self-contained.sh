@@ -780,6 +780,13 @@ fi
 STEP_INDEX=0
 IMAGE_BUILD_LOG=""
 IMAGE_BUILD_PID=""
+declare -a _docker_args_copy=()
+declare -a _forgejo_auth_args_copy=()
+declare -a _image_auth_args_copy=()
+
+set +u
+_docker_args_copy=("${DOCKER_ARGS[@]}")
+set -u
 
 # Always generate OIDC secrets — vcp-platform-values.yaml embeds them for the
 # vCP OIDC provider regardless of which use cases are enabled.
@@ -814,7 +821,7 @@ if [[ "$SKIP_VIND" != "true" ]]; then
     --control-plane-nodes "$CONTROL_PLANE_NODE_COUNT"
     --worker-nodes "$WORKER_NODE_COUNT"
   )
-  for docker_arg in "${DOCKER_ARGS[@]}"; do
+  for docker_arg in "${_docker_args_copy[@]}"; do
     _install_vind_args+=(--docker-arg "$docker_arg")
   done
   _install_vind_args+=(
@@ -913,10 +920,14 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       forgejo_auth_args+=(--password "$FORGEJO_PASSWORD")
     fi
 
+    set +u
+    _forgejo_auth_args_copy=("${forgejo_auth_args[@]}")
+    set -u
+
     bash scripts/bootstrap-forgejo-repo.sh \
       --forgejo-url "$FORGEJO_URL" \
       --username "$FORGEJO_USERNAME" \
-      "${forgejo_auth_args[@]}" \
+      "${_forgejo_auth_args_copy[@]}" \
       --owner "$FORGEJO_OWNER" \
       --owner-type "$FORGEJO_OWNER_TYPE" \
       --repo "$REPO_NAME" \
@@ -928,7 +939,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       bash scripts/configure-forgejo-actions-secret.sh \
         --forgejo-url "$FORGEJO_URL" \
         --username "$FORGEJO_USERNAME" \
-        "${forgejo_auth_args[@]}" \
+        "${_forgejo_auth_args_copy[@]}" \
         --owner "$FORGEJO_OWNER" \
         --repo "$REPO_NAME" \
         --secret-name FORGEJO_PASSWORD \
@@ -939,7 +950,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       bash scripts/configure-forgejo-actions-secret.sh \
         --forgejo-url "$FORGEJO_URL" \
         --username "$FORGEJO_USERNAME" \
-        "${forgejo_auth_args[@]}" \
+        "${_forgejo_auth_args_copy[@]}" \
         --owner "$FORGEJO_OWNER" \
         --repo "$REPO_NAME" \
         --secret-name FORGEJO_TOKEN \
@@ -955,7 +966,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
         bash "$_demo_repo_dir/scripts/bootstrap-forgejo-repo.sh" \
           --forgejo-url "$FORGEJO_URL" \
           --username "$FORGEJO_USERNAME" \
-          "${forgejo_auth_args[@]}" \
+          "${_forgejo_auth_args_copy[@]}" \
           --owner "$FORGEJO_OWNER" \
           --owner-type "$FORGEJO_OWNER_TYPE" \
           --repo "vcluster-auto-nodes-pod" \
@@ -987,6 +998,10 @@ elif [[ -n "$image_auth_password" ]]; then
   image_auth_args+=(--password "$image_auth_password")
 fi
 
+set +u
+_image_auth_args_copy=("${image_auth_args[@]}")
+set -u
+
 if [[ "$SKIP_RUNNER_JOB_IMAGE_BUILD" != "true" ]]; then
   step "Build and push the Forgejo runner job image"
   require_cmd docker
@@ -998,7 +1013,7 @@ if [[ "$SKIP_RUNNER_JOB_IMAGE_BUILD" != "true" ]]; then
     --image-name "${REPO_NAME}-forgejo-runner-job" \
     --extra-tag latest \
     --username "$FORGEJO_USERNAME" \
-    "${image_auth_args[@]}" \
+    "${_image_auth_args_copy[@]}" \
     --context vind-demo-cluster/forgejo-runner/job-image \
     --dockerfile vind-demo-cluster/forgejo-runner/job-image/Dockerfile \
     --platform "$IMAGE_PLATFORM" \
@@ -1021,7 +1036,7 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX"
     --repo-name "$REPO_NAME"
     --username "$FORGEJO_USERNAME"
-    "${image_auth_args[@]}"
+    "${_image_auth_args_copy[@]}"
     --platform "$IMAGE_PLATFORM"
     --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
     --skip-cache
