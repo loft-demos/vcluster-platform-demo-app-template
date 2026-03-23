@@ -95,4 +95,9 @@ perl -0pi -e '
   s/__FORGEJO_HOST__/$ENV{FORGEJO_HOST}/g;
 ' "$rendered_file"
 
+if ! rg -q '^[[:space:]]*apiVersion:' "$rendered_file"; then
+  echo "[INFO] No browser ingress resources to apply."
+  exit 0
+fi
+
 kubectl apply -f "$rendered_file"

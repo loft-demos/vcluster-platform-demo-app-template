@@ -126,7 +126,9 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 actions:
                   ENABLED: true
                 server:
+                  DOMAIN: __FORGEJO_HOST__
                   ROOT_URL: http://__FORGEJO_HOST__/
+                  SSH_DOMAIN: __FORGEJO_HOST__
         - chart:
             name: argo-cd
             repo: https://argoproj.github.io/argo-helm
@@ -150,7 +152,7 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
               ingress:
                 enabled: false
               service:
-                type: ClusterIP
+                type: LoadBalancer
         - chart:
             name: external-secrets
             repo: https://charts.external-secrets.io

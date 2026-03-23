@@ -24,6 +24,8 @@ Options:
   --vcp-host HOST           Optional. Defaults to vcp.local.
   --argocd-host HOST        Optional. Defaults to argocd.<vcp-host>.
   --forgejo-host HOST       Optional. Defaults to forgejo.<vcp-host>.
+  --argocd-upstream HOST[:PORT]
+                            Optional. Override the default Argo CD LoadBalancer upstream.
   --vcp-upstream HOST[:PORT]
                             Optional. Override the default vCP LoadBalancer upstream.
   --forgejo-upstream HOST[:PORT]
@@ -50,6 +52,7 @@ CLUSTER_NAME="vcp"
 VCP_HOST="vcp.local"
 ARGOCD_HOST=""
 FORGEJO_HOST=""
+ARGOCD_UPSTREAM=""
 VCP_UPSTREAM=""
 FORGEJO_UPSTREAM=""
 INGRESS_WILDCARD_HOST=""
@@ -75,6 +78,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --forgejo-host)
       FORGEJO_HOST="${2:-}"
+      shift 2
+      ;;
+    --argocd-upstream)
+      ARGOCD_UPSTREAM="${2:-}"
       shift 2
       ;;
     --vcp-upstream)
@@ -149,6 +156,10 @@ if [[ -z "$INGRESS_UPSTREAM" ]]; then
   INGRESS_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.ingress-nginx-controller.ingress-nginx:80"
 fi
 
+if [[ -z "$ARGOCD_UPSTREAM" ]]; then
+  ARGOCD_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.argocd-server.argocd:80"
+fi
+
 if [[ -z "$VCP_UPSTREAM" ]]; then
   VCP_UPSTREAM="vcluster.lb.${CLUSTER_NAME}.loft.vcluster-platform:443"
 fi
@@ -165,6 +176,7 @@ VIND_DOCKER_NETWORK=${VIND_DOCKER_NETWORK}
 VCP_HOST=${VCP_HOST}
 ARGOCD_HOST=${ARGOCD_HOST}
 FORGEJO_HOST=${FORGEJO_HOST}
+ARGOCD_UPSTREAM=${ARGOCD_UPSTREAM}
 VCP_UPSTREAM=${VCP_UPSTREAM}
 FORGEJO_UPSTREAM=${FORGEJO_UPSTREAM}
 INGRESS_WILDCARD_HOST=${INGRESS_WILDCARD_HOST}
@@ -172,6 +184,7 @@ INGRESS_UPSTREAM=${INGRESS_UPSTREAM}
 EOF
 
 echo "[INFO] Wrote ${ENV_FILE}"
+echo "[INFO] Argo CD upstream: ${ARGOCD_UPSTREAM}"
 echo "[INFO] vCP upstream: ${VCP_UPSTREAM}"
 echo "[INFO] Forgejo upstream: ${FORGEJO_UPSTREAM}"
 echo "[INFO] Browser ingress upstream: ${INGRESS_UPSTREAM}"

@@ -1,20 +1,4 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: argocd-browser
-  namespace: argocd
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: __ARGOCD_HOST__
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: argocd-server
-                port:
-                  number: 80
+# Browser-facing ingress resources are intentionally empty for now.
+# vCP, Argo CD, and Forgejo use dedicated LoadBalancer paths in the local
+# self-contained vind flow. ingress-nginx remains the wildcard edge for
+# application hosts such as *.vcp.local.

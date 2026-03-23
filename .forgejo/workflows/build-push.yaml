@@ -65,10 +65,19 @@ jobs:
         env:
           IMAGE_BASE: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
 
-      - name: Log in to Forgejo Container Registry and push
+      - name: Configure Forgejo Container Registry auth and push
         run: |
-          echo "$FORGEJO_TOKEN" | docker login '{REPLACE_FORGEJO_HOST}' \
-            --username "$GITHUB_ACTOR" --password-stdin
+          mkdir -p "$HOME/.docker"
+          REGISTRY_AUTH="$(printf '%s:%s' "$GITHUB_ACTOR" "$FORGEJO_TOKEN" | base64 | tr -d '\n')"
+          cat >"$HOME/.docker/config.json" <<EOF
+          {
+            "auths": {
+              "{REPLACE_FORGEJO_HOST}": {
+                "auth": "${REGISTRY_AUTH}"
+              }
+            }
+          }
+          EOF
           docker push "$IMAGE_BASE:$APP_VERSION"
           docker push "$IMAGE_BASE:latest"
         env:

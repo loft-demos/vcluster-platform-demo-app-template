@@ -3,7 +3,7 @@
 }
 
 http://{$ARGOCD_HOST} {
-  reverse_proxy http://{$INGRESS_UPSTREAM}
+  reverse_proxy http://{$ARGOCD_UPSTREAM}
 }
 
 http://{$VCP_HOST} {

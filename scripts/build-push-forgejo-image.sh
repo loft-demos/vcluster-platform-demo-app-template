@@ -192,12 +192,23 @@ fi
 
 image_ref="${IMAGE_REPOSITORY_PREFIX%/}/${IMAGE_NAME}"
 
-echo "[INFO] Logging into ${REGISTRY}"
+echo "[INFO] Configuring registry auth for ${REGISTRY}"
+mkdir -p "${HOME}/.docker"
 if [[ -n "$TOKEN" ]]; then
-  printf '%s' "$TOKEN" | docker login "$REGISTRY" --username "$USERNAME" --password-stdin >/dev/null
+  auth_secret="$TOKEN"
 else
-  printf '%s' "$PASSWORD" | docker login "$REGISTRY" --username "$USERNAME" --password-stdin >/dev/null
+  auth_secret="$PASSWORD"
 fi
+registry_auth="$(printf '%s:%s' "$USERNAME" "$auth_secret" | base64 | tr -d '\n')"
+cat >"${HOME}/.docker/config.json" <<EOF
+{
+  "auths": {
+    "${REGISTRY}": {
+      "auth": "${registry_auth}"
+    }
+  }
+}
+EOF
 
 if ! docker buildx inspect >/dev/null 2>&1; then
   docker buildx create --use >/dev/null
