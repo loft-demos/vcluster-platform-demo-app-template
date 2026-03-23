@@ -88,6 +88,9 @@ In practice that means:
 - this repo is pushed into Forgejo instead of relying on a GitHub template copy
 - Argo CD reads the repo from the in-cluster Forgejo service URL
 - local Forgejo uses <http://forgejo.vcp.local> so registry auth stays on plain HTTP inside the self-contained path
+- the local-domain adapter also publishes `vcp.local`, `argocd.vcp.local`, and
+  `forgejo.vcp.local` as Docker-network aliases on `vcluster.<name>`, so the
+  runner, Kargo, and node containers can reach those same hostnames locally
 - the shared self-contained Forgejo runner is declared in [forgejo-runner/](./forgejo-runner/) and deployed by [../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml)
 - the demo app image from `src/` is built and pushed to the Forgejo container
   registry as `<repo>-demo-app`, under the repo-scoped prefix

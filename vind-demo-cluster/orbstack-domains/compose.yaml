@@ -17,7 +17,11 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
-      - vind
+      vind:
+        aliases:
+          - ${VCP_HOST}
+          - ${ARGOCD_HOST}
+          - ${FORGEJO_HOST}
 
 networks:
   vind:

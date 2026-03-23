@@ -203,6 +203,56 @@ EOF
   fi
 }
 
+ensure_coredns_host_alias() {
+  require_cmd jq
+  local host_name="$1"
+  local service_namespace="$2"
+  local service_name="$3"
+  local service_ip=""
+  local config_key=""
+  local server_block=""
+
+  wait_for_create 60 2 -n "$service_namespace" get svc "$service_name"
+  service_ip="$(kubectl -n "$service_namespace" get svc "$service_name" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"
+
+  if [[ -z "$service_ip" ]]; then
+    log_warn "Could not find ClusterIP for ${service_namespace}/${service_name} — skipping CoreDNS host alias for ${host_name}." >&2
+    return 0
+  fi
+
+  config_key="${host_name}.server"
+  server_block="${host_name}:1053 {
+    hosts {
+        ${service_ip} ${host_name}
+        fallthrough
+    }
+}"
+
+  if ! kubectl -n kube-system get configmap coredns-custom >/dev/null 2>&1; then
+    cat <<EOF | kubectl apply -f - >/dev/null
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data: {}
+EOF
+  fi
+
+  if [[ "$(kubectl -n kube-system get configmap coredns-custom -o json 2>/dev/null | jq -r --arg key "$config_key" '.data[$key] // empty')" == "$server_block" ]]; then
+    log_info "CoreDNS already resolves ${host_name} inside the cluster"
+    return 0
+  fi
+
+  kubectl -n kube-system get configmap coredns-custom -o json \
+    | jq --arg key "$config_key" --arg value "$server_block" '.data[$key] = $value' \
+    | kubectl apply -f - >/dev/null
+
+  kubectl -n kube-system rollout restart deployment/coredns >/dev/null 2>&1 || true
+  kubectl -n kube-system rollout status deployment/coredns --timeout=180s >/dev/null 2>&1 || true
+  log_done "Configured CoreDNS host alias ${host_name} -> ${service_ip}"
+}
+
 annotate_loft_cluster() {
   local domain_prefix="$1"
   local domain_name="$2"
@@ -925,6 +975,10 @@ if [[ "$SKIP_ARGOCD_BOOTSTRAP" != "true" ]]; then
   step "Annotate cluster/loft-cluster for Platform-side host and timezone values"
   require_cmd kubectl
   annotate_loft_cluster "$vcp_domain_prefix" "$vcp_domain" "$SLEEP_TIME_ZONE"
+
+  step "Configure in-cluster DNS for the vCP OIDC host"
+  require_cmd kubectl
+  ensure_coredns_host_alias "$VCP_HOST" "vcluster-platform" "loft"
 
   step "Create Argo CD credentials and apply the root application"
   require_cmd kubectl

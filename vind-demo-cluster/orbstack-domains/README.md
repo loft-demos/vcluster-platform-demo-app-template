@@ -17,10 +17,12 @@ instead of relying on:
 
 `vind` and OrbStack solve different parts of the local access problem:
 
-- `vind` exposes browser-facing apps through Kubernetes `Ingress` resources
-- `ingress-nginx` stays as the single `LoadBalancer` entrypoint
-- that `LoadBalancer` is backed by an HAProxy container on the per-cluster
-  Docker network, for example `vcluster.vcp`
+- `vind` exposes wildcard app hosts through Kubernetes `Ingress` resources
+- `vcp.local`, `argocd.vcp.local`, and `forgejo.vcp.local` each keep their own
+  dedicated `LoadBalancer` upstream
+- `ingress-nginx` stays as the wildcard app entrypoint
+- those `LoadBalancer` services are backed by HAProxy containers on the
+  per-cluster Docker network, for example `vcluster.vcp`
 - OrbStack can assign nice local HTTPS domains to Docker containers
 - OrbStack does not directly assign those friendly domains to Kubernetes
   services inside `vind`
@@ -28,7 +30,11 @@ instead of relying on:
 So this folder uses a small Caddy container as a bridge:
 
 - OrbStack gives the Caddy container friendly HTTPS hostnames
-- Caddy reverse proxies those hostnames to the shared ingress-nginx upstream
+- Caddy reverse proxies those hostnames to the mixed `vind` upstreams
+- the same Caddy container also advertises Docker-network aliases for
+  `vcp.local`, `argocd.vcp.local`, and `forgejo.vcp.local`, so machine clients
+  running on the `vind` network can reach the same hostnames without leaving
+  the local Docker network
 
 That is the main pattern.
 
@@ -45,6 +51,9 @@ For a `vind` cluster named `vcp`, the Docker network is usually:
 
 Typical upstreams look like:
 
+- `vcluster.lb.vcp.loft.vcluster-platform:443`
+- `vcluster.lb.vcp.argocd-server.argocd:80`
+- `vcluster.lb.vcp.forgejo-http.forgejo:3000`
 - `vcluster.lb.vcp.ingress-nginx-controller.ingress-nginx:80`
 
 The Caddy container joins `vcluster.vcp`, so it can resolve and reach those
@@ -56,6 +65,11 @@ domains:
 - `vcp.local`
 - `argocd.vcp.local`
 - `forgejo.vcp.local`
+
+Docker clients that also join `vcluster.vcp` see those same three hostnames as
+network aliases for the Caddy container itself. That split keeps browser access
+and in-cluster machine access on the same hostnames without leaking Kubernetes
+service DNS names into image tags or callback URLs.
 
 ## Quick Tutorial
 
@@ -107,6 +121,9 @@ VCP_HOST=team-a.vcp.local
 ARGOCD_HOST=argocd.team-a.vcp.local
 FORGEJO_HOST=forgejo.team-a.vcp.local
 INGRESS_WILDCARD_HOST=*.team-a.vcp.local
+ARGOCD_UPSTREAM=vcluster.lb.team-a.argocd-server.argocd:80
+VCP_UPSTREAM=vcluster.lb.team-a.loft.vcluster-platform:443
+FORGEJO_UPSTREAM=vcluster.lb.team-a.forgejo-http.forgejo:3000
 INGRESS_UPSTREAM=vcluster.lb.team-a.ingress-nginx-controller.ingress-nginx:80
 ```
 

@@ -34,7 +34,7 @@ Options:
   --docker-network NAME     Optional. Defaults to vcluster.<cluster-name>.
   --ingress-upstream HOST[:PORT]
                             Optional. Override the default ingress-nginx upstream used
-                            for Argo CD and wildcard app hosts.
+                            for wildcard app hosts.
   --timeout SECONDS         Optional. Defaults to 120.
   --help                    Show this message.
 EOF
@@ -187,7 +187,7 @@ echo "[INFO] Wrote ${ENV_FILE}"
 echo "[INFO] Argo CD upstream: ${ARGOCD_UPSTREAM}"
 echo "[INFO] vCP upstream: ${VCP_UPSTREAM}"
 echo "[INFO] Forgejo upstream: ${FORGEJO_UPSTREAM}"
-echo "[INFO] Browser ingress upstream: ${INGRESS_UPSTREAM}"
+echo "[INFO] Wildcard ingress upstream: ${INGRESS_UPSTREAM}"
 
 docker compose \
   --project-directory "$COMPOSE_DIR" \
