@@ -3,19 +3,15 @@
 }
 
 http://{$ARGOCD_HOST} {
-  reverse_proxy http://{$ARGOCD_UPSTREAM}
+  reverse_proxy http://{$INGRESS_UPSTREAM}
 }
 
 http://{$VCP_HOST} {
-  reverse_proxy https://{$VCP_UPSTREAM} {
-    transport http {
-      tls_insecure_skip_verify
-    }
-  }
+  reverse_proxy http://{$INGRESS_UPSTREAM}
 }
 
 http://{$FORGEJO_HOST} {
-  reverse_proxy http://{$FORGEJO_UPSTREAM}
+  reverse_proxy http://{$INGRESS_UPSTREAM}
 }
 
 http://{$INGRESS_WILDCARD_HOST} {

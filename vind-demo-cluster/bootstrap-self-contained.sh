@@ -35,15 +35,13 @@ Optional OrbStack local domain overrides:
   --vcp-host team-a.vcp.local
   --argocd-host argocd.team-a.vcp.local
   --forgejo-host forgejo.team-a.vcp.local
+  --ingress-upstream vcluster.lb.team-a.ingress-nginx-controller.ingress-nginx:80
   --onepassword-vault team-a
   --vcp-version 4.8.0
   --worker-nodes 2
   --use-cases eso,auto-snapshots
   --private-node-vm-name private-node-demo-worker-1
   --sleep-time-zone America/New_York
-  --vcp-upstream vcluster.lb.team-a.loft.vcluster-platform:443
-  --argocd-upstream vcluster.lb.team-a.argocd-server.argocd:443
-  --forgejo-upstream vcluster.lb.team-a.forgejo-http.forgejo:3000
   --image-platform linux/arm64
 
 Optional skip flags:
@@ -361,9 +359,7 @@ WAIT_FOR_IMAGE_BUILD="false"
 VCP_HOST="vcp.local"
 ARGOCD_HOST="argocd.vcp.local"
 FORGEJO_HOST="forgejo.vcp.local"
-VCP_UPSTREAM=""
-ARGOCD_UPSTREAM=""
-FORGEJO_UPSTREAM=""
+INGRESS_UPSTREAM=""
 ORBSTACK_ENV_FILE=""
 
 LICENSE_TOKEN="${LICENSE_TOKEN:-}"
@@ -452,24 +448,16 @@ while [[ $# -gt 0 ]]; do
       FORGEJO_HOST="${2:-}"
       shift 2
       ;;
+    --ingress-upstream)
+      INGRESS_UPSTREAM="${2:-}"
+      shift 2
+      ;;
     --onepassword-vault)
       ONEPASSWORD_VAULT="${2:-}"
       shift 2
       ;;
     --private-node-vm-name)
       PRIVATE_NODE_VM_NAME="${2:-}"
-      shift 2
-      ;;
-    --vcp-upstream)
-      VCP_UPSTREAM="${2:-}"
-      shift 2
-      ;;
-    --argocd-upstream)
-      ARGOCD_UPSTREAM="${2:-}"
-      shift 2
-      ;;
-    --forgejo-upstream)
-      FORGEJO_UPSTREAM="${2:-}"
       shift 2
       ;;
     --orbstack-env-file)
@@ -787,6 +775,18 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --include-md
 fi
 
+if [[ "$SKIP_VIND" == "true" ]]; then
+  if command -v kubectl >/dev/null 2>&1 && kubectl get namespace ingress-nginx >/dev/null 2>&1; then
+    step "Apply vind browser ingress resources"
+    bash vind-demo-cluster/apply-browser-ingresses.sh \
+      --vcp-host "$VCP_HOST" \
+      --argocd-host "$ARGOCD_HOST" \
+      --forgejo-host "$FORGEJO_HOST"
+  else
+    log_warn "Skipping browser ingress apply because the vind cluster is not reachable yet."
+  fi
+fi
+
 if [[ "$SKIP_ORBSTACK_ENV" != "true" ]]; then
   step "Configure local OrbStack domains"
   bash vind-demo-cluster/start-orbstack-domains.sh \
@@ -794,9 +794,7 @@ if [[ "$SKIP_ORBSTACK_ENV" != "true" ]]; then
     --vcp-host "$VCP_HOST" \
     --argocd-host "$ARGOCD_HOST" \
     --forgejo-host "$FORGEJO_HOST" \
-    --vcp-upstream "$VCP_UPSTREAM" \
-    --argocd-upstream "$ARGOCD_UPSTREAM" \
-    --forgejo-upstream "$FORGEJO_UPSTREAM" \
+    --ingress-upstream "$INGRESS_UPSTREAM" \
     --env-file "$ORBSTACK_ENV_FILE"
 fi
 

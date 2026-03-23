@@ -133,9 +133,8 @@ VIND_DOCKER_NETWORK=vcluster.${CLUSTER_NAME}
 VCP_HOST=${VCP_HOST}
 ARGOCD_HOST=${ARGOCD_HOST}
 FORGEJO_HOST=${FORGEJO_HOST}
-VCP_UPSTREAM=vcluster.lb.${CLUSTER_NAME}.loft.vcluster-platform:443
-ARGOCD_UPSTREAM=vcluster.lb.${CLUSTER_NAME}.argocd-server.argocd:80
-FORGEJO_UPSTREAM=vcluster.lb.${CLUSTER_NAME}.forgejo-http.forgejo:3000
+INGRESS_WILDCARD_HOST=*.${VCP_HOST}
+INGRESS_UPSTREAM=vcluster.lb.${CLUSTER_NAME}.ingress-nginx-controller.ingress-nginx:80
 EOF
     env_file_for_down="$temp_env_file"
   fi

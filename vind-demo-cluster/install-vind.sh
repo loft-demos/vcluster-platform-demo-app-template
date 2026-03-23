@@ -309,6 +309,12 @@ log_info "Enabled use cases: $selected_use_cases"
 
 vcluster create "$CLUSTER_NAME" --driver docker --upgrade --add=false --values "$rendered_values"
 
+log_info "Applying browser ingress resources"
+bash vind-demo-cluster/apply-browser-ingresses.sh \
+  --vcp-host "$VCP_HOST" \
+  --argocd-host "$ARGOCD_HOST" \
+  --forgejo-host "$FORGEJO_HOST"
+
 # Render the vCP Helm values from its dedicated template file.
 _vcp_values_tmpl="$(dirname "$VALUES_FILE")/vcp-platform-values.yaml"
 _vcp_values_rendered="$(mktemp "${TMPDIR:-/tmp}/vcp-platform-values.XXXXXX")"

@@ -242,18 +242,19 @@ Default local hostnames:
 
 This setup uses a small [Caddy adapter](https://caddyserver.com/docs/quick-starts/reverse-proxy) under [orbstack-domains/](./orbstack-domains) because `vind` and OrbStack solve two different parts of the problem:
 
-- `vind` creates `LoadBalancer` services for things like vCluster Platform,
-  Argo CD, and Forgejo
-- those `LoadBalancer` services are backed by HAProxy containers on the
+- `vind` keeps `ingress-nginx` as the single browser-facing `LoadBalancer`
+- vCluster Platform, Argo CD, and Forgejo are exposed with Kubernetes `Ingress`
+  resources inside the `vind` cluster
+- that `ingress-nginx` `LoadBalancer` is backed by an HAProxy container on the
   per-cluster Docker network, for example `vcluster.vcp`
 - OrbStack can give nice local HTTPS hostnames to containers
 - Caddy is the bridge that lets those OrbStack hostnames proxy to the `vind`
-  `LoadBalancer` upstreams
+  ingress upstream
 
 That gives you friendly local URLs like `vcp.local` instead of relying on:
 
 - raw OrbStack control-plane domains like `vcluster.cp.vcp.orb.local`
-- raw `LoadBalancer` hostnames or local IPs
+- raw ingress controller hostnames or local IPs
 
 Raw OrbStack hostnames still exist, but they are not the main operator path.
 

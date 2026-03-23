@@ -109,7 +109,7 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 effect: NoSchedule
             service:
               http:
-                type: LoadBalancer
+                type: ClusterIP
             ingress:
               enabled: false
             gitea:
@@ -150,7 +150,7 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
               ingress:
                 enabled: false
               service:
-                type: LoadBalancer
+                type: ClusterIP
         - chart:
             name: external-secrets
             repo: https://charts.external-secrets.io

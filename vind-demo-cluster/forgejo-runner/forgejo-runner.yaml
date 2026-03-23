@@ -103,4 +103,4 @@ spec:
             optional: true
             items:
               - key: ca.crt
-                path: {REPLACE_FORGEJO_HOST}/ca.crt
+                path: "{REPLACE_FORGEJO_HOST}/ca.crt"
