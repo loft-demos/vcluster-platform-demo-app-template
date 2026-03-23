@@ -631,8 +631,9 @@ if [[ -z "$FORGEJO_OWNER_TYPE" ]]; then
 fi
 
 if [[ -z "$GIT_BASE_URL" ]]; then
-  # Use the public Forgejo URL so Argo CD app source URLs match webhook payloads.
-  GIT_BASE_URL="${FORGEJO_URL%/}"
+  # Use the in-cluster Forgejo service for Git consumers that run inside the
+  # vCluster, such as Argo CD and Kargo.
+  GIT_BASE_URL="http://forgejo-http.forgejo.svc.cluster.local:3000"
 fi
 
 if [[ -z "$GIT_BASE_URL_AUTHED" ]]; then

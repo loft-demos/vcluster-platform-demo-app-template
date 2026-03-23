@@ -435,7 +435,7 @@ fi
 
 echo "[INFO] Forgejo bootstrap complete."
 echo "[INFO] Suggested local-contained placeholders:"
-echo "  REPLACE_GIT_BASE_URL=$FORGEJO_URL"
+echo "  REPLACE_GIT_BASE_URL=http://forgejo-http.forgejo.svc.cluster.local:3000"
 echo "  REPLACE_GIT_PUBLIC_URL=$FORGEJO_URL"
 _forgejo_registry_host="${FORGEJO_URL#http://}"
 _forgejo_registry_host="${_forgejo_registry_host#https://}"
