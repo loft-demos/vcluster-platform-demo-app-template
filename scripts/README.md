@@ -1,6 +1,6 @@
 # Scripts
 
-This folder has seven scripts that matter for the self-contained `vind` path.
+This folder has eight scripts that matter for the self-contained `vind` path.
 
 ## `replace-text-local.sh`
 
@@ -52,8 +52,10 @@ Forgejo build workflow still contain unresolved placeholders.
 
 ## `build-push-forgejo-image.sh`
 
-Builds `src/Dockerfile` and pushes the demo image to the Forgejo container
-registry.
+Builds a Dockerfile and pushes it to the Forgejo container registry. The
+default path is still the demo app image from `src/Dockerfile`, but the `vind`
+bootstrap also reuses this helper to publish the Forgejo runner job image from
+`vind-demo-cluster/forgejo-runner/job-image/`.
 
 Example:
 
@@ -66,11 +68,17 @@ bash scripts/build-push-forgejo-image.sh \
   --password "$FORGEJO_ADMIN_PASSWORD"
 ```
 
-It pushes:
+By default it pushes:
 
 - the local git short SHA tag
 - the Helm chart `appVersion` tag
 - as image `forgejo.vcp.local/vcluster-demos/vcp-gitops/vcp-gitops-demo-app`
+
+It also supports overrides such as:
+
+- `--image-name` to change the image name under the repo-scoped prefix
+- `--context` and `--dockerfile` to build something other than `src/`
+- `--extra-tag latest` for stable helper tags alongside the immutable git SHA
 
 ## `configure-forgejo-webhook.sh`
 
@@ -109,6 +117,24 @@ bash scripts/configure-forgejo-labels.sh \
   --label-name 'deploy/flux-vcluster-preview' \
   --label-color 'c5def5' \
   --label-description 'PR preview vCluster instances with a matrix of Kubernetes versions via Flux'
+```
+
+## `configure-forgejo-actions-secret.sh`
+
+Creates or updates a Forgejo repository Actions secret. The `vind` bootstrap now
+uses this to seed `FORGEJO_PASSWORD` for the `build-push` workflow.
+
+Example:
+
+```bash
+bash scripts/configure-forgejo-actions-secret.sh \
+  --forgejo-url http://forgejo.vcp.local \
+  --username demo-admin \
+  --password "$FORGEJO_ADMIN_PASSWORD" \
+  --owner vcluster-demos \
+  --repo vcp-gitops \
+  --secret-name FORGEJO_PASSWORD \
+  --secret-value "$FORGEJO_ADMIN_PASSWORD"
 ```
 
 ## `configure-flux-webhook.sh`

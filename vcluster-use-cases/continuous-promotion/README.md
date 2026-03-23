@@ -38,6 +38,10 @@ There are two CI paths in this repo:
 
 In the `vind` self-contained path, the shared Forgejo runner follows Forgejo's Docker-access guidance by exposing an isolated pod-local DinD socket to job containers and exporting `DOCKER_HOST` so workflow steps can reach it.
 
+Bootstrap also publishes a small repo-scoped runner job image for the `vind`
+path, so the runner labels resolve to a Node.js image that already includes the
+Docker CLI instead of installing it on every workflow run.
+
 The demo app image is tagged with the `appVersion` from `helm-chart/Chart.yaml` and pushed to the configured OCI registry. The Kargo Warehouse for both demos watches that image repository and triggers promotion automatically when a new semver tag appears.
 
 In the `vind` self-contained path, bootstrap also creates a `forgejo-image-credentials` Secret in the `progressive-delivery` and `pre-prod-gate` namespaces so Kargo can authenticate to the private Forgejo registry. GitHub-backed paths only need an equivalent Kargo image-credential secret when the chosen registry is private.
@@ -77,7 +81,8 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 
 | File | Purpose |
 |---|---|
-| [manifests/progressive-delivery/kargo-project.yaml](manifests/progressive-delivery/kargo-project.yaml) | Kargo Project (creates `progressive-delivery` namespace) |
+| [manifests/progressive-delivery/namespace.yaml](manifests/progressive-delivery/namespace.yaml) | Pre-creates the `progressive-delivery` namespace with `kargo.akuity.io/project: "true"` so Kargo can adopt it |
+| [manifests/progressive-delivery/kargo-project.yaml](manifests/progressive-delivery/kargo-project.yaml) | Kargo Project (adopts the labeled `progressive-delivery` namespace) |
 | [manifests/progressive-delivery/kargo-warehouse.yaml](manifests/progressive-delivery/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + PromotionPolicies |
 | [manifests/progressive-delivery/kargo-analysis-template.yaml](manifests/progressive-delivery/kargo-analysis-template.yaml) | curl health-check AnalysisTemplate |
@@ -110,7 +115,8 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 
 | File | Purpose |
 |---|---|
-| [manifests/pre-prod-gate/kargo-project.yaml](manifests/pre-prod-gate/kargo-project.yaml) | Kargo Project (creates `pre-prod-gate` namespace) |
+| [manifests/pre-prod-gate/namespace.yaml](manifests/pre-prod-gate/namespace.yaml) | Pre-creates the `pre-prod-gate` namespace with `kargo.akuity.io/project: "true"` so Kargo can adopt it |
+| [manifests/pre-prod-gate/kargo-project.yaml](manifests/pre-prod-gate/kargo-project.yaml) | Kargo Project (adopts the labeled `pre-prod-gate` namespace) |
 | [manifests/pre-prod-gate/kargo-warehouse.yaml](manifests/pre-prod-gate/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | stage, pre-prod-vcluster, prod Stages + soak time |
 | [manifests/pre-prod-gate/kargo-analysis-template.yaml](manifests/pre-prod-gate/kargo-analysis-template.yaml) | Integration test Job AnalysisTemplate |
@@ -139,7 +145,7 @@ Check [github.com/akuity/kargo/releases](https://github.com/akuity/kargo/release
 
 This section only applies to the `vind` self-contained path. The bootstrap script uses Forgejo offline registration. It registers a repo-scoped runner from inside the Forgejo pod with `forgejo forgejo-cli actions register`, stores the shared 40-character hex secret in `forgejo-runner-offline-registration`, and the runner init container recreates `/data/.runner` with `forgejo-runner create-runner-file` when needed. The Forgejo-side registration uses plain label names, while the runnable label mappings live in [../../vind-demo-cluster/forgejo-runner/forgejo-runner-config.yaml](../../vind-demo-cluster/forgejo-runner/forgejo-runner-config.yaml).
 
-The `vind` runner uses a repo-scoped DinD sidecar and keeps `runner.capacity` at `1`, which matches Forgejo's recommendation to avoid multiple concurrent jobs sharing the same Docker daemon.
+The `vind` runner uses a repo-scoped DinD sidecar and keeps `runner.capacity` at `1`, which matches Forgejo's recommendation to avoid multiple concurrent jobs sharing the same Docker daemon. Keep the Kubernetes Deployment at `replicas: 1` as well: the offline-registration secret represents a single runner identity, and scaling the Deployment would make multiple pods fight over the same local runner state.
 
 If the Secret is missing, re-run bootstrap or recreate it manually:
 

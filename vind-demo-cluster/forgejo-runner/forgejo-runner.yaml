@@ -16,7 +16,11 @@ metadata:
   name: forgejo-runner
   namespace: forgejo
 spec:
+  # This deployment represents one offline-registered Forgejo runner identity.
+  # Scale out with additional runner registrations, not by increasing replicas.
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: forgejo-runner
@@ -54,7 +58,14 @@ spec:
       containers:
         - name: runner
           image: code.forgejo.org/forgejo/runner:12
-          command: ["forgejo-runner", "daemon", "--config", "/config/config.yaml"]
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until [ -S /var/run/docker.sock ]; do
+                echo "Waiting for Docker socket..."
+                sleep 1
+              done
+              exec forgejo-runner daemon --config /config/config.yaml
           securityContext:
             runAsUser: 0
             runAsGroup: 0

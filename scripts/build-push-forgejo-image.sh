@@ -25,6 +25,7 @@ Options:
   --image-repository-prefix PATH  Registry path prefix, for example forgejo.vcp.local/vcluster-demos/vcp-gitops
   --repo-name NAME                Repo name used to derive the image name. Default: current repo name
   --image-name NAME               Final image name. Default: <repo-name>-demo-app
+  --extra-tag VALUE               Additional image tag to publish. Repeatable.
   --username NAME                 Registry username
   --token VALUE                   Registry token. Defaults to FORGEJO_TOKEN
   --password VALUE                Registry password. Defaults to FORGEJO_PASSWORD
@@ -50,6 +51,7 @@ REGISTRY=""
 IMAGE_REPOSITORY_PREFIX=""
 REPO_NAME=""
 IMAGE_NAME=""
+EXTRA_TAGS=()
 USERNAME=""
 TOKEN="${FORGEJO_TOKEN:-}"
 PASSWORD="${FORGEJO_PASSWORD:-}"
@@ -76,6 +78,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --image-name)
       IMAGE_NAME="${2:-}"
+      shift 2
+      ;;
+    --extra-tag)
+      EXTRA_TAGS+=("${2:-}")
       shift 2
       ;;
     --username)
@@ -194,10 +200,10 @@ image_ref="${IMAGE_REPOSITORY_PREFIX%/}/${IMAGE_NAME}"
 
 echo "[INFO] Configuring registry auth for ${REGISTRY}"
 mkdir -p "${HOME}/.docker"
-if [[ -n "$TOKEN" ]]; then
-  auth_secret="$TOKEN"
-else
+if [[ -n "$PASSWORD" ]]; then
   auth_secret="$PASSWORD"
+else
+  auth_secret="$TOKEN"
 fi
 registry_auth="$(printf '%s:%s' "$USERNAME" "$auth_secret" | base64 | tr -d '\n')"
 cat >"${HOME}/.docker/config.json" <<EOF
@@ -226,6 +232,12 @@ build_args=(
   --tag "${image_ref}:${short_sha}"
   --tag "${image_ref}:${chart_app_version}"
 )
+
+for extra_tag in "${EXTRA_TAGS[@]}"; do
+  build_args+=(
+    --tag "${image_ref}:${extra_tag}"
+  )
+done
 
 if [[ "$SKIP_CACHE" != "true" ]]; then
   build_args+=(

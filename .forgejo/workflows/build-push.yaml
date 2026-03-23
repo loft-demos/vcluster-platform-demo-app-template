@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ensure Docker CLI is available
+      - name: Verify Docker CLI is available
         run: |
           if command -v docker >/dev/null 2>&1; then
             docker --version
@@ -32,7 +32,7 @@ jobs:
           fi
 
           if ! command -v apt-get >/dev/null 2>&1; then
-            echo "ERROR: docker CLI is missing and this runner image does not provide apt-get." >&2
+            echo "ERROR: docker CLI is missing and this runner job image does not provide apt-get." >&2
             exit 1
           fi
 
@@ -46,40 +46,19 @@ jobs:
           apt-get install -y --no-install-recommends docker.io
           docker --version
 
-      - name: Read appVersion from Helm chart
-        run: |
-          APP_VERSION="$(sed -n 's/^appVersion:[[:space:]]*//p' helm-chart/Chart.yaml | head -n1 | tr -d "\"'[:space:]")"
-          if [ -z "$APP_VERSION" ]; then
-            echo "ERROR: could not read appVersion from helm-chart/Chart.yaml" >&2
-            exit 1
-          fi
-          echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
-
       - name: Build image
         run: |
-          docker build \
-            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
-            -t "$IMAGE_BASE:$APP_VERSION" \
-            -t "$IMAGE_BASE:latest" \
-            ./src
+          bash scripts/build-push-forgejo-image.sh \
+            --registry '{REPLACE_FORGEJO_HOST}' \
+            --image-repository-prefix '{REPLACE_IMAGE_REPOSITORY_PREFIX}' \
+            --repo-name '{REPLACE_REPO_NAME}' \
+            --extra-tag latest \
+            --username "$FORGEJO_USERNAME" \
+            --password "$FORGEJO_PASSWORD" \
+            --token "$FORGEJO_TOKEN" \
+            --platform "linux/$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/')" \
+            --source-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
         env:
-          IMAGE_BASE: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
-
-      - name: Configure Forgejo Container Registry auth and push
-        run: |
-          mkdir -p "$HOME/.docker"
-          REGISTRY_AUTH="$(printf '%s:%s' "$GITHUB_ACTOR" "$FORGEJO_TOKEN" | base64 | tr -d '\n')"
-          cat >"$HOME/.docker/config.json" <<EOF
-          {
-            "auths": {
-              "{REPLACE_FORGEJO_HOST}": {
-                "auth": "${REGISTRY_AUTH}"
-              }
-            }
-          }
-          EOF
-          docker push "$IMAGE_BASE:$APP_VERSION"
-          docker push "$IMAGE_BASE:latest"
-        env:
+          FORGEJO_USERNAME: '{REPLACE_FORGEJO_USERNAME}'
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
-          IMAGE_BASE: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+          FORGEJO_PASSWORD: ${{ secrets.FORGEJO_PASSWORD }}

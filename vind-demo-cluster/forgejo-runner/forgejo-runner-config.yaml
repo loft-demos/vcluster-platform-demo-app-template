@@ -11,10 +11,12 @@ data:
       file: /data/.runner
       capacity: 1
       labels:
-        - docker:docker://node:20-bookworm
-        - ubuntu-latest:docker://node:20-bookworm
-        - ubuntu-22.04:docker://node:20-bookworm
-        - ubuntu-20.04:docker://node:18-bullseye
+        # This image keeps Node.js plus the Docker CLI together so workflows
+        # can skip the per-job apt-get install that made local Forgejo builds slow.
+        - docker:docker://{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-forgejo-runner-job:{REPLACE_RUNNER_JOB_IMAGE_TAG}
+        - ubuntu-latest:docker://{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-forgejo-runner-job:{REPLACE_RUNNER_JOB_IMAGE_TAG}
+        - ubuntu-22.04:docker://{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-forgejo-runner-job:{REPLACE_RUNNER_JOB_IMAGE_TAG}
+        - ubuntu-20.04:docker://{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-forgejo-runner-job:{REPLACE_RUNNER_JOB_IMAGE_TAG}
       envs:
         DOCKER_HOST: unix:///var/run/docker.sock
       timeout: 3h

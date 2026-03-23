@@ -59,9 +59,11 @@ What the bootstrap does:
 - creates or upgrades the `vind` cluster
 - installs vCluster Platform, Argo CD, ESO, and Forgejo
 - registers the shared Forgejo Actions runner via offline registration and stores its secret in-cluster
+- builds and pushes a small Forgejo runner job image so workflow containers already have the Docker CLI
 - annotates `clusters.management.loft.sh/loft-cluster` with `domainPrefix`, `domain`, and `sleepTimeZone`
 - runs local placeholder replacement
 - pushes the repo into Forgejo
+- seeds the repo Actions secrets needed by the Forgejo `build-push` workflow
 - builds and pushes the `src/` demo image to the Forgejo container registry
 - creates the Argo CD Forgejo secrets
 - updates the Argo CD `cluster-local` secret that controls which use-case appsets are selected
@@ -93,7 +95,8 @@ In practice that means:
   runner, Kargo, and node containers can reach those same hostnames locally
 - bootstrap also teaches the embedded CoreDNS to resolve those hostnames to the
   matching in-cluster services, so pod-network clients use the same names too
-- the shared self-contained Forgejo runner is declared in [forgejo-runner/](./forgejo-runner/) and deployed by [../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml)
+- the shared self-contained Forgejo runner is declared in [forgejo-runner/](./forgejo-runner/) and deployed by [../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml); it is intentionally a single replica because one offline-registration secret maps to one runner identity
+- bootstrap also publishes a repo-scoped runner job image (`{REPO_NAME}-forgejo-runner-job`) so Forgejo jobs start with Node.js plus the Docker CLI already available
 - the demo app image from `src/` is built and pushed to the Forgejo container
   registry as `<repo>-demo-app`, under the repo-scoped prefix
   `forgejo.vcp.local/<org>/<repo>/<repo>-demo-app`
@@ -151,6 +154,13 @@ LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --worker-nodes 3
 ```
 
+Try the experimental Docker pass-through for storage opts:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --docker-storage-opt-size 160G
+```
+
 Enable a few use cases as part of the bootstrap:
 
 ```bash
@@ -181,6 +191,11 @@ bash vind-demo-cluster/bootstrap-self-contained.sh --list-use-cases
 The demo image build runs in the background by default so the bootstrap can
 finish faster. Use `--wait-for-image-build` if you want the script to block
 until the Forgejo registry push completes.
+
+The Forgejo runner job image is built separately so the runner labels stay in
+sync even on reruns that skip the demo app image build. Only use
+`--skip-runner-job-image-build` when that runner image tag already exists in the
+local Forgejo registry.
 
 On Apple Silicon, the image build now defaults to native `linux/arm64` instead
 of forcing `linux/amd64`.
@@ -236,6 +251,69 @@ Use a different 1Password vault for the ESO store:
 LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --onepassword-vault team-a
 ```
+
+## Storage and Disk Pressure
+
+`vind` does not currently expose a repo-level `--disk-size` flag.
+
+The official vCluster Docker-driver docs say this deployment model uses Docker
+volumes for persistent data. That matches the live `vind` containers here:
+their `/var` filesystem is backed by Docker volumes like
+`vcluster.cp.<name>.var` and `vcluster.node.<name>.var`, so the effective disk
+ceiling comes from the host Docker or OrbStack data store rather than from a
+per-cluster value in [vcluster.yaml](./vcluster.yaml).
+
+OrbStack's settings docs currently document memory and CPU limits plus Docker
+engine config, but not a per-cluster or per-container disk-size setting. The
+practical implication is that low-disk incidents in `vind` are usually host
+Docker storage pressure, not something this repo can size independently.
+
+There is one possible low-level workaround: the Docker-driver docs say
+`experimental.docker.args` is passed through as extra `docker run` arguments.
+If your local Docker backend supports a flag like `--storage-opt size=...`, you
+can experiment with it there. That is not a documented `vind` feature, though,
+and it may not change the named Docker volumes `vind` always mounts for `/var`,
+`/etc`, `/usr/local/bin`, and `/opt/cni/bin`.
+
+On the current OrbStack-backed setup, a direct Docker probe accepted both
+`--storage-opt size=160G` and `--storage-opt size=10G`, but the container still
+reported the same full backing filesystem size via `df -h /`. So this knob is
+available for experimentation only; it is not currently validated as an
+effective capacity control for `vind`.
+
+When you want to inspect the current state, use:
+
+```bash
+bash vind-demo-cluster/check-vind-storage.sh
+```
+
+The most direct node-perspective view is:
+
+```bash
+docker exec vcluster.node.vcp.worker-2 df -h / /var
+```
+
+That is the right complement to `kubectl get node -o yaml`: the Kubernetes
+`ephemeral-storage` values come from kubelet's view of the node filesystem, not
+from a separate repo-managed disk-size setting.
+
+If you hit `node.kubernetes.io/disk-pressure` or see vCP pods evicted for
+`ephemeral-storage`, the fastest recovery path is usually:
+
+```bash
+docker buildx prune -af
+docker image prune -af
+kubectl --context vcluster-docker_vcp get nodes
+kubectl --context vcluster-docker_vcp -n vcluster-platform rollout restart deploy/loft
+```
+
+As a last resort, OrbStack's docs note that:
+
+- `orb delete docker` clears Docker data
+- `orb reset` clears all OrbStack data
+
+Those are much higher-blast-radius than a normal cache prune, so treat them as
+reset operations.
 
 ## Local Access
 
@@ -398,6 +476,7 @@ Override that with:
 
 Use these only when you want more manual control:
 
+- [check-vind-storage.sh](./check-vind-storage.sh)
 - [install-vind.sh](./install-vind.sh)
 - [start-orbstack-domains.sh](./start-orbstack-domains.sh)
 - [delete-vind.sh](./delete-vind.sh)

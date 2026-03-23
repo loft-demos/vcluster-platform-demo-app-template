@@ -39,6 +39,7 @@ Optional OrbStack local domain overrides:
   --onepassword-vault team-a
   --vcp-version 4.8.0
   --worker-nodes 2
+  --docker-storage-opt-size 160G
   --use-cases eso,auto-snapshots
   --private-node-vm-name private-node-demo-worker-1
   --sleep-time-zone America/New_York
@@ -49,6 +50,7 @@ Optional skip flags:
   --skip-replace
   --skip-orbstack-env
   --skip-forgejo
+  --skip-runner-job-image-build
   --skip-image-build
   --wait-for-image-build
   --skip-argocd-bootstrap
@@ -403,6 +405,7 @@ SKIP_VIND="false"
 SKIP_REPLACE="false"
 SKIP_ORBSTACK_ENV="false"
 SKIP_FORGEJO="false"
+SKIP_RUNNER_JOB_IMAGE_BUILD="false"
 SKIP_IMAGE_BUILD="false"
 WAIT_FOR_IMAGE_BUILD="false"
 
@@ -416,6 +419,8 @@ LICENSE_TOKEN="${LICENSE_TOKEN:-}"
 VCP_VERSION="${VCP_VERSION:-4.8.0}"
 CONTROL_PLANE_NODE_COUNT="${CONTROL_PLANE_NODE_COUNT:-1}"
 WORKER_NODE_COUNT="${WORKER_NODE_COUNT:-2}"
+DOCKER_STORAGE_OPT_SIZE="${DOCKER_STORAGE_OPT_SIZE:-}"
+DOCKER_ARGS=()
 SLEEP_TIME_ZONE="${SLEEP_TIME_ZONE:-America/New_York}"
 FORGEJO_URL=""
 FORGEJO_USERNAME="${FORGEJO_ADMIN_USER:-demo-admin}"
@@ -480,6 +485,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --worker-nodes)
       WORKER_NODE_COUNT="${2:-}"
+      shift 2
+      ;;
+    --docker-arg)
+      DOCKER_ARGS+=("${2:-}")
+      shift 2
+      ;;
+    --docker-storage-opt-size)
+      DOCKER_STORAGE_OPT_SIZE="${2:-}"
       shift 2
       ;;
     --sleep-time-zone)
@@ -587,6 +600,10 @@ while [[ $# -gt 0 ]]; do
       SNAPSHOT_REGISTRY_PASSWORD="${2:-}"
       shift 2
       ;;
+    --skip-runner-job-image-build)
+      SKIP_RUNNER_JOB_IMAGE_BUILD="true"
+      shift
+      ;;
     --skip-image-build)
       SKIP_IMAGE_BUILD="true"
       shift
@@ -644,6 +661,10 @@ if [[ ! "$WORKER_NODE_COUNT" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
+if [[ -n "$DOCKER_STORAGE_OPT_SIZE" ]]; then
+  DOCKER_ARGS+=("--storage-opt=size=${DOCKER_STORAGE_OPT_SIZE}")
+fi
+
 if [[ -z "$VCLUSTER_NAME" && -n "$REPO_NAME" ]]; then
   VCLUSTER_NAME="${REPO_NAME%-app}"
 fi
@@ -699,6 +720,9 @@ fi
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
   IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST}/${FORGEJO_OWNER}/${REPO_NAME}"
 fi
+
+require_cmd git
+RUNNER_JOB_IMAGE_TAG="$(git rev-parse --short=8 HEAD)"
 
 if [[ -z "$IMAGE_PULL_PROJECT_SECRET_NAME" ]]; then
   IMAGE_PULL_PROJECT_SECRET_NAME="${ORG_NAME}-ghcr-write-pat"
@@ -779,27 +803,34 @@ fi
 
 if [[ "$SKIP_VIND" != "true" ]]; then
   step "Create or upgrade the vind cluster"
-  bash vind-demo-cluster/install-vind.sh \
-    --cluster-name "$CLUSTER_NAME" \
-    --values-file "$VALUES_FILE" \
-    --license-token "$LICENSE_TOKEN" \
-    --vcp-version "$VCP_VERSION" \
-    --repo-name "$REPO_NAME" \
-    --org-name "$ORG_NAME" \
-    --vcluster-name "$VCLUSTER_NAME" \
-    --control-plane-nodes "$CONTROL_PLANE_NODE_COUNT" \
-    --worker-nodes "$WORKER_NODE_COUNT" \
-    --use-cases "$USE_CASES" \
-    --sleep-time-zone "$SLEEP_TIME_ZONE" \
-    --vcp-host "$VCP_HOST" \
-    --argocd-host "$ARGOCD_HOST" \
-    --forgejo-host "$FORGEJO_HOST" \
-    --forgejo-admin-user "$FORGEJO_USERNAME" \
-    --forgejo-admin-password "$FORGEJO_PASSWORD" \
-    --orbstack-env-file "$ORBSTACK_ENV_FILE" \
-    --skip-cluster-annotation \
-    --skip-orbstack-domains \
+  _install_vind_args=(
+    --cluster-name "$CLUSTER_NAME"
+    --values-file "$VALUES_FILE"
+    --license-token "$LICENSE_TOKEN"
+    --vcp-version "$VCP_VERSION"
+    --repo-name "$REPO_NAME"
+    --org-name "$ORG_NAME"
+    --vcluster-name "$VCLUSTER_NAME"
+    --control-plane-nodes "$CONTROL_PLANE_NODE_COUNT"
+    --worker-nodes "$WORKER_NODE_COUNT"
+  )
+  for docker_arg in "${DOCKER_ARGS[@]}"; do
+    _install_vind_args+=(--docker-arg "$docker_arg")
+  done
+  _install_vind_args+=(
+    --use-cases "$USE_CASES"
+    --sleep-time-zone "$SLEEP_TIME_ZONE"
+    --vcp-host "$VCP_HOST"
+    --argocd-host "$ARGOCD_HOST"
+    --forgejo-host "$FORGEJO_HOST"
+    --forgejo-admin-user "$FORGEJO_USERNAME"
+    --forgejo-admin-password "$FORGEJO_PASSWORD"
+    --orbstack-env-file "$ORBSTACK_ENV_FILE"
+    --skip-cluster-annotation
+    --skip-orbstack-domains
     --skip-summary
+  )
+  bash vind-demo-cluster/install-vind.sh "${_install_vind_args[@]}"
 fi
 
 if [[ "$SKIP_REPLACE" != "true" ]]; then
@@ -810,6 +841,8 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --org-name "$ORG_NAME" \
     --vcluster-name "$VCLUSTER_NAME" \
     --base-domain "$BASE_DOMAIN" \
+    --forgejo-username "$FORGEJO_USERNAME" \
+    --runner-job-image-tag "$RUNNER_JOB_IMAGE_TAG" \
     --git-base-url "$GIT_BASE_URL" \
     --git-base-url-authed "$GIT_BASE_URL_AUTHED" \
     --git-public-url "$GIT_PUBLIC_URL" \
@@ -891,6 +924,28 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       --skip-tags \
       --include-working-tree
 
+    if [[ -n "$FORGEJO_PASSWORD" ]]; then
+      bash scripts/configure-forgejo-actions-secret.sh \
+        --forgejo-url "$FORGEJO_URL" \
+        --username "$FORGEJO_USERNAME" \
+        "${forgejo_auth_args[@]}" \
+        --owner "$FORGEJO_OWNER" \
+        --repo "$REPO_NAME" \
+        --secret-name FORGEJO_PASSWORD \
+        --secret-value "$FORGEJO_PASSWORD"
+    fi
+
+    if [[ -n "$FORGEJO_TOKEN" ]]; then
+      bash scripts/configure-forgejo-actions-secret.sh \
+        --forgejo-url "$FORGEJO_URL" \
+        --username "$FORGEJO_USERNAME" \
+        "${forgejo_auth_args[@]}" \
+        --owner "$FORGEJO_OWNER" \
+        --repo "$REPO_NAME" \
+        --secret-name FORGEJO_TOKEN \
+        --secret-value "$FORGEJO_TOKEN"
+    fi
+
     if [[ "$AUTO_NODES_ENABLED" == "true" ]]; then
       step "Mirror vcluster-auto-nodes-pod to Forgejo"
       _demo_repo_dir="$(pwd)"
@@ -922,6 +977,34 @@ if [[ "$SKIP_REPLACE" != "true" && "$SKIP_FORGEJO" != "true" ]]; then
   git restore . >/dev/null 2>&1 || true
 fi
 
+image_auth_password="$FORGEJO_PASSWORD"
+image_auth_token="$FORGEJO_TOKEN"
+declare -a image_auth_args=()
+
+if [[ -n "$image_auth_token" ]]; then
+  image_auth_args+=(--token "$image_auth_token")
+elif [[ -n "$image_auth_password" ]]; then
+  image_auth_args+=(--password "$image_auth_password")
+fi
+
+if [[ "$SKIP_RUNNER_JOB_IMAGE_BUILD" != "true" ]]; then
+  step "Build and push the Forgejo runner job image"
+  require_cmd docker
+
+  bash scripts/build-push-forgejo-image.sh \
+    --registry "$FORGEJO_HOST" \
+    --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
+    --repo-name "$REPO_NAME" \
+    --image-name "${REPO_NAME}-forgejo-runner-job" \
+    --extra-tag latest \
+    --username "$FORGEJO_USERNAME" \
+    "${image_auth_args[@]}" \
+    --context vind-demo-cluster/forgejo-runner/job-image \
+    --dockerfile vind-demo-cluster/forgejo-runner/job-image/Dockerfile \
+    --platform "$IMAGE_PLATFORM" \
+    --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
+fi
+
 if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
   if [[ "$WAIT_FOR_IMAGE_BUILD" == "true" ]]; then
     step "Build and push the demo image to Forgejo"
@@ -930,16 +1013,6 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
   fi
   require_cmd docker
   require_cmd nohup
-
-  image_auth_password="$FORGEJO_PASSWORD"
-  image_auth_token="$FORGEJO_TOKEN"
-  declare -a image_auth_args
-
-  if [[ -n "$image_auth_token" ]]; then
-    image_auth_args+=(--token "$image_auth_token")
-  elif [[ -n "$image_auth_password" ]]; then
-    image_auth_args+=(--password "$image_auth_password")
-  fi
 
   declare -a image_build_cmd
   image_build_cmd=(
@@ -1245,6 +1318,23 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
 
   for _kargo_ns in progressive-delivery pre-prod-gate; do
     if kubectl get namespace "$_kargo_ns" >/dev/null 2>&1; then
+      _kargo_project_label="$(
+        kubectl get namespace "$_kargo_ns" -o jsonpath='{.metadata.labels.kargo\.akuity\.io/project}' 2>/dev/null || true
+      )"
+      if [[ "$_kargo_project_label" != "true" ]]; then
+        kubectl label namespace "$_kargo_ns" kargo.akuity.io/project=true --overwrite >/dev/null 2>&1 || true
+        _kargo_project_label="$(
+          kubectl get namespace "$_kargo_ns" -o jsonpath='{.metadata.labels.kargo\.akuity\.io/project}' 2>/dev/null || true
+        )"
+      fi
+
+      if [[ "$_kargo_project_label" != "true" ]]; then
+        log_warn "Namespace ${_kargo_ns} exists, but is not labeled for Kargo Project adoption." >&2
+        log_warn "Expected label: kargo.akuity.io/project=true" >&2
+        log_warn "Re-run bootstrap after Argo syncs the labeled Namespace manifest, or label it manually." >&2
+        continue
+      fi
+
       cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret

@@ -36,6 +36,11 @@ Options:
                          Optional. Defaults to 1. This vind config currently
                          supports exactly one control plane node.
   --worker-nodes COUNT   Optional. Defaults to 2.
+  --docker-arg ARG       Optional. Repeatable extra docker-run arg passed via
+                         experimental.docker.args. Experimental.
+  --docker-storage-opt-size SIZE
+                         Optional shorthand for --docker-arg
+                         --storage-opt=size=<SIZE>. Experimental.
   --vcp-host HOST        Optional. Defaults to vcp.local.
   --argocd-host HOST     Optional. Defaults to argocd.<vcp-host>.
   --forgejo-host HOST    Optional. Defaults to forgejo.<vcp-host>.
@@ -69,6 +74,10 @@ require_cmd() {
   fi
 }
 
+yaml_escape() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
 if [[ -z "${_CR+set}" ]]; then
   # Not inherited from a parent script — detect tty ourselves
   if [[ -t 1 ]] && [[ "${NO_COLOR:-}" != "1" ]]; then
@@ -93,6 +102,8 @@ ORG_NAME="vcluster-demos"
 VCLUSTER_NAME=""
 CONTROL_PLANE_NODE_COUNT="${CONTROL_PLANE_NODE_COUNT:-1}"
 WORKER_NODE_COUNT="${WORKER_NODE_COUNT:-2}"
+DOCKER_STORAGE_OPT_SIZE="${DOCKER_STORAGE_OPT_SIZE:-}"
+DOCKER_ARGS=()
 VCP_HOST="${VCP_HOST:-vcp.local}"
 ARGOCD_HOST=""
 FORGEJO_HOST=""
@@ -141,6 +152,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --worker-nodes)
       WORKER_NODE_COUNT="${2:-}"
+      shift 2
+      ;;
+    --docker-arg)
+      DOCKER_ARGS+=("${2:-}")
+      shift 2
+      ;;
+    --docker-storage-opt-size)
+      DOCKER_STORAGE_OPT_SIZE="${2:-}"
       shift 2
       ;;
     --vcp-host)
@@ -224,6 +243,10 @@ if [[ ! "$WORKER_NODE_COUNT" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
+if [[ -n "$DOCKER_STORAGE_OPT_SIZE" ]]; then
+  DOCKER_ARGS+=("--storage-opt=size=${DOCKER_STORAGE_OPT_SIZE}")
+fi
+
 if [[ -z "$ARGOCD_HOST" ]]; then
   ARGOCD_HOST="argocd.${VCP_HOST}"
 fi
@@ -257,11 +280,30 @@ selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 selected_use_case_lines="$(resolve_use_case_selection "$USE_CASES")"
 
 worker_nodes_yaml="      []"
+docker_args_yaml=""
+if [[ "${#DOCKER_ARGS[@]}" -gt 0 ]]; then
+  docker_args_yaml="    args:
+"
+  for docker_arg in "${DOCKER_ARGS[@]}"; do
+    docker_args_yaml="${docker_args_yaml}      - \"$(yaml_escape "$docker_arg")\"
+"
+  done
+  docker_args_yaml="${docker_args_yaml%$'\n'}"
+fi
+
 if [[ "$WORKER_NODE_COUNT" -gt 0 ]]; then
   worker_nodes_yaml=""
   for worker_index in $(seq 1 "$WORKER_NODE_COUNT"); do
     worker_nodes_yaml="${worker_nodes_yaml}      - name: worker-${worker_index}
 "
+    if [[ "${#DOCKER_ARGS[@]}" -gt 0 ]]; then
+      worker_nodes_yaml="${worker_nodes_yaml}        args:
+"
+      for docker_arg in "${DOCKER_ARGS[@]}"; do
+        worker_nodes_yaml="${worker_nodes_yaml}          - \"$(yaml_escape "$docker_arg")\"
+"
+      done
+    fi
   done
   worker_nodes_yaml="${worker_nodes_yaml%$'\n'}"
 fi
@@ -276,7 +318,7 @@ cp "$VALUES_FILE" "$rendered_values"
 
 export LICENSE_TOKEN VCP_VERSION VCP_HOST FORGEJO_HOST FORGEJO_ADMIN_USER FORGEJO_ADMIN_PASSWORD
 export VCP_DOMAIN_PREFIX="$vcp_domain_prefix" VCP_DOMAIN="$vcp_domain"
-export VIND_DOCKER_NODES="$worker_nodes_yaml"
+export VIND_DOCKER_NODES="$worker_nodes_yaml" VIND_DOCKER_ARGS="$docker_args_yaml"
 export CLUSTER_LOCAL_USE_CASE_LABELS="$cluster_local_use_case_labels"
 export REPO_NAME ORG_NAME VCLUSTER_NAME
 perl -0pi -e '
@@ -287,6 +329,7 @@ perl -0pi -e '
   s/__FORGEJO_HOST__/$ENV{FORGEJO_HOST}/g;
   s/__FORGEJO_ADMIN_USER__/$ENV{FORGEJO_ADMIN_USER}/g;
   s/__FORGEJO_ADMIN_PASSWORD__/$ENV{FORGEJO_ADMIN_PASSWORD}/g;
+  s/__VIND_DOCKER_ARGS__/$ENV{VIND_DOCKER_ARGS}/g;
   s/__VIND_DOCKER_NODES__/$ENV{VIND_DOCKER_NODES}/g;
   s/__CLUSTER_LOCAL_USE_CASE_LABELS__/$ENV{CLUSTER_LOCAL_USE_CASE_LABELS}/g;
   s/__REPO_NAME__/$ENV{REPO_NAME}/g;
@@ -301,6 +344,9 @@ log_info "vCluster Platform version: $VCP_VERSION"
 log_info "Repo: $ORG_NAME/$REPO_NAME"
 log_info "Control plane nodes: $CONTROL_PLANE_NODE_COUNT"
 log_info "Worker nodes: $WORKER_NODE_COUNT"
+if [[ "${#DOCKER_ARGS[@]}" -gt 0 ]]; then
+  log_info "Experimental docker args: ${DOCKER_ARGS[*]}"
+fi
 log_info "vCluster Platform host: $VCP_HOST"
 log_info "Forgejo host: $FORGEJO_HOST"
 log_info "Forgejo admin user: $FORGEJO_ADMIN_USER"

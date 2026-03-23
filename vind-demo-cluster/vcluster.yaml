@@ -15,6 +15,7 @@
 # - __FORGEJO_HOST__
 # - __FORGEJO_ADMIN_USER__
 # - __FORGEJO_ADMIN_PASSWORD__
+# - optional `experimental.docker.args`
 # - worker node list for `experimental.docker.nodes`
 controlPlane:
   distro:
@@ -24,6 +25,16 @@ controlPlane:
 
 experimental:
   docker:
+    # vind currently has no supported per-cluster disk-size setting.
+    # The Docker driver docs say storage uses Docker volumes, and the live
+    # control-plane/worker containers always mount named Docker volumes for
+    # /var, /etc, /usr/local/bin, and /opt/cni/bin.
+    #
+    # A low-level workaround may be possible with experimental.docker.args
+    # because those values are passed through to docker run, but that is not a
+    # documented vind feature and may not affect the named volumes that back
+    # the node filesystems.
+__VIND_DOCKER_ARGS__
     nodes:
 __VIND_DOCKER_NODES__
   deploy:

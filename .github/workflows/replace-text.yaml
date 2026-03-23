@@ -49,6 +49,8 @@ jobs:
             echo "VCLUSTER_NAME=$(echo "${REPO_NAME%-app}")" >> "$GITHUB_ENV"
           fi
           echo "vCluster name is $VCLUSTER_NAME"
+      - name: set-short-sha
+        run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
       - uses: actions/checkout@v3
       - uses: flcdrg/replace-multiple-action@v2.0.148
         with:
@@ -59,6 +61,8 @@ jobs:
               { "find": "{REPLACE_ORG_NAME}", "replace": "${{ env.ORG_NAME }}" },
               { "find": "{REPLACE_VCLUSTER_NAME}", "replace": "${{ env.VCLUSTER_NAME }}" },
               { "find": "{REPLACE_BASE_DOMAIN}", "replace": "${{ env.BASE_DOMAIN }}" },
+              { "find": "{REPLACE_FORGEJO_USERNAME}", "replace": "${{ github.actor }}" },
+              { "find": "{REPLACE_RUNNER_JOB_IMAGE_TAG}", "replace": "${{ env.SHORT_SHA }}" },
               { "find": "{REPLACE_GIT_BASE_URL}", "replace": "${{ env.GIT_BASE_URL }}" },
               { "find": "{REPLACE_GIT_PUBLIC_URL}", "replace": "${{ env.GIT_PUBLIC_URL }}" },
               { "find": "{REPLACE_IMAGE_REPOSITORY_PREFIX}", "replace": "${{ env.IMAGE_REPOSITORY_PREFIX }}" },
@@ -95,8 +99,6 @@ jobs:
               exit $EXIT_CODE
             fi
           fi
-      - name: Get short SHA
-        run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
