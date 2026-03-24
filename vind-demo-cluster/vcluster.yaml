@@ -18,6 +18,10 @@
 # - optional `experimental.docker.args`
 # - worker node list for `experimental.docker.nodes`
 controlPlane:
+  backingStore:
+    etcd:
+      embedded:
+        enabled: true
   distro:
     k8s:
       image:
@@ -130,6 +134,13 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
             persistence:
               enabled: true
               size: 20Gi
+            resources:
+              requests:
+                cpu: 250m
+                memory: 512Mi
+              limits:
+                cpu: "1"
+                memory: 1Gi
             tolerations:
               - key: node-role.kubernetes.io/control-plane
                 operator: Exists

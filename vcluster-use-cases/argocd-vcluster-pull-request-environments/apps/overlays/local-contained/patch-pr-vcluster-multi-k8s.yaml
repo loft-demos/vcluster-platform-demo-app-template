@@ -21,7 +21,7 @@ spec:
                 tokenRef:
                   secretName: loft-demo-org-cred
                   key: token
-              requeueAfterSeconds: 30
+              requeueAfterSeconds: 86400
               template:
                 metadata: {}
                 spec:
