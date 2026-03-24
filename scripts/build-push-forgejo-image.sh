@@ -222,10 +222,6 @@ cat >"${HOME}/.docker/config.json" <<EOF
 }
 EOF
 
-if ! docker buildx inspect >/dev/null 2>&1; then
-  docker buildx create --use >/dev/null
-fi
-
 build_args=(
   build
   --platform "$PLATFORM"
@@ -261,4 +257,44 @@ build_args+=("$CONTEXT_PATH")
 echo "[INFO] Building and pushing ${image_ref}"
 echo "[INFO] Platform: ${PLATFORM}"
 echo "[INFO] Tags: ${short_sha}, ${chart_app_version}"
-docker buildx "${build_args[@]}"
+
+if docker buildx version >/dev/null 2>&1; then
+  if ! docker buildx inspect >/dev/null 2>&1; then
+    docker buildx create --use >/dev/null
+  fi
+  docker buildx "${build_args[@]}"
+else
+  echo "[WARN] docker buildx is unavailable; falling back to plain docker build/push without registry cache." >&2
+
+  docker_build_args=(
+    build
+    --platform "$PLATFORM"
+    --file "$DOCKERFILE_PATH"
+    --label "org.opencontainers.image.revision=${full_sha}"
+    --label "org.opencontainers.image.title=${IMAGE_NAME}"
+    --label "org.opencontainers.image.vendor=loft.sh"
+    --label "org.opencontainers.image.source=${SOURCE_URL%/}"
+    --tag "${image_ref}:${short_sha}"
+    --tag "${image_ref}:${chart_app_version}"
+  )
+
+  set +u
+  for extra_tag in "${extra_tags_copy[@]}"; do
+    docker_build_args+=(
+      --tag "${image_ref}:${extra_tag}"
+    )
+  done
+  set -u
+
+  docker_build_args+=("$CONTEXT_PATH")
+
+  docker "${docker_build_args[@]}"
+  docker push "${image_ref}:${short_sha}"
+  docker push "${image_ref}:${chart_app_version}"
+
+  set +u
+  for extra_tag in "${extra_tags_copy[@]}"; do
+    docker push "${image_ref}:${extra_tag}"
+  done
+  set -u
+fi
