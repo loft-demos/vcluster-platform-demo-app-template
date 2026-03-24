@@ -14,7 +14,7 @@ What this script can do:
 3. run local placeholder replacement for this repo
 4. start the OrbStack local-domain adapter automatically
 5. bootstrap the repo into Forgejo by default
-6. build and push the demo app image to the Forgejo container registry
+6. optionally build and push the demo app image to the Forgejo container registry
 7. create the Argo CD Forgejo secrets, the default vCP ProjectSecret, and apply the self-contained root app
 
 What it does not do yet:
@@ -46,6 +46,7 @@ Optional OrbStack local domain overrides:
   --image-platform linux/arm64
 
 Optional skip flags:
+  --build-image
   --skip-vind
   --skip-replace
   --skip-orbstack-env
@@ -404,7 +405,7 @@ SKIP_VIND="false"
 SKIP_REPLACE="false"
 SKIP_ORBSTACK_ENV="false"
 SKIP_FORGEJO="false"
-SKIP_IMAGE_BUILD="false"
+SKIP_IMAGE_BUILD="true"
 WAIT_FOR_IMAGE_BUILD="false"
 
 VCP_HOST="vcp.local"
@@ -598,11 +599,16 @@ while [[ $# -gt 0 ]]; do
       SNAPSHOT_REGISTRY_PASSWORD="${2:-}"
       shift 2
       ;;
+    --build-image)
+      SKIP_IMAGE_BUILD="false"
+      shift
+      ;;
     --skip-image-build)
       SKIP_IMAGE_BUILD="true"
       shift
       ;;
     --wait-for-image-build)
+      SKIP_IMAGE_BUILD="false"
       WAIT_FOR_IMAGE_BUILD="true"
       shift
       ;;

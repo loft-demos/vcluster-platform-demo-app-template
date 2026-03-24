@@ -63,7 +63,7 @@ What the bootstrap does:
 - runs local placeholder replacement
 - pushes the repo into Forgejo
 - seeds the repo Actions secrets needed by the Forgejo `build-push` workflow
-- builds and pushes the `src/` demo image to the Forgejo container registry
+- optionally builds and pushes the `src/` demo image to the Forgejo container registry
 - creates the Argo CD Forgejo secrets
 - updates the Argo CD `cluster-local` secret that controls which use-case appsets are selected
 - optionally creates a default vCP `ProjectSecret` for snapshot registry auth in `p-default`
@@ -123,7 +123,7 @@ demo environment.
 
 ## Most Common Commands
 
-Create or rerun everything:
+Create or rerun the environment:
 
 ```bash
 LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh
@@ -186,9 +186,25 @@ List the supported use cases:
 bash vind-demo-cluster/bootstrap-self-contained.sh --list-use-cases
 ```
 
-The demo image build runs in the background by default so the bootstrap can
-finish faster. Use `--wait-for-image-build` if you want the script to block
-until the Forgejo registry push completes.
+No demo image build runs by default anymore. That keeps the local-contained
+bootstrap lighter and avoids hammering the local Docker/OrbStack runtime unless
+you explicitly want to publish the demo image.
+
+Use `--build-image` if you want the bootstrap to start the image build in the
+background:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --build-image
+```
+
+Use `--wait-for-image-build` if you want the script to block until the Forgejo
+registry push completes:
+
+```bash
+LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
+  --wait-for-image-build
+```
 
 On Apple Silicon, the image build now defaults to native `linux/arm64` instead
 of forcing `linux/amd64`.

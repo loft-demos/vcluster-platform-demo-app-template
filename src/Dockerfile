@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -o http-echo main.go
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o http-echo main.go
 
 FROM gcr.io/distroless/static:nonroot-$TARGETARCH
 WORKDIR /

@@ -155,10 +155,17 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
                 existingSecret: forgejo-admin-secret
                 email: demo-admin@__VCP_LOFT_HOST__
               config:
+                database:
+                  DB_TYPE: sqlite3
+                  SQLITE_TIMEOUT: 120000
+                  SQLITE_JOURNAL_MODE: WAL
                 packages:
                   ENABLED: true
                 service:
                   DISABLE_REGISTRATION: true
+                ui.notification:
+                  MIN_TIMEOUT: -1
+                  EVENT_SOURCE_UPDATE_TIME: -1
                 webhook:
                   ALLOWED_HOST_LIST: external,private,loopback
                 actions:

@@ -6,7 +6,9 @@ on:
       - main
     paths:
       - 'src/**'
-      - 'helm-chart/**'
+      - 'helm-chart/Chart.yaml'
+      - 'scripts/build-push-forgejo-image.sh'
+      - '.forgejo/workflows/build-push.yaml'
 
 concurrency:
   group: build-push

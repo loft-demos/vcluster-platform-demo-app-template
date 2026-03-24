@@ -266,10 +266,15 @@ if docker buildx version >/dev/null 2>&1; then
 else
   echo "[WARN] docker buildx is unavailable; falling back to plain docker build/push without registry cache." >&2
 
+  if [[ "$SKIP_CACHE" != "true" ]]; then
+    docker pull "${image_ref}:latest" >/dev/null 2>&1 || true
+  fi
+
   docker_build_args=(
     build
     --platform "$PLATFORM"
     --file "$DOCKERFILE_PATH"
+    --build-arg BUILDKIT_INLINE_CACHE=1
     --label "org.opencontainers.image.revision=${full_sha}"
     --label "org.opencontainers.image.title=${IMAGE_NAME}"
     --label "org.opencontainers.image.vendor=loft.sh"
@@ -286,9 +291,15 @@ else
   done
   set -u
 
+  if [[ "$SKIP_CACHE" != "true" ]]; then
+    docker_build_args+=(
+      --cache-from "${image_ref}:latest"
+    )
+  fi
+
   docker_build_args+=("$CONTEXT_PATH")
 
-  docker "${docker_build_args[@]}"
+  DOCKER_BUILDKIT=1 docker "${docker_build_args[@]}"
   docker push "${image_ref}:${short_sha}"
   docker push "${image_ref}:${chart_app_version}"
 
