@@ -59,7 +59,6 @@ What the bootstrap does:
 - creates or upgrades the `vind` cluster
 - installs vCluster Platform, Argo CD, ESO, and Forgejo
 - registers the shared Forgejo Actions runner via offline registration and stores its secret in-cluster
-- builds and pushes a small Forgejo runner job image so workflow containers already have the Docker CLI
 - annotates `clusters.management.loft.sh/loft-cluster` with `domainPrefix`, `domain`, and `sleepTimeZone`
 - runs local placeholder replacement
 - pushes the repo into Forgejo
@@ -96,7 +95,6 @@ In practice that means:
 - bootstrap also teaches the embedded CoreDNS to resolve those hostnames to the
   matching in-cluster services, so pod-network clients use the same names too
 - the shared self-contained Forgejo runner is declared in [forgejo-runner/](./forgejo-runner/) and deployed by [../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml](../vcluster-gitops/overlays/local-contained/forgejo-runner-app.yaml); it is intentionally a single replica because one offline-registration secret maps to one runner identity
-- bootstrap also publishes a repo-scoped runner job image (`{REPO_NAME}-forgejo-runner-job`) so Forgejo jobs start with Node.js plus the Docker CLI already available
 - the demo app image from `src/` is built and pushed to the Forgejo container
   registry as `<repo>-demo-app`, under the repo-scoped prefix
   `forgejo.vcp.local/<org>/<repo>/<repo>-demo-app`
@@ -191,11 +189,6 @@ bash vind-demo-cluster/bootstrap-self-contained.sh --list-use-cases
 The demo image build runs in the background by default so the bootstrap can
 finish faster. Use `--wait-for-image-build` if you want the script to block
 until the Forgejo registry push completes.
-
-The Forgejo runner job image is built separately so the runner labels stay in
-sync even on reruns that skip the demo app image build. Only use
-`--skip-runner-job-image-build` when that runner image tag already exists in the
-local Forgejo registry.
 
 On Apple Silicon, the image build now defaults to native `linux/arm64` instead
 of forcing `linux/amd64`.

@@ -50,7 +50,6 @@ Optional skip flags:
   --skip-replace
   --skip-orbstack-env
   --skip-forgejo
-  --skip-runner-job-image-build
   --skip-image-build
   --wait-for-image-build
   --skip-argocd-bootstrap
@@ -405,7 +404,6 @@ SKIP_VIND="false"
 SKIP_REPLACE="false"
 SKIP_ORBSTACK_ENV="false"
 SKIP_FORGEJO="false"
-SKIP_RUNNER_JOB_IMAGE_BUILD="false"
 SKIP_IMAGE_BUILD="false"
 WAIT_FOR_IMAGE_BUILD="false"
 
@@ -600,10 +598,6 @@ while [[ $# -gt 0 ]]; do
       SNAPSHOT_REGISTRY_PASSWORD="${2:-}"
       shift 2
       ;;
-    --skip-runner-job-image-build)
-      SKIP_RUNNER_JOB_IMAGE_BUILD="true"
-      shift
-      ;;
     --skip-image-build)
       SKIP_IMAGE_BUILD="true"
       shift
@@ -720,9 +714,6 @@ fi
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
   IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST}/${FORGEJO_OWNER}/${REPO_NAME}"
 fi
-
-require_cmd git
-RUNNER_JOB_IMAGE_TAG="$(git rev-parse --short=8 HEAD)"
 
 if [[ -z "$IMAGE_PULL_PROJECT_SECRET_NAME" ]]; then
   IMAGE_PULL_PROJECT_SECRET_NAME="${ORG_NAME}-ghcr-write-pat"
@@ -851,7 +842,6 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --vcluster-name "$VCLUSTER_NAME" \
     --base-domain "$BASE_DOMAIN" \
     --forgejo-username "$FORGEJO_USERNAME" \
-    --runner-job-image-tag "$RUNNER_JOB_IMAGE_TAG" \
     --git-base-url "$GIT_BASE_URL" \
     --git-base-url-authed "$GIT_BASE_URL_AUTHED" \
     --git-public-url "$GIT_PUBLIC_URL" \
@@ -1011,28 +1001,6 @@ fi
 set +u
 _image_auth_args_copy=("${image_auth_args[@]}")
 set -u
-
-if [[ "$SKIP_RUNNER_JOB_IMAGE_BUILD" != "true" ]]; then
-  step "Build and push the Forgejo runner job image"
-  require_cmd docker
-
-  set +u
-  bash scripts/build-push-forgejo-image.sh \
-    --registry "$FORGEJO_HOST" \
-    --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
-    --repo-name "$REPO_NAME" \
-    --image-name "${REPO_NAME}-forgejo-runner-job" \
-    --extra-tag latest \
-    --username "$FORGEJO_USERNAME" \
-    "${_image_auth_args_copy[@]}" \
-    --context vind-demo-cluster/forgejo-runner/job-image \
-    --dockerfile vind-demo-cluster/forgejo-runner/job-image/Dockerfile \
-    --registry-insecure \
-    --platform "$IMAGE_PLATFORM" \
-    --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}" \
-    --skip-cache
-  set -u
-fi
 
 if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
   if [[ "$WAIT_FOR_IMAGE_BUILD" == "true" ]]; then

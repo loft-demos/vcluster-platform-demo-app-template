@@ -53,9 +53,7 @@ Forgejo build workflow still contain unresolved placeholders.
 ## `build-push-forgejo-image.sh`
 
 Builds a Dockerfile and pushes it to the Forgejo container registry. The
-default path is still the demo app image from `src/Dockerfile`, but the `vind`
-bootstrap also reuses this helper to publish the Forgejo runner job image from
-`vind-demo-cluster/forgejo-runner/job-image/`.
+default path is the demo app image from `src/Dockerfile`.
 
 Example:
 

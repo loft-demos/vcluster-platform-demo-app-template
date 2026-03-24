@@ -38,10 +38,6 @@ There are two CI paths in this repo:
 
 In the `vind` self-contained path, the shared Forgejo runner follows Forgejo's Docker-access guidance by exposing an isolated pod-local DinD socket to job containers and exporting `DOCKER_HOST` so workflow steps can reach it.
 
-Bootstrap also publishes a small repo-scoped runner job image for the `vind`
-path, so the runner labels resolve to a Node.js image that already includes the
-Docker CLI instead of installing it on every workflow run.
-
 The demo app image is tagged with the `appVersion` from `helm-chart/Chart.yaml` and pushed to the configured OCI registry. The Kargo Warehouse for both demos watches that image repository and triggers promotion automatically when a new semver tag appears.
 
 In the `vind` self-contained path, bootstrap also creates a `forgejo-image-credentials` Secret in the `progressive-delivery` and `pre-prod-gate` namespaces so Kargo can authenticate to the private Forgejo registry. GitHub-backed paths only need an equivalent Kargo image-credential secret when the chosen registry is private.
