@@ -1027,8 +1027,10 @@ if [[ "$SKIP_RUNNER_JOB_IMAGE_BUILD" != "true" ]]; then
     "${_image_auth_args_copy[@]}" \
     --context vind-demo-cluster/forgejo-runner/job-image \
     --dockerfile vind-demo-cluster/forgejo-runner/job-image/Dockerfile \
+    --registry-insecure \
     --platform "$IMAGE_PLATFORM" \
-    --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
+    --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}" \
+    --skip-cache
   set -u
 fi
 
@@ -1050,6 +1052,7 @@ if [[ "$SKIP_IMAGE_BUILD" != "true" ]]; then
     --repo-name "$REPO_NAME"
     --username "$FORGEJO_USERNAME"
     "${_image_auth_args_copy[@]}"
+    --registry-insecure
     --platform "$IMAGE_PLATFORM"
     --source-url "${GIT_PUBLIC_URL%/}/${ORG_NAME}/${REPO_NAME}"
     --skip-cache

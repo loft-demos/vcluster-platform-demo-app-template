@@ -34,6 +34,7 @@ Options:
   --chart-file PATH               Helm chart file used to read appVersion. Default: helm-chart/Chart.yaml
   --platform VALUE                Docker platform. Default: auto-detect from the local machine
   --source-url URL                OCI source label URL
+  --registry-insecure             Allow pushing to an insecure HTTP registry
   --skip-cache                    Disable registry build cache
   --help                          Show this message
 EOF
@@ -60,6 +61,7 @@ DOCKERFILE_PATH="src/Dockerfile"
 CHART_FILE="helm-chart/Chart.yaml"
 PLATFORM="auto"
 SOURCE_URL=""
+REGISTRY_INSECURE="false"
 SKIP_CACHE="false"
 
 while [[ $# -gt 0 ]]; do
@@ -115,6 +117,10 @@ while [[ $# -gt 0 ]]; do
     --source-url)
       SOURCE_URL="${2:-}"
       shift 2
+      ;;
+    --registry-insecure)
+      REGISTRY_INSECURE="true"
+      shift
       ;;
     --skip-cache)
       SKIP_CACHE="true"
@@ -224,7 +230,7 @@ build_args=(
   build
   --platform "$PLATFORM"
   --file "$DOCKERFILE_PATH"
-  --push
+  --output "type=image,push=true,registry.insecure=${REGISTRY_INSECURE}"
   --label "org.opencontainers.image.revision=${full_sha}"
   --label "org.opencontainers.image.title=${IMAGE_NAME}"
   --label "org.opencontainers.image.vendor=loft.sh"
@@ -246,7 +252,7 @@ set -u
 if [[ "$SKIP_CACHE" != "true" ]]; then
   build_args+=(
     --cache-from "type=registry,ref=${image_ref}:buildcache"
-    --cache-to "type=registry,ref=${image_ref}:buildcache,mode=max"
+    --cache-to "type=registry,ref=${image_ref}:buildcache,mode=max,ignore-error=true"
   )
 fi
 
