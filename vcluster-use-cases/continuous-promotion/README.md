@@ -27,6 +27,31 @@ Generator-hosted environments typically expose Kargo at `https://kargo-{REPLACE_
 - **Progressive Delivery demo** — classic dev → staging → prod pipeline
 - **Pre-Prod Gate demo** — stage → pre-prod vCluster → prod pipeline (CoreWeave pattern)
 
+The default path is for Flux to own the Kargo install and Kargo CR manifests
+when the cluster has both `continuousPromotion=true` and `flux=true`. The
+legacy Argo CD-managed Kargo path is still available through the
+`legacyArgoKargo=true` cluster label.
+
+On the `vind` self-contained path, that legacy label is derived automatically
+when you enable `continuous-promotion` without `flux`, so local-contained
+bootstraps do not need an extra manual toggle. If you want Flux to own Kargo in
+`vind`, enable both use cases together.
+
+---
+
+## Sleep Mode And Wake-Up
+
+Both continuous-promotion vCluster templates use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD cluster health checks do not constantly wake sleeping vClusters.
+
+Because of that, the Argo CD Applications that target those sleeping vClusters also subscribe to `notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''`. That subscription triggers an Argo CD Notification only when an app becomes `OutOfSync`, which then calls the shared `vcluster-wakeup-proxy` service to wake the vCluster on demand.
+
+The shared notification template and proxy live under the pull-request-environments use case:
+
+- [../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml](../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml)
+- [../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml](../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml)
+
+If you keep the `ignore-user-agents: argo*` annotation but do not install equivalent Argo Notifications wake-up plumbing, promotions into sleeping vClusters can appear stuck because Argo CD will no longer wake them by routine polling.
+
 ---
 
 ## CI / Image pipeline
@@ -84,9 +109,9 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/progressive-delivery/kargo-warehouse.yaml](manifests/progressive-delivery/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + PromotionPolicies |
 | [manifests/progressive-delivery/kargo-analysis-template.yaml](manifests/progressive-delivery/kargo-analysis-template.yaml) | curl health-check AnalysisTemplate |
-| [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vClusters (ArgoCD import enabled) |
+| [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vClusters with sleep mode enabled and Argo user-agent polling ignored |
 | [manifests/progressive-delivery/kargo-vcluster-instances.yaml](manifests/progressive-delivery/kargo-vcluster-instances.yaml) | pd-dev, pd-staging, pd-prod VCIs |
-| [manifests/progressive-delivery/guestbook-appset.yaml](manifests/progressive-delivery/guestbook-appset.yaml) | ApplicationSet deploying the app into each vCluster via cluster generator |
+| [manifests/progressive-delivery/guestbook-appset.yaml](manifests/progressive-delivery/guestbook-appset.yaml) | ApplicationSet deploying the app into each vCluster via cluster generator and subscribing those apps to wake sleeping vClusters on demand |
 
 ---
 
@@ -118,9 +143,9 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/pre-prod-gate/kargo-warehouse.yaml](manifests/pre-prod-gate/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | stage, pre-prod-vcluster, prod Stages + soak time |
 | [manifests/pre-prod-gate/kargo-analysis-template.yaml](manifests/pre-prod-gate/kargo-analysis-template.yaml) | Integration test Job AnalysisTemplate |
-| [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, ArgoCD import enabled |
+| [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, ArgoCD import enabled, and Argo user-agent polling ignored |
 | [manifests/pre-prod-gate/kargo-vcluster-instances.yaml](manifests/pre-prod-gate/kargo-vcluster-instances.yaml) | ppg-pre-prod VCI |
-| [manifests/pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) | ArgoCD Applications for stage, pre-prod, and prod |
+| [manifests/pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) | ArgoCD Applications for stage, pre-prod, and prod, with wake-up notification subscriptions on the sleeping-vCluster targets |
 
 ---
 
@@ -128,16 +153,18 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 
 ### Kargo admin credentials
 
-`kargo-helm-app.yaml` references two placeholders that must be added to `scripts/replace-text-local.sh`:
+The legacy Argo-managed `kargo-helm-app.yaml` path references two placeholders that must be added to `scripts/replace-text-local.sh`:
 
 | Placeholder | How to generate |
 |---|---|
 | `{REPLACE_KARGO_ADMIN_PASSWORD_HASH}` | `htpasswd -bnBC 10 "" <password> \| tr -d ':\n' \| sed 's/$2y/$2a/'` |
 | `{REPLACE_KARGO_TOKEN_SIGNING_KEY}` | `openssl rand -base64 32` |
 
+If you prefer not to keep those values in Argo CD Helm values, there is now a Flux-owned host-cluster alternative under [../flux/host-apps/kargo](../flux/host-apps/kargo) that reads auth settings from a Secret via `HelmRelease.valuesFrom`. That Flux path is enabled when `continuousPromotion=true` and `flux=true`. The legacy Argo-managed Kargo install now lives under [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml) and is selected when `legacyArgoKargo=true`. On the `vind` self-contained path, bootstrap sets that label automatically whenever `continuous-promotion` is enabled without `flux`.
+
 ### Kargo version
 
-Check [github.com/akuity/kargo/releases](https://github.com/akuity/kargo/releases) for the latest chart version and update `targetRevision` in [apps/kargo-helm-app.yaml](apps/kargo-helm-app.yaml).
+Check [github.com/akuity/kargo/releases](https://github.com/akuity/kargo/releases) for the latest chart version and update `targetRevision` in either the Flux `HelmRelease` at [../flux/host-apps/kargo/install/kargo-helmrelease.yaml](../flux/host-apps/kargo/install/kargo-helmrelease.yaml) or the legacy Argo path at [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml).
 
 ### Forgejo runner registration
 

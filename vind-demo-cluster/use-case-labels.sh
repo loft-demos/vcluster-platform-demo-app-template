@@ -287,6 +287,32 @@ $(known_use_case_entries)
 EOF
 }
 
+render_cluster_local_behavior_labels() {
+  local spec="$1"
+  local indent="${2:-}"
+  local enabled=""
+  local legacy_argo_kargo="false"
+
+  enabled="$(resolve_use_case_selection "$spec")" || return 1
+
+  # On the local-contained vind path, continuous-promotion falls back to the
+  # legacy Argo-managed Kargo install unless Flux is also enabled.
+  if use_case_list_contains "$enabled" "continuous-promotion" \
+    && ! use_case_list_contains "$enabled" "flux"; then
+    legacy_argo_kargo="true"
+  fi
+
+  printf '%slegacyArgoKargo: "%s"\n' "$indent" "$legacy_argo_kargo"
+}
+
+render_cluster_local_labels() {
+  local spec="$1"
+  local indent="${2:-}"
+
+  render_cluster_local_use_case_labels "$spec" "$indent" || return 1
+  render_cluster_local_behavior_labels "$spec" "$indent" || return 1
+}
+
 selected_use_cases_csv() {
   local spec="$1"
   local enabled=""

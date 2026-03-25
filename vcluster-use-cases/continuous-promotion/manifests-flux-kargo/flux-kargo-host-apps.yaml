@@ -1,0 +1,21 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: flux-kargo-host-apps
+  namespace: p-vcluster-flux-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  wait: true
+  dependsOn:
+    - name: vcluster-flux-kustomize
+      namespace: p-vcluster-flux-demo
+  sourceRef:
+    kind: GitRepository
+    name: vcluster-flux-demo
+    namespace: p-vcluster-flux-demo
+  path: ./vcluster-use-cases/flux/host-apps/kargo

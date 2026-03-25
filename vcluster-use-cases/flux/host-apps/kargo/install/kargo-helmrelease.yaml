@@ -1,0 +1,54 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: kargo
+  namespace: p-vcluster-flux-demo
+spec:
+  targetNamespace: kargo
+  storageNamespace: kargo
+  releaseName: kargo
+  chart:
+    spec:
+      chart: kargo
+      version: 1.9.5
+      sourceRef:
+        kind: HelmRepository
+        name: kargo-charts
+        namespace: p-vcluster-flux-demo
+  interval: 50m
+  driftDetection:
+    mode: enabled
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    api:
+      host: {REPLACE_KARGO_HOST}
+      # Keep auth config out of Git. A Secret in the same namespace as this
+      # HelmRelease can layer in api.adminAccount and/or api.oidc settings.
+      adminAccount:
+        enabled: false
+      oidc:
+        enabled: false
+      argocd:
+        urls:
+          "": "https://{REPLACE_ARGOCD_HOST}"
+      tls:
+        enabled: false
+        terminatedUpstream: false
+      ingress:
+        enabled: true
+        ingressClassName: nginx
+        annotations:
+          nginx.ingress.kubernetes.io/ssl-redirect: "false"
+        tls:
+          enabled: false
+  valuesFrom:
+    - kind: Secret
+      name: kargo-auth-values
+      valuesKey: values.yaml
+      optional: true

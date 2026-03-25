@@ -15,6 +15,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     kargo.akuity.io/authorized-stage: pre-prod-gate:stage
+    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -41,6 +42,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     kargo.akuity.io/authorized-stage: pre-prod-gate:pre-prod-vcluster
+    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

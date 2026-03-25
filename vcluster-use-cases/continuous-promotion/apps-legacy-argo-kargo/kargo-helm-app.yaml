@@ -17,19 +17,15 @@ spec:
   source:
     chart: kargo
     repoURL: ghcr.io/akuity/kargo-charts
-    # Check https://github.com/akuity/kargo/pkgs/container/kargo-charts%2Fkargo for latest version
     targetRevision: 1.9.5
     helm:
       values: |
         api:
-          # Domain only — no protocol prefix
           host: {REPLACE_KARGO_HOST}
 
           adminAccount:
             enabled: true
-            # Generate with: htpasswd -bnBC 10 "" <password> | tr -d ':\n' | sed 's/$2y/$2a/'
             passwordHash: '{REPLACE_KARGO_ADMIN_PASSWORD_HASH}'
-            # Generate with: openssl rand -base64 29 | tr -d "=+/" | cut -c1-32
             tokenSigningKey: '{REPLACE_KARGO_TOKEN_SIGNING_KEY}'
 
           argocd:
@@ -38,9 +34,6 @@ spec:
 
           oidc:
             enabled: true
-            # issuerURL points at the Dex sidecar, which brokers to vCP.
-            # Dex handles the client secret and self-signed TLS cert so Kargo
-            # does not need a clientSecret field or a TLS skip flag.
             issuerURL: "https://{REPLACE_KARGO_HOST}/dex"
             clientID: "kargo"
             additionalScopes:
@@ -50,8 +43,6 @@ spec:
             dex:
               enabled: true
               tls:
-                # Dex requires TLS; selfSignedCert generates a cert Secret
-                # automatically. Kargo trusts it because it manages both sides.
                 selfSignedCert: true
                 certSecretName: kargo-dex-tls
               connectors:
@@ -65,8 +56,6 @@ spec:
                     insecureSkipVerify: true
                     redirectURI: "https://{REPLACE_KARGO_HOST}/dex/callback"
 
-          # TLS terminated by nginx ingress — disable pod-level TLS but tell
-          # Kargo to still generate https:// URLs
           tls:
             enabled: false
             terminatedUpstream: false

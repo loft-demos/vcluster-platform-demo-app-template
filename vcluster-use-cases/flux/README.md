@@ -18,6 +18,7 @@ Argo CD `Application` resources that will trigger additional installs:
 - vCluster Platform Bash `App` - Enables automatic creation of a Flux KubeConfig Secret for `VirtualClusterInstances` in a vCluster Platform host or connected cluster when running a single instance of Flux for `VirtualClusterInstances` deployed across multiple vCluster Platform host clusters.
 - Flux `GitRepository` - Points to this repository and is mapped to the `p-vcluster-flux-demo` namespace in the _vCluster Flux Demo_ vCluster Platform Project.
 - A Flux `Kustomization` resource that will create the `VirtualClusterInstance` resource defined under the [kustomize directory](./kustomize)
+- A Flux-managed host-cluster Kargo path under [host-apps/kargo](./host-apps/kargo) that is enabled by the continuous-promotion use case when `flux=true`
 
 ## Pull Request Environments
 
@@ -38,3 +39,13 @@ NOTE: For using the bash App script to create a Flux vCluster kubeconfig:
 - Then use the CLI to connect to vCluster Platform: vcluster platform login https://tango.us.demo.dev --access-key $ACCESS_KEY
 - Then connect to the Platform host cluster where Flux will retrieve the `kubeconfig` secret: vcluster platform connect cluster loft-cluster
 - You will also need to ensure that all Flux resources that require that vCluster `kubeconfig` are also deployed to that same namespace
+
+## Optional: Flux-manage Kargo
+
+If you want Flux to install Kargo instead of Argo CD:
+
+1. Enable the continuous-promotion and flux use cases together so Argo CD creates the Flux `Kustomization` from [../continuous-promotion/manifests-flux-kargo/flux-kargo-host-apps.yaml](../continuous-promotion/manifests-flux-kargo/flux-kargo-host-apps.yaml).
+2. Put the host-side Kargo resources under [host-apps/kargo](./host-apps/kargo).
+3. Create the `kargo-auth-values` Secret or `ExternalSecret` in namespace `p-vcluster-flux-demo`.
+4. Flux will install the Kargo chart first and then reconcile the `pre-prod-gate` and `progressive-delivery` Kargo manifests by using Flux `dependsOn`.
+5. The legacy Argo-managed Kargo path is now opt-in through the `legacyArgoKargo=true` cluster label. On the `vind` self-contained path, bootstrap derives that label automatically whenever `continuous-promotion` is enabled without `flux`.

@@ -275,7 +275,7 @@ if [[ -z "$ORBSTACK_ENV_FILE" ]]; then
   fi
 fi
 
-cluster_local_use_case_labels="$(render_cluster_local_use_case_labels "$USE_CASES" '            ')"
+cluster_local_use_case_labels="$(render_cluster_local_labels "$USE_CASES" '            ')"
 selected_use_cases="$(selected_use_cases_csv "$USE_CASES")"
 selected_use_case_lines="$(resolve_use_case_selection "$USE_CASES")"
 declare -a docker_args_copy=()

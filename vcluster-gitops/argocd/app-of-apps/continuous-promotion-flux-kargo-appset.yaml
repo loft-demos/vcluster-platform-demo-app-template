@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: continuous-promotion-cluster
+  name: continuous-promotion-flux-kargo
   namespace: argocd
 spec:
   generators:
@@ -9,11 +9,18 @@ spec:
         selector:
           matchLabels:
             continuousPromotion: 'true'
+            flux: 'true'
+          matchExpressions:
+            - key: legacyArgoKargo
+              operator: NotIn
+              values:
+                - 'true'
   template:
     metadata:
-      name: 'continuous-promotion-apps'
+      name: 'continuous-promotion-flux-kargo-apps'
       labels:
         use-case.demos.vcluster.com: continuous-promotion
+        use-case.demos.vcluster.com/kargo-owner: flux
     spec:
       destination:
         server: '{{server}}'
@@ -22,7 +29,7 @@ spec:
       source:
         repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
         targetRevision: HEAD
-        path: vcluster-use-cases/continuous-promotion/apps-common
+        path: vcluster-use-cases/continuous-promotion/apps-flux-kargo
       syncPolicy:
         automated:
           prune: true

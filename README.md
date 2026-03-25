@@ -143,9 +143,16 @@ The label keys currently used by the repo are:
 | `virtual-scheduler` | `virtualScheduler` |
 | `vnode` | `vnode` |
 
+Additional behavior toggle:
+
+| Purpose | `cluster-local` label |
+| --- | --- |
+| opt into the legacy Argo-managed Kargo install for `continuous-promotion` | `legacyArgoKargo` |
+
 Notes:
 
 - on the `vind` path, the bootstrap `--use-cases` flag writes these labels for you
+- on the `vind` self-contained path, `legacyArgoKargo` is derived automatically when `continuous-promotion` is enabled without `flux`, so you do not need to set that label by hand
 - on the Demo Generator path, the initial values usually come from template parameters and the generated cluster secret
 - changing the secret directly is the fastest way to test another combination after the environment already exists
 

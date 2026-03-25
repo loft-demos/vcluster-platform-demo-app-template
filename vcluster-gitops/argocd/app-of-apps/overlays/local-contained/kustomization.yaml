@@ -24,6 +24,8 @@ resources:
   - ../../virtual-cluster-templates-app.yaml
   - ../../virtual-scheduler-appset.yaml
   - ../../continuous-promotion-appset.yaml
+  - ../../continuous-promotion-flux-kargo-appset.yaml
+  - ../../continuous-promotion-legacy-argo-kargo-appset.yaml
   - ../../vnode-with-vcluster-appset.yaml
 patches:
   - path: patch-autosnapshots-appset.yaml

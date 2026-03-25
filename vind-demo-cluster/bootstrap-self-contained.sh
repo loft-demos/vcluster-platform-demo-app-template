@@ -335,7 +335,7 @@ apply_cluster_local_secret() {
   local use_case_spec="$4"
   local labels_block=""
 
-  labels_block="$(render_cluster_local_use_case_labels "$use_case_spec" '    ')" || return 1
+  labels_block="$(render_cluster_local_labels "$use_case_spec" '    ')" || return 1
 
   cat <<EOF | kubectl apply -f -
 apiVersion: v1
