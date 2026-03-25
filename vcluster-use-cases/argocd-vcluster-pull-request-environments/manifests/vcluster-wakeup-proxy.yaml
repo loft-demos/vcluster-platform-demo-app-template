@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: proxy
-          image: ghcr.io/loft-demos/vcluster-wakeup-proxy:0.1.0
+          image: ghcr.io/loft-demos/vcluster-wakeup-proxy:0.2.0
           ports: [{ containerPort: 8080 }]
           env:
             - name: UPSTREAM_BASE
@@ -22,7 +22,7 @@ spec:
             - name: SUCCESS_ON
               value: "502,504"
             - name: UPSTREAM_TIMEOUT
-              value: "10s"
+              value: "5s"
           readinessProbe:
             httpGet: { path: /readyz, port: 8080 }
             initialDelaySeconds: 1

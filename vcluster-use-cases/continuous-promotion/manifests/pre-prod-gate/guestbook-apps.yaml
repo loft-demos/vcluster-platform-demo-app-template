@@ -1,47 +1,22 @@
 # ArgoCD Applications for the pre-prod-gate pipeline.
 # Kargo updates the image tag on these Applications via argocd-update promotion steps.
 #
-# guestbook-stage:    targets the ppg-pre-prod vCluster (stage namespace)
-# guestbook-pre-prod: targets the ppg-pre-prod vCluster (guestbook namespace, with verification)
-# guestbook-prod-ppg: targets production (update destination to a real prod cluster)
+# guestbook-pre-prod:          targets the pre-prod-gate-pre-prod vCluster
+# guestbook-pre-prod-gate-prod: targets production (update destination to a real prod cluster)
 #
 # Sync wave 3 ensures VCIs (wave 2) are registered with ArgoCD before these Apps are created.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: guestbook-stage
-  namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-    kargo.akuity.io/authorized-stage: pre-prod-gate:stage
-    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: default
-  source:
-    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-    targetRevision: HEAD
-    path: vcluster-use-cases/continuous-promotion/guestbook/stages/ppg-stage
-  destination:
-    name: loft-default-vcluster-ppg-pre-prod
-    namespace: guestbook-stage
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
   name: guestbook-pre-prod
   namespace: argocd
+  labels:
+    vclusterProjectId: default
+    vclusterName: pre-prod-gate-pre-prod
   annotations:
     argocd.argoproj.io/sync-wave: "3"
-    kargo.akuity.io/authorized-stage: pre-prod-gate:pre-prod-vcluster
+    kargo.akuity.io/authorized-stage: pre-prod-gate:pre-prod
     notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -52,7 +27,7 @@ spec:
     targetRevision: HEAD
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/pre-prod
   destination:
-    name: loft-default-vcluster-ppg-pre-prod
+    name: loft-default-vcluster-pre-prod-gate-pre-prod
     namespace: guestbook
   syncPolicy:
     automated:
@@ -65,7 +40,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: guestbook-prod-ppg
+  name: guestbook-pre-prod-gate-prod
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"

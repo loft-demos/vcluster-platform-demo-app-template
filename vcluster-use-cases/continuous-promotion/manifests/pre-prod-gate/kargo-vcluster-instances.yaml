@@ -1,9 +1,9 @@
 # Long-lived pre-prod vCluster. Scales to zero after 10 minutes of inactivity
-# and wakes when Kargo promotes freight into the pre-prod-vcluster Stage.
+# and wakes when Kargo promotes freight into the pre-prod Stage.
 apiVersion: management.loft.sh/v1
 kind: VirtualClusterInstance
 metadata:
-  name: ppg-pre-prod
+  name: pre-prod-gate-pre-prod
   namespace: p-default
   annotations:
     argocd.argoproj.io/sync-wave: "2"

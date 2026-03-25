@@ -25,7 +25,7 @@ Generator-hosted environments typically expose Kargo at `https://kargo-{REPLACE_
 - **Kargo operator** — installed via Helm into the `kargo` namespace; UI available at the configured Kargo host
 - **Forgejo runner (vind self-contained only)** — shared CI runner in the `forgejo` namespace; builds and pushes the demo app image on every commit to `src/` or `helm-chart/`
 - **Progressive Delivery demo** — classic dev → staging → prod pipeline
-- **Pre-Prod Gate demo** — stage → pre-prod vCluster → prod pipeline (CoreWeave pattern)
+- **Pre-Prod Gate demo** — pre-prod vCluster → prod pipeline (CoreWeave pattern)
 
 The default path is for Flux to own the Kargo install and Kargo CR manifests
 when the cluster has both `continuousPromotion=true` and `flux=true`. The
@@ -43,14 +43,20 @@ bootstraps do not need an extra manual toggle. If you want Flux to own Kargo in
 
 Both continuous-promotion vCluster templates use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD cluster health checks do not constantly wake sleeping vClusters.
 
-Because of that, the Argo CD Applications that target those sleeping vClusters also subscribe to `notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''`. That subscription triggers an Argo CD Notification only when an app becomes `OutOfSync`, which then calls the shared `vcluster-wakeup-proxy` service to wake the vCluster on demand.
+Because of that, the Argo CD Applications that target those sleeping vClusters also need explicit wake-up metadata:
+
+- `notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''`
+- `metadata.labels.vclusterProjectId`
+- `metadata.labels.vclusterName`
+
+When one of those Applications becomes `OutOfSync`, Argo CD Notifications sends a webhook to the shared `vcluster-wakeup-proxy` service. The proxy then issues the wake-triggering request to vCluster Platform for the target VCI, instead of waiting for normal Argo polling to wake it indirectly.
 
 The shared notification template and proxy live under the pull-request-environments use case:
 
 - [../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml](../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml)
 - [../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml](../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml)
 
-If you keep the `ignore-user-agents: argo*` annotation but do not install equivalent Argo Notifications wake-up plumbing, promotions into sleeping vClusters can appear stuck because Argo CD will no longer wake them by routine polling.
+If you keep the `ignore-user-agents: argo*` annotation but do not install equivalent Argo Notifications wake-up plumbing, promotions into sleeping vClusters can appear stuck because Argo CD will no longer wake them by routine polling. Likewise, if the subscription annotation is present but the `vclusterProjectId` / `vclusterName` labels are missing, the wake-up template cannot resolve the correct target VCI.
 
 ---
 
@@ -123,16 +129,13 @@ Inspired by a real-world pattern: uses a long-lived pre-prod vCluster running on
 Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
     │
     ▼ auto-promote
-  stage (host cluster namespace)
-    │
-    ▼ manual promote → integration test Job → pass required
-  pre-prod-vcluster (ppg-pre-prod vCluster — scales to zero when idle)
+  pre-prod (pre-prod-gate-pre-prod vCluster — scales to zero when idle)
     │  └─ 10 minute soak time required
     ▼ manual approval required
   prod (production cluster)
 ```
 
-**Verification:** A Kubernetes Job runs inside the cluster against the pre-prod vCluster's ingress URL. The job retries for up to 2 minutes to account for vCluster wake-up time after scale-to-zero. Pass = exit 0, fail = exit 1.
+**Verification:** A Kubernetes Job runs inside the cluster against the pre-prod vCluster's ingress URL. The job retries for up to 2 minutes to account for vCluster wake-up time after scale-to-zero. New Freight auto-promotes directly into pre-prod; pass = exit 0, fail = exit 1.
 
 **Key files:**
 
@@ -141,11 +144,11 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/pre-prod-gate/namespace.yaml](manifests/pre-prod-gate/namespace.yaml) | Pre-creates the `pre-prod-gate` namespace with `kargo.akuity.io/project: "true"` so Kargo can adopt it |
 | [manifests/pre-prod-gate/kargo-project.yaml](manifests/pre-prod-gate/kargo-project.yaml) | Kargo Project (adopts the labeled `pre-prod-gate` namespace) |
 | [manifests/pre-prod-gate/kargo-warehouse.yaml](manifests/pre-prod-gate/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
-| [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | stage, pre-prod-vcluster, prod Stages + soak time |
+| [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | pre-prod and prod Stages + soak time |
 | [manifests/pre-prod-gate/kargo-analysis-template.yaml](manifests/pre-prod-gate/kargo-analysis-template.yaml) | Integration test Job AnalysisTemplate |
 | [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, ArgoCD import enabled, and Argo user-agent polling ignored |
-| [manifests/pre-prod-gate/kargo-vcluster-instances.yaml](manifests/pre-prod-gate/kargo-vcluster-instances.yaml) | ppg-pre-prod VCI |
-| [manifests/pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) | ArgoCD Applications for stage, pre-prod, and prod, with wake-up notification subscriptions on the sleeping-vCluster targets |
+| [manifests/pre-prod-gate/kargo-vcluster-instances.yaml](manifests/pre-prod-gate/kargo-vcluster-instances.yaml) | `pre-prod-gate-pre-prod` VCI |
+| [manifests/pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) | ArgoCD Applications for pre-prod and prod, with wake-up notification subscriptions on the sleeping-vCluster target |
 
 ---
 
@@ -216,4 +219,4 @@ The `destination.name` values in the ApplicationSet and ArgoCD Applications foll
 
 ### Production destination (pre-prod-gate)
 
-`guestbook-prod-ppg` in [pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) defaults to the host cluster. Update `destination` to point at a real external production cluster to complete the end-to-end story.
+`guestbook-pre-prod-gate-prod` in [pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) defaults to the host cluster. Update `destination` to point at a real external production cluster to complete the end-to-end story.

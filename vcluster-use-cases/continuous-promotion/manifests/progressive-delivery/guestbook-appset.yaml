@@ -26,6 +26,9 @@ spec:
     metadata:
       name: 'guestbook-{{metadata.labels.kargo-stage}}'
       namespace: argocd
+      labels:
+        vclusterName: '{{metadata.labels.vclusterName}}'
+        vclusterProjectId: '{{metadata.labels.vclusterProjectId}}'
       annotations:
         argocd.argoproj.io/sync-wave: "3"
         kargo.akuity.io/authorized-stage: 'progressive-delivery:{{metadata.labels.kargo-stage}}'

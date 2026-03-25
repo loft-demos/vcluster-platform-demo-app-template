@@ -1,4 +1,4 @@
-# AnalysisTemplate used by the pre-prod-vcluster Stage.
+# AnalysisTemplate used by the pre-prod Stage.
 # Runs a real integration test Job inside the cluster against the app deployed
 # in the pre-prod vCluster via its ingress URL. Exit 0 = pass, freight eligible
 # for prod. Exit 1 = fail, promotion to prod is blocked.

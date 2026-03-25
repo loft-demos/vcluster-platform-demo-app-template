@@ -6,6 +6,51 @@ The first approach leverages a pre-existing shared Argo CD instance (and only re
 
 The second approach leverages a pre-existing shared Argo CD instance that has been integrated with a vCluster Platform project for creating the PR vCluster, and installs a second, ephemeral, Argo CD instance into the PR vCluster (using a Virtual Cluster Template App) and the PR preview app is deployed into the vCluster using that embbedded (and completely ephemeral) Argo CD instance.
 
+## Shared Wake-Up Notifications
+
+This use case also contains the shared Argo CD Notifications plumbing that wakes sleeping vCluster instances on demand. The same pieces are reused by the pull request examples and by the continuous-promotion demos.
+
+Why this exists:
+
+- Sleeping vClusters often use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD health checks do not constantly wake them up.
+- Once Argo's routine polling is ignored, Argo needs a separate way to ask vCluster Platform to wake the target before a sync can complete.
+
+What the shared resources do:
+
+- [manifests/argocd-notifications-cm.yaml](manifests/argocd-notifications-cm.yaml) defines the `wakeup-vcluster` notification trigger and webhook template.
+- [manifests/vcluster-wakeup-proxy.yaml](manifests/vcluster-wakeup-proxy.yaml) deploys a small proxy in the `argocd` namespace that receives the notification and forwards the wake-triggering request to vCluster Platform.
+
+How the flow works:
+
+1. An Argo CD `Application` that targets a sleeping vCluster becomes `OutOfSync`.
+2. The `wakeup-vcluster` notification trigger fires.
+3. Argo CD Notifications renders the webhook path using the app's `vclusterProjectId` and `vclusterName` labels.
+4. The request is sent to `vcluster-wakeup-proxy`, which forwards the wake-triggering call to the vCluster Platform path for that VCI.
+5. Once the VCI wakes up, Argo CD can continue syncing against the imported cluster destination.
+
+What an app needs to participate:
+
+- `notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''`
+- `metadata.labels.vclusterProjectId`
+- `metadata.labels.vclusterName`
+
+Without those labels, the notification template cannot build the vCluster Platform path to wake the correct instance.
+
+Example:
+
+```yaml
+metadata:
+  annotations:
+    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
+  labels:
+    vclusterProjectId: default
+    vclusterName: pre-prod-gate-pre-prod
+```
+
+Those values must identify the vCluster Platform project and the `VirtualClusterInstance` name, not the Argo CD cluster destination name. For example, Argo may target a destination like `loft-default-vcluster-pre-prod-gate-pre-prod`, while the wake-up template still needs `default` and `pre-prod-gate-pre-prod` to construct the vCluster Platform request path.
+
+This same shared wake-up plumbing is also referenced from [../continuous-promotion/README.md](../continuous-promotion/README.md), because the continuous-promotion demos reuse the same notification template and proxy.
+
 ## Pros and Cons of the Two Approaches
 ### 1. Shared Argo CD creates and deplos to ephemeral vCluster:
 
@@ -51,4 +96,3 @@ Details of this setup, to include the components used, Kubernetes resources conf
 **✖ Longer PR Setup Time** – Each PR needs to spin up a fresh vCluster + Argo CD, which may slow CI/CD pipelines.
 
 **✖ More Complex Management** – Requires automation to spin up and tear down vCluster and Argo CD per PR efficiently.
-

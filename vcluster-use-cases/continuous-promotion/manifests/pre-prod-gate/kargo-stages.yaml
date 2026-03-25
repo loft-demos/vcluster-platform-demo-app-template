@@ -1,5 +1,5 @@
-# ProjectConfig enables auto-promotion for the stage Stage only.
-# pre-prod-vcluster and prod require manual promotion in the Kargo UI.
+# ProjectConfig enables auto-promotion for the pre-prod Stage.
+# prod still requires manual promotion in the Kargo UI.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
@@ -10,15 +10,16 @@ metadata:
 spec:
   promotionPolicies:
     - stageSelector:
-        name: stage
+        name: pre-prod
       autoPromotionEnabled: true
 ---
-# stage: auto-promotes from Warehouse; deploys to the host cluster namespace
-# (represents the upstream stage cluster before pre-prod testing)
+# pre-prod: auto-promotes directly from the Warehouse into the long-lived pre-prod vCluster.
+# The vCluster scales to zero when idle and wakes automatically when Kargo promotes.
+# Integration tests run here — freight only proceeds to prod on pass.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
-  name: stage
+  name: pre-prod
   namespace: pre-prod-gate
   annotations:
     argocd.argoproj.io/sync-wave: "4"
@@ -29,38 +30,6 @@ spec:
         name: guestbook
       sources:
         direct: true
-  promotionTemplate:
-    spec:
-      steps:
-        - uses: argocd-update
-          config:
-            apps:
-              - name: guestbook-stage
-                sources:
-                  - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-                    kustomize:
-                      images:
-                        - repoURL: '{REPLACE_APP_IMAGE_REPOSITORY}'
-                          tag: '${{ imageFrom("{REPLACE_APP_IMAGE_REPOSITORY}").Tag }}'
----
-# pre-prod-vcluster: promotes from stage; deploys into the pre-prod vCluster.
-# The vCluster scales to zero when idle and wakes automatically when Kargo promotes.
-# Integration tests run here — freight only proceeds to prod on pass.
-apiVersion: kargo.akuity.io/v1alpha1
-kind: Stage
-metadata:
-  name: pre-prod-vcluster
-  namespace: pre-prod-gate
-  annotations:
-    argocd.argoproj.io/sync-wave: "4"
-spec:
-  requestedFreight:
-    - origin:
-        kind: Warehouse
-        name: guestbook
-      sources:
-        stages:
-          - stage
   verification:
     analysisTemplates:
       - name: integration-test
@@ -99,7 +68,7 @@ spec:
         name: guestbook
       sources:
         stages:
-          - pre-prod-vcluster
+          - pre-prod
         requiredSoakTime: 10m
   promotionTemplate:
     spec:
@@ -107,7 +76,7 @@ spec:
         - uses: argocd-update
           config:
             apps:
-              - name: guestbook-prod-ppg
+              - name: guestbook-pre-prod-gate-prod
                 sources:
                   - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
                     kustomize:

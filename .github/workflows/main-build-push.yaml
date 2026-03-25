@@ -82,12 +82,6 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.NEW_APP_VERSION }}
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Simple echo app based on the HashiCorp echo-http.
-      - name: Delete Old Images
-        uses: actions/delete-package-versions@v4
-        with: 
-          package-name: ${{ github.event.repository.name }}
-          package-type: 'container'
-          min-versions-to-keep: 9
 
   helm-chart-update:
     needs: changes

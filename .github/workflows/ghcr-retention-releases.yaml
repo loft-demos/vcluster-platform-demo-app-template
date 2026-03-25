@@ -1,0 +1,94 @@
+name: ghcr-retention-releases
+
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    env:
+      OWNER: ${{ github.repository_owner }}
+      KEEP_RELEASES: '10'
+      MIN_AGE_HOURS: '72'
+      SEMVER_REGEX: '^v?[0-9]+\\.[0-9]+\\.[0-9]+$'
+    steps:
+      - name: Compute release versions to delete
+        id: calc
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          PKG="${GITHUB_REPOSITORY#*/}"
+
+          if ! gh api --paginate "/orgs/${OWNER}/packages/container/${PKG}/versions" -q '.[]' > objects.ndjson 2>/tmp/ghcr-retention.err; then
+            if grep -qi 'not found' /tmp/ghcr-retention.err; then
+              echo "Package ${OWNER}/${PKG} does not exist yet. Skipping."
+              echo "ids=" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            cat /tmp/ghcr-retention.err >&2
+            exit 1
+          fi
+
+          jq \
+            --arg re "$SEMVER_REGEX" \
+            --argjson keep "$KEEP_RELEASES" \
+            --argjson minAgeHours "$MIN_AGE_HOURS" \
+            --argjson now "$(date -u +%s)" \
+            -s '
+              map({
+                id,
+                ts: (.created_at // .updated_at),
+                tags: ((.metadata.container.tags // []) | flatten | map(tostring))
+              })
+              | map(. + {
+                  semver_tags: [.tags[]? | select(test($re))],
+                  age_hours: (
+                    ($now - ((.ts | fromdateiso8601))) / 3600
+                  )
+                })
+              | map(select((.semver_tags | length) > 0))
+              | sort_by(.ts) | reverse
+              | . as $all
+              | ($all[:$keep] | map(.id)) as $keep_ids
+              | [
+                  $all[]
+                  | select(.age_hours >= $minAgeHours)
+                  | select(($keep_ids | index(.id)) == null)
+                ]
+            ' objects.ndjson > to-delete.json
+
+          echo "Release-tagged versions considered:"
+          jq -r '
+            map({
+              id,
+              created_at: .ts,
+              age_hours: (.age_hours | floor),
+              tags: .tags
+            })
+          ' to-delete.json
+
+          DEL_IDS="$(jq -r 'map(.id) | join(",")' to-delete.json)"
+          echo "ids=${DEL_IDS}" >> "$GITHUB_OUTPUT"
+          echo "To delete: ${DEL_IDS:-<none>}"
+
+      - name: Delete selected package versions
+        uses: actions/delete-package-versions@v5
+        if: ${{ steps.calc.outputs.ids != '' }}
+        with:
+          owner: ${{ github.repository_owner }}
+          package-name: ${{ github.event.repository.name }}
+          package-type: container
+          package-version-ids: ${{ steps.calc.outputs.ids }}
+          token: ${{ github.token }}
+
+      - name: Nothing to delete
+        if: ${{ steps.calc.outputs.ids == '' }}
+        run: echo "No release versions matched deletion criteria."
