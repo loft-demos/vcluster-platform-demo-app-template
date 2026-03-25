@@ -1,4 +1,4 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: kargo
@@ -28,12 +28,8 @@ spec:
   values:
     api:
       host: {REPLACE_KARGO_HOST}
-      # Keep auth config out of Git. A Secret in the same namespace as this
-      # HelmRelease can layer in api.adminAccount and/or api.oidc settings.
-      adminAccount:
-        enabled: false
-      oidc:
-        enabled: false
+      # Keep auth config out of Git. The referenced Secret is responsible for
+      # setting api.adminAccount and/or api.oidc values.
       argocd:
         urls:
           "": "https://{REPLACE_ARGOCD_HOST}"

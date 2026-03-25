@@ -15,7 +15,7 @@ spec:
     namespace: p-vcluster-flux-demo
   path: ./vcluster-use-cases/flux/host-apps/kargo/install
   healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2beta2
+    - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
       name: kargo
       namespace: p-vcluster-flux-demo
