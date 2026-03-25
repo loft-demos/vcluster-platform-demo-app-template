@@ -4,7 +4,7 @@
 
 replicaCount: 1
 image:
-  repository: {REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app
+  repository: {REPLACE_APP_IMAGE_REPOSITORY}
   pullPolicy: IfNotPresent
   # use Chart appVersion if not set as value
   tag: ""

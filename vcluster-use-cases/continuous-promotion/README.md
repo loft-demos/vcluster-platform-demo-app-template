@@ -18,9 +18,11 @@ kubectl -n argocd label secret cluster-local continuousPromotion=true --overwrit
 
 **vCP Generator:** add `continuousPromotion` as a boolean parameter in `vcluster-platform-demo-template.yaml`.
 
+Generator-hosted environments typically expose Kargo at `https://kargo-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}`. The local `vind` path defaults to `https://kargo.{REPLACE_BASE_DOMAIN}` unless you override the Kargo host during template replacement.
+
 ## What gets deployed
 
-- **Kargo operator** — installed via Helm into the `kargo` namespace; UI available at `https://kargo.{BASE_DOMAIN}`
+- **Kargo operator** — installed via Helm into the `kargo` namespace; UI available at the configured Kargo host
 - **Forgejo runner (vind self-contained only)** — shared CI runner in the `forgejo` namespace; builds and pushes the demo app image on every commit to `src/` or `helm-chart/`
 - **Progressive Delivery demo** — classic dev → staging → prod pipeline
 - **Pre-Prod Gate demo** — stage → pre-prod vCluster → prod pipeline (CoreWeave pattern)

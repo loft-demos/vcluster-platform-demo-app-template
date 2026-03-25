@@ -8,7 +8,7 @@ metadata:
 spec:
   subscriptions:
     - image:
-        repoURL: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+        repoURL: '{REPLACE_APP_IMAGE_REPOSITORY}'
         semverConstraint: ">=0.0.1"
         discoveryLimit: 5
         insecureSkipTLSVerify: true

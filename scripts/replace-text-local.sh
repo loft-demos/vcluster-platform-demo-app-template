@@ -17,6 +17,8 @@ Replacements:
 - {REPLACE_GIT_BASE_URL}
 - {REPLACE_GIT_BASE_URL_AUTHED}
 - {REPLACE_GIT_PUBLIC_URL}
+- {REPLACE_ARGOCD_HOST}
+- {REPLACE_APP_IMAGE_REPOSITORY}
 - {REPLACE_IMAGE_REPOSITORY_PREFIX}
 - {REPLACE_OCI_REGISTRY_HOST}
 - {REPLACE_SNAPSHOT_OCI_REPOSITORY}
@@ -25,6 +27,7 @@ Replacements:
 - {REPLACE_KARGO_ADMIN_PASSWORD_HASH}
 - {REPLACE_KARGO_TOKEN_SIGNING_KEY}
 - {REPLACE_KARGO_OIDC_SECRET}
+- {REPLACE_KARGO_HOST}
 - {REPLACE_FORGEJO_OIDC_SECRET}
 
 Usage:
@@ -44,6 +47,10 @@ Options:
   --git-base-url-authed URL
                           Optional. Defaults to http://user:pass@forgejo-http.forgejo.svc.cluster.local:3000.
   --git-public-url URL    Optional. Defaults to http://forgejo.vcp.local.
+  --argocd-host HOST      Optional. Defaults to argocd.<base-domain>.
+  --app-image-repository IMAGE
+                          Optional. Full image repository for the demo app.
+                          Defaults to <image-repository-prefix>/<repo-name>-demo-app.
   --forgejo-host HOST     Optional. Defaults to forgejo.vcp.local.
   --image-repository-prefix PREFIX
                           Optional. Defaults to forgejo.vcp.local/<org-name>/<repo-name>.
@@ -66,6 +73,9 @@ Options:
   --kargo-oidc-secret SECRET
                           Optional. OIDC client secret for Kargo ↔ vCP SSO.
                           Defaults to empty string (OIDC disabled).
+  --kargo-host HOST
+                          Optional. External Kargo host name.
+                          Defaults to kargo.<base-domain>.
   --forgejo-oidc-secret SECRET
                           Optional. OIDC client secret for Forgejo ↔ vCP SSO.
                           Defaults to empty string (OIDC disabled).
@@ -91,6 +101,8 @@ FORGEJO_USERNAME_VALUE=""
 GIT_BASE_URL=""
 GIT_BASE_URL_AUTHED=""
 GIT_PUBLIC_URL=""
+ARGOCD_HOST=""
+APP_IMAGE_REPOSITORY=""
 FORGEJO_HOST=""
 IMAGE_REPOSITORY_PREFIX=""
 OCI_REGISTRY_HOST=""
@@ -100,6 +112,7 @@ ONEPASSWORD_VAULT=""
 KARGO_ADMIN_PASSWORD_HASH=""
 KARGO_TOKEN_SIGNING_KEY=""
 KARGO_OIDC_SECRET=""
+KARGO_HOST=""
 FORGEJO_OIDC_SECRET=""
 INCLUDE_MD="false"
 DRY_RUN="false"
@@ -138,6 +151,14 @@ while [[ $# -gt 0 ]]; do
       GIT_PUBLIC_URL="${2:-}"
       shift 2
       ;;
+    --argocd-host)
+      ARGOCD_HOST="${2:-}"
+      shift 2
+      ;;
+    --app-image-repository)
+      APP_IMAGE_REPOSITORY="${2:-}"
+      shift 2
+      ;;
     --forgejo-host)
       FORGEJO_HOST="${2:-}"
       shift 2
@@ -172,6 +193,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --kargo-oidc-secret)
       KARGO_OIDC_SECRET="${2:-}"
+      shift 2
+      ;;
+    --kargo-host)
+      KARGO_HOST="${2:-}"
       shift 2
       ;;
     --forgejo-oidc-secret)
@@ -209,6 +234,10 @@ if [[ -z "$VCLUSTER_NAME" ]]; then
   VCLUSTER_NAME="${REPO_NAME%-app}"
 fi
 
+if [[ -z "$KARGO_HOST" ]]; then
+  KARGO_HOST="kargo.${BASE_DOMAIN}"
+fi
+
 if [[ -z "$GIT_BASE_URL" ]]; then
   GIT_BASE_URL="http://${FORGEJO_SERVICE_HOST:-forgejo-http.forgejo.svc.cluster.local:3000}"
 fi
@@ -228,8 +257,16 @@ if [[ -z "$GIT_PUBLIC_URL" ]]; then
   GIT_PUBLIC_URL="http://${FORGEJO_HOST:-forgejo.vcp.local}"
 fi
 
+if [[ -z "$ARGOCD_HOST" ]]; then
+  ARGOCD_HOST="argocd.${BASE_DOMAIN}"
+fi
+
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
   IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST:-forgejo.vcp.local}/${ORG_NAME}/${REPO_NAME}"
+fi
+
+if [[ -z "$APP_IMAGE_REPOSITORY" ]]; then
+  APP_IMAGE_REPOSITORY="${IMAGE_REPOSITORY_PREFIX}/${REPO_NAME}-demo-app"
 fi
 
 if [[ -z "$OCI_REGISTRY_HOST" ]]; then
@@ -260,7 +297,7 @@ while IFS= read -r file; do
 done < <(
   rg -l \
     --hidden \
-    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_FORGEJO_USERNAME\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_BASE_URL_AUTHED\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_ADMIN_PASSWORD_HASH\}|\{REPLACE_KARGO_TOKEN_SIGNING_KEY\}|\{REPLACE_KARGO_OIDC_SECRET\}|\{REPLACE_FORGEJO_OIDC_SECRET\}|\{REPLACE_FORGEJO_HOST\}' \
+    '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_FORGEJO_USERNAME\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_BASE_URL_AUTHED\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_ARGOCD_HOST\}|\{REPLACE_APP_IMAGE_REPOSITORY\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_ADMIN_PASSWORD_HASH\}|\{REPLACE_KARGO_TOKEN_SIGNING_KEY\}|\{REPLACE_KARGO_OIDC_SECRET\}|\{REPLACE_KARGO_HOST\}|\{REPLACE_FORGEJO_OIDC_SECRET\}|\{REPLACE_FORGEJO_HOST\}' \
     . \
     "${globs[@]}" \
     --glob '!.git/*'
@@ -278,11 +315,14 @@ echo "[INFO] Base domain: $BASE_DOMAIN"
 echo "[INFO] Git base URL: $GIT_BASE_URL"
 echo "[INFO] Git base URL (authed): ${GIT_BASE_URL_AUTHED//:*@/:***@}"
 echo "[INFO] Git public URL: $GIT_PUBLIC_URL"
+echo "[INFO] Argo CD host: $ARGOCD_HOST"
+echo "[INFO] App image repository: $APP_IMAGE_REPOSITORY"
 echo "[INFO] Image repository prefix: $IMAGE_REPOSITORY_PREFIX"
 echo "[INFO] OCI registry host: $OCI_REGISTRY_HOST"
 echo "[INFO] Snapshot OCI repository: $SNAPSHOT_OCI_REPOSITORY"
 echo "[INFO] Image pull source secret name: $IMAGE_PULL_SOURCE_SECRET_NAME"
 echo "[INFO] 1Password vault: $ONEPASSWORD_VAULT"
+echo "[INFO] Kargo host: $KARGO_HOST"
 echo "[INFO] Files: ${#files[@]}"
 
 if [[ "$DRY_RUN" == "true" ]]; then
@@ -291,7 +331,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
 fi
 
 FORGEJO_HOST="${FORGEJO_HOST:-forgejo.vcp.local}"
-export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_BASE_URL_AUTHED GIT_PUBLIC_URL IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT KARGO_ADMIN_PASSWORD_HASH KARGO_TOKEN_SIGNING_KEY KARGO_OIDC_SECRET FORGEJO_OIDC_SECRET FORGEJO_HOST FORGEJO_USERNAME_VALUE
+export REPO_NAME ORG_NAME VCLUSTER_NAME BASE_DOMAIN GIT_BASE_URL GIT_BASE_URL_AUTHED GIT_PUBLIC_URL ARGOCD_HOST APP_IMAGE_REPOSITORY IMAGE_REPOSITORY_PREFIX OCI_REGISTRY_HOST SNAPSHOT_OCI_REPOSITORY IMAGE_PULL_SOURCE_SECRET_NAME ONEPASSWORD_VAULT KARGO_ADMIN_PASSWORD_HASH KARGO_TOKEN_SIGNING_KEY KARGO_OIDC_SECRET KARGO_HOST FORGEJO_OIDC_SECRET FORGEJO_HOST FORGEJO_USERNAME_VALUE
 
 for file in "${files[@]}"; do
   perl -0pi -e '
@@ -303,6 +343,8 @@ for file in "${files[@]}"; do
     s/\{REPLACE_GIT_BASE_URL\}/$ENV{GIT_BASE_URL}/g;
     s/\{REPLACE_GIT_BASE_URL_AUTHED\}/$ENV{GIT_BASE_URL_AUTHED}/g;
     s/\{REPLACE_GIT_PUBLIC_URL\}/$ENV{GIT_PUBLIC_URL}/g;
+    s/\{REPLACE_ARGOCD_HOST\}/$ENV{ARGOCD_HOST}/g;
+    s/\{REPLACE_APP_IMAGE_REPOSITORY\}/$ENV{APP_IMAGE_REPOSITORY}/g;
     s/\{REPLACE_IMAGE_REPOSITORY_PREFIX\}/$ENV{IMAGE_REPOSITORY_PREFIX}/g;
     s/\{REPLACE_OCI_REGISTRY_HOST\}/$ENV{OCI_REGISTRY_HOST}/g;
     s/\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}/$ENV{SNAPSHOT_OCI_REPOSITORY}/g;
@@ -311,6 +353,7 @@ for file in "${files[@]}"; do
     s/\{REPLACE_KARGO_ADMIN_PASSWORD_HASH\}/$ENV{KARGO_ADMIN_PASSWORD_HASH}/g;
     s/\{REPLACE_KARGO_TOKEN_SIGNING_KEY\}/$ENV{KARGO_TOKEN_SIGNING_KEY}/g;
     s/\{REPLACE_KARGO_OIDC_SECRET\}/$ENV{KARGO_OIDC_SECRET}/g;
+    s/\{REPLACE_KARGO_HOST\}/$ENV{KARGO_HOST}/g;
     s/\{REPLACE_FORGEJO_OIDC_SECRET\}/$ENV{FORGEJO_OIDC_SECRET}/g;
     s/\{REPLACE_FORGEJO_HOST\}/$ENV{FORGEJO_HOST}/g;
   ' "$file"

@@ -16,7 +16,7 @@ spec:
       containers:
         - name: guestbook
           # Kargo updates this image tag via argocd-update image override when promoting
-          image: '{REPLACE_IMAGE_REPOSITORY_PREFIX}/{REPLACE_REPO_NAME}-demo-app'
+          image: '{REPLACE_APP_IMAGE_REPOSITORY}'
           ports:
             - containerPort: 8080
           resources:

@@ -11,3 +11,11 @@ patches:
       - op: replace
         path: /spec/rules/0/host
         value: guestbook-stage.{REPLACE_BASE_DOMAIN}
+  - target:
+      kind: Deployment
+      name: guestbook
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args
+        value:
+          - --text=guestbook stage

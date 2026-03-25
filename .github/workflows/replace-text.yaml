@@ -23,13 +23,14 @@ env:
   BASE_DOMAIN: ${{ inputs.base_domain || 'us.demo.dev' }}
   GIT_BASE_URL: https://github.com
   GIT_PUBLIC_URL: https://github.com
+  APP_IMAGE_REPOSITORY: ghcr.io/${{ github.repository_owner || 'loft-demos' }}/${{ github.event.repository.name }}
   IMAGE_REPOSITORY_PREFIX: ghcr.io/${{ github.repository_owner || 'loft-demos' }}
   OCI_REGISTRY_HOST: ghcr.io
   SNAPSHOT_OCI_REPOSITORY: ghcr.io/${{ github.repository_owner || 'loft-demos' }}/${{ github.event.repository.name }}
   IMAGE_PULL_SOURCE_SECRET_NAME: ${{ github.repository_owner || 'loft-demos' }}-ghcr-write-pat
   ONEPASSWORD_VAULT: ${{ github.repository_owner || 'loft-demos' }}
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner || 'loft-demos' }}/${{ github.event.repository.name }}-demo-app
+  IMAGE_NAME: ${{ github.repository_owner || 'loft-demos' }}/${{ github.event.repository.name }}
 
 jobs:
   replace-text:
@@ -44,11 +45,14 @@ jobs:
         id: set-vcluster-name
         run: |
           if [ -n "${{ inputs.vcluster_name }}" ]; then
-            echo "VCLUSTER_NAME=${{ inputs.vcluster_name }}" >> "$GITHUB_ENV"
+            VCLUSTER_NAME="${{ inputs.vcluster_name }}"
           else
-            echo "VCLUSTER_NAME=$(echo "${REPO_NAME%-app}")" >> "$GITHUB_ENV"
+            VCLUSTER_NAME="$(echo "${REPO_NAME%-app}")"
           fi
-          echo "vCluster name is $VCLUSTER_NAME"
+          echo "VCLUSTER_NAME=${VCLUSTER_NAME}" >> "$GITHUB_ENV"
+          echo "KARGO_HOST=kargo-${VCLUSTER_NAME}.${BASE_DOMAIN}" >> "$GITHUB_ENV"
+          echo "ARGOCD_HOST=argocd-${VCLUSTER_NAME}.${BASE_DOMAIN}" >> "$GITHUB_ENV"
+          echo "vCluster name is ${VCLUSTER_NAME}"
       - uses: actions/checkout@v3
       - uses: flcdrg/replace-multiple-action@v2.0.148
         with:
@@ -62,11 +66,14 @@ jobs:
               { "find": "{REPLACE_FORGEJO_USERNAME}", "replace": "${{ github.actor }}" },
               { "find": "{REPLACE_GIT_BASE_URL}", "replace": "${{ env.GIT_BASE_URL }}" },
               { "find": "{REPLACE_GIT_PUBLIC_URL}", "replace": "${{ env.GIT_PUBLIC_URL }}" },
+              { "find": "{REPLACE_ARGOCD_HOST}", "replace": "${{ env.ARGOCD_HOST }}" },
+              { "find": "{REPLACE_APP_IMAGE_REPOSITORY}", "replace": "${{ env.APP_IMAGE_REPOSITORY }}" },
               { "find": "{REPLACE_IMAGE_REPOSITORY_PREFIX}", "replace": "${{ env.IMAGE_REPOSITORY_PREFIX }}" },
               { "find": "{REPLACE_OCI_REGISTRY_HOST}", "replace": "${{ env.OCI_REGISTRY_HOST }}" },
               { "find": "{REPLACE_SNAPSHOT_OCI_REPOSITORY}", "replace": "${{ env.SNAPSHOT_OCI_REPOSITORY }}" },
               { "find": "{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}", "replace": "${{ env.IMAGE_PULL_SOURCE_SECRET_NAME }}" },
-              { "find": "{REPLACE_1PASSWORD_VAULT}", "replace": "${{ env.ONEPASSWORD_VAULT }}" }
+              { "find": "{REPLACE_1PASSWORD_VAULT}", "replace": "${{ env.ONEPASSWORD_VAULT }}" },
+              { "find": "{REPLACE_KARGO_HOST}", "replace": "${{ env.KARGO_HOST }}" }
             ]
           prefix: ''
           suffix: ''
@@ -77,7 +84,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.KM_PAT_DELETE_PACKAGES }}
         run: |
-          PACKAGE_NAME=${{ github.event.repository.name }}-demo-app
+          PACKAGE_NAME=${{ github.event.repository.name }}
 
           echo "[INFO] Attempting to delete package: $PACKAGE_NAME"
 
