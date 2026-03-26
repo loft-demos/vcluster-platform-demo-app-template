@@ -1,0 +1,27 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: PromotionTask
+metadata:
+  name: wake-vcluster
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  vars:
+    - name: projectId
+      value: default
+    - name: vclusterName
+  steps:
+    - uses: http
+      retry:
+        timeout: 2m
+      config:
+        method: POST
+        url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local/kubernetes/project/${{ vars.projectId }}/virtualcluster/${{ vars.vclusterName }}
+        headers:
+          - name: Authorization
+            value: Bearer ${{ secret('vcluster-wakeup-proxy').accessKey }}
+          - name: User-Agent
+            value: kargo-wakeup
+        timeout: 10s
+        successExpression: response.status in [200, 202]
+        failureExpression: response.status in [401, 403, 404]

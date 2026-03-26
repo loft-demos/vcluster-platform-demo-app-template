@@ -34,6 +34,11 @@ spec:
   promotionTemplate:
     spec:
       steps:
+        - task:
+            name: wake-vcluster
+          vars:
+            - name: vclusterName
+              value: pd-dev
         - uses: argocd-update
           config:
             apps:
@@ -70,6 +75,11 @@ spec:
   promotionTemplate:
     spec:
       steps:
+        - task:
+            name: wake-vcluster
+          vars:
+            - name: vclusterName
+              value: pd-staging
         - uses: argocd-update
           config:
             apps:
@@ -100,6 +110,11 @@ spec:
   promotionTemplate:
     spec:
       steps:
+        - task:
+            name: wake-vcluster
+          vars:
+            - name: vclusterName
+              value: pd-prod
         - uses: argocd-update
           config:
             apps:

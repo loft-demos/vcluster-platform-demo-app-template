@@ -41,6 +41,11 @@ spec:
   promotionTemplate:
     spec:
       steps:
+        - task:
+            name: wake-vcluster
+          vars:
+            - name: vclusterName
+              value: pre-prod-gate-pre-prod
         - uses: argocd-update
           config:
             apps:
