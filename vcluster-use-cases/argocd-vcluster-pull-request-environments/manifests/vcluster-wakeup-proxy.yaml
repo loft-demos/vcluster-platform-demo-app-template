@@ -23,6 +23,8 @@ spec:
               value: "502,504"
             - name: UPSTREAM_TIMEOUT
               value: "5s"
+            - name: LOG_REQUESTS
+              value: "true"
           readinessProbe:
             httpGet: { path: /readyz, port: 8080 }
             initialDelaySeconds: 1
