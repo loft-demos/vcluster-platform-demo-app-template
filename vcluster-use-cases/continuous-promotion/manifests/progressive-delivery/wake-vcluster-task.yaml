@@ -22,6 +22,7 @@ spec:
             value: Bearer ${{ secret('vcluster-wakeup-proxy').accessKey }}
           - name: User-Agent
             value: kargo-wakeup
+        responseContentType: text/plain
         timeout: 10s
-        successExpression: response.status in [200, 202]
+        successExpression: response.status in [200, 202, 204]
         failureExpression: response.status in [401, 403, 404]
