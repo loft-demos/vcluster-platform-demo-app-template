@@ -1,0 +1,43 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xkargogithubwebhooks.demo.loft.sh
+spec:
+  claimNames:
+    kind: KargoGitHubWebhook
+    plural: kargogithubwebhooks
+  defaultCompositeDeletePolicy: Background
+  defaultCompositionUpdatePolicy: Automatic
+  group: demo.loft.sh
+  names:
+    kind: XKargoGitHubWebhook
+    plural: xkargogithubwebhooks
+  versions:
+    - name: v1alpha1
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: >-
+            Creates a GitHub repository webhook that points at the Kargo GitHub
+            receiver URL published in ClusterConfig status.
+          properties:
+            spec:
+              properties:
+                clusterConfigName:
+                  default: cluster
+                  description: Kargo ClusterConfig name to observe.
+                  type: string
+                repoName:
+                  description: GitHub repository name.
+                  type: string
+              required:
+                - repoName
+              type: object
+            status:
+              properties:
+                kargoWebhookURL:
+                  description: Resolved Kargo GitHub receiver URL.
+                  type: string
+              type: object
+          type: object
+      served: true

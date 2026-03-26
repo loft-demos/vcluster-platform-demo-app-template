@@ -1,0 +1,10 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ClusterConfig
+metadata:
+  name: cluster
+spec:
+  webhookReceivers:
+    - name: github-ghcr
+      github:
+        secretRef:
+          name: kargo-github-webhook-secret

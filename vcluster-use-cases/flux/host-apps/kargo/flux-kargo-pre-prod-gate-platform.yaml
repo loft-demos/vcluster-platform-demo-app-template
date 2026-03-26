@@ -1,0 +1,121 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: flux-kargo-pre-prod-gate-platform
+  namespace: p-vcluster-flux-demo
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: vcluster-flux-demo
+    namespace: p-vcluster-flux-demo
+  path: ./vcluster-use-cases/continuous-promotion/manifests/pre-prod-gate
+  patches:
+    - target:
+        group: external-secrets.io
+        version: v1
+        kind: ExternalSecret
+        name: vcluster-wakeup-proxy
+        namespace: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          name: vcluster-wakeup-proxy
+          namespace: pre-prod-gate
+    - target:
+        group: kargo.akuity.io
+        version: v1alpha1
+        kind: PromotionTask
+        name: wake-vcluster
+        namespace: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: kargo.akuity.io/v1alpha1
+        kind: PromotionTask
+        metadata:
+          name: wake-vcluster
+          namespace: pre-prod-gate
+    - target:
+        group: kargo.akuity.io
+        version: v1alpha1
+        kind: Project
+        name: pre-prod-gate
+        namespace: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: kargo.akuity.io/v1alpha1
+        kind: Project
+        metadata:
+          name: pre-prod-gate
+          namespace: pre-prod-gate
+    - target:
+        group: argoproj.io
+        version: v1alpha1
+        kind: AnalysisTemplate
+        name: integration-test
+        namespace: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: argoproj.io/v1alpha1
+        kind: AnalysisTemplate
+        metadata:
+          name: integration-test
+          namespace: pre-prod-gate
+    - target:
+        group: kargo.akuity.io
+        version: v1alpha1
+        kind: Warehouse
+        name: guestbook
+        namespace: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: kargo.akuity.io/v1alpha1
+        kind: Warehouse
+        metadata:
+          name: guestbook
+          namespace: pre-prod-gate
+    - target:
+        group: kargo.akuity.io
+        version: v1alpha1
+        kind: ProjectConfig
+        name: pre-prod-gate
+        namespace: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: kargo.akuity.io/v1alpha1
+        kind: ProjectConfig
+        metadata:
+          name: pre-prod-gate
+          namespace: pre-prod-gate
+    - target:
+        group: kargo.akuity.io
+        version: v1alpha1
+        kind: Stage
+        name: pre-prod
+        namespace: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: kargo.akuity.io/v1alpha1
+        kind: Stage
+        metadata:
+          name: pre-prod
+          namespace: pre-prod-gate
+    - target:
+        group: kargo.akuity.io
+        version: v1alpha1
+        kind: Stage
+        name: prod
+        namespace: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: kargo.akuity.io/v1alpha1
+        kind: Stage
+        metadata:
+          name: prod
+          namespace: pre-prod-gate

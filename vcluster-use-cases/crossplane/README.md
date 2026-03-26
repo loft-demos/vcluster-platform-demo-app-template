@@ -8,6 +8,8 @@ In this repo, Crossplane is mainly used to:
 - provision ephemeral `VirtualClusterInstance` resources through a custom
   `PullRequestEnvironment` claim
 - create GitHub repository webhooks through a custom `ArgoCDWebhook` claim
+- create GitHub repository webhooks for Kargo GHCR refreshes through a custom
+  `KargoGitHubWebhook` claim
 - provide a visual UI for Crossplane resources with Komoplane
 
 These resources support the pull request environment flows under
@@ -27,9 +29,11 @@ vcluster-use-cases/crossplane/
 │   ├── argocdwebhook-composition.yaml
 │   ├── function-patch-and-transform.yaml
 │   ├── github-provider-config.yaml
+│   ├── kargogithubwebhook-composition.yaml
 │   ├── kubernetes-provider-config.yaml
 │   ├── pullrequestenvironments-composition.yaml
 │   ├── xargocdwebhooks.yaml
+│   ├── xkargogithubwebhooks.yaml
 │   └── xpullrequestenvironments.yaml
 └── providers/
     ├── github-provider.yaml
@@ -150,6 +154,38 @@ Both webhooks:
   `argo-appset-webhook-url`
 - use `github-provider-config` for GitHub API access
 
+#### `xkargogithubwebhooks.yaml`
+
+[`xkargogithubwebhooks.yaml`](./manifests/xkargogithubwebhooks.yaml) defines
+the `KargoGitHubWebhook` claim and `XKargoGitHubWebhook` composite resource.
+
+The claim schema accepts:
+
+- `spec.repoName`
+- `spec.clusterConfigName` with a default of `cluster`
+
+#### `kargogithubwebhook-composition.yaml`
+
+[`kargogithubwebhook-composition.yaml`](./manifests/kargogithubwebhook-composition.yaml)
+implements the `XKargoGitHubWebhook` composition in `Pipeline` mode.
+
+It:
+
+- observes the Flux-managed Kargo `ClusterConfig`
+- copies the published Kargo receiver URL from
+  `status.webhookReceivers[0].url` into the composite status
+- creates a URL `Secret` in `crossplane-system`
+- creates a GitHub `RepositoryWebhook` that reads that URL secret and the
+  shared Kargo webhook signing secret
+
+The resulting GitHub webhook listens for:
+
+- `push`
+- `package`
+
+This matches Kargo's GitHub receiver guidance for GHCR-associated source
+repositories.
+
 #### `function-patch-and-transform.yaml`
 
 [`function-patch-and-transform.yaml`](./manifests/function-patch-and-transform.yaml)
@@ -173,6 +209,8 @@ for two focused automation paths:
 1. `PullRequestEnvironment` claims create ephemeral vCluster instances and
    supporting OIDC secrets
 2. `ArgoCDWebhook` claims create GitHub webhooks that point at Argo CD
+3. `KargoGitHubWebhook` claims create GitHub webhooks that point at the Kargo
+   cluster-level GitHub receiver URL published in `ClusterConfig` status
 
 The internal pull request environment flow under
 [`vcluster-use-cases/argocd-vcluster-pull-request-environments/internal/`](../argocd-vcluster-pull-request-environments/internal/)
@@ -185,6 +223,8 @@ exist:
 
 - a `github-provider-secret` secret in `crossplane-system` with GitHub
   credentials for the GitHub provider
+- a Flux-managed Kargo `ClusterConfig` named `cluster` if you want to use the
+  `KargoGitHubWebhook` claim as-is
 - the vCluster Platform CRDs and API must already be reachable from the cluster
   because the Kubernetes provider creates `management.loft.sh/v1`
   `VirtualClusterInstance` objects
@@ -201,3 +241,7 @@ exist:
   than generic.
 - The `pull-request-vcluster` template referenced by the composition must exist
   for the vCluster instance reconciliation to succeed.
+- The `KargoGitHubWebhook` composition currently assumes this repo's
+  cluster-level Kargo configuration publishes a single receiver at
+  `status.webhookReceivers[0]`. If you add more cluster receivers later, update
+  the composition to select the desired receiver explicitly.

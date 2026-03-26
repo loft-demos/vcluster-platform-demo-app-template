@@ -16,7 +16,9 @@ Do not let Argo CD and Flux both manage the Kargo install at the same time.
 ## Layout
 
 - `install/` contains the Flux-managed Kargo chart install
+- `cluster/` contains the Flux-managed Kargo cluster-level webhook receiver config
 - `flux-kargo-install.yaml` waits for the Kargo HelmRelease to become healthy
+- `flux-kargo-cluster-config.yaml` applies the shared `ClusterConfig` and webhook signing secret only after the chart install is ready
 - `flux-kargo-pre-prod-gate.yaml` and `flux-kargo-progressive-delivery.yaml` apply the Kargo CR manifests only after the chart install is ready via Flux `dependsOn`
 
 ## Secret-backed auth values
@@ -41,3 +43,41 @@ Examples:
 The live `kargo-auth-values-external-secret.yaml` in this directory is wired for
 the External Secrets Operator use case and assumes `ClusterSecretStore/vcp-demo-store`
 already exists.
+
+## GitHub / GHCR webhook receiver
+
+This Flux-managed path also carries a cluster-level Kargo webhook receiver for
+GitHub package events that originate from GHCR-associated source repositories.
+
+- `cluster/cluster-config.yaml` defines a single `ClusterConfig` receiver
+- `cluster/kargo-github-webhook-secret-external-secret.yaml` renders the
+  webhook signing secret into `kargo-cluster-secrets`
+- the secret is sourced from the `pr-github-receiver-token` 1Password item via
+  `ClusterSecretStore/vcp-demo-store`
+
+The Kargo receiver URL is published in `ClusterConfig.status.webhookReceivers`.
+The follow-on automation in this repo is a Crossplane
+`KargoGitHubWebhook` claim, which observes that status URL and creates the
+corresponding GitHub repository webhook, so new GHCR package events can trigger
+immediate `Warehouse` refreshes instead of waiting for polling alone.
+
+Example:
+
+```yaml
+apiVersion: demo.loft.sh/v1alpha1
+kind: KargoGitHubWebhook
+metadata:
+  name: kargo-ghcr
+  namespace: p-vcluster-flux-demo
+spec:
+  repoName: {REPLACE_REPO_NAME}
+```
+
+The Crossplane composition lives under
+[`../../../crossplane/manifests/`](../../../crossplane/manifests/) and
+currently assumes the Flux-managed Kargo `ClusterConfig` publishes a single
+receiver at `status.webhookReceivers[0]`.
+
+The claim is available for use, but it is not auto-applied from this Flux path.
+That keeps the Flux-managed Kargo install usable even when the Crossplane use
+case is disabled.

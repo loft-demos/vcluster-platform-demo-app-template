@@ -7,6 +7,8 @@ spec:
   dependsOn:
     - name: flux-kargo-install
       namespace: p-vcluster-flux-demo
+    - name: flux-kargo-pre-prod-gate-platform
+      namespace: p-vcluster-flux-demo
   interval: 10m
   retryInterval: 1m
   timeout: 5m
@@ -17,3 +19,64 @@ spec:
     name: vcluster-flux-demo
     namespace: p-vcluster-flux-demo
   path: ./vcluster-use-cases/continuous-promotion/manifests/pre-prod-gate
+  patches:
+    - target:
+        version: v1
+        kind: Namespace
+        name: pre-prod-gate
+      patch: |
+        $patch: delete
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: pre-prod-gate
+    - target:
+        group: management.loft.sh
+        version: v1
+        kind: VirtualClusterTemplate
+        name: kargo-pre-prod-template
+      patch: |
+        $patch: delete
+        apiVersion: management.loft.sh/v1
+        kind: VirtualClusterTemplate
+        metadata:
+          name: kargo-pre-prod-template
+    - target:
+        group: management.loft.sh
+        version: v1
+        kind: VirtualClusterInstance
+        name: pre-prod-gate-pre-prod
+        namespace: p-default
+      patch: |
+        $patch: delete
+        apiVersion: management.loft.sh/v1
+        kind: VirtualClusterInstance
+        metadata:
+          name: pre-prod-gate-pre-prod
+          namespace: p-default
+    - target:
+        group: argoproj.io
+        version: v1alpha1
+        kind: Application
+        name: guestbook-pre-prod
+        namespace: argocd
+      patch: |
+        $patch: delete
+        apiVersion: argoproj.io/v1alpha1
+        kind: Application
+        metadata:
+          name: guestbook-pre-prod
+          namespace: argocd
+    - target:
+        group: argoproj.io
+        version: v1alpha1
+        kind: Application
+        name: guestbook-pre-prod-gate-prod
+        namespace: argocd
+      patch: |
+        $patch: delete
+        apiVersion: argoproj.io/v1alpha1
+        kind: Application
+        metadata:
+          name: guestbook-pre-prod-gate-prod
+          namespace: argocd

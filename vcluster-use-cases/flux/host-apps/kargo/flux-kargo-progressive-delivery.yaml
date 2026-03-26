@@ -7,6 +7,8 @@ spec:
   dependsOn:
     - name: flux-kargo-install
       namespace: p-vcluster-flux-demo
+    - name: flux-kargo-progressive-delivery-platform
+      namespace: p-vcluster-flux-demo
   interval: 10m
   retryInterval: 1m
   timeout: 5m
@@ -17,3 +19,77 @@ spec:
     name: vcluster-flux-demo
     namespace: p-vcluster-flux-demo
   path: ./vcluster-use-cases/continuous-promotion/manifests/progressive-delivery
+  patches:
+    - target:
+        version: v1
+        kind: Namespace
+        name: progressive-delivery
+      patch: |
+        $patch: delete
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: progressive-delivery
+    - target:
+        group: management.loft.sh
+        version: v1
+        kind: VirtualClusterTemplate
+        name: kargo-stage-template
+      patch: |
+        $patch: delete
+        apiVersion: management.loft.sh/v1
+        kind: VirtualClusterTemplate
+        metadata:
+          name: kargo-stage-template
+    - target:
+        group: management.loft.sh
+        version: v1
+        kind: VirtualClusterInstance
+        name: pd-dev
+        namespace: p-default
+      patch: |
+        $patch: delete
+        apiVersion: management.loft.sh/v1
+        kind: VirtualClusterInstance
+        metadata:
+          name: pd-dev
+          namespace: p-default
+    - target:
+        group: management.loft.sh
+        version: v1
+        kind: VirtualClusterInstance
+        name: pd-staging
+        namespace: p-default
+      patch: |
+        $patch: delete
+        apiVersion: management.loft.sh/v1
+        kind: VirtualClusterInstance
+        metadata:
+          name: pd-staging
+          namespace: p-default
+    - target:
+        group: management.loft.sh
+        version: v1
+        kind: VirtualClusterInstance
+        name: pd-prod
+        namespace: p-default
+      patch: |
+        $patch: delete
+        apiVersion: management.loft.sh/v1
+        kind: VirtualClusterInstance
+        metadata:
+          name: pd-prod
+          namespace: p-default
+    - target:
+        group: argoproj.io
+        version: v1alpha1
+        kind: ApplicationSet
+        name: guestbook-progressive-delivery
+        namespace: argocd
+      patch: |
+        $patch: delete
+        apiVersion: argoproj.io/v1alpha1
+        kind: ApplicationSet
+        metadata:
+          name: guestbook-progressive-delivery
+          namespace: argocd

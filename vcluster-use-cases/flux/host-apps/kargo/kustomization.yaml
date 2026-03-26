@@ -3,5 +3,8 @@ kind: Kustomization
 resources:
   - kargo-auth-values-external-secret.yaml
   - flux-kargo-install.yaml
+  - flux-kargo-cluster-config.yaml
+  - flux-kargo-pre-prod-gate-platform.yaml
   - flux-kargo-pre-prod-gate.yaml
+  - flux-kargo-progressive-delivery-platform.yaml
   - flux-kargo-progressive-delivery.yaml

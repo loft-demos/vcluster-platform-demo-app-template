@@ -103,6 +103,14 @@ In the `vind` self-contained path, the shared Forgejo runner follows Forgejo's D
 
 The demo app image is tagged with the `appVersion` from `helm-chart/Chart.yaml` and pushed to the configured OCI registry. The Kargo Warehouse for both demos watches that image repository and triggers promotion automatically when a new semver tag appears.
 
+On the Flux-owned Kargo path, the host cluster also now carries a cluster-level
+Kargo GitHub webhook receiver. GHCR cannot send webhooks directly, so GitHub
+`package` events from the associated source repository are the trigger path.
+Kargo publishes the receiver URL in `ClusterConfig.status.webhookReceivers`, and
+the intended next step is for Crossplane to create the matching GitHub webhook
+from that status URL so new images can refresh `Warehouse`s immediately instead
+of waiting for polling.
+
 In the `vind` self-contained path, bootstrap also creates a `forgejo-image-credentials` Secret in the `progressive-delivery` and `pre-prod-gate` namespaces so Kargo can authenticate to the private Forgejo registry. GitHub-backed paths only need an equivalent Kargo image-credential secret when the chosen registry is private.
 
 To trigger a new build manually, bump `appVersion` in `helm-chart/Chart.yaml` and push to `main`.
@@ -219,6 +227,8 @@ critical path:
   from 1Password-backed `ExternalSecret`s
 - the per-project wakeup token `ExternalSecret`s currently read the
   `accessKey` field from the shared `demo-admin-access-key` item
+- the cluster-level Kargo GitHub webhook receiver secret reads the `token`
+  field from the shared `pr-github-receiver-token` item
 
 That combination is intended to make generator-hosted demo environments recover
 cleanly even when ESO takes a while to produce the initial Secrets.

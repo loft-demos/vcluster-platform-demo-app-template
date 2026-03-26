@@ -42,7 +42,7 @@ These should be added after the base bootstrap is working.
 | Secret | Namespace | Purpose | Expected Keys |
 | --- | --- | --- | --- |
 | `demo-admin-access-key` | `p-auth-core` or `p-vcluster-flux-demo` | Flux / connected-cluster / webhook wake-up flows | `accessKey` |
-| `pr-github-receiver-token` | `p-auth-core` | Flux GitHub receiver webhook signing secret | `token` |
+| `pr-github-receiver-token` | `p-auth-core` and `kargo-cluster-secrets` | Flux GitHub receiver and Kargo GitHub webhook signing secret | `token` |
 | `oidc-secret` | `p-auth-core` | Argo CD OIDC client secret for PR environments | `clientSecret` |
 | `loft-demo-org-cred` | project namespaces | GitHub token or app credential for Flux / PR automation | `token` or org-specific app credential data |
 | `database-connector` | `vcluster-platform` or projected project scope | vCluster Platform shared database connector config | connector-specific keys |
