@@ -37,26 +37,56 @@ when you enable `continuous-promotion` without `flux`, so local-contained
 bootstraps do not need an extra manual toggle. If you want Flux to own Kargo in
 `vind`, enable both use cases together.
 
+On the Flux-owned path, Kargo auth now comes from an ESO-managed
+`ExternalSecret` that renders the `kargo-auth-values` Secret in
+`p-vcluster-flux-demo`. Flux watches that Secret and the `HelmRelease` now
+requires it before install, which avoids the earlier half-installed state where
+Kargo could come up with missing auth values and never fully recover after ESO
+was slow to reconcile.
+
 ---
 
 ## Sleep Mode And Wake-Up
 
 Both continuous-promotion vCluster templates use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD cluster health checks do not constantly wake sleeping vClusters.
 
-Because of that, the Argo CD Applications that target those sleeping vClusters also need explicit wake-up metadata:
+Because of that, sleeping-stage promotions now use two wake-up paths:
+
+1. Kargo proactively wakes the target vCluster before `argocd-update`.
+2. Argo CD Notifications remains the shared fallback for Argo-driven syncs and other non-Kargo flows.
+
+For the Kargo-owned path, each project now includes:
+
+- a project-local `vcluster-wakeup-proxy` `ExternalSecret` sourced from the
+  1Password item `demo-admin-access-key` via `ClusterSecretStore/vcp-demo-store`
+- a `wake-vcluster` `PromotionTask`
+- a first promotion step that calls the task before `argocd-update`
+
+That means Kargo no longer waits for Argo to observe `OutOfSync` before a
+sleeping target starts waking up.
+
+The Argo CD Applications that target those sleeping vClusters still need explicit wake-up metadata:
 
 - `notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''`
 - `metadata.labels.vclusterProjectId`
 - `metadata.labels.vclusterName`
 
-When one of those Applications becomes `OutOfSync`, Argo CD Notifications sends a webhook to the shared `vcluster-wakeup-proxy` service. The proxy then issues the wake-triggering request to vCluster Platform for the target VCI, instead of waiting for normal Argo polling to wake it indirectly.
+When one of those Applications becomes `OutOfSync`, Argo CD Notifications sends
+a webhook to the shared `vcluster-wakeup-proxy` service. The proxy then issues
+the wake-triggering request to vCluster Platform for the target VCI, instead of
+waiting for normal Argo polling to wake it indirectly.
 
 The shared notification template and proxy live under the pull-request-environments use case:
 
 - [../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml](../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml)
 - [../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml](../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml)
 
-If you keep the `ignore-user-agents: argo*` annotation but do not install equivalent Argo Notifications wake-up plumbing, promotions into sleeping vClusters can appear stuck because Argo CD will no longer wake them by routine polling. Likewise, if the subscription annotation is present but the `vclusterProjectId` / `vclusterName` labels are missing, the wake-up template cannot resolve the correct target VCI.
+If you keep the `ignore-user-agents: argo*` annotation but do not install
+equivalent wake-up plumbing, promotions into sleeping vClusters can appear
+stuck because Argo CD will no longer wake them by routine polling. Likewise, if
+the subscription annotation is present but the `vclusterProjectId` /
+`vclusterName` labels are missing, the wake-up template cannot resolve the
+correct target VCI.
 
 ---
 
@@ -114,6 +144,8 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/progressive-delivery/kargo-project.yaml](manifests/progressive-delivery/kargo-project.yaml) | Kargo Project (adopts the labeled `progressive-delivery` namespace) |
 | [manifests/progressive-delivery/kargo-warehouse.yaml](manifests/progressive-delivery/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + PromotionPolicies |
+| [manifests/progressive-delivery/wake-vcluster-task.yaml](manifests/progressive-delivery/wake-vcluster-task.yaml) | Project-local `PromotionTask` that wakes the target vCluster before each Argo-driven promotion |
+| [manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml](manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
 | [manifests/progressive-delivery/kargo-analysis-template.yaml](manifests/progressive-delivery/kargo-analysis-template.yaml) | curl health-check AnalysisTemplate |
 | [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vClusters with sleep mode enabled and Argo user-agent polling ignored |
 | [manifests/progressive-delivery/kargo-vcluster-instances.yaml](manifests/progressive-delivery/kargo-vcluster-instances.yaml) | pd-dev, pd-staging, pd-prod VCIs |
@@ -145,6 +177,8 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/pre-prod-gate/kargo-project.yaml](manifests/pre-prod-gate/kargo-project.yaml) | Kargo Project (adopts the labeled `pre-prod-gate` namespace) |
 | [manifests/pre-prod-gate/kargo-warehouse.yaml](manifests/pre-prod-gate/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | pre-prod and prod Stages + soak time |
+| [manifests/pre-prod-gate/wake-vcluster-task.yaml](manifests/pre-prod-gate/wake-vcluster-task.yaml) | Project-local `PromotionTask` that wakes the pre-prod vCluster before `argocd-update` |
+| [manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml](manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
 | [manifests/pre-prod-gate/kargo-analysis-template.yaml](manifests/pre-prod-gate/kargo-analysis-template.yaml) | Integration test Job AnalysisTemplate |
 | [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, ArgoCD import enabled, and Argo user-agent polling ignored |
 | [manifests/pre-prod-gate/kargo-vcluster-instances.yaml](manifests/pre-prod-gate/kargo-vcluster-instances.yaml) | `pre-prod-gate-pre-prod` VCI |
@@ -164,6 +198,30 @@ The legacy Argo-managed `kargo-helm-app.yaml` path references two placeholders t
 | `{REPLACE_KARGO_TOKEN_SIGNING_KEY}` | `openssl rand -base64 32` |
 
 If you prefer not to keep those values in Argo CD Helm values, there is now a Flux-owned host-cluster alternative under [../flux/host-apps/kargo](../flux/host-apps/kargo) that reads auth settings from a Secret via `HelmRelease.valuesFrom`. That Flux path is enabled when `continuousPromotion=true` and `flux=true`. The legacy Argo-managed Kargo install now lives under [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml) and is selected when `legacyArgoKargo=true`. On the `vind` self-contained path, bootstrap sets that label automatically whenever `continuous-promotion` is enabled without `flux`.
+
+On the Flux path, the live auth secret is rendered by
+[../flux/host-apps/kargo/kargo-auth-values-external-secret.yaml](../flux/host-apps/kargo/kargo-auth-values-external-secret.yaml).
+That generated Secret is labeled with `reconcile.fluxcd.io/watch: Enabled`, and
+the Kargo `HelmRelease` now treats it as required instead of optional. This
+prevents Kargo from installing into a broken “login disabled” state when ESO is
+slow to create the Secret.
+
+### ESO / bootstrap sequencing
+
+The continuous-promotion Flux path now assumes ESO is part of the bootstrap
+critical path:
+
+- the ESO app-of-apps `ApplicationSet` is synced earlier so the operator and
+  `ClusterSecretStore` are available sooner
+- the ESO Helm app no longer uses Argo `Replace=true`, which was contributing
+  to webhook/cert bootstrap churn
+- the Kargo auth Secret and per-project wakeup token Secrets are all sourced
+  from 1Password-backed `ExternalSecret`s
+- the per-project wakeup token `ExternalSecret`s currently read the
+  `accessKey` field from the shared `demo-admin-access-key` item
+
+That combination is intended to make generator-hosted demo environments recover
+cleanly even when ESO takes a while to produce the initial Secrets.
 
 ### Kargo version
 

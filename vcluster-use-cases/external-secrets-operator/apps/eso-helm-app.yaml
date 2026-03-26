@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: eso-helm-app
+  name: eso
   namespace: argocd
   labels:
     use-case.demos.vcluster.com: eso
@@ -18,7 +18,18 @@ spec:
   source:
     chart: external-secrets
     repoURL: https://charts.external-secrets.io
-    targetRevision: 0.20.4
+    targetRevision: 2.2.0
+    helm:
+      releaseName: eso
+      values: |
+        fullnameOverride: eso
+        webhook:
+          create: false
+        certController:
+          create: false
+        crds:
+          conversion:
+            enabled: false
   syncPolicy:
     automated:
       prune: true
