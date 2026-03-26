@@ -47,4 +47,4 @@ spec:
     - kind: Secret
       name: kargo-auth-values
       valuesKey: values.yaml
-      optional: true
+      optional: false
