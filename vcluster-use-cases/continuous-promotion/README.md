@@ -25,7 +25,7 @@ Generator-hosted environments typically expose Kargo at `https://kargo-{REPLACE_
 - **Kargo operator** — installed via Helm into the `kargo` namespace; UI available at the configured Kargo host
 - **Forgejo runner (vind self-contained only)** — shared CI runner in the `forgejo` namespace; builds and pushes the demo app image on every commit to `src/` or `helm-chart/`
 - **Progressive Delivery demo** — classic dev → staging → prod pipeline
-- **Pre-Prod Gate demo** — pre-prod vCluster → prod pipeline (CoreWeave pattern)
+- **Pre-Prod Gate demo** — pre-prod vCluster → prod pipeline
 
 The default path is for Flux to own the Kargo install and Kargo CR manifests
 when the cluster has both `continuousPromotion=true` and `flux=true`. The
