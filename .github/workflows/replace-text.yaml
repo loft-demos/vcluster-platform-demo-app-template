@@ -51,6 +51,7 @@ jobs:
           fi
           echo "VCLUSTER_NAME=${VCLUSTER_NAME}" >> "$GITHUB_ENV"
           echo "KARGO_HOST=kargo-${VCLUSTER_NAME}.${BASE_DOMAIN}" >> "$GITHUB_ENV"
+          echo "KARGO_WEBHOOK_HOST=kargo-webhooks-${VCLUSTER_NAME}.${BASE_DOMAIN}" >> "$GITHUB_ENV"
           echo "ARGOCD_HOST=argocd-${VCLUSTER_NAME}.${BASE_DOMAIN}" >> "$GITHUB_ENV"
           echo "vCluster name is ${VCLUSTER_NAME}"
       - uses: actions/checkout@v3
@@ -73,7 +74,8 @@ jobs:
               { "find": "{REPLACE_SNAPSHOT_OCI_REPOSITORY}", "replace": "${{ env.SNAPSHOT_OCI_REPOSITORY }}" },
               { "find": "{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}", "replace": "${{ env.IMAGE_PULL_SOURCE_SECRET_NAME }}" },
               { "find": "{REPLACE_1PASSWORD_VAULT}", "replace": "${{ env.ONEPASSWORD_VAULT }}" },
-              { "find": "{REPLACE_KARGO_HOST}", "replace": "${{ env.KARGO_HOST }}" }
+              { "find": "{REPLACE_KARGO_HOST}", "replace": "${{ env.KARGO_HOST }}" },
+              { "find": "{REPLACE_KARGO_WEBHOOK_HOST}", "replace": "${{ env.KARGO_WEBHOOK_HOST }}" }
             ]
           prefix: ''
           suffix: ''

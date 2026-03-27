@@ -8,127 +8,120 @@ spec:
   compositeTypeRef:
     apiVersion: demo.loft.sh/v1alpha1
     kind: XKargoGitHubWebhook
-  mode: Pipeline
-  pipeline:
-    - functionRef:
-        name: function-patch-and-transform
-      input:
-        apiVersion: pt.fn.crossplane.io/v1beta1
-        kind: Resources
-        resources:
-          - base:
-              apiVersion: kubernetes.crossplane.io/v1alpha2
-              kind: Object
-              spec:
-                forProvider:
-                  manifest:
-                    apiVersion: kargo.akuity.io/v1alpha1
-                    kind: ClusterConfig
-                    metadata:
-                      name: cluster
-                managementPolicies:
-                  - Observe
-                providerConfigRef:
-                  name: kubernetes-provider
-            name: kargo-cluster-config
-            patches:
-              - fromFieldPath: spec.clusterConfigName
-                toFieldPath: spec.forProvider.manifest.metadata.name
-                type: FromCompositeFieldPath
-              - fromFieldPath: status.atProvider.manifest.status.webhookReceivers[0].url
-                toFieldPath: status.kargoWebhookURL
-                type: ToCompositeFieldPath
-            readinessChecks:
-              - fieldPath: status.atProvider.manifest.status.webhookReceivers[0].url
-                type: NonEmpty
-          - base:
-              apiVersion: kubernetes.crossplane.io/v1alpha2
-              kind: Object
-              spec:
-                forProvider:
-                  manifest:
-                    apiVersion: v1
-                    kind: Secret
-                    metadata:
-                      name: kargo-webhook-url
-                      namespace: crossplane-system
-                    stringData:
-                      url: ""
-                providerConfigRef:
-                  name: kubernetes-provider
-            name: kargo-webhook-url
-            patches:
-              - fromFieldPath: metadata.name
-                toFieldPath: spec.forProvider.manifest.metadata.name
-                transforms:
-                  - string:
-                      fmt: "%s-kargo-webhook-url"
-                      type: Format
-                    type: string
-                type: FromCompositeFieldPath
-              - fromFieldPath: status.kargoWebhookURL
-                policy:
-                  fromFieldPath: Required
-                toFieldPath: spec.forProvider.manifest.stringData.url
-                type: FromCompositeFieldPath
-            readinessChecks:
-              - matchCondition:
-                  status: "True"
-                  type: Ready
-                type: MatchCondition
-          - base:
-              apiVersion: repo.github.upbound.io/v1alpha1
-              kind: RepositoryWebhook
+  mode: Resources
+  resources:
+    - base:
+        apiVersion: kubernetes.crossplane.io/v1alpha2
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: kargo.akuity.io/v1alpha1
+              kind: ClusterConfig
               metadata:
-                name: kargo-github-webhook
-              spec:
-                forProvider:
-                  active: true
-                  configuration:
-                    - contentType: json
-                      insecureSsl: false
-                      secretSecretRef:
-                        key: secret
-                        name: kargo-github-webhook-secret
-                        namespace: kargo-system-resources
-                      urlSecretRef:
-                        key: url
-                        name: kargo-webhook-url
-                        namespace: crossplane-system
-                  events:
-                    - push
-                    - package
-                managementPolicies:
-                  - Create
-                  - Observe
-                providerConfigRef:
-                  name: github-provider-config
-            name: kargo-github-webhook
-            patches:
-              - fromFieldPath: metadata.name
-                toFieldPath: metadata.name
-                transforms:
-                  - string:
-                      fmt: "%s-github-webhook"
-                      type: Format
-                    type: string
-                type: FromCompositeFieldPath
-              - fromFieldPath: spec.repoName
-                toFieldPath: spec.forProvider.repository
-                type: FromCompositeFieldPath
-              - fromFieldPath: metadata.name
-                toFieldPath: spec.forProvider.configuration[0].urlSecretRef.name
-                transforms:
-                  - string:
-                      fmt: "%s-kargo-webhook-url"
-                      type: Format
-                    type: string
-                type: FromCompositeFieldPath
-            readinessChecks:
-              - matchCondition:
-                  status: "True"
-                  type: Ready
-                type: MatchCondition
-      step: patch-and-transform
+                name: cluster
+          managementPolicies:
+            - Observe
+          providerConfigRef:
+            name: kubernetes-provider
+      name: kargo-cluster-config
+      patches:
+        - fromFieldPath: spec.clusterConfigName
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.manifest.status.webhookReceivers[0].url
+          toFieldPath: status.kargoWebhookURL
+          type: ToCompositeFieldPath
+      readinessChecks:
+        - fieldPath: status.atProvider.manifest.status.webhookReceivers[0].url
+          type: NonEmpty
+    - base:
+        apiVersion: kubernetes.crossplane.io/v1alpha2
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: kargo-webhook-url
+                namespace: crossplane-system
+              stringData:
+                url: ""
+          providerConfigRef:
+            name: kubernetes-provider
+      name: kargo-webhook-url
+      patches:
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          transforms:
+            - string:
+                fmt: "%s-kargo-webhook-url"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.kargoWebhookURL
+          policy:
+            fromFieldPath: Required
+          toFieldPath: spec.forProvider.manifest.stringData.url
+          type: FromCompositeFieldPath
+      readinessChecks:
+        - matchCondition:
+            status: "True"
+            type: Ready
+          type: MatchCondition
+    - base:
+        apiVersion: repo.github.upbound.io/v1alpha1
+        kind: RepositoryWebhook
+        metadata:
+          name: kargo-github-webhook
+        spec:
+          forProvider:
+            active: true
+            configuration:
+              - contentType: json
+                insecureSsl: false
+                secretSecretRef:
+                  key: secret
+                  name: kargo-github-webhook-secret
+                  namespace: kargo-system-resources
+                urlSecretRef:
+                  key: url
+                  name: kargo-webhook-url
+                  namespace: crossplane-system
+            events:
+              - push
+              - package
+          managementPolicies:
+            - Create
+            - Observe
+          providerConfigRef:
+            name: github-provider-config
+      name: kargo-github-webhook
+      patches:
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - string:
+                fmt: "%s-github-webhook"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.repoName
+          toFieldPath: spec.forProvider.repository
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.configuration[0].urlSecretRef.name
+          transforms:
+            - string:
+                fmt: "%s-kargo-webhook-url"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+      readinessChecks:
+        - matchCondition:
+            status: "True"
+            type: Ready
+          type: MatchCondition
   publishConnectionDetailsWithStoreConfigRef:
     name: default

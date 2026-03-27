@@ -167,7 +167,7 @@ The claim schema accepts:
 #### `kargogithubwebhook-composition.yaml`
 
 [`kargogithubwebhook-composition.yaml`](./manifests/kargogithubwebhook-composition.yaml)
-implements the `XKargoGitHubWebhook` composition in `Pipeline` mode.
+implements the `XKargoGitHubWebhook` composition in `Resources` mode.
 
 It:
 
@@ -249,3 +249,7 @@ exist:
   cluster-level Kargo configuration publishes a single receiver at
   `status.webhookReceivers[0]`. If you add more cluster receivers later, update
   the composition to select the desired receiver explicitly.
+- If a pipeline-mode composition reports `tls: failed to verify certificate`
+  against `function-patch-and-transform`, Crossplane cannot execute that
+  function until the package runtime is restarted or reinstalled. The Kargo
+  webhook composition avoids that dependency by using `Resources` mode.

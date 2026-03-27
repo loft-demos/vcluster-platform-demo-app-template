@@ -30,6 +30,7 @@ resources:
   - ../../vnode-with-vcluster-appset.yaml
 patches:
   - path: patch-autosnapshots-appset.yaml
+  - path: patch-continuous-promotion-flux-kargo-appset.yaml
   - path: patch-pr-apps-bootstrap.yaml
   - path: patch-flux-appset.yaml
   - path: patch-flux-operator-helm-app.yaml

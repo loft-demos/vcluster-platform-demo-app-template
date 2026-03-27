@@ -16,7 +16,7 @@ spec:
   wait: true
   sourceRef:
     kind: GitRepository
-    name: vcluster-flux-demo
+    name: vcluster-flux-demo-kargo
     namespace: p-vcluster-flux-demo
   path: ./vcluster-use-cases/continuous-promotion/manifests/pre-prod-gate
   patches:

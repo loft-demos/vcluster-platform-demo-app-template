@@ -21,6 +21,8 @@ Defaults:
 - repo: `vcp-gitops`
 - org: `vcluster-demos`
 - base domain: `vcp.local`
+- Kargo host: `kargo.vcp.local`
+- Kargo webhook host: `kargo-webhooks.vcp.local`
 - git base URL: `http://forgejo-http.forgejo.svc.cluster.local:3000`
 - git public URL: `http://forgejo.vcp.local`
 - image repository prefix: `forgejo.vcp.local/vcluster-demos/vcp-gitops`

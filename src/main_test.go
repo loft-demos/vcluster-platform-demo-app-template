@@ -1,44 +1,50 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
-func TestHandlers(t *testing.T) {
+func TestTextHandler(t *testing.T) {
 	t.Parallel()
-	r := gin.New()
-	r.GET("/", TextHandler)
+	r := newHandler("hello")
 	req, _ := http.NewRequest("GET", "/", nil)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 	if resp.Code != http.StatusOK {
 		t.Errorf("Wrong status code: %d", resp.Code)
 	}
+	if got := resp.Body.String(); got != "hello" {
+		t.Errorf("Wrong response body: %q", got)
+	}
 }
 
 func TestHealthHandler(t *testing.T) {
 	t.Parallel()
-	r := gin.New()
-	r.GET("/health", TextHandler)
+	r := newHandler("hello")
 	req, _ := http.NewRequest("GET", "/health", nil)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 	if resp.Code != http.StatusOK {
 		t.Errorf("Wrong status code: %d", resp.Code)
 	}
+	if got := strings.TrimSpace(resp.Body.String()); got != `{"status":"OK"}` {
+		t.Errorf("Wrong response body: %q", got)
+	}
 }
 
-func TestNotFoundHandler(t *testing.T) {
+func TestFallbackHandler(t *testing.T) {
 	t.Parallel()
-	r := gin.New()
-	r.GET("/你好", TextHandler)
+	r := newHandler("hello")
 	req, _ := http.NewRequest("GET", "/你好", nil)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 	if resp.Code != http.StatusOK {
 		t.Errorf("Wrong status code: %d", resp.Code)
+	}
+	if got := resp.Body.String(); got != "hello" {
+		t.Errorf("Wrong response body: %q", got)
 	}
 }

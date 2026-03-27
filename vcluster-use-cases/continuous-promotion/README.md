@@ -18,7 +18,7 @@ kubectl -n argocd label secret cluster-local continuousPromotion=true --overwrit
 
 **vCP Generator:** add `continuousPromotion` as a boolean parameter in `vcluster-platform-demo-template.yaml`.
 
-Generator-hosted environments typically expose Kargo at `https://kargo-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}`. The local `vind` path defaults to `https://kargo.{REPLACE_BASE_DOMAIN}` unless you override the Kargo host during template replacement.
+Generator-hosted environments typically expose Kargo at `https://kargo-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}` and the dedicated webhook ingress at `https://kargo-webhooks-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}`. The local `vind` path defaults to `https://kargo.{REPLACE_BASE_DOMAIN}` for the UI/API and `https://kargo-webhooks.{REPLACE_BASE_DOMAIN}` for external webhooks unless you override those hosts during template replacement.
 
 ## What gets deployed
 
@@ -38,11 +38,12 @@ bootstraps do not need an extra manual toggle. If you want Flux to own Kargo in
 `vind`, enable both use cases together.
 
 On the Flux-owned path, Kargo auth now comes from an ESO-managed
-`ExternalSecret` that renders the `kargo-auth-values` Secret in
-`p-vcluster-flux-demo`. Flux watches that Secret and the `HelmRelease` now
-requires it before install, which avoids the earlier half-installed state where
-Kargo could come up with missing auth values and never fully recover after ESO
-was slow to reconcile.
+`ExternalSecret` under
+[../flux/host-apps/kargo/auth/](../flux/host-apps/kargo/auth/) that renders the
+`kargo-auth-values` Secret in `p-vcluster-flux-demo`. Flux now gates the Kargo
+install on that `ExternalSecret` becoming Ready, which avoids the earlier
+half-installed state where Kargo could come up with missing auth values and
+never fully recover after ESO was slow to reconcile.
 
 ---
 
@@ -61,9 +62,17 @@ For the Kargo-owned path, each project now includes:
   1Password item `demo-admin-access-key` via `ClusterSecretStore/vcp-demo-store`
 - a first inline `http` promotion step that calls the wakeup proxy before
   `argocd-update`
+- a second inline `http` promotion step that polls the corresponding
+  `VirtualClusterInstance` until `status.phase` becomes `Ready`
 
 That means Kargo no longer waits for Argo to observe `OutOfSync` before a
 sleeping target starts waking up.
+
+It also means `argocd-update` no longer races the wake-up process for sleeping
+stage vClusters. Note that this readiness gate reduces promotion-time errors,
+but `argocd-update` still registers ongoing Stage health checks in Kargo, so a
+sleeping target can still appear `Unknown` later if Argo cannot assess the
+Application while the vCluster is asleep.
 
 The Argo CD Applications that target those sleeping vClusters still need explicit wake-up metadata:
 
@@ -111,6 +120,12 @@ when Crossplane is also enabled this repo now auto-applies a
 `KargoGitHubWebhook` claim so Crossplane creates the matching GitHub webhook
 from that status URL. That lets new images refresh `Warehouse`s immediately
 instead of waiting for polling.
+
+The Flux bridge for that Kargo host-app path now also creates its own
+`GitRepository` (`vcluster-flux-demo-kargo`) in `p-vcluster-flux-demo`. That
+removes the earlier race where the continuous-promotion Kargo bridge could
+reconcile before the separate Flux demo source `GitRepository` from the Flux
+use case existed.
 
 In the `vind` self-contained path, bootstrap also creates a `forgejo-image-credentials` Secret in the `progressive-delivery` and `pre-prod-gate` namespaces so Kargo can authenticate to the private Forgejo registry. GitHub-backed paths only need an equivalent Kargo image-credential secret when the chosen registry is private.
 
@@ -207,11 +222,12 @@ The legacy Argo-managed `kargo-helm-app.yaml` path references two placeholders t
 If you prefer not to keep those values in Argo CD Helm values, there is now a Flux-owned host-cluster alternative under [../flux/host-apps/kargo](../flux/host-apps/kargo) that reads auth settings from a Secret via `HelmRelease.valuesFrom`. That Flux path is enabled when `continuousPromotion=true` and `flux=true`. The legacy Argo-managed Kargo install now lives under [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml) and is selected when `legacyArgoKargo=true`. On the `vind` self-contained path, bootstrap sets that label automatically whenever `continuous-promotion` is enabled without `flux`.
 
 On the Flux path, the live auth secret is rendered by
-[../flux/host-apps/kargo/kargo-auth-values-external-secret.yaml](../flux/host-apps/kargo/kargo-auth-values-external-secret.yaml).
+[../flux/host-apps/kargo/auth/kargo-auth-values-external-secret.yaml](../flux/host-apps/kargo/auth/kargo-auth-values-external-secret.yaml).
 That generated Secret is labeled with `reconcile.fluxcd.io/watch: Enabled`, and
-the Kargo `HelmRelease` now treats it as required instead of optional. This
-prevents Kargo from installing into a broken “login disabled” state when ESO is
-slow to create the Secret.
+the Kargo `HelmRelease` now treats it as required instead of optional. The
+Flux bridge also now applies that `ExternalSecret` via its own
+`flux-kargo-auth` `Kustomization`, so Kargo install waits for ESO readiness
+instead of racing it.
 
 ### ESO / bootstrap sequencing
 
@@ -228,6 +244,9 @@ critical path:
   `accessKey` field from the shared `demo-admin-access-key` item
 - the cluster-level Kargo GitHub webhook receiver secret reads the `token`
   field from the shared `pr-github-receiver-token` item
+- the cluster-level Kargo receiver secret and `ClusterConfig` are now split into
+  separate Flux `Kustomization`s, so Kargo does not try to publish webhook
+  receivers before ESO has rendered the signing secret
 
 That combination is intended to make generator-hosted demo environments recover
 cleanly even when ESO takes a while to produce the initial Secrets.

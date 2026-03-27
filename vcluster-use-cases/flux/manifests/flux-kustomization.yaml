@@ -56,9 +56,3 @@ spec:
   prune: true
   timeout: 2m
   wait: true
-  # important: this feature requires Flux 2.5+
-  healthCheckExprs:
-    - apiVersion: management.loft.sh/v1
-      kind: VirtualClusterInstance
-      failed: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'False')"
-      current: "status.conditions.filter(e, e.type == 'VirtualClusterReady').all(e, e.status == 'True')"

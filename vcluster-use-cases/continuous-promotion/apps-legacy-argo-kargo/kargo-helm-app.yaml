@@ -64,7 +64,21 @@ spec:
             enabled: true
             ingressClassName: nginx
             annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+              nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+              nginx.ingress.kubernetes.io/ssl-redirect: "true"
+            tls:
+              enabled: false
+
+        externalWebhooksServer:
+          host: {REPLACE_KARGO_WEBHOOK_HOST}
+          tls:
+            enabled: false
+            terminatedUpstream: true
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
               nginx.ingress.kubernetes.io/ssl-redirect: "true"
             tls:
               enabled: false

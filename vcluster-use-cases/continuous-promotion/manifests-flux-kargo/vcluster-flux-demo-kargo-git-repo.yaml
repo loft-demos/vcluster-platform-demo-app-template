@@ -1,0 +1,12 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: vcluster-flux-demo-kargo
+  namespace: p-vcluster-flux-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  interval: 5m0s
+  url: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
+  ref:
+    branch: main

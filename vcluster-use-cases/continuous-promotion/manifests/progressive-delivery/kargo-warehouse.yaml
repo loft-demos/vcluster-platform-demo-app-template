@@ -12,3 +12,4 @@ spec:
         semverConstraint: ">=0.0.1"
         discoveryLimit: 5
         insecureSkipTLSVerify: true
+        interval: 24h # relies on webhook for updates

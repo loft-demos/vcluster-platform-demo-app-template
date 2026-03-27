@@ -4,6 +4,9 @@ metadata:
   name: flux-kargo-install
   namespace: p-vcluster-flux-demo
 spec:
+  dependsOn:
+    - name: flux-kargo-auth
+      namespace: p-vcluster-flux-demo
   interval: 10m
   retryInterval: 1m
   timeout: 5m
@@ -11,7 +14,7 @@ spec:
   wait: true
   sourceRef:
     kind: GitRepository
-    name: vcluster-flux-demo
+    name: vcluster-flux-demo-kargo
     namespace: p-vcluster-flux-demo
   path: ./vcluster-use-cases/flux/host-apps/kargo/install
   healthChecks:

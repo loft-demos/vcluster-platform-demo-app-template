@@ -47,5 +47,6 @@ If you want Flux to install Kargo instead of Argo CD:
 1. Enable the continuous-promotion and flux use cases together so Argo CD creates the Flux `Kustomization` from [../continuous-promotion/manifests-flux-kargo/flux-kargo-host-apps.yaml](../continuous-promotion/manifests-flux-kargo/flux-kargo-host-apps.yaml).
 2. Put the host-side Kargo resources under [host-apps/kargo](./host-apps/kargo).
 3. Create the `kargo-auth-values` Secret or `ExternalSecret` in namespace `p-vcluster-flux-demo`.
-4. Flux will install the Kargo chart first and then reconcile the `pre-prod-gate` and `progressive-delivery` Kargo manifests by using Flux `dependsOn`.
-5. The legacy Argo-managed Kargo path is now opt-in through the `legacyArgoKargo=true` cluster label. On the `vind` self-contained path, bootstrap derives that label automatically whenever `continuous-promotion` is enabled without `flux`.
+4. The continuous-promotion Flux bridge now creates its own `GitRepository` (`vcluster-flux-demo-kargo`) so the Kargo host-app path does not race the separate `flux-manifests` source bootstrap.
+5. Flux will wait for the ESO-backed Kargo auth secret, install the Kargo chart, wait for the cluster webhook secret, then reconcile the `pre-prod-gate` and `progressive-delivery` Kargo manifests by using Flux `dependsOn`.
+6. The legacy Argo-managed Kargo path is now opt-in through the `legacyArgoKargo=true` cluster label. On the `vind` self-contained path, bootstrap derives that label automatically whenever `continuous-promotion` is enabled without `flux`.

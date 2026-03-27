@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/spf13/pflag"
+	"encoding/json"
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -12,24 +12,18 @@ import (
 	"time"
 )
 
-var text = pflag.String("text", "", "text to put on the webpage")
-var addr = pflag.String("addr", ":8080", "address to listen on")
-
 func main() {
-	pflag.Parse()
+	text := flag.String("text", "", "text to put on the webpage")
+	addr := flag.String("addr", ":8080", "address to listen on")
+	flag.Parse()
 
 	if *text == "" {
 		log.Fatal("--text option is required!")
 	}
 
-	r := gin.Default()
-	r.GET("/", TextHandler)
-	r.GET("/health", HealthHandler)
-	r.NoRoute(TextHandler)
-
 	srv := http.Server{
 		Addr:    *addr,
-		Handler: r,
+		Handler: newHandler(*text),
 	}
 
 	go func() {
@@ -52,13 +46,17 @@ func main() {
 	log.Println("Server exiting")
 }
 
-func HealthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status": "OK",
+func newHandler(text string) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "OK"}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
+	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte(text))
+	})
+	return mux
 }
-
-func TextHandler(c *gin.Context) {
-	c.String(http.StatusOK, *text)
-}
-

@@ -1,17 +1,18 @@
-# syntax=docker/dockerfile:1
-FROM golang:1.21-alpine AS builder
+# syntax=docker/dockerfile:1.7
+FROM --platform=$BUILDPLATFORM golang:1.21-alpine AS builder
 ARG TARGETARCH
 ARG TARGETOS
 WORKDIR /src
-COPY go.mod go.sum ./
+COPY go.mod ./
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 COPY . .
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o http-echo main.go
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /out/http-echo main.go
 
-FROM gcr.io/distroless/static:nonroot-$TARGETARCH
+FROM gcr.io/distroless/static:nonroot
 WORKDIR /
-COPY --from=builder /src/http-echo .
+COPY --from=builder /out/http-echo /http-echo
 EXPOSE 8080
 ENTRYPOINT ["/http-echo"]

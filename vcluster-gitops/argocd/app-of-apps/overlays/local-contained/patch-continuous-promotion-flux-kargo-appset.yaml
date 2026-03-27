@@ -1,0 +1,10 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: continuous-promotion-flux-kargo
+  namespace: argocd
+spec:
+  template:
+    spec:
+      source:
+        path: vcluster-use-cases/continuous-promotion/apps-flux-kargo/overlays/local-contained
