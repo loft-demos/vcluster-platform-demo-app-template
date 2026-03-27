@@ -38,6 +38,9 @@ spec:
               - fromFieldPath: status.atProvider.manifest.status.webhookReceivers[0].url
                 toFieldPath: status.kargoWebhookURL
                 type: ToCompositeFieldPath
+            readinessChecks:
+              - fieldPath: status.atProvider.manifest.status.webhookReceivers[0].url
+                type: NonEmpty
           - base:
               apiVersion: kubernetes.crossplane.io/v1alpha2
               kind: Object
@@ -87,7 +90,7 @@ spec:
                       secretSecretRef:
                         key: secret
                         name: kargo-github-webhook-secret
-                        namespace: kargo-cluster-secrets
+                        namespace: kargo-system-resources
                       urlSecretRef:
                         key: url
                         name: kargo-webhook-url

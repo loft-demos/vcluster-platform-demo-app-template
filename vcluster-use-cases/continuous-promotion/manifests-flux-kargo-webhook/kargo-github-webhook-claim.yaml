@@ -1,0 +1,8 @@
+apiVersion: demo.loft.sh/v1alpha1
+kind: KargoGitHubWebhook
+metadata:
+  name: kargo-ghcr
+  namespace: p-vcluster-flux-demo
+spec:
+  clusterConfigName: cluster
+  repoName: '{REPLACE_REPO_NAME}'

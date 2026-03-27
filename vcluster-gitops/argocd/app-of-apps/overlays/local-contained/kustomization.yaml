@@ -25,6 +25,7 @@ resources:
   - ../../virtual-scheduler-appset.yaml
   - ../../continuous-promotion-appset.yaml
   - ../../continuous-promotion-flux-kargo-appset.yaml
+  - ../../continuous-promotion-kargo-webhook-appset.yaml
   - ../../continuous-promotion-legacy-argo-kargo-appset.yaml
   - ../../vnode-with-vcluster-appset.yaml
 patches:

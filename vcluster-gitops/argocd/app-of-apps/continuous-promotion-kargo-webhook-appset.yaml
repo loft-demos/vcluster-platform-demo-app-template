@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: continuous-promotion-kargo-webhook
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            continuousPromotion: 'true'
+            flux: 'true'
+            crossplane: 'true'
+          matchExpressions:
+            - key: legacyArgoKargo
+              operator: NotIn
+              values:
+                - 'true'
+  template:
+    metadata:
+      name: 'continuous-promotion-kargo-webhook-apps'
+      labels:
+        use-case.demos.vcluster.com: continuous-promotion
+        use-case.demos.vcluster.com/kargo-owner: flux
+    spec:
+      destination:
+        server: '{{server}}'
+        namespace: argocd
+      project: default
+      source:
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+        targetRevision: HEAD
+        path: vcluster-use-cases/continuous-promotion/apps-flux-kargo-webhook
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - Replace=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 20s
+            factor: 2
+            maxDuration: 3m

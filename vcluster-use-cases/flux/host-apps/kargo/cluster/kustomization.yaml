@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - kargo-cluster-secrets-namespace.yaml
+  - kargo-system-resources-namespace.yaml
   - kargo-github-webhook-secret-external-secret.yaml
   - cluster-config.yaml

@@ -35,12 +35,13 @@ spec:
           "": "https://{REPLACE_ARGOCD_HOST}"
       tls:
         enabled: false
-        terminatedUpstream: false
+        terminatedUpstream: true
       ingress:
         enabled: true
         ingressClassName: nginx
         annotations:
-          nginx.ingress.kubernetes.io/ssl-redirect: "false"
+          nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+          nginx.ingress.kubernetes.io/ssl-redirect: "true"
         tls:
           enabled: false
   valuesFrom:

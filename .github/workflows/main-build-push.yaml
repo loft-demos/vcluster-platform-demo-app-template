@@ -19,6 +19,7 @@ env:
 
 jobs:
   changes:
+    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' }}
     runs-on: ubuntu-22.04
     outputs:
       src: ${{ steps.changes.outputs.src }}
@@ -36,7 +37,7 @@ jobs:
 
   app-update:
     needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' }}
+    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' && needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-22.04
     permissions:
       packages: write
@@ -85,7 +86,7 @@ jobs:
 
   helm-chart-update:
     needs: changes
-    if: ${{ needs.changes.outputs.helm-chart == 'true' }}
+    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' && needs.changes.outputs.helm-chart == 'true' }}
     runs-on: ubuntu-22.04
     permissions:
       contents: write

@@ -1,0 +1,98 @@
+# ArgoCD Applications for the progressive-delivery pipeline.
+# Kargo updates the image tag on these Applications via argocd-update promotion steps.
+#
+# guestbook-dev:     targets the pd-dev vCluster
+# guestbook-staging: targets the pd-staging vCluster
+# guestbook-prod:    targets the pd-prod vCluster
+#
+# Sync wave 3 ensures VCIs (wave 2) are registered with ArgoCD before these Apps are created.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-dev
+  namespace: argocd
+  labels:
+    vclusterProjectId: default
+    vclusterName: pd-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    kargo.akuity.io/authorized-stage: progressive-delivery:dev
+    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/dev
+  destination:
+    name: loft-default-vcluster-pd-dev
+    namespace: guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-staging
+  namespace: argocd
+  labels:
+    vclusterProjectId: default
+    vclusterName: pd-staging
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    kargo.akuity.io/authorized-stage: progressive-delivery:staging
+    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/staging
+  destination:
+    name: loft-default-vcluster-pd-staging
+    namespace: guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-prod
+  namespace: argocd
+  labels:
+    vclusterProjectId: default
+    vclusterName: pd-prod
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    kargo.akuity.io/authorized-stage: progressive-delivery:prod
+    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+    targetRevision: HEAD
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/prod
+  destination:
+    name: loft-default-vcluster-pd-prod
+    namespace: guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -17,6 +17,7 @@ env:
 
 jobs:
   build-push-app:
+    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' }}
     runs-on: ubuntu-22.04
     permissions:
       packages: write

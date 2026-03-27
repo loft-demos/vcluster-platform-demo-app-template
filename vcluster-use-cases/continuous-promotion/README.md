@@ -107,9 +107,10 @@ On the Flux-owned Kargo path, the host cluster also now carries a cluster-level
 Kargo GitHub webhook receiver. GHCR cannot send webhooks directly, so GitHub
 `package` events from the associated source repository are the trigger path.
 Kargo publishes the receiver URL in `ClusterConfig.status.webhookReceivers`, and
-the intended next step is for Crossplane to create the matching GitHub webhook
-from that status URL so new images can refresh `Warehouse`s immediately instead
-of waiting for polling.
+when Crossplane is also enabled this repo now auto-applies a
+`KargoGitHubWebhook` claim so Crossplane creates the matching GitHub webhook
+from that status URL. That lets new images refresh `Warehouse`s immediately
+instead of waiting for polling.
 
 In the `vind` self-contained path, bootstrap also creates a `forgejo-image-credentials` Secret in the `progressive-delivery` and `pre-prod-gate` namespaces so Kargo can authenticate to the private Forgejo registry. GitHub-backed paths only need an equivalent Kargo image-credential secret when the chosen registry is private.
 
@@ -156,7 +157,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/progressive-delivery/kargo-analysis-template.yaml](manifests/progressive-delivery/kargo-analysis-template.yaml) | curl health-check AnalysisTemplate |
 | [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vClusters with sleep mode enabled and Argo user-agent polling ignored |
 | [manifests/progressive-delivery/kargo-vcluster-instances.yaml](manifests/progressive-delivery/kargo-vcluster-instances.yaml) | pd-dev, pd-staging, pd-prod VCIs |
-| [manifests/progressive-delivery/guestbook-appset.yaml](manifests/progressive-delivery/guestbook-appset.yaml) | ApplicationSet deploying the app into each vCluster via cluster generator and subscribing those apps to wake sleeping vClusters on demand |
+| [manifests/progressive-delivery/guestbook-apps.yaml](manifests/progressive-delivery/guestbook-apps.yaml) | Stable ArgoCD Applications for dev, staging, and prod, with wake-up notification subscriptions on the sleeping-vCluster targets |
 
 ---
 

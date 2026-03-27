@@ -9,4 +9,4 @@ resources:
   - kargo-stages.yaml
   - kargo-vcluster-template.yaml
   - kargo-vcluster-instances.yaml
-  - guestbook-appset.yaml
+  - guestbook-apps.yaml

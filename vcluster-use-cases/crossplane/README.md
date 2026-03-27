@@ -212,6 +212,10 @@ for two focused automation paths:
 3. `KargoGitHubWebhook` claims create GitHub webhooks that point at the Kargo
    cluster-level GitHub receiver URL published in `ClusterConfig` status
 
+When `continuousPromotion=true`, `flux=true`, and `crossplane=true` are all
+enabled, the repo now auto-applies the Kargo webhook claim through the
+continuous-promotion app-of-apps path.
+
 The internal pull request environment flow under
 [`vcluster-use-cases/argocd-vcluster-pull-request-environments/internal/`](../argocd-vcluster-pull-request-environments/internal/)
 depends on these Crossplane APIs.

@@ -51,15 +51,21 @@ GitHub package events that originate from GHCR-associated source repositories.
 
 - `cluster/cluster-config.yaml` defines a single `ClusterConfig` receiver
 - `cluster/kargo-github-webhook-secret-external-secret.yaml` renders the
-  webhook signing secret into `kargo-cluster-secrets`
+  webhook signing secret into `kargo-system-resources`
 - the secret is sourced from the `pr-github-receiver-token` 1Password item via
   `ClusterSecretStore/vcp-demo-store`
+- Kargo's external webhook server speaks HTTPS internally even when ingress TLS
+  is terminated upstream, so the ingress must use
+  `nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"` and Kargo must be
+  told `api.tls.terminatedUpstream=true` so it publishes `https://` receiver
+  URLs
 
 The Kargo receiver URL is published in `ClusterConfig.status.webhookReceivers`.
-The follow-on automation in this repo is a Crossplane
-`KargoGitHubWebhook` claim, which observes that status URL and creates the
-corresponding GitHub repository webhook, so new GHCR package events can trigger
-immediate `Warehouse` refreshes instead of waiting for polling alone.
+When both `continuousPromotion=true` and `crossplane=true` are enabled on the
+cluster, this repo now auto-applies a Crossplane `KargoGitHubWebhook` claim,
+which observes that status URL and creates the corresponding GitHub repository
+webhook so new GHCR package events can trigger immediate `Warehouse` refreshes
+instead of waiting for polling alone.
 
 Example:
 
@@ -77,7 +83,3 @@ The Crossplane composition lives under
 [`../../../crossplane/manifests/`](../../../crossplane/manifests/) and
 currently assumes the Flux-managed Kargo `ClusterConfig` publishes a single
 receiver at `status.webhookReceivers[0]`.
-
-The claim is available for use, but it is not auto-applied from this Flux path.
-That keeps the Flux-managed Kargo install usable even when the Crossplane use
-case is disabled.
