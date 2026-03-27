@@ -31,19 +31,6 @@ spec:
     - target:
         group: kargo.akuity.io
         version: v1alpha1
-        kind: PromotionTask
-        name: wake-vcluster
-        namespace: progressive-delivery
-      patch: |
-        $patch: delete
-        apiVersion: kargo.akuity.io/v1alpha1
-        kind: PromotionTask
-        metadata:
-          name: wake-vcluster
-          namespace: progressive-delivery
-    - target:
-        group: kargo.akuity.io
-        version: v1alpha1
         kind: Project
         name: progressive-delivery
         namespace: progressive-delivery

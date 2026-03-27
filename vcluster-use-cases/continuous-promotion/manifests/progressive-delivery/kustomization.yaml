@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - vcluster-wakeup-proxy-secret.yaml
-  - wake-vcluster-task.yaml
   - kargo-project.yaml
   - kargo-analysis-template.yaml
   - kargo-warehouse.yaml

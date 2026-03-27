@@ -59,8 +59,8 @@ For the Kargo-owned path, each project now includes:
 
 - a project-local `vcluster-wakeup-proxy` `ExternalSecret` sourced from the
   1Password item `demo-admin-access-key` via `ClusterSecretStore/vcp-demo-store`
-- a `wake-vcluster` `PromotionTask`
-- a first promotion step that calls the task before `argocd-update`
+- a first inline `http` promotion step that calls the wakeup proxy before
+  `argocd-update`
 
 That means Kargo no longer waits for Argo to observe `OutOfSync` before a
 sleeping target starts waking up.
@@ -151,8 +151,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/progressive-delivery/namespace.yaml](manifests/progressive-delivery/namespace.yaml) | Pre-creates the `progressive-delivery` namespace with `kargo.akuity.io/project: "true"` so Kargo can adopt it |
 | [manifests/progressive-delivery/kargo-project.yaml](manifests/progressive-delivery/kargo-project.yaml) | Kargo Project (adopts the labeled `progressive-delivery` namespace) |
 | [manifests/progressive-delivery/kargo-warehouse.yaml](manifests/progressive-delivery/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
-| [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + PromotionPolicies |
-| [manifests/progressive-delivery/wake-vcluster-task.yaml](manifests/progressive-delivery/wake-vcluster-task.yaml) | Project-local `PromotionTask` that wakes the target vCluster before each Argo-driven promotion |
+| [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + inline wakeup `http` promotion steps before each Argo-driven promotion |
 | [manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml](manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
 | [manifests/progressive-delivery/kargo-analysis-template.yaml](manifests/progressive-delivery/kargo-analysis-template.yaml) | curl health-check AnalysisTemplate |
 | [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vClusters with sleep mode enabled and Argo user-agent polling ignored |
@@ -184,8 +183,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/pre-prod-gate/namespace.yaml](manifests/pre-prod-gate/namespace.yaml) | Pre-creates the `pre-prod-gate` namespace with `kargo.akuity.io/project: "true"` so Kargo can adopt it |
 | [manifests/pre-prod-gate/kargo-project.yaml](manifests/pre-prod-gate/kargo-project.yaml) | Kargo Project (adopts the labeled `pre-prod-gate` namespace) |
 | [manifests/pre-prod-gate/kargo-warehouse.yaml](manifests/pre-prod-gate/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
-| [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | pre-prod and prod Stages + soak time |
-| [manifests/pre-prod-gate/wake-vcluster-task.yaml](manifests/pre-prod-gate/wake-vcluster-task.yaml) | Project-local `PromotionTask` that wakes the pre-prod vCluster before `argocd-update` |
+| [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | pre-prod and prod Stages + soak time, with an inline wakeup `http` step before pre-prod `argocd-update` |
 | [manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml](manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
 | [manifests/pre-prod-gate/kargo-analysis-template.yaml](manifests/pre-prod-gate/kargo-analysis-template.yaml) | Integration test Job AnalysisTemplate |
 | [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, ArgoCD import enabled, and Argo user-agent polling ignored |

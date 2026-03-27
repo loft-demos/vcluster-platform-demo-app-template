@@ -54,7 +54,7 @@ spec:
             sleep:
               auto:
                 # Scale to zero quickly when Kargo is not actively promoting
-                afterInactivity: "10m"
+                afterInactivity: "45m"
                 timezone: '{{ default "America/New_York" .Values.loft.clusterAnnotations.sleepTimeZone }}'
             deletion:
               auto:

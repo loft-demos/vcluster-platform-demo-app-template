@@ -34,11 +34,21 @@ spec:
   promotionTemplate:
     spec:
       steps:
-        - task:
-            name: wake-vcluster
-          vars:
-            - name: vclusterName
-              value: pd-dev
+        - uses: http
+          retry:
+            timeout: 2m
+          config:
+            method: POST
+            url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local/kubernetes/project/default/virtualcluster/pd-dev
+            headers:
+              - name: Authorization
+                value: Bearer ${{ secret('vcluster-wakeup-proxy').accessKey }}
+              - name: User-Agent
+                value: kargo-wakeup
+            responseContentType: text/plain
+            timeout: 10s
+            successExpression: response.status in [200, 202, 204]
+            failureExpression: response.status in [401, 403, 404]
         - uses: argocd-update
           config:
             apps:
@@ -75,11 +85,21 @@ spec:
   promotionTemplate:
     spec:
       steps:
-        - task:
-            name: wake-vcluster
-          vars:
-            - name: vclusterName
-              value: pd-staging
+        - uses: http
+          retry:
+            timeout: 2m
+          config:
+            method: POST
+            url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local/kubernetes/project/default/virtualcluster/pd-staging
+            headers:
+              - name: Authorization
+                value: Bearer ${{ secret('vcluster-wakeup-proxy').accessKey }}
+              - name: User-Agent
+                value: kargo-wakeup
+            responseContentType: text/plain
+            timeout: 10s
+            successExpression: response.status in [200, 202, 204]
+            failureExpression: response.status in [401, 403, 404]
         - uses: argocd-update
           config:
             apps:
@@ -110,11 +130,21 @@ spec:
   promotionTemplate:
     spec:
       steps:
-        - task:
-            name: wake-vcluster
-          vars:
-            - name: vclusterName
-              value: pd-prod
+        - uses: http
+          retry:
+            timeout: 2m
+          config:
+            method: POST
+            url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local/kubernetes/project/default/virtualcluster/pd-prod
+            headers:
+              - name: Authorization
+                value: Bearer ${{ secret('vcluster-wakeup-proxy').accessKey }}
+              - name: User-Agent
+                value: kargo-wakeup
+            responseContentType: text/plain
+            timeout: 10s
+            successExpression: response.status in [200, 202, 204]
+            failureExpression: response.status in [401, 403, 404]
         - uses: argocd-update
           config:
             apps:
