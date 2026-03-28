@@ -1,0 +1,72 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: argocd-appset-webhook-readiness
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 360
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      containers:
+        - name: wait-for-appset-webhook
+          image: curlimages/curl:7.88.1
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              # GitHub sends an immediate ping when a webhook is created, so wait
+              # until the ApplicationSet webhook backend is really serving first.
+              target="http://argocd-applicationset-controller.argocd.svc.cluster.local:7000/api/webhook"
+              body='{"zen":"Responsive is better than fast.","hook_id":1,"hook":{"type":"Repository","id":1,"name":"web","active":true,"events":["push","pull_request"],"config":{"content_type":"json","insecure_ssl":"0","url":"https://example.invalid/api/webhook"}},"repository":{"id":1,"name":"readiness-probe","full_name":"demo/readiness-probe","private":true,"owner":{"login":"demo","id":1,"type":"Organization"}},"sender":{"login":"argocd-webhook-probe","id":1,"type":"User"}}'
+
+              max_attempts=60
+              attempt=1
+              while [ "$attempt" -le "$max_attempts" ]; do
+                status="$(curl -sS -o /tmp/response-body -w '%{http_code}' \
+                  --connect-timeout 2 \
+                  --max-time 10 \
+                  -H 'Accept: */*' \
+                  -H 'Content-Type: application/json' \
+                  -H 'User-Agent: argocd-webhook-readiness-probe' \
+                  -H 'X-GitHub-Delivery: argocd-webhook-readiness-probe' \
+                  -H 'X-GitHub-Event: ping' \
+                  -H 'X-GitHub-Hook-ID: 1' \
+                  -H 'X-GitHub-Hook-Installation-Target-Id: 1' \
+                  -H 'X-GitHub-Hook-Installation-Target-Type: repository' \
+                  -X POST \
+                  --data "$body" \
+                  "$target" || true)"
+
+                case "$status" in
+                  2*)
+                    echo "ApplicationSet webhook is serving with HTTP $status."
+                    exit 0
+                    ;;
+                esac
+
+                echo "Attempt $attempt/$max_attempts: ApplicationSet webhook returned HTTP $status."
+                if [ -s /tmp/response-body ]; then
+                  echo "Response body:"
+                  head -c 500 /tmp/response-body
+                  echo
+                fi
+
+                attempt=$((attempt + 1))
+                sleep 5
+              done
+
+              echo "Timed out waiting for ApplicationSet webhook readiness at $target."
+              exit 1
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi

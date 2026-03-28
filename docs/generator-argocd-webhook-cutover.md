@@ -19,6 +19,7 @@ webhook flow:
 ## Files In This Repo
 
 - `vcluster-gitops/argocd/app-of-apps/argocd-webhooks-appset.yaml`
+- `vcluster-use-cases/crossplane/argocd-webhooks/argocd-appset-webhook-readiness-job.yaml`
 - `vcluster-use-cases/crossplane/argocd-webhooks/argo-webhook-url-secret.yaml`
 - `vcluster-use-cases/crossplane/argocd-webhooks/argo-appset-webhook-url-secret.yaml`
 - `vcluster-use-cases/crossplane/argocd-webhooks/argo-github-webhook.yaml`
@@ -34,6 +35,9 @@ uses:
 
 The resulting webhook behavior is:
 
+- a `PreSync` hook blocks GitHub webhook creation until the internal
+  `argocd-applicationset-controller` webhook endpoint answers a synthetic
+  GitHub `ping` with `200`
 - the Argo CD API webhook listens for `push`
 - the Argo CD ApplicationSet webhook listens for `push` and `pull_request`
 

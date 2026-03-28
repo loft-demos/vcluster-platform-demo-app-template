@@ -21,6 +21,7 @@ especially the internal Crossplane-based examples.
 ```text
 vcluster-use-cases/crossplane/
 ├── argocd-webhooks/
+│   ├── argocd-appset-webhook-readiness-job.yaml
 │   ├── argo-appset-github-webhook.yaml
 │   ├── argo-appset-webhook-url-secret.yaml
 │   ├── argo-github-webhook.yaml
@@ -85,6 +86,10 @@ instance that runs in the Generator vCluster Platform vCluster.
 They are synced by the main-path app-of-apps `ApplicationSet`
 [`argocd-webhooks-appset.yaml`](../../vcluster-gitops/argocd/app-of-apps/argocd-webhooks-appset.yaml).
 
+- [`argocd-appset-webhook-readiness-job.yaml`](./argocd-webhooks/argocd-appset-webhook-readiness-job.yaml)
+  is an Argo CD `PreSync` hook that sends a synthetic GitHub `ping` to the
+  internal ApplicationSet webhook service and blocks the GitHub webhook
+  resources until the controller answers with `200`
 - [`argo-webhook-url-secret.yaml`](./argocd-webhooks/argo-webhook-url-secret.yaml)
   publishes the Generator-vCluster Argo CD API webhook URL in the `argocd`
   namespace
@@ -256,8 +261,6 @@ exist:
 
 - a `github-provider-secret` secret in `crossplane-system` with GitHub
   credentials for the GitHub provider
-- `argo-webhook-url` and `argo-appset-webhook-url` secrets in `argocd` if you
-  want the declarative Generator-vCluster Argo webhook resources to reconcile
 - a Flux-managed Kargo `ClusterConfig` named `cluster` if you want to use the
   `KargoGitHubWebhook` claim as-is
 - the vCluster Platform CRDs and API must already be reachable from the cluster
@@ -276,6 +279,12 @@ exist:
   than generic.
 - The `pull-request-vcluster` template referenced by the composition must exist
   for the vCluster instance reconciliation to succeed.
+- The Generator-vCluster Argo webhook path now waits for the internal
+  `argocd-applicationset-controller` webhook service to answer a synthetic
+  GitHub `ping` before Crossplane creates the external GitHub webhook objects.
+  If that hook job fails, inspect the `argocd-github-webhooks` Argo CD
+  application and the `argocd-applicationset-controller` deployment before
+  recreating the webhooks.
 - The `KargoGitHubWebhook` composition currently assumes this repo's
   cluster-level Kargo configuration publishes a single receiver at
   `status.webhookReceivers[0]`. If you add more cluster receivers later, update
