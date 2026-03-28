@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: argocd-github-webhooks
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            crossplane: 'true'
+  template:
+    metadata:
+      name: argocd-github-webhooks
+      labels:
+        use-case.demos.vcluster.com: crossplane
+    spec:
+      destination:
+        server: '{{server}}'
+        namespace: argocd
+      project: default
+      source:
+        repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
+        targetRevision: HEAD
+        path: vcluster-use-cases/crossplane/argocd-webhooks
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - Replace=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 20s
+            factor: 2
+            maxDuration: 3m

@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: guestbook-shared-demo-source
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+type: Opaque
+stringData:
+  message: host-cluster ESO store
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pre-prod-gate-shared-demo-store
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pre-prod-gate-shared-demo-store-role
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - selfsubjectrulesreviews
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pre-prod-gate-shared-demo-store
+  namespace: pre-prod-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+subjects:
+  - kind: ServiceAccount
+    name: pre-prod-gate-shared-demo-store
+    namespace: pre-prod-gate
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pre-prod-gate-shared-demo-store-role
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: pre-prod-gate-shared-demo-store
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: pre-prod-gate
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          key: ca.crt
+          namespace: pre-prod-gate
+      auth:
+        serviceAccount:
+          name: pre-prod-gate-shared-demo-store
+          namespace: pre-prod-gate

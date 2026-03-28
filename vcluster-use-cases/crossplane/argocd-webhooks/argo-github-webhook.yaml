@@ -1,0 +1,21 @@
+apiVersion: repo.github.upbound.io/v1alpha1
+kind: RepositoryWebhook
+metadata:
+  name: argo-github-webhook
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  forProvider:
+    repository: {REPLACE_REPO_NAME}
+    active: true
+    configuration:
+      - contentType: json
+        insecureSsl: false
+        urlSecretRef:
+          key: url
+          name: argo-webhook-url
+          namespace: argocd
+    events:
+      - push
+  providerConfigRef:
+    name: github-provider-config

@@ -84,7 +84,8 @@ jobs:
           sbom: false
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.NEW_APP_VERSION }}
-          outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Simple echo app based on the HashiCorp echo-http.
+          labels: |
+            org.opencontainers.image.description=Simple echo app based on the HashiCorp echo-http.
 
   helm-chart-update:
     needs: changes

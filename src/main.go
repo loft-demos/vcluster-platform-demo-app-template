@@ -23,7 +23,7 @@ func main() {
 
 	srv := http.Server{
 		Addr:    *addr,
-		Handler: newHandler(*text),
+		Handler: newHandler(composeText(*text, os.Getenv("DEMO_SHARED_MESSAGE"))),
 	}
 
 	go func() {
@@ -44,6 +44,14 @@ func main() {
 	}
 
 	log.Println("Server exiting")
+}
+
+func composeText(text, sharedMessage string) string {
+	if sharedMessage == "" {
+		return text
+	}
+
+	return text + "\nshared config: " + sharedMessage
 }
 
 func newHandler(text string) http.Handler {

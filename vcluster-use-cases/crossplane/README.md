@@ -20,6 +20,11 @@ especially the internal Crossplane-based examples.
 
 ```text
 vcluster-use-cases/crossplane/
+├── argocd-webhooks/
+│   ├── argo-appset-github-webhook.yaml
+│   ├── argo-appset-webhook-url-secret.yaml
+│   ├── argo-github-webhook.yaml
+│   └── argo-webhook-url-secret.yaml
 ├── apps/
 │   ├── crossplane-helm-app.yaml
 │   ├── crossplane-manifests.yaml
@@ -71,6 +76,27 @@ This folder contains the top-level Argo CD `Application` resources.
 - [`crossplane-manifests.yaml`](./apps/crossplane-manifests.yaml)
   applies the Crossplane XRDs, compositions, function, and `ProviderConfig`
   resources from [`manifests/`](./manifests/)
+
+### `argocd-webhooks/`
+
+This folder contains the declarative GitHub webhook resources for the Argo CD
+instance that runs in the Generator vCluster Platform vCluster.
+
+They are synced by the main-path app-of-apps `ApplicationSet`
+[`argocd-webhooks-appset.yaml`](../../vcluster-gitops/argocd/app-of-apps/argocd-webhooks-appset.yaml).
+
+- [`argo-webhook-url-secret.yaml`](./argocd-webhooks/argo-webhook-url-secret.yaml)
+  publishes the Generator-vCluster Argo CD API webhook URL in the `argocd`
+  namespace
+- [`argo-appset-webhook-url-secret.yaml`](./argocd-webhooks/argo-appset-webhook-url-secret.yaml)
+  publishes the Generator-vCluster Argo CD ApplicationSet webhook URL in the
+  `argocd` namespace
+- [`argo-github-webhook.yaml`](./argocd-webhooks/argo-github-webhook.yaml)
+  creates the GitHub `push` webhook for the Generator-vCluster Argo CD API
+  server
+- [`argo-appset-github-webhook.yaml`](./argocd-webhooks/argo-appset-github-webhook.yaml)
+  creates the GitHub `push` + `pull_request` webhook for the Generator-vCluster
+  ApplicationSet server
 
 ### `providers/`
 
@@ -204,12 +230,15 @@ installs the Crossplane function package
 ## How Crossplane Is Used In This Repo
 
 Crossplane here is not a general-purpose platform abstraction layer. It is used
-for two focused automation paths:
+for four focused automation paths:
 
 1. `PullRequestEnvironment` claims create ephemeral vCluster instances and
    supporting OIDC secrets
-2. `ArgoCDWebhook` claims create GitHub webhooks that point at Argo CD
-3. `KargoGitHubWebhook` claims create GitHub webhooks that point at the Kargo
+2. declarative `RepositoryWebhook` resources create the Generator-vCluster
+   Argo CD GitHub webhooks
+3. `ArgoCDWebhook` claims create GitHub webhooks that point at Argo CD for the
+   Argo CD vCluster template path
+4. `KargoGitHubWebhook` claims create GitHub webhooks that point at the Kargo
    cluster-level GitHub receiver URL published in `ClusterConfig` status
 
 When `continuousPromotion=true`, `flux=true`, and `crossplane=true` are all
@@ -227,6 +256,8 @@ exist:
 
 - a `github-provider-secret` secret in `crossplane-system` with GitHub
   credentials for the GitHub provider
+- `argo-webhook-url` and `argo-appset-webhook-url` secrets in `argocd` if you
+  want the declarative Generator-vCluster Argo webhook resources to reconcile
 - a Flux-managed Kargo `ClusterConfig` named `cluster` if you want to use the
   `KargoGitHubWebhook` claim as-is
 - the vCluster Platform CRDs and API must already be reachable from the cluster

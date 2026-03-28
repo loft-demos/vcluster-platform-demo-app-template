@@ -25,7 +25,7 @@ spec:
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
     targetRevision: HEAD
-    path: vcluster-use-cases/continuous-promotion/guestbook/stages/pre-prod
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/pre-prod-gate-pre-prod
   destination:
     name: loft-default-vcluster-pre-prod-gate-pre-prod
     namespace: guestbook
@@ -52,7 +52,7 @@ spec:
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
     targetRevision: HEAD
-    path: vcluster-use-cases/continuous-promotion/guestbook/stages/prod
+    path: vcluster-use-cases/continuous-promotion/guestbook/stages/pre-prod-gate-prod
   destination:
     server: https://kubernetes.default.svc
     namespace: guestbook-prod

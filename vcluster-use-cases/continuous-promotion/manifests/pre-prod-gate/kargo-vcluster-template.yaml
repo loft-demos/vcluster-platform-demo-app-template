@@ -64,6 +64,9 @@ spec:
               toHost:
                 ingresses:
                   enabled: true
+            integrations:
+              externalSecrets:
+                enabled: true
             controlPlane:
               backingStore:
                 etcd:

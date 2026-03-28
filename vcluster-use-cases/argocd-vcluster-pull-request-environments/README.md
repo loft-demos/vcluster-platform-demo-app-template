@@ -12,7 +12,7 @@ This use case also contains the shared Argo CD Notifications plumbing that wakes
 
 Why this exists:
 
-- Sleeping vClusters often use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD health checks do not constantly wake them up.
+- Sleeping vCluster instances often use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD health checks do not constantly wake them up.
 - Once Argo's routine polling is ignored, Argo needs a separate way to ask vCluster Platform to wake the target before a sync can complete.
 
 What the shared resources do:

@@ -7,6 +7,18 @@ import (
 	"testing"
 )
 
+func TestComposeText(t *testing.T) {
+	t.Parallel()
+
+	if got := composeText("hello", ""); got != "hello" {
+		t.Errorf("Wrong text without shared message: %q", got)
+	}
+
+	if got := composeText("hello", "host-cluster ESO store"); got != "hello\nshared config: host-cluster ESO store" {
+		t.Errorf("Wrong text with shared message: %q", got)
+	}
+}
+
 func TestTextHandler(t *testing.T) {
 	t.Parallel()
 	r := newHandler("hello")

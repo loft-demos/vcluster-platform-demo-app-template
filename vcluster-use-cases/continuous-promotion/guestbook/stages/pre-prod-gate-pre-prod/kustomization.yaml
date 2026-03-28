@@ -2,6 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ../../base
+  - ../../shared-host-eso
 patches:
   - target:
       kind: Ingress
@@ -18,3 +19,11 @@ patches:
         path: /spec/template/spec/containers/0/args
         value:
           - --text=guestbook pre-prod
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: DEMO_SHARED_MESSAGE
+            valueFrom:
+              secretKeyRef:
+                name: guestbook-shared-config
+                key: message

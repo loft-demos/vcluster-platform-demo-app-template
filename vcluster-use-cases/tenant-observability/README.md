@@ -38,8 +38,8 @@ the whole observability stack directly in the `VirtualClusterTemplate`.
 - the supported path uses Promtail plus Central HostPath Mapper for tenant log
   collection
 - the host Argo CD instance can manage add-ons inside imported tenant
-  vClusters
-- multiple tenant vClusters on the same host cluster stay isolated because each
+  vCluster instances
+- multiple tenant vCluster instances on the same host cluster stay isolated because each
   vCluster has its own stack and local datasources
 
 Promtail is the collector used for the supported path.
@@ -160,7 +160,7 @@ LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --use-cases eso,tenant-observability
 ```
 
-Then create tenant vClusters from this template:
+Then create tenant vCluster instances from this template:
 
 - [manifests/tenant-observability-vcluster-template.yaml](./manifests/tenant-observability-vcluster-template.yaml)
 
@@ -170,7 +170,7 @@ An example instance in the default project is included:
 
 ## Validate Tenant Isolation
 
-Create two tenant vClusters:
+Create two tenant vCluster instances:
 
 - `team-a`
 - `team-b`
@@ -243,5 +243,5 @@ This is intentionally lightweight:
 Things to watch first:
 
 - one Promtail pod runs per node per tenant vCluster on the standard path
-- many tenant vClusters on the same host cluster will increase Promtail fanout
+- many tenant vCluster instances on the same host cluster will increase Promtail fanout
 - Loki, Prometheus, and Grafana state are ephemeral in this PoV

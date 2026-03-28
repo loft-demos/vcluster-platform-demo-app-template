@@ -49,7 +49,7 @@ never fully recover after ESO was slow to reconcile.
 
 ## Sleep Mode And Wake-Up
 
-Both continuous-promotion vCluster templates use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD cluster health checks do not constantly wake sleeping vClusters.
+Both continuous-promotion vCluster templates use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD cluster health checks do not constantly wake sleeping vCluster instances.
 
 Because of that, sleeping-stage promotions now use two wake-up paths:
 
@@ -69,12 +69,12 @@ That means Kargo no longer waits for Argo to observe `OutOfSync` before a
 sleeping target starts waking up.
 
 It also means `argocd-update` no longer races the wake-up process for sleeping
-stage vClusters. Note that this readiness gate reduces promotion-time errors,
+stage vCluster instances. Note that this readiness gate reduces promotion-time errors,
 but `argocd-update` still registers ongoing Stage health checks in Kargo, so a
 sleeping target can still appear `Unknown` later if Argo cannot assess the
 Application while the vCluster is asleep.
 
-The Argo CD Applications that target those sleeping vClusters still need explicit wake-up metadata:
+The Argo CD Applications that target those sleeping vCluster instances still need explicit wake-up metadata:
 
 - `notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''`
 - `metadata.labels.vclusterProjectId`
@@ -85,13 +85,13 @@ a webhook to the shared `vcluster-wakeup-proxy` service. The proxy then issues
 the wake-triggering request to vCluster Platform for the target VCI, instead of
 waiting for normal Argo polling to wake it indirectly.
 
-The shared notification template and proxy live under the pull-request-environments use case:
+The shared notification template and proxy live under the pull-request-environments use case (that is enabled by default for vCP Demo Generator environments):
 
 - [../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml](../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml)
 - [../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml](../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml)
 
 If you keep the `ignore-user-agents: argo*` annotation but do not install
-equivalent wake-up plumbing, promotions into sleeping vClusters can appear
+equivalent wake-up plumbing, promotions into sleeping vCluster instances can appear
 stuck because Argo CD will no longer wake them by routine polling. Likewise, if
 the subscription annotation is present but the `vclusterProjectId` /
 `vclusterName` labels are missing, the wake-up template cannot resolve the
@@ -112,20 +112,9 @@ In the `vind` self-contained path, the shared Forgejo runner follows Forgejo's D
 
 The demo app image is tagged with the `appVersion` from `helm-chart/Chart.yaml` and pushed to the configured OCI registry. The Kargo Warehouse for both demos watches that image repository and triggers promotion automatically when a new semver tag appears.
 
-On the Flux-owned Kargo path, the host cluster also now carries a cluster-level
-Kargo GitHub webhook receiver. GHCR cannot send webhooks directly, so GitHub
-`package` events from the associated source repository are the trigger path.
-Kargo publishes the receiver URL in `ClusterConfig.status.webhookReceivers`, and
-when Crossplane is also enabled this repo now auto-applies a
-`KargoGitHubWebhook` claim so Crossplane creates the matching GitHub webhook
-from that status URL. That lets new images refresh `Warehouse`s immediately
-instead of waiting for polling.
+On the Flux-owned Kargo path, the host cluster also now carries a cluster-level Kargo GitHub webhook receiver. GHCR cannot send webhooks directly, so GitHub`package` events from the associated source repository are the trigger path.Kargo publishes the receiver URL in `ClusterConfig.status.webhookReceivers`, and when Crossplane is also enabled this repo now auto-applies a`KargoGitHubWebhook` claim so Crossplane creates the matching GitHub webhook from that status URL. That lets new images refresh `Warehouse`s immediately instead of waiting for polling.
 
-The Flux bridge for that Kargo host-app path now also creates its own
-`GitRepository` (`vcluster-flux-demo-kargo`) in `p-vcluster-flux-demo`. That
-removes the earlier race where the continuous-promotion Kargo bridge could
-reconcile before the separate Flux demo source `GitRepository` from the Flux
-use case existed.
+The Flux bridge for that Kargo host-app path now also creates its own`GitRepository` (`vcluster-flux-demo-kargo`) in `p-vcluster-flux-demo`. That removes the earlier race where the continuous-promotion Kargo bridge could reconcile before the separate Flux demo source `GitRepository` from the Flux use case existed.
 
 In the `vind` self-contained path, bootstrap also creates a `forgejo-image-credentials` Secret in the `progressive-delivery` and `pre-prod-gate` namespaces so Kargo can authenticate to the private Forgejo registry. GitHub-backed paths only need an equivalent Kargo image-credential secret when the chosen registry is private.
 
@@ -170,7 +159,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + inline wakeup `http` promotion steps before each Argo-driven promotion |
 | [manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml](manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
 | [manifests/progressive-delivery/kargo-analysis-template.yaml](manifests/progressive-delivery/kargo-analysis-template.yaml) | curl health-check AnalysisTemplate |
-| [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vClusters with sleep mode enabled and Argo user-agent polling ignored |
+| [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vCluster instances with sleep mode enabled and Argo user-agent polling ignored |
 | [manifests/progressive-delivery/kargo-vcluster-instances.yaml](manifests/progressive-delivery/kargo-vcluster-instances.yaml) | pd-dev, pd-staging, pd-prod VCIs |
 | [manifests/progressive-delivery/guestbook-apps.yaml](manifests/progressive-delivery/guestbook-apps.yaml) | Stable ArgoCD Applications for dev, staging, and prod, with wake-up notification subscriptions on the sleeping-vCluster targets |
 
@@ -178,7 +167,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 
 ## Demo 2 — Pre-Prod Gate
 
-Inspired by a real-world pattern: uses a long-lived pre-prod vCluster running on the same underlying hardware as production to test changes before they reach real prod clusters. The vCluster scales to zero between promotions, eliminating idle cost.
+Inspired by a real-world pattern: uses a long-lived pre-prod vCluster running on the same underlying hardware as production to test changes before they reach real prod clusters. The vCluster use vCP Sleep Mode to scale to zero between promotions, eliminating idle cost.
 
 ```text
 Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
@@ -190,7 +179,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
   prod (production cluster)
 ```
 
-**Verification:** A Kubernetes Job runs inside the cluster against the pre-prod vCluster's ingress URL. The job retries for up to 2 minutes to account for vCluster wake-up time after scale-to-zero. New Freight auto-promotes directly into pre-prod; pass = exit 0, fail = exit 1.
+**Verification:** A Kubernetes Job runs inside the cluster against the repo-scoped pre-prod ingress URL `https://guestbook-pre-prod-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}`. The job retries for up to 2 minutes to account for vCluster wake-up time after scale-to-zero. New Freight auto-promotes directly into pre-prod; pass = exit 0, fail = exit 1.
 
 **Key files:**
 
@@ -201,10 +190,15 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/pre-prod-gate/kargo-warehouse.yaml](manifests/pre-prod-gate/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | pre-prod and prod Stages + soak time, with an inline wakeup `http` step before pre-prod `argocd-update` |
 | [manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml](manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
+| [manifests/pre-prod-gate/shared-demo-cluster-store.yaml](manifests/pre-prod-gate/shared-demo-cluster-store.yaml) | Host-cluster Kubernetes-provider `ClusterSecretStore`, source Secret, and RBAC used by both the shared-node pre-prod vCluster app and the host-cluster prod app |
 | [manifests/pre-prod-gate/kargo-analysis-template.yaml](manifests/pre-prod-gate/kargo-analysis-template.yaml) | Integration test Job AnalysisTemplate |
 | [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, ArgoCD import enabled, and Argo user-agent polling ignored |
 | [manifests/pre-prod-gate/kargo-vcluster-instances.yaml](manifests/pre-prod-gate/kargo-vcluster-instances.yaml) | `pre-prod-gate-pre-prod` VCI |
-| [manifests/pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) | ArgoCD Applications for pre-prod and prod, with wake-up notification subscriptions on the sleeping-vCluster target |
+| [manifests/pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) | ArgoCD Applications for pre-prod and prod, both pointing at pre-prod-gate-specific stage overlays with a shared host-cluster `ExternalSecret` |
+
+The pre-prod-gate guestbook overlays under [guestbook/stages/pre-prod-gate-pre-prod](guestbook/stages/pre-prod-gate-pre-prod/kustomization.yaml) and [guestbook/stages/pre-prod-gate-prod](guestbook/stages/pre-prod-gate-prod/kustomization.yaml) both render the same `guestbook-shared-config` Secret from `ClusterSecretStore/pre-prod-gate-shared-demo-store`, then expose it to the app as `DEMO_SHARED_MESSAGE`. The host and pre-prod ingress hosts follow the same repo-scoped pattern as the other guestbook stages: `guestbook-pre-prod-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}` and `guestbook-prod-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}`.
+
+Because this demo store uses ESO's Kubernetes provider, [shared-demo-cluster-store.yaml](manifests/pre-prod-gate/shared-demo-cluster-store.yaml) includes both the `ClusterSecretStore` and its upstream source Secret `guestbook-shared-demo-source`. The `ExternalSecret` creates the runtime Secret consumed by the app, but the source Secret is still needed as the provider-side object that the Kubernetes-backed store reads from. In the shared-node pre-prod vCluster, the vCluster ESO integration syncs that `ExternalSecret` to the host-side namespace so the host-installed ESO components still do the reconciliation work.
 
 ---
 
