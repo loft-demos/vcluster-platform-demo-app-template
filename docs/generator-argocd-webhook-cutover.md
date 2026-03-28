@@ -71,6 +71,9 @@ reconcile successfully:
 - the secret referenced by `github-provider-config`
 - the generated repo placeholders must resolve the correct repo name,
   Generator-vCluster name, and base domain
+- if the ApplicationSet controller still exposes a routable Service before its
+  webhook listener is serving, add readiness and liveness probes to the
+  upstream Generator Argo CD Helm values in `loft-demo-base`
 - `argo-cd-cluster-application-set` must remain unchanged so the Argo CD
   vCluster template path continues to work separately from this new Generator
   webhook path

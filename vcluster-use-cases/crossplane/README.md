@@ -285,6 +285,10 @@ exist:
   If that hook job fails, inspect the `argocd-github-webhooks` Argo CD
   application and the `argocd-applicationset-controller` deployment before
   recreating the webhooks.
+- If the ApplicationSet controller still advertises a Service endpoint before
+  the webhook listener is actually serving, enable controller readiness and
+  liveness probes in the upstream Generator Argo CD Helm values in
+  `loft-demo-base`.
 - The `KargoGitHubWebhook` composition currently assumes this repo's
   cluster-level Kargo configuration publishes a single receiver at
   `status.webhookReceivers[0]`. If you add more cluster receivers later, update

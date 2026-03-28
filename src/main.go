@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -23,7 +24,7 @@ func main() {
 
 	srv := http.Server{
 		Addr:    *addr,
-		Handler: newHandler(composeText(*text, os.Getenv("DEMO_SHARED_MESSAGE"))),
+		Handler: newHandler(composeText(*text, os.Getenv("DEMO_SHARED_MESSAGE"), os.Getenv("DEMO_IMAGE"))),
 	}
 
 	go func() {
@@ -46,12 +47,37 @@ func main() {
 	log.Println("Server exiting")
 }
 
-func composeText(text, sharedMessage string) string {
-	if sharedMessage == "" {
-		return text
+func composeText(text, sharedMessage, imageRef string) string {
+	lines := []string{text}
+
+	if tag := parseImageTag(imageRef); tag != "" {
+		lines = append(lines, "docker tag: "+tag)
 	}
 
-	return text + "\nshared config: " + sharedMessage
+	if sharedMessage != "" {
+		lines = append(lines, "shared config: "+sharedMessage)
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+func parseImageTag(imageRef string) string {
+	imageRef = strings.TrimSpace(imageRef)
+	if imageRef == "" {
+		return ""
+	}
+
+	if digestIndex := strings.Index(imageRef, "@"); digestIndex >= 0 {
+		return imageRef[digestIndex+1:]
+	}
+
+	lastSlash := strings.LastIndex(imageRef, "/")
+	lastColon := strings.LastIndex(imageRef, ":")
+	if lastColon > lastSlash {
+		return imageRef[lastColon+1:]
+	}
+
+	return ""
 }
 
 func newHandler(text string) http.Handler {

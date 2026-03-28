@@ -9,7 +9,7 @@ patches:
     patch: |-
       - op: replace
         path: /spec/rules/0/host
-        value: guestbook-staging-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}
+        value: guestbook-staging-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
   - target:
       kind: Deployment
       name: guestbook

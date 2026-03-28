@@ -4,3 +4,14 @@ resources:
   - deploy.yaml
   - service.yaml
   - ingress.yaml
+replacements:
+  - source:
+      kind: Deployment
+      name: guestbook
+      fieldPath: spec.template.spec.containers.[name=guestbook].image
+    targets:
+      - select:
+          kind: Deployment
+          name: guestbook
+        fieldPaths:
+          - spec.template.spec.containers.[name=guestbook].env.[name=DEMO_IMAGE].value
