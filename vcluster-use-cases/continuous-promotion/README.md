@@ -1,6 +1,6 @@
 # Continuous Promotion with Kargo
 
-Demonstrates GitOps-native continuous promotion across isolated Kubernetes environments using [Kargo](https://kargo.akuity.io) and ArgoCD. Each promotion stage is a real, fully isolated Kubernetes cluster (vCluster), provisioned on demand and visible to Kargo as a first-class ArgoCD destination.
+Demonstrates GitOps-native continuous promotion across isolated Kubernetes environments using [Kargo](https://kargo.akuity.io) and Argo CD. Each promotion stage is a real, fully isolated Kubernetes cluster (vCluster), provisioned on demand and visible to Kargo as a first-class Argo CD destination.
 
 ## Enable
 
@@ -23,6 +23,7 @@ Generator-hosted environments typically expose Kargo at `https://kargo-{REPLACE_
 ## What gets deployed
 
 - **Kargo operator** — installed via Helm into the `kargo` namespace; UI available at the configured Kargo host
+- **Argo Rollouts** - leveraged for Kargo stage verification with its `AnalysisTemplate` custom resource
 - **Forgejo runner (vind self-contained only)** — shared CI runner in the `forgejo` namespace; builds and pushes the demo app image on every commit to `src/` or `helm-chart/`
 - **Progressive Delivery demo** — classic dev → staging → prod pipeline
 - **Pre-Prod Gate demo** — pre-prod vCluster → prod pipeline
@@ -168,6 +169,38 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 ## Demo 2 — Pre-Prod Gate
 
 Inspired by a real-world pattern: uses a long-lived pre-prod vCluster running on the same underlying hardware as production to test changes before they reach real prod clusters. The vCluster use vCP Sleep Mode to scale to zero between promotions, eliminating idle cost.
+
+### Why?
+
+A Shared Nodes vCluster is an effective pre-production target for Kargo because it enables selective divergence on top of production-parity platform infrastructure, while also supporting low-cost lifecycle testing via sleep/wake.
+
+Instead of recreating a full staging environment, the promoted workload runs in a virtual cluster that inherits the host cluster’s platform stack. Only the application and explicitly chosen components differ. With sleep mode, the same environment can be reused across promotion cycles while also validating real upgrade behavior.
+
+### Core idea
+
+Traditional pre-prod environments often drift from production because they duplicate too much infrastructure and platform software. A Shared Nodes vCluster changes the model:
+
+- The host cluster provides the common platform substrate
+- The vCluster provides workload isolation and an independent Kubernetes API surface
+- Kargo promotes only the candidate changes into that vCluster
+- Argo CD deploys those changes declaratively
+- Everything else stays shared unless explicitly overridden
+
+This produces a pre-prod environment that is both:
+
+- closer to production than a standalone staging cluster
+- safer than testing directly in production
+- reusable across promotion cycles via sleep mode
+
+### Why this is attractive for Kargo
+
+Kargo’s purpose is to answer whether a specific artifact or config change is ready to advance. That works best when the target environment differs from production only in the exact changes being evaluated.
+
+A Shared Nodes vCluster supports that directly:
+
+- promote a new app version into the vCluster
+- optionally promote one or two supporting components alongside it
+- keep the rest of the platform identical to production
 
 ```text
 Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
