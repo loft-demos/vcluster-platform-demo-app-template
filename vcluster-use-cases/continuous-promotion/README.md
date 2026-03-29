@@ -207,7 +207,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
     │
     ▼ auto-promote
   pre-prod (pre-prod-gate-pre-prod vCluster — scales to zero when idle)
-    │  └─ 10 minute soak time required
+    │  └─ 1 minute soak time required
     ▼ manual approval required
   prod (production cluster)
 ```

@@ -83,7 +83,7 @@ spec:
                           tag: '${{ imageFrom("{REPLACE_APP_IMAGE_REPOSITORY}").Tag }}'
 ---
 # prod: requires manual approval in Kargo UI; only eligible after pre-prod tests pass.
-# Soak time ensures freight has been running in pre-prod for at least 10 minutes.
+# Soak time ensures freight has been running in pre-prod for at least 3 minute.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
@@ -99,7 +99,7 @@ spec:
       sources:
         stages:
           - pre-prod
-        requiredSoakTime: 10m
+        requiredSoakTime: 3m
   promotionTemplate:
     spec:
       steps:
