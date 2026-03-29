@@ -96,7 +96,7 @@ spec:
       - name: guestbook-health
     args:
       - name: app-url
-        value: "https://guestbook-staging.{REPLACE_BASE_DOMAIN}"
+        value: "https://guestbook-staging-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}"
   promotionTemplate:
     spec:
       steps:

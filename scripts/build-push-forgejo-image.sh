@@ -226,6 +226,7 @@ build_args=(
   build
   --platform "$PLATFORM"
   --file "$DOCKERFILE_PATH"
+  --build-arg "IMAGE_TAG=${chart_app_version}"
   --output "type=image,push=true,registry.insecure=${REGISTRY_INSECURE}"
   --label "org.opencontainers.image.revision=${full_sha}"
   --label "org.opencontainers.image.title=${IMAGE_NAME}"
@@ -275,6 +276,7 @@ else
     --platform "$PLATFORM"
     --file "$DOCKERFILE_PATH"
     --build-arg BUILDKIT_INLINE_CACHE=1
+    --build-arg "IMAGE_TAG=${chart_app_version}"
     --label "org.opencontainers.image.revision=${full_sha}"
     --label "org.opencontainers.image.title=${IMAGE_NAME}"
     --label "org.opencontainers.image.vendor=loft.sh"

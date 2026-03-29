@@ -54,6 +54,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./src
+          build-args: |
+            IMAGE_TAG=${{ env.SHORT_SHA }}
           platforms: linux/amd64
           push: true
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache

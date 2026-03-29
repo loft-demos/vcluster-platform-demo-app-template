@@ -35,7 +35,7 @@ spec:
       - name: integration-test
     args:
       - name: app-url
-        value: "https://guestbook-pre-prod-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}"
+        value: "https://guestbook-ppg-pre-prod-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}"
       - name: image-tag
         value: '${{ imageFrom("{REPLACE_APP_IMAGE_REPOSITORY}").Tag }}'
   promotionTemplate:

@@ -75,6 +75,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./src
+          build-args: |
+            IMAGE_TAG=${{ env.NEW_APP_VERSION }}
           platforms: linux/amd64
           cache-from: |
             type=gha,scope=repo-app

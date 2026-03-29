@@ -44,7 +44,7 @@ spec:
           metadata:
             annotations:
               loft.sh/custom-links: >-
-                Guestbook=https://guestbook-pre-prod-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
+                Guestbook=https://guestbook-ppg-pre-prod-{{ .Values.loft.clusterAnnotations.domainPrefix }}.{{ .Values.loft.clusterAnnotations.domain }}
         pro:
           enabled: true
         helmRelease:

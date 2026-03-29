@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var buildImageTag string
+
 func main() {
 	text := flag.String("text", "", "text to put on the webpage")
 	addr := flag.String("addr", ":8080", "address to listen on")
@@ -24,7 +26,7 @@ func main() {
 
 	srv := http.Server{
 		Addr:    *addr,
-		Handler: newHandler(composeText(*text, os.Getenv("DEMO_SHARED_MESSAGE"), os.Getenv("DEMO_IMAGE"))),
+		Handler: newHandler(composeText(*text, os.Getenv("DEMO_SHARED_MESSAGE"), os.Getenv("DEMO_IMAGE"), buildImageTag)),
 	}
 
 	go func() {
@@ -47,10 +49,10 @@ func main() {
 	log.Println("Server exiting")
 }
 
-func composeText(text, sharedMessage, imageRef string) string {
+func composeText(text, sharedMessage, imageRef, fallbackTag string) string {
 	lines := []string{text}
 
-	if tag := parseImageTag(imageRef); tag != "" {
+	if tag := imageTag(imageRef, fallbackTag); tag != "" {
 		lines = append(lines, "docker tag: "+tag)
 	}
 
@@ -59,6 +61,14 @@ func composeText(text, sharedMessage, imageRef string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func imageTag(imageRef, fallbackTag string) string {
+	if tag := parseImageTag(imageRef); tag != "" {
+		return tag
+	}
+
+	return strings.TrimSpace(fallbackTag)
 }
 
 func parseImageTag(imageRef string) string {

@@ -212,7 +212,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
   prod (production cluster)
 ```
 
-**Verification:** A Kubernetes Job runs inside the cluster against the repo-scoped pre-prod ingress URL `https://guestbook-pre-prod-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}`. The job retries for up to 2 minutes to account for vCluster wake-up time after scale-to-zero. New Freight auto-promotes directly into pre-prod; pass = exit 0, fail = exit 1.
+**Verification:** A Kubernetes Job runs inside the cluster against the repo-scoped pre-prod ingress URL `https://guestbook-ppg-pre-prod-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}`. The job retries for up to 2 minutes to account for vCluster wake-up time after scale-to-zero. New Freight auto-promotes directly into pre-prod; pass = exit 0, fail = exit 1.
 
 **Key files:**
 
