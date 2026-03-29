@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: proxy
-          image: ghcr.io/loft-demos/vcluster-wakeup-proxy:0.4.0
+          image: ghcr.io/loft-demos/vcluster-wakeup-proxy:0.5.0
           ports: [{ containerPort: 8080 }]
           env:
             - name: UPSTREAM_BASE
@@ -25,6 +25,10 @@ spec:
               value: "5s"
             - name: LOG_REQUESTS
               value: "true"
+            - name: ARGOCD_CLUSTER_REFRESH_SECRET_NAMESPACE
+              value: "argocd"
+            - name: ARGOCD_CLUSTER_REFRESH_SECRET_NAME_TEMPLATE
+              value: "loft-{project}-vcluster-{virtualcluster}"
           readinessProbe:
             httpGet: { path: /readyz, port: 8080 }
             initialDelaySeconds: 1
