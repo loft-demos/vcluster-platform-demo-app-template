@@ -26,7 +26,6 @@ spec:
                 matchLabels:
                   prLabel: deploy-argocd-vcluster-preview
                   repo: {REPLACE_REPO_NAME}
-                  vcluster.loft.sh/ready: 'true'
   template:
     metadata:
       annotations:

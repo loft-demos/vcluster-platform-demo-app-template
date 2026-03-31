@@ -1,8 +1,10 @@
-# Shared vCluster Sleep Wake-Up
+# Optimizing vCluster Sleep Mode For Argo CD
 
-This directory contains the shared host-side Argo CD resources that make
-sleeping imported vCluster instances behave well when they are added to Argo CD and use
-`sleepmode.loft.sh/ignore-user-agents: argo*`.
+This directory contains the shared host-side Argo CD resources used to make
+vCluster sleep mode behave well with Argo CD for imported vCluster instances.
+That includes preventing routine Argo traffic from defeating sleep mode,
+providing a deliberate wake-up path when needed, and keeping Argo CD behavior
+clean while a destination vCluster is sleeping, waking, or ready again.
 
 ## Intent
 
@@ -71,8 +73,8 @@ The shared stack installs:
 - `argocd-notifications-cm` with the `wakeup-vcluster` webhook trigger
 - `argocd-notifications-secret` as the label-backed Secret reference used by
   Argo CD Notifications
-- `vcluster-wakeup-proxy`
-- `vcluster-wakeup-watcher`
+- [`vcluster-wakeup-proxy`](https://github.com/loft-demos/vcluster-wakeup-proxy/blob/main/README.md)
+- [`vcluster-wakeup-watcher`](https://github.com/loft-demos/vcluster-wakeup-proxy/blob/main/README.md#optional-vci-watcher)
 
 ## How The Flow Works
 
@@ -150,6 +152,9 @@ cluster Secret annotation alone as a substitute for `ignore-user-agents`.
 
 `vcluster-wakeup-proxy` handles the wake-triggering HTTP request.
 
+Upstream project README:
+[loft-demos/vcluster-wakeup-proxy](https://github.com/loft-demos/vcluster-wakeup-proxy/blob/main/README.md)
+
 Its job is to sit in front of the vCluster Platform upstream and make the first
 wake request behave like an accepted action instead of a hard failure when the
 target is still waking up.
@@ -180,6 +185,9 @@ this repo, Kargo promotion steps can also call the same proxy before an
 
 `vcluster-wakeup-watcher` continuously reconciles Argo CD behavior from
 `VirtualClusterInstance` state.
+
+Upstream watcher section:
+[Optional VCI Watcher](https://github.com/loft-demos/vcluster-wakeup-proxy/blob/main/README.md#optional-vci-watcher)
 
 It polls `VirtualClusterInstance` resources from the management cluster API and
 derives the corresponding imported Argo CD cluster Secret and matching

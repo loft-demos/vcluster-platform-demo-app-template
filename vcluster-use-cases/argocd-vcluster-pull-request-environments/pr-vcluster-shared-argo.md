@@ -33,7 +33,7 @@ The only thing deployed into the vCluster is the PR preview app itself as other 
       - `headBranch` is the head branch of the Pull Request
 
 3. Once the Argo CD cluster `Secret` is created with the necessary `metadata.labels`, it, along with the properly labeled Pull Request, trigger the second Argo CD `ApplicationSet` that uses the Matrix generator to merge the template parameters from the Pull Request and Cluster generators to generate an `Application` that will deploy the PR preview application into the PR vCluster.
-4. The `vcluster-ready-labeler` `Deployment` executes a simple shell script every 10 seconds that adds a label to `VirtualClusterInstance` resources when their `VirtualClusterOnline` status becomes `True`. This in turn is added by vCluster Platform to the Argo CD cluster `Secret` and is the last label required to trigger the second PR preview app `ApplicationSet` with the Cluster generator. Although not absolutely necessary, this setup ensures there are no initial errors with the second generated`Application` as it tries to connect to the PR vCluster that is not yet ready.
+4. The generated preview-app `Application` may exist before the PR vCluster is fully ready. That is acceptable now: retries, self-heal, and the shared `vcluster-wakeup-watcher` handle the temporary not-ready phase instead of requiring a separate ready-labeling loop.
 5. Additional commits to the Pull Request head branch will automatically be redeployed to the PR vCluster via the second `Application`, deploying the updated container image with a tag based on the short commit sha of the triggering PR commit. However, the vCluster `Application` is associated with the PR head branch, and not a specific commit, so it does not get recreated with every PR commit.
 6. If the Pull Request is merged or closed, or if the `create-pr-vcluster-external-argocd` label is removed, both `Applications` will be deleted resulting in the PR vCluster being deleted.
 
@@ -72,10 +72,11 @@ Because imported sleepy vClusters are not unique to this use case, the wake-up p
 Ideal PR-preview workflow for vCluster with sleep mode.
 
 ✅ Matrix generator using PR x Cluster
-✅ Label-based cluster filtering (only deploy to matching vCluster)
+✅ Label-based cluster filtering (only deploy to matching PR vCluster)
 ✅ Argo CD Notification subscription for wake-up only when OutOfSync (new commit to PR head branch)
 ✅ Non-intrusive wake-up trigger (via subscribe.*)
 ✅ Precise per-vCluster labeling for webhook templating (vclusterName, vclusterProjectId)
 ✅ TLS + ingress config per preview
 ✅ Retries and self-heal enabled for robustness
+✅ No extra ready-labeling controller required
 ✅ Namespace auto-creation via sync option
