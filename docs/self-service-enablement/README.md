@@ -13,8 +13,6 @@ use cases that deepen the story.
 
 ## Recommendation
 
-Use this as a documented demo flow first. Do not create a new demo use case yet.
-
 The repo already has the core ingredients needed for this story:
 
 - seeded projects: [`vcluster-gitops/projects/api-framework.yaml`](../../vcluster-gitops/projects/api-framework.yaml) and [`vcluster-gitops/projects/auth-core.yaml`](../../vcluster-gitops/projects/auth-core.yaml)
@@ -22,9 +20,6 @@ The repo already has the core ingredients needed for this story:
 - seeded users: [`vcluster-gitops/users/users.yaml`](../../vcluster-gitops/users/users.yaml)
 - a custom project role with limited troubleshooting access: [`vcluster-gitops/project-roles/project-user-with-logs.yaml`](../../vcluster-gitops/project-roles/project-user-with-logs.yaml)
 - a default self-service template and a seeded example vCluster instance: [`vcluster-gitops/virtual-cluster-templates/base/default.yaml`](../../vcluster-gitops/virtual-cluster-templates/base/default.yaml) and [`vcluster-gitops/virtual-cluster-instances/api-framework-qa.yaml`](../../vcluster-gitops/virtual-cluster-instances/api-framework-qa.yaml)
-
-Create a new use case only if we want a one-click packaged version of this flow
-that installs extra demo artifacts specifically for enablement sessions.
 
 ## Best-Fit Repo Setup
 

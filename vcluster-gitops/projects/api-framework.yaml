@@ -64,7 +64,6 @@ spec:
         - api-framework
         - loft-admins
   argoCD:
-    virtualClusterInstance: argocd
     namespace: argocd
     sso:
       host: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}

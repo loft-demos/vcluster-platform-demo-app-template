@@ -43,42 +43,99 @@ jobs:
     steps:
       - name: set-vcluster-name
         id: set-vcluster-name
+        shell: bash
         run: |
           if [ -n "${{ inputs.vcluster_name }}" ]; then
             VCLUSTER_NAME="${{ inputs.vcluster_name }}"
           else
-            VCLUSTER_NAME="$(echo "${REPO_NAME%-app}")"
+            VCLUSTER_NAME="${REPO_NAME%-app}"
           fi
-          echo "VCLUSTER_NAME=${VCLUSTER_NAME}" >> "$GITHUB_ENV"
-          echo "KARGO_HOST=kargo-${VCLUSTER_NAME}.${BASE_DOMAIN}" >> "$GITHUB_ENV"
-          echo "KARGO_WEBHOOK_HOST=kargo-webhooks-${VCLUSTER_NAME}.${BASE_DOMAIN}" >> "$GITHUB_ENV"
-          echo "ARGOCD_HOST=argocd-${VCLUSTER_NAME}.${BASE_DOMAIN}" >> "$GITHUB_ENV"
+
+          KARGO_HOST="kargo-${VCLUSTER_NAME}.${BASE_DOMAIN}"
+          KARGO_WEBHOOK_HOST="kargo-webhooks-${VCLUSTER_NAME}.${BASE_DOMAIN}"
+          ARGOCD_HOST="argocd-${VCLUSTER_NAME}.${BASE_DOMAIN}"
+
+          {
+            echo "VCLUSTER_NAME=${VCLUSTER_NAME}"
+            echo "KARGO_HOST=${KARGO_HOST}"
+            echo "KARGO_WEBHOOK_HOST=${KARGO_WEBHOOK_HOST}"
+            echo "ARGOCD_HOST=${ARGOCD_HOST}"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "vcluster_name=${VCLUSTER_NAME}"
+            echo "kargo_host=${KARGO_HOST}"
+            echo "kargo_webhook_host=${KARGO_WEBHOOK_HOST}"
+            echo "argocd_host=${ARGOCD_HOST}"
+          } >> "$GITHUB_OUTPUT"
+
           echo "vCluster name is ${VCLUSTER_NAME}"
       - uses: actions/checkout@v3
-      - uses: flcdrg/replace-multiple-action@v2.0.148
-        with:
-          files: '**/*.yaml'
-          find:  |
-            [
-              { "find": "{REPLACE_REPO_NAME}", "replace": "${{ env.REPO_NAME }}" },
-              { "find": "{REPLACE_ORG_NAME}", "replace": "${{ env.ORG_NAME }}" },
-              { "find": "{REPLACE_VCLUSTER_NAME}", "replace": "${{ env.VCLUSTER_NAME }}" },
-              { "find": "{REPLACE_BASE_DOMAIN}", "replace": "${{ env.BASE_DOMAIN }}" },
-              { "find": "{REPLACE_FORGEJO_USERNAME}", "replace": "${{ github.actor }}" },
-              { "find": "{REPLACE_GIT_BASE_URL}", "replace": "${{ env.GIT_BASE_URL }}" },
-              { "find": "{REPLACE_GIT_PUBLIC_URL}", "replace": "${{ env.GIT_PUBLIC_URL }}" },
-              { "find": "{REPLACE_ARGOCD_HOST}", "replace": "${{ env.ARGOCD_HOST }}" },
-              { "find": "{REPLACE_APP_IMAGE_REPOSITORY}", "replace": "${{ env.APP_IMAGE_REPOSITORY }}" },
-              { "find": "{REPLACE_IMAGE_REPOSITORY_PREFIX}", "replace": "${{ env.IMAGE_REPOSITORY_PREFIX }}" },
-              { "find": "{REPLACE_OCI_REGISTRY_HOST}", "replace": "${{ env.OCI_REGISTRY_HOST }}" },
-              { "find": "{REPLACE_SNAPSHOT_OCI_REPOSITORY}", "replace": "${{ env.SNAPSHOT_OCI_REPOSITORY }}" },
-              { "find": "{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME}", "replace": "${{ env.IMAGE_PULL_SOURCE_SECRET_NAME }}" },
-              { "find": "{REPLACE_1PASSWORD_VAULT}", "replace": "${{ env.ONEPASSWORD_VAULT }}" },
-              { "find": "{REPLACE_KARGO_HOST}", "replace": "${{ env.KARGO_HOST }}" },
-              { "find": "{REPLACE_KARGO_WEBHOOK_HOST}", "replace": "${{ env.KARGO_WEBHOOK_HOST }}" }
-            ]
-          prefix: ''
-          suffix: ''
+      - name: replace template placeholders
+        shell: bash
+        env:
+          VCLUSTER_NAME: ${{ steps.set-vcluster-name.outputs.vcluster_name }}
+          ARGOCD_HOST: ${{ steps.set-vcluster-name.outputs.argocd_host }}
+          KARGO_HOST: ${{ steps.set-vcluster-name.outputs.kargo_host }}
+          KARGO_WEBHOOK_HOST: ${{ steps.set-vcluster-name.outputs.kargo_webhook_host }}
+        run: |
+          file_count=0
+
+          while IFS= read -r -d '' file; do
+            file_count=$((file_count + 1))
+            perl -0pi -e '
+              s/\{REPLACE_REPO_NAME\}/$ENV{REPO_NAME}/g;
+              s/\{REPLACE_ORG_NAME\}/$ENV{ORG_NAME}/g;
+              s/\{REPLACE_VCLUSTER_NAME\}/$ENV{VCLUSTER_NAME}/g;
+              s/\{REPLACE_BASE_DOMAIN\}/$ENV{BASE_DOMAIN}/g;
+              s/\{REPLACE_FORGEJO_USERNAME\}/$ENV{GITHUB_ACTOR}/g;
+              s/\{REPLACE_GIT_BASE_URL\}/$ENV{GIT_BASE_URL}/g;
+              s/\{REPLACE_GIT_PUBLIC_URL\}/$ENV{GIT_PUBLIC_URL}/g;
+              s/\{REPLACE_ARGOCD_HOST\}/$ENV{ARGOCD_HOST}/g;
+              s/\{REPLACE_APP_IMAGE_REPOSITORY\}/$ENV{APP_IMAGE_REPOSITORY}/g;
+              s/\{REPLACE_IMAGE_REPOSITORY_PREFIX\}/$ENV{IMAGE_REPOSITORY_PREFIX}/g;
+              s/\{REPLACE_OCI_REGISTRY_HOST\}/$ENV{OCI_REGISTRY_HOST}/g;
+              s/\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}/$ENV{SNAPSHOT_OCI_REPOSITORY}/g;
+              s/\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}/$ENV{IMAGE_PULL_SOURCE_SECRET_NAME}/g;
+              s/\{REPLACE_1PASSWORD_VAULT\}/$ENV{ONEPASSWORD_VAULT}/g;
+              s/\{REPLACE_KARGO_HOST\}/$ENV{KARGO_HOST}/g;
+              s/\{REPLACE_KARGO_WEBHOOK_HOST\}/$ENV{KARGO_WEBHOOK_HOST}/g;
+            ' "$file"
+          done < <(
+            find . \
+              -type f \
+              \( -name '*.yaml' -o -name '*.yml' \) \
+              ! -path './.git/*' \
+              ! -path './.github/workflows/replace-text.yaml' \
+              -print0
+          )
+
+          if [ "$file_count" -eq 0 ]; then
+            echo "[INFO] No YAML files found for replacement."
+            exit 0
+          fi
+      - name: validate replacements
+        shell: bash
+        run: |
+          unresolved=0
+
+          while IFS= read -r -d '' file; do
+            if grep -nE '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_FORGEJO_USERNAME\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_ARGOCD_HOST\}|\{REPLACE_APP_IMAGE_REPOSITORY\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_HOST\}|\{REPLACE_KARGO_WEBHOOK_HOST\}' "$file"; then
+              unresolved=1
+            fi
+          done < <(
+            find . \
+              -type f \
+              \( -name '*.yaml' -o -name '*.yml' \) \
+              ! -path './.git/*' \
+              ! -path './.github/workflows/replace-text.yaml' \
+              -print0
+          )
+
+          if [ "$unresolved" -ne 0 ]; then
+            echo "[ERROR] Unresolved replace-text workflow placeholders remain in YAML files after replacement."
+            exit 1
+          fi
       - uses: stefanzweifel/git-auto-commit-action@v5
       - name: delete-package
         id: delete-package
