@@ -5,4 +5,4 @@ metadata:
   namespace: argocd
 spec:
   source:
-    path: vcluster-use-cases/argocd-vcluster-pull-request-environments/manifests/overlays/local-contained
+    path: vcluster-use-cases/argocd-vcluster-pull-request-environments/manifests

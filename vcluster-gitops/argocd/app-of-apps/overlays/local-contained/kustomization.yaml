@@ -4,6 +4,7 @@ resources:
   - ../../argocd-in-vcluster-appset.yaml
   - ../../argocd-vcluster-add-ons-app.yaml
   - ../../argocd-vcluster-pull-request-environments-apps.yaml
+  - ../../vcluster-sleep-wakeup-app.yaml
   - ../../autosnapshots-appset.yaml
   - ../../cnpg-appset.yaml
   - ../../connected-host-cluster-appset.yaml
@@ -33,5 +34,6 @@ patches:
   - path: patch-autosnapshots-appset.yaml
   - path: patch-continuous-promotion-flux-kargo-appset.yaml
   - path: patch-pr-apps-bootstrap.yaml
+  - path: patch-vcluster-sleep-wakeup-app.yaml
   - path: patch-flux-appset.yaml
   - path: patch-flux-operator-helm-app.yaml

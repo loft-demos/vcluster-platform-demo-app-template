@@ -52,6 +52,16 @@ never fully recover after ESO was slow to reconcile.
 
 Both continuous-promotion vCluster templates use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD cluster health checks do not constantly wake sleeping vCluster instances.
 
+The shared wake-up docs explain the Argo CD behavior behind that choice in more
+detail: Git polling, cluster cache and cluster-info traffic, and Application
+reconciliation are different things. For sleepy imported vClusters, the
+annotation is there to stop routine cluster-directed Argo traffic from waking
+the destination all the time, while `argocd.argoproj.io/skip-reconcile` is used
+separately as a temporary controller-side pause for apps that target that
+cluster. The docs do not clearly define that cluster Secret annotation as a
+full replacement for `ignore-user-agents`, especially for a cluster that is
+registered in Argo CD before any app targets it.
+
 Because of that, sleeping-stage promotions now use two wake-up paths:
 
 1. Kargo proactively wakes the target vCluster before `argocd-update`.
@@ -88,10 +98,19 @@ health because the destination API is asleep, Argo CD Notifications sends a webh
 request to vCluster Platform for the target VCI, instead of waiting for normal
 Argo polling to wake it indirectly.
 
-The shared notification template and proxy live under the pull-request-environments use case (that is enabled by default for vCP Demo Generator environments):
+The shared `vcluster-wakeup-watcher` then complements that proxy flow by
+watching `VirtualClusterInstance` state from the management cluster API. While
+the target is sleeping or waking, it marks the imported Argo CD cluster Secret
+to skip reconcile so Argo does not keep hammering an unavailable destination.
+When the VCI becomes ready again, it removes that pause behavior and triggers an
+Argo refresh for matching `Application` resources. That is why the watcher
+pattern makes sense here: `skip-reconcile=true` while the VCI is sleeping or
+waking, then remove it once the VCI is ready.
 
-- [../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml](../argocd-vcluster-pull-request-environments/manifests/argocd-notifications-cm.yaml)
-- [../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml](../argocd-vcluster-pull-request-environments/manifests/vcluster-wakeup-proxy.yaml)
+The shared wake-up stack is now bootstrapped centrally for the host Argo CD instance:
+
+- [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md)
+- [../../vcluster-gitops/argocd/app-of-apps/vcluster-sleep-wakeup-app.yaml](../../vcluster-gitops/argocd/app-of-apps/vcluster-sleep-wakeup-app.yaml)
 
 If you keep the `ignore-user-agents: argo*` annotation but do not install
 equivalent wake-up plumbing, promotions into sleeping vCluster instances can appear
@@ -99,6 +118,11 @@ stuck because Argo CD will no longer wake them by routine polling. Likewise, if
 the subscription annotation is present but the `vclusterProjectId` /
 `vclusterName` labels are missing, the wake-up template cannot resolve the
 correct target VCI.
+
+That equivalent plumbing should generally include both the proxy and the watcher:
+
+- the proxy handles the initial wake request and transient wake-time responses
+- the watcher keeps Argo CD reconcile behavior aligned with the sleeping or waking VCI lifecycle
 
 ---
 
@@ -161,6 +185,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/progressive-delivery/kargo-warehouse.yaml](manifests/progressive-delivery/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + inline wakeup `http` promotion steps before each Argo-driven promotion |
 | [manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml](manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
+| [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md) | Shared host-Argo wake-up stack used by the stage Applications, including both `vcluster-wakeup-proxy` and `vcluster-wakeup-watcher` |
 | [manifests/progressive-delivery/kargo-analysis-template.yaml](manifests/progressive-delivery/kargo-analysis-template.yaml) | curl health-check AnalysisTemplate |
 | [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vCluster instances with sleep mode enabled and Argo user-agent polling ignored |
 | [manifests/progressive-delivery/kargo-vcluster-instances.yaml](manifests/progressive-delivery/kargo-vcluster-instances.yaml) | pd-dev, pd-staging, pd-prod VCIs |
@@ -225,6 +250,7 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/pre-prod-gate/kargo-warehouse.yaml](manifests/pre-prod-gate/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | pre-prod and prod Stages + soak time, with an inline wakeup `http` step before pre-prod `argocd-update` |
 | [manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml](manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
+| [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md) | Shared host-Argo wake-up stack used by the pre-prod Application, including both `vcluster-wakeup-proxy` and `vcluster-wakeup-watcher` |
 | [manifests/pre-prod-gate/shared-demo-cluster-store.yaml](manifests/pre-prod-gate/shared-demo-cluster-store.yaml) | Host-cluster Kubernetes-provider `ClusterSecretStore`, source Secret, and RBAC used by both the shared-node pre-prod vCluster app and the host-cluster prod app |
 | [manifests/pre-prod-gate/kargo-analysis-template.yaml](manifests/pre-prod-gate/kargo-analysis-template.yaml) | Integration test Job AnalysisTemplate |
 | [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, ArgoCD import enabled, and Argo user-agent polling ignored |
