@@ -20,10 +20,18 @@ data:
       vcluster-platform:
         method: POST
         path: /kubernetes/project/{{ index .app.metadata.labels "vclusterProjectId" }}/virtualcluster/{{ index .app.metadata.labels "vclusterName" }}
-  # Trigger wake-up when app becomes OutOfSync
+  # Trigger wake-up when the app either becomes OutOfSync or Argo reports an
+  # Unknown/failed state against a sleeping destination. Sleeping imported
+  # clusters often surface as sync.status=Unknown rather than Synced.
   trigger.wakeup-vcluster: |
-    - description: "Wake vCluster when app is OutOfSync"
+    - description: "Wake vCluster when app needs a sleeping destination"
       when: app.status.sync.status == 'OutOfSync'
+        or ((app.status.sync.status == 'Synced' or app.status.sync.status == 'Unknown')
+          and (
+            app.status.health.status == 'Unknown'
+            or (app.status.operationState != nil
+              and app.status.operationState.phase == 'Failed')
+          ))
       send: [wakeup-vcluster]
   service.github: |
     appID: $githubAppID

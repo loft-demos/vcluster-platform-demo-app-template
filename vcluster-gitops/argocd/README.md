@@ -17,7 +17,8 @@ metadata:
     resolveDNS: ''
     eso: 'true'
     kyverno: 'true'
-    postgres: ''
+    customResourceSync: ''
+    cnpg: ''
     databaseConnector: ''
     rancher: ''
   name: cluster-local

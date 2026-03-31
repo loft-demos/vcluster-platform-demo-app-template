@@ -20,6 +20,12 @@ data:
         method: POST
         path: /kubernetes/project/{{ index .app.metadata.labels "vclusterProjectId" }}/virtualcluster/{{ index .app.metadata.labels "vclusterName" }}
   trigger.wakeup-vcluster: |
-    - description: "Wake vCluster when app is OutOfSync"
+    - description: "Wake vCluster when app needs a sleeping destination"
       when: app.status.sync.status == 'OutOfSync'
+        or ((app.status.sync.status == 'Synced' or app.status.sync.status == 'Unknown')
+          and (
+            app.status.health.status == 'Unknown'
+            or (app.status.operationState != nil
+              and app.status.operationState.phase == 'Failed')
+          ))
       send: [wakeup-vcluster]

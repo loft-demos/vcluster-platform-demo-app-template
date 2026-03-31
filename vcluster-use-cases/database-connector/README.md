@@ -11,7 +11,6 @@ non-privileged user on a shared [CloudNative PG](https://cloudnative-pg.io/) (CN
 ```text
 vcluster-use-cases/database-connector/
 ├── apps/
-│   ├── cnpg-helm-app.yaml
 │   └── cnpg-manifests.yaml
 └── manifests/
     ├── cnpg-admin-secret.yaml
@@ -25,12 +24,12 @@ vcluster-use-cases/database-connector/
 
 ### `apps/`
 
-- [`apps/cnpg-helm-app.yaml`](./apps/cnpg-helm-app.yaml)
-  installs the CloudNative PG operator Helm chart (`cloudnative-pg`) into the
-  `cnpg-system` namespace.
 - [`apps/cnpg-manifests.yaml`](./apps/cnpg-manifests.yaml)
   applies the manifests that create the PostgreSQL cluster, connector secret,
   template, and example vCluster instance.
+
+The host-side CNPG operator itself is installed by a shared Argo CD app whenever
+either `database-connector` or `custom-resource-sync` is enabled.
 
 ### `manifests/`
 

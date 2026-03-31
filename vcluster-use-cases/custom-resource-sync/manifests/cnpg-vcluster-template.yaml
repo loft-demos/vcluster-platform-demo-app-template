@@ -1,34 +1,16 @@
 kind: VirtualClusterTemplate
 apiVersion: management.loft.sh/v1
 metadata:
-  name: postgres-operator-template
+  name: cnpg-custom-resource-sync-template
 spec:
-  displayName: Postgres Operator Template
+  displayName: CloudNative PG Template
   template:
     metadata:
       labels:
         loft.sh/import-argocd: 'true'
       annotations:
-        sleepmode.loft.sh/delete-after: '72000'
-        loft.sh/require-ingress-authentication: 'true'
-        sleepmode.loft.sh/sleep-after: '600'
         sleepmode.loft.sh/ignore-user-agents: 'argo*'
-    objects: |
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: preview-hello-world-app
-      ---
-      apiVersion: v1
-      kind: Secret
-      metadata:
-        name: ghcr-login-secret
-        namespace: preview-hello-world-app
-        labels:
-          loft.sh/project-secret-name: ghcr-login-secret
-      data:
-        .dockerconfigjson: e30K
-      type: kubernetes.io/dockerconfigjson
+    objects: {}
     access:
       rules:
         - teams:
@@ -51,7 +33,7 @@ spec:
             ingresses:
               enabled: true
             customResources:
-              postgresqls.acid.zalan.do:
+              clusters.postgresql.cnpg.io:
                 enabled: true
 
         controlPlane:

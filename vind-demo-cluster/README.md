@@ -395,13 +395,13 @@ Available use cases for the `vind` bootstrap:
 - `auto-snapshots`
 - `connected-host-cluster`
 - `crossplane`
+- `custom-resource-sync`
 - `eso`
 - `flux`
 - `kyverno`
 - `database-connector`
 - `namespace-sync`
 - `private-nodes`
-- `postgres`
 - `rancher`
 - `resolve-dns`
 - `tenant-observability`

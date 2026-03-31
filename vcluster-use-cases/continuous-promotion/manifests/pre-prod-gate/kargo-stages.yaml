@@ -74,7 +74,7 @@ spec:
         - uses: argocd-update
           config:
             apps:
-              - name: guestbook-pre-prod
+              - name: guestbook-ppg-pre-prod
                 sources:
                   - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
                     kustomize:
@@ -106,7 +106,7 @@ spec:
         - uses: argocd-update
           config:
             apps:
-              - name: guestbook-pre-prod-gate-prod
+              - name: guestbook-ppg-prod
                 sources:
                   - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
                     kustomize:

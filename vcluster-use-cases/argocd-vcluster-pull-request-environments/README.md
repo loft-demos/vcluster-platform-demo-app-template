@@ -22,7 +22,7 @@ What the shared resources do:
 
 How the flow works:
 
-1. An Argo CD `Application` that targets a sleeping vCluster becomes `OutOfSync`.
+1. An Argo CD `Application` that targets a sleeping vCluster either becomes `OutOfSync`, or it falls into a stale `Synced` / `Unknown` state while Argo records a failed sync or `Unknown` health because the target API is asleep.
 2. The `wakeup-vcluster` notification trigger fires.
 3. Argo CD Notifications renders the webhook path using the app's `vclusterProjectId` and `vclusterName` labels.
 4. The request is sent to `vcluster-wakeup-proxy`, which forwards the wake-triggering call to the vCluster Platform path for that VCI.

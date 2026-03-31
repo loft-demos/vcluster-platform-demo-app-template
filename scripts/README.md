@@ -1,6 +1,6 @@
 # Scripts
 
-This folder has eight scripts that matter for the self-contained `vind` path.
+This folder has nine scripts that matter for the self-contained `vind` path.
 
 ## `replace-text-local.sh`
 
@@ -169,3 +169,22 @@ Run it with:
 ```bash
 bash scripts/update-templates.sh
 ```
+
+## `test-pre-prod-wakeup.sh`
+
+Reproduces the sleeping-pre-prod Argo CD wake-up scenario for the continuous-promotion demo.
+
+Examples:
+
+```bash
+bash scripts/test-pre-prod-wakeup.sh status
+```
+
+```bash
+bash scripts/test-pre-prod-wakeup.sh scenario
+```
+
+The `scenario` mode force-sleeps `pre-prod-gate-pre-prod`, tails the Argo CD
+notifications and wakeup-proxy logs, then triggers a manual sync on
+`guestbook-pre-prod` so you can verify that the backup wake-up path fires for a
+sleeping destination.

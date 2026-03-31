@@ -1,30 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: postgres-cluster
+  name: cnpg-cluster
   namespace: argocd
 spec:
   generators:
     - clusters:
         selector:
           matchLabels:
-            postgres: 'true'
+            cnpg: 'true'
   template:
     metadata:
-      # name is the name of the kubernetes cluster as selected by the spec above
-      name: 'postgres-apps'
+      name: 'cnpg-apps'
       labels:
-        use-case.demos.vcluster.com: postgres
+        use-case.demos.vcluster.com: cnpg
     spec:
       destination:
-        # server is the url of the cluster as selected by the spec above
         server: '{{server}}'
         namespace: argocd
       project: default
       source:
         repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
         targetRevision: HEAD
-        path: vcluster-use-cases/custom-resource-sync/apps
+        path: vcluster-use-cases/_shared/cnpg/apps
       syncPolicy:
         automated:
           prune: true
@@ -33,8 +31,8 @@ spec:
           - CreateNamespace=true
           - Replace=true
         retry:
-          limit: 5 # number of failed sync attempt retries; unlimited number of attempts if less than 0
+          limit: 5
           backoff:
-            duration: 20s # the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")
-            factor: 2 # a factor to multiply the base duration after each failed retry
+            duration: 20s
+            factor: 2
             maxDuration: 3m

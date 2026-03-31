@@ -386,6 +386,20 @@ current_cluster_local_use_cases() {
 $(known_use_case_entries)
 EOF
 
+  if ! printf '%s\n' "$selected" | rg -qx "custom-resource-sync"; then
+    label_value="$(
+      kubectl -n argocd get secret cluster-local \
+        -o "jsonpath={.metadata.labels.postgres}" 2>/dev/null || true
+    )"
+    if [[ "$label_value" == "true" ]]; then
+      if [[ -z "$selected" ]]; then
+        selected="custom-resource-sync"
+      else
+        selected="${selected},custom-resource-sync"
+      fi
+    fi
+  fi
+
   if [[ -n "$selected" ]]; then
     printf '%s\n' "$selected"
     return 0

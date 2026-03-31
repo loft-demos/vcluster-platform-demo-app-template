@@ -307,7 +307,8 @@ Add a `README.md` to `vcluster-use-cases/my-feature/` describing:
 ## Reference: `database-connector` use case
 
 The `database-connector` use case is a good concrete example of this pattern. It has:
-- Two Applications in `apps/`: a Helm app (CNPG operator) and a manifests app
+- One Application in `apps/`: a manifests app for the use-case-specific resources
+- A shared CNPG dependency installed separately by `vcluster-gitops/argocd/app-of-apps/cnpg-appset.yaml`
 - Sync waves ordering secrets → CNPG Cluster → VirtualClusterInstance
 - A credential secret using `{REPLACE_DB_CONNECTOR_PASSWORD}` placeholder
 - Label key `databaseConnector` mapped to canonical name `database-connector`

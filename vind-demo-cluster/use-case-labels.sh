@@ -32,6 +32,7 @@ auto-nodes|autoNodes
 auto-snapshots|autoSnapshots
 connected-host-cluster|connectedHostCluster
 crossplane|crossplane
+custom-resource-sync|customResourceSync
 eso|eso
 flux|flux
 kyverno|kyverno
@@ -39,7 +40,6 @@ continuous-promotion|continuousPromotion
 database-connector|databaseConnector
 namespace-sync|namespaceSync
 private-nodes|privateNodes
-postgres|postgres
 rancher|rancher
 resolve-dns|resolveDNS
 tenant-observability|tenantObservability
@@ -69,6 +69,9 @@ canonical_use_case_name() {
     crossplane)
       printf '%s\n' "crossplane"
       ;;
+    custom-resource-sync|customresourcesync|customResourceSync|postgres)
+      printf '%s\n' "custom-resource-sync"
+      ;;
     eso)
       printf '%s\n' "eso"
       ;;
@@ -89,9 +92,6 @@ canonical_use_case_name() {
       ;;
     private-nodes|privatenodes|privateNodes)
       printf '%s\n' "private-nodes"
-      ;;
-    postgres)
-      printf '%s\n' "postgres"
       ;;
     rancher)
       printf '%s\n' "rancher"
@@ -121,6 +121,7 @@ label_key_for_use_case() {
     auto-snapshots) printf '%s\n' "autoSnapshots" ;;
     connected-host-cluster) printf '%s\n' "connectedHostCluster" ;;
     crossplane) printf '%s\n' "crossplane" ;;
+    custom-resource-sync) printf '%s\n' "customResourceSync" ;;
     eso) printf '%s\n' "eso" ;;
     flux) printf '%s\n' "flux" ;;
     kyverno) printf '%s\n' "kyverno" ;;
@@ -128,7 +129,6 @@ label_key_for_use_case() {
     database-connector) printf '%s\n' "databaseConnector" ;;
     namespace-sync) printf '%s\n' "namespaceSync" ;;
     private-nodes) printf '%s\n' "privateNodes" ;;
-    postgres) printf '%s\n' "postgres" ;;
     rancher) printf '%s\n' "rancher" ;;
     resolve-dns) printf '%s\n' "resolveDNS" ;;
     tenant-observability) printf '%s\n' "tenantObservability" ;;
@@ -291,9 +291,15 @@ render_cluster_local_behavior_labels() {
   local spec="$1"
   local indent="${2:-}"
   local enabled=""
+  local cnpg="false"
   local legacy_argo_kargo="false"
 
   enabled="$(resolve_use_case_selection "$spec")" || return 1
+
+  if use_case_list_contains "$enabled" "database-connector" \
+    || use_case_list_contains "$enabled" "custom-resource-sync"; then
+    cnpg="true"
+  fi
 
   # On the local-contained vind path, continuous-promotion falls back to the
   # legacy Argo-managed Kargo install unless Flux is also enabled.
@@ -302,6 +308,7 @@ render_cluster_local_behavior_labels() {
     legacy_argo_kargo="true"
   fi
 
+  printf '%scnpg: "%s"\n' "$indent" "$cnpg"
   printf '%slegacyArgoKargo: "%s"\n' "$indent" "$legacy_argo_kargo"
 }
 
@@ -335,14 +342,15 @@ Supported use cases for the vind cluster-local secret:
 - connected-host-cluster
 - continuous-promotion
 - crossplane
+- custom-resource-sync
 - eso
 - flux
 - kyverno
 - database-connector
 - namespace-sync
-- postgres
 - rancher
 - resolve-dns
+- tenant-observability
 - virtual-scheduler
 - vnode
 

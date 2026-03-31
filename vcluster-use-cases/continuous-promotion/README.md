@@ -81,10 +81,12 @@ The Argo CD Applications that target those sleeping vCluster instances still nee
 - `metadata.labels.vclusterProjectId`
 - `metadata.labels.vclusterName`
 
-When one of those Applications becomes `OutOfSync`, Argo CD Notifications sends
-a webhook to the shared `vcluster-wakeup-proxy` service. The proxy then issues
-the wake-triggering request to vCluster Platform for the target VCI, instead of
-waiting for normal Argo polling to wake it indirectly.
+When one of those Applications becomes `OutOfSync`, or when it falls into a
+stale `Synced` / `Unknown` state while Argo records a failed sync or `Unknown`
+health because the destination API is asleep, Argo CD Notifications sends a webhook to the shared
+`vcluster-wakeup-proxy` service. The proxy then issues the wake-triggering
+request to vCluster Platform for the target VCI, instead of waiting for normal
+Argo polling to wake it indirectly.
 
 The shared notification template and proxy live under the pull-request-environments use case (that is enabled by default for vCP Demo Generator environments):
 

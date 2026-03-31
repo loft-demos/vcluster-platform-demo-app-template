@@ -31,6 +31,7 @@ Main repo areas:
 - [vcluster-use-cases/](./vcluster-use-cases): demo use cases
 - [vind-demo-cluster/](./vind-demo-cluster): self-contained `vind` bootstrap
 - [scripts/](./scripts): local helper scripts
+- [docs/self-service-enablement/README.md](./docs/self-service-enablement/README.md): enablement demo flow for self-service provisioning, project multi-tenancy, and RBAC
 - [docs/secret-contract.md](./docs/secret-contract.md): secret contract for ESO / 1Password
 
 ## Available Use Cases
@@ -54,7 +55,7 @@ Main repo areas:
 | [`continuous-promotion`](./vcluster-use-cases/continuous-promotion/) | Uses Kargo, Argo CD, sleeping vCluster instances, and a shared-node pre-prod gate where the app can consume host-managed ESO-backed config before promotion. | `Depends` | `Yes` | [Repo](./vcluster-use-cases/continuous-promotion/README.md), [Kargo](https://docs.kargo.io) |
 | [`crossplane`](./vcluster-use-cases/crossplane/) | Crossplane providers, compositions, and claims used for webhook automation and PR environment orchestration. | `Depends` | `TBD` | [Repo](./vcluster-use-cases/crossplane/README.md) |
 | [`custom-resource-definitions`](./vcluster-use-cases/custom-resource-definitions/) | Reserved area for CRD-focused demos and examples that depend on installing or exposing custom resource definitions. | `Depends` | `TBD` | [Repo](./vcluster-use-cases/custom-resource-definitions/) |
-| [`custom-resource-sync`](./vcluster-use-cases/custom-resource-sync/) | Syncs custom resources such as Postgres operator objects between the host and the vCluster side. | `Yes` | `TBD` | [Repo](./vcluster-use-cases/custom-resource-sync/), [Custom resources to host](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/sync/to-host/advanced/custom-resources) |
+| [`custom-resource-sync`](./vcluster-use-cases/custom-resource-sync/) | Syncs CloudNative PG `Cluster` resources from a vCluster to a host-side CNPG operator. | `Yes` | `TBD` | [Repo](./vcluster-use-cases/custom-resource-sync/), [Custom resources to host](https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/sync/to-host/advanced/custom-resources) |
 | [`database-connector`](./vcluster-use-cases/database-connector/) | Uses the vCluster Platform database connector with CloudNative PG as an external backing store for vCluster instances. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/database-connector/README.md), [Database connector](https://www.vcluster.com/docs/platform/administer/connector/database) |
 | [`external-secrets-operator`](./vcluster-use-cases/external-secrets-operator/) | Installs ESO and shows how to integrate external secret delivery into vCluster and Platform flows. | `Enterprise` | `TBD` | [Repo](./vcluster-use-cases/external-secrets-operator/README.md), [External Secrets integration](https://www.vcluster.com/docs/vcluster/integrations/external-secrets/external-secrets) |
 | [`flux`](./vcluster-use-cases/flux/) | Flux Operator, Flux-managed vCluster instances, and Flux-based pull request environments. | `Depends` | `TBD` | [Repo](./vcluster-use-cases/flux/README.md) |
@@ -99,7 +100,7 @@ kubectl -n argocd label secret cluster-local \
 Disable a use case:
 
 ```bash
-kubectl -n argocd label secret cluster-local postgres=false --overwrite
+kubectl -n argocd label secret cluster-local customResourceSync=false --overwrite
 ```
 
 Enable a few more use cases with the exact label keys:
@@ -107,6 +108,8 @@ Enable a few more use cases with the exact label keys:
 ```bash
 kubectl -n argocd label secret cluster-local \
   argoCdInVcluster=true \
+  customResourceSync=true \
+  cnpg=true \
   connectedHostCluster=true \
   namespaceSync=true \
   privateNodes=true \
@@ -132,13 +135,13 @@ The label keys currently used by the repo are:
 | `connected-host-cluster` | `connectedHostCluster` |
 | `continuous-promotion` | `continuousPromotion` |
 | `crossplane` | `crossplane` |
+| `custom-resource-sync` | `customResourceSync` |
 | `eso` | `eso` |
 | `flux` | `flux` |
 | `kyverno` | `kyverno` |
 | `database-connector` | `databaseConnector` |
 | `namespace-sync` | `namespaceSync` |
 | `private-nodes` | `privateNodes` |
-| `postgres` | `postgres` |
 | `rancher` | `rancher` |
 | `resolve-dns` | `resolveDNS` |
 | `tenant-observability` | `tenantObservability` |
@@ -149,11 +152,14 @@ Additional behavior toggle:
 
 | Purpose | `cluster-local` label |
 | --- | --- |
+| install the shared host-side CNPG operator for `database-connector` and `custom-resource-sync` | `cnpg` |
 | opt into the legacy Argo-managed Kargo install for `continuous-promotion` | `legacyArgoKargo` |
 
 Notes:
 
 - on the `vind` path, the bootstrap `--use-cases` flag writes these labels for you
+- on the `vind` path, `cnpg` is derived automatically when either `database-connector` or `custom-resource-sync` is enabled
+- if you edit `argocd/cluster-local` manually, set `cnpg=true` whenever either `databaseConnector=true` or `customResourceSync=true`
 - on the `vind` self-contained path, `legacyArgoKargo` is derived automatically when `continuous-promotion` is enabled without `flux`, so you do not need to set that label by hand
 - on the Demo Generator path, the initial values usually come from template parameters and the generated cluster secret
 - changing the secret directly is the fastest way to test another combination after the environment already exists

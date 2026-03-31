@@ -9,7 +9,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: guestbook-pre-prod
+  name: guestbook-ppg-pre-prod
   namespace: argocd
   labels:
     vclusterProjectId: default
@@ -40,7 +40,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: guestbook-pre-prod-gate-prod
+  name: guestbook-ppg-prod
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
@@ -55,7 +55,7 @@ spec:
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/pre-prod-gate-prod
   destination:
     server: https://kubernetes.default.svc
-    namespace: guestbook-prod
+    namespace: guestbook
   syncPolicy:
     automated:
       prune: true

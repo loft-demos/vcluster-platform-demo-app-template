@@ -5,6 +5,7 @@ resources:
   - ../../argocd-vcluster-add-ons-app.yaml
   - ../../argocd-vcluster-pull-request-environments-apps.yaml
   - ../../autosnapshots-appset.yaml
+  - ../../cnpg-appset.yaml
   - ../../connected-host-cluster-appset.yaml
   - ../../crossplane-appset.yaml
   - ../../eso-appset.yaml
@@ -16,7 +17,7 @@ resources:
   - ../../namespace-sync-appset.yaml
   - ../../auto-nodes-appset.yaml
   - ../../private-nodes-appset.yaml
-  - ../../postgres-appset.yaml
+  - ../../custom-resource-sync-appset.yaml
   - ../../rancher-appset.yaml
   - repo-app-pr-appset.yaml
   - ../../resolve-dns-appset.yaml
