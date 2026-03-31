@@ -2,7 +2,7 @@
 
 This directory contains the shared host-side Argo CD resources used to make
 vCluster sleep mode behave well with Argo CD for imported vCluster instances.
-That includes preventing routine Argo traffic from defeating sleep mode,
+That includes preventing routine Argo CD traffic from defeating sleep mode,
 providing a deliberate wake-up path when needed, and keeping Argo CD behavior
 clean while a destination vCluster is sleeping, waking, or ready again.
 
@@ -83,22 +83,22 @@ At a high level, the flow looks like this:
 1. A sleeping imported vCluster is intentionally ignoring normal `argo*`
    requests.
 2. A real deployment event happens, such as an `Application` becoming
-   `OutOfSync`, or Argo ending up in a stale `Synced` / `Unknown` state because
+   `OutOfSync`, or Argo CD ending up in a stale `Synced` / `Unknown` state because
    the destination API is asleep.
 3. Argo CD Notifications sends a webhook to `vcluster-wakeup-proxy`.
 4. The proxy forwards the wake-triggering `POST` to the vCluster Platform API
    path for the target `VirtualClusterInstance`.
-5. Once the vCluster begins waking, the watcher keeps Argo from repeatedly
+5. Once the vCluster begins waking, the watcher keeps Argo CD from repeatedly
    reconciling against a destination that is still sleeping or only partially
    ready.
 6. When the `VirtualClusterInstance` becomes ready again, the watcher removes
-   the pause behavior and nudges Argo to refresh and resume normal work.
+   the pause behavior and nudges Argo CD to refresh and resume normal work.
 
 The result is:
 
-- routine Argo cluster traffic does not keep the vCluster online
+- routine Argo CD cluster traffic does not keep the vCluster online
 - real sync activity can still wake the vCluster on demand
-- Argo behaves more cleanly while the destination transitions through sleeping
+- Argo CD behaves more cleanly while the destination transitions through sleeping
   and waking states
 
 ## Why `ignore-user-agents` And `skip-reconcile` Both Matter
@@ -106,11 +106,11 @@ The result is:
 These two controls complement each other, but they are not interchangeable.
 
 `sleepmode.loft.sh/ignore-user-agents: argo*` is the vCluster-side protection.
-It prevents routine Argo-originated API traffic from waking the sleeping
+It prevents routine Argo CD-originated API traffic from waking the sleeping
 vCluster in the first place.
 
 `argocd.argoproj.io/skip-reconcile: "true"` on the imported cluster Secret is
-the Argo-side pause switch. It tells Argo CD to skip reconciliation for apps
+the pause switch on the Argo CD side. It tells Argo CD to skip reconciliation for apps
 that target that cluster while the destination is sleeping or waking.
 
 That annotation is very relevant here, but it solves a different problem than
@@ -129,7 +129,7 @@ What the docs do not clearly say is:
 
 In other words:
 
-- `ignore-user-agents` reduces accidental wake-ups caused by routine Argo
+- `ignore-user-agents` reduces accidental wake-ups caused by routine Argo CD
   cluster traffic
 - `skip-reconcile` reduces noisy or premature app behavior while the cluster is
   intentionally unavailable
@@ -166,15 +166,15 @@ In this repo's configuration, the proxy:
 - treats transient wake-time upstream responses such as `502` and `504` as
   accepted for the wake path
 - patches the imported Argo CD cluster Secret using the template
-  `loft-{project}-vcluster-{virtualcluster}` so Argo refreshes its destination
+  `loft-{project}-vcluster-{virtualcluster}` so Argo CD refreshes its destination
   cluster cache sooner
 
 Why that matters:
 
 - the first wake request often reaches the platform before the destination API
   is ready to answer cleanly
-- Argo should treat that as "wake initiated" instead of "deployment failed"
-- refreshing the imported cluster Secret helps Argo notice the destination is
+- Argo CD should treat that as "wake initiated" instead of "deployment failed"
+- refreshing the imported cluster Secret helps Argo CD notice the destination is
   usable again faster
 
 The proxy is useful for Argo CD Notifications and for other callers too. In
@@ -212,10 +212,10 @@ In this repo's configuration, the watcher:
 
 Why that matters:
 
-- without the watcher, Argo can keep retrying a sleeping destination in noisy or
+- without the watcher, Argo CD can keep retrying a sleeping destination in noisy or
   confusing ways
 - a destination that is waking may still not be ready for real sync work yet
-- unpausing and refreshing Argo only when the VCI is ready gives a much cleaner
+- unpausing and refreshing Argo CD only when the VCI is ready gives a much cleaner
   handoff back to normal reconciliation
 
 ## Application Requirements

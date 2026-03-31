@@ -279,7 +279,7 @@ exist:
   than generic.
 - The `pull-request-vcluster` template referenced by the composition must exist
   for the vCluster instance reconciliation to succeed.
-- The Generator-vCluster Argo webhook path now waits for the internal
+- The Generator-vCluster Argo CD webhook path now waits for the internal
   `argocd-applicationset-controller` webhook service to answer a synthetic
   GitHub `ping` before Crossplane creates the external GitHub webhook objects.
   If that hook job fails, inspect the `argocd-github-webhooks` Argo CD

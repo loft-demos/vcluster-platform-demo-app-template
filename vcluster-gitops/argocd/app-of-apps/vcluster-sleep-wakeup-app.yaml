@@ -1,4 +1,4 @@
-# The Argo CD Application for shared wake-up plumbing for sleeping imported vClusters
+# The Argo CD Application for shared wake-up plumbing for sleeping imported vCluster instances
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

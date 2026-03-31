@@ -37,11 +37,11 @@ This setup enables the automatic creation of ephemeral PR vCluster instances for
 - Upon merging or closing the PR (or removing the `pr-vcluster` label), the host cluster Argo CD `ApplicationSet` triggers the deletion of the associated PR vCluster `Application` resulting in the deletion of the PR vCluster, keeping the system efficient and cost-effective.
 ```mermaid
 flowchart LR
-    PR-->Host-Argo;
-    Host-Argo-->Crossplane;
+    PR-->HostArgoCD[Host Argo CD];
+    HostArgoCD-->Crossplane;
     Crossplane-->PR-vCluster;
-    PR-vCluster-->vCluster-Argo;
-    vCluster-Argo-->PR-App;
+    PR-vCluster-->vClusterArgoCD[vCluster Argo CD];
+    vClusterArgoCD-->PR-App;
 ```
 This approach enables fast, isolated, and repeatable CI/CD workflows, enhancing development velocity and reducing integration risks.
 

@@ -1,4 +1,4 @@
-# Automated Pull Request Environments with vCluster Platform and ArgoCD 
+# Automated Pull Request Environments with vCluster Platform and Argo CD
 
 The `pr-environments` examples cover two different approaches for using vCluster Platform and Argo CD to create and deploy to ephemeral Kubernetes virtual clusters for GitHub Pull Requests. In both cases, a `VirtualClusterInstance` custom resource referencing a `VirtualClusterTemplate` resources is used to create a vCluster Platform managed vCluster instance.
 
@@ -8,32 +8,32 @@ The second approach leverages a pre-existing shared Argo CD instance that has be
 
 ## Shared Wake-Up Notifications
 
-The pull request examples consume a shared host-Argo wake-up stack that is now bootstrapped independently of this use case under [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md). The same pieces are reused by the pull request examples and by the continuous-promotion demos.
+The pull request examples consume a shared host Argo CD wake-up stack that is now bootstrapped independently of this use case under [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md). The same pieces are reused by the pull request examples and by the continuous-promotion demos.
 
 Why this exists:
 
 - Sleeping vCluster instances often use `sleepmode.loft.sh/ignore-user-agents: argo*` so normal Argo CD health checks do not constantly wake them up.
-- Once Argo's routine polling is ignored, Argo needs both a separate way to ask vCluster Platform to wake the target and a way to behave cleanly while that imported destination is still sleeping or waking.
+- Once Argo CD's routine polling is ignored, Argo CD needs both a separate way to ask vCluster Platform to wake the target and a way to behave cleanly while that imported destination is still sleeping or waking.
 
 The shared wake-up README also calls out an important Argo CD distinction here:
 Git polling, cluster cache and cluster-info traffic, and Application
-reconciliation are different loops. For sleepy imported vClusters, the
+reconciliation are different loops. For sleepy imported vCluster instances, the
 `ignore-user-agents` annotation mainly protects against the cluster-directed
-controller traffic, while `skip-reconcile` is used later as a temporary Argo-side
-pause for apps targeting that cluster. It is not documented as a full
+controller traffic, while `skip-reconcile` is used later as a temporary pause
+on the Argo CD side for apps targeting that cluster. It is not documented as a full
 replacement for `ignore-user-agents`, especially for clusters that are merely
 registered in Argo CD but not yet targeted by an Application.
 
 What the shared resources do:
 
 - [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/base/kustomization.yaml](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/base/kustomization.yaml) installs the shared `argocd-notifications-cm`, `argocd-notifications-secret`, `vcluster-wakeup-proxy`, and `vcluster-wakeup-watcher` resources into the host Argo CD instance.
-- [../../vcluster-gitops/argocd/app-of-apps/vcluster-sleep-wakeup-app.yaml](../../vcluster-gitops/argocd/app-of-apps/vcluster-sleep-wakeup-app.yaml) bootstraps that shared stack as part of the normal Argo app-of-apps flow.
+- [../../vcluster-gitops/argocd/app-of-apps/vcluster-sleep-wakeup-app.yaml](../../vcluster-gitops/argocd/app-of-apps/vcluster-sleep-wakeup-app.yaml) bootstraps that shared stack as part of the normal Argo CD app-of-apps flow.
 - `vcluster-wakeup-proxy` accepts the initial wake-triggering webhook and forwards it to vCluster Platform without treating transient wake-time responses as hard failures.
 - `vcluster-wakeup-watcher` observes `VirtualClusterInstance` state and pauses or resumes imported-cluster reconciliation so Argo CD reacts more cleanly while a destination is sleeping, waking, or ready again.
 
 How the flow works:
 
-1. An Argo CD `Application` that targets a sleeping vCluster either becomes `OutOfSync`, or it falls into a stale `Synced` / `Unknown` state while Argo records a failed sync or `Unknown` health because the target API is asleep.
+1. An Argo CD `Application` that targets a sleeping vCluster either becomes `OutOfSync`, or it falls into a stale `Synced` / `Unknown` state while Argo CD records a failed sync or `Unknown` health because the target API is asleep.
 2. The `wakeup-vcluster` notification trigger fires.
 3. Argo CD Notifications renders the webhook path using the app's `vclusterProjectId` and `vclusterName` labels.
 4. The request is sent to `vcluster-wakeup-proxy`, which forwards the wake-triggering call to the vCluster Platform path for that VCI.
@@ -60,7 +60,7 @@ metadata:
     vclusterName: pre-prod-gate-pre-prod
 ```
 
-Those values must identify the vCluster Platform project and the `VirtualClusterInstance` name, not the Argo CD cluster destination name. For example, Argo may target a destination like `loft-default-vcluster-pre-prod-gate-pre-prod`, while the wake-up template still needs `default` and `pre-prod-gate-pre-prod` to construct the vCluster Platform request path.
+Those values must identify the vCluster Platform project and the `VirtualClusterInstance` name, not the Argo CD cluster destination name. For example, Argo CD may target a destination like `loft-default-vcluster-pre-prod-gate-pre-prod`, while the wake-up template still needs `default` and `pre-prod-gate-pre-prod` to construct the vCluster Platform request path.
 
 This same shared wake-up plumbing is also referenced from [../continuous-promotion/README.md](../continuous-promotion/README.md), because the continuous-promotion demos reuse the same notification template, proxy, and watcher.
 

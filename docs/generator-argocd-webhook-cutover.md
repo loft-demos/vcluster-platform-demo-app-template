@@ -1,6 +1,6 @@
-# Generator Argo Webhook Cutover
+# Generator Argo CD Webhook Cutover
 
-This repo now carries a dedicated declarative GitHub webhook path for the Argo
+This repo now carries a dedicated declarative GitHub webhook path for the Argo CD
 CD instance installed in the Generator vCluster Platform vCluster.
 
 That Generator-specific path is separate from the existing
@@ -25,7 +25,7 @@ webhook flow:
 - `vcluster-use-cases/crossplane/argocd-webhooks/argo-github-webhook.yaml`
 - `vcluster-use-cases/crossplane/argocd-webhooks/argo-appset-github-webhook.yaml`
 
-This is in addition to the pre-existing child-vCluster Argo path that still
+This is in addition to the pre-existing child-vCluster Argo CD path that still
 uses:
 
 - `vcluster-gitops/virtual-cluster-templates/base/argocd.yaml`
@@ -56,7 +56,7 @@ Remove:
 - `argo-webhook-url` and `argo-appset-webhook-url` `Secret`s from
   `vcluster-platform-demo-generator/vcluster-platform-gitops/virtual-cluster-templates/vcluster-platform-demo-template.yaml`
 
-The upstream Generator repo should no longer create the Argo webhook resources
+The upstream Generator repo should no longer create the Argo CD webhook resources
 or the URL secrets once this repo owns them.
 
 ## External Prerequisites
@@ -92,7 +92,7 @@ Use a single cutover window so both repos do not create the same GitHub
 webhooks at the same time:
 
 1. Deploy this repo version in the generated repo template flow.
-2. Remove the Argo webhook resources and URL secrets from `loft-demo-base`.
+2. Remove the Argo CD webhook resources and URL secrets from `loft-demo-base`.
 3. Recreate or update the affected Generator environments so only this repo
    owns those webhooks.
 4. Verify each generated GitHub repo now has exactly one Argo CD API webhook

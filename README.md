@@ -153,7 +153,7 @@ Additional behavior toggle:
 | Purpose | `cluster-local` label |
 | --- | --- |
 | install the shared host-side CNPG operator for `database-connector` and `custom-resource-sync` | `cnpg` |
-| opt into the legacy Argo-managed Kargo install for `continuous-promotion` | `legacyArgoKargo` |
+| opt into the legacy Argo CD-managed Kargo install for `continuous-promotion` | `legacyArgoKargo` |
 
 Notes:
 

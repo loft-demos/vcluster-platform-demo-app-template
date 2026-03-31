@@ -19,7 +19,7 @@ spec:
         openAPIV3Schema:
           description: >-
             A PullRequestEnvironment for virtual clusters is a composite
-            resource that represents a vCluster with ArgoCD installed and
+            resource that represents a vCluster with Argo CD installed and
             configured with an ApplicationSet for a GitHub Pull Request.
           properties:
             spec:

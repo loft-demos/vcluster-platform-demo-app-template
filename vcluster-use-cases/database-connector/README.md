@@ -93,7 +93,7 @@ demo password (`vcluster-demo-postgres`). CNPG reads `cnpg-postgres-admin` and s
 the postgres superuser password to match, so the connector always authenticates.
 
 **vind / local path**: no runtime patching needed. Both secrets are applied from git
-with the same password. ArgoCD self-heal keeps them consistent automatically.
+with the same password. Argo CD self-heal keeps them consistent automatically.
 
 **Managed Generator path**: replace both secrets via 1Password / ESO with a real
 password before the environment is provisioned.

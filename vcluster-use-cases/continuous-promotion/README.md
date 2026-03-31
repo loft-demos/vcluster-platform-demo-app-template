@@ -54,8 +54,8 @@ Both continuous-promotion vCluster templates use `sleepmode.loft.sh/ignore-user-
 
 The shared wake-up docs explain the Argo CD behavior behind that choice in more
 detail: Git polling, cluster cache and cluster-info traffic, and Application
-reconciliation are different things. For sleepy imported vClusters, the
-annotation is there to stop routine cluster-directed Argo traffic from waking
+reconciliation are different things. For sleepy imported vCluster instances, the
+annotation is there to stop routine cluster-directed Argo CD traffic from waking
 the destination all the time, while `argocd.argoproj.io/skip-reconcile` is used
 separately as a temporary controller-side pause for apps that target that
 cluster. The docs do not clearly define that cluster Secret annotation as a
@@ -65,7 +65,7 @@ registered in Argo CD before any app targets it.
 Because of that, sleeping-stage promotions now use two wake-up paths:
 
 1. Kargo proactively wakes the target vCluster before `argocd-update`.
-2. Argo CD Notifications remains the shared fallback for Argo-driven syncs and other non-Kargo flows.
+2. Argo CD Notifications remains the shared fallback for Argo CD-driven syncs and other non-Kargo flows.
 
 For the Kargo-owned path, each project now includes:
 
@@ -76,13 +76,13 @@ For the Kargo-owned path, each project now includes:
 - a second inline `http` promotion step that polls the corresponding
   `VirtualClusterInstance` until `status.phase` becomes `Ready`
 
-That means Kargo no longer waits for Argo to observe `OutOfSync` before a
+That means Kargo no longer waits for Argo CD to observe `OutOfSync` before a
 sleeping target starts waking up.
 
 It also means `argocd-update` no longer races the wake-up process for sleeping
 stage vCluster instances. Note that this readiness gate reduces promotion-time errors,
 but `argocd-update` still registers ongoing Stage health checks in Kargo, so a
-sleeping target can still appear `Unknown` later if Argo cannot assess the
+sleeping target can still appear `Unknown` later if Argo CD cannot assess the
 Application while the vCluster is asleep.
 
 The Argo CD Applications that target those sleeping vCluster instances still need explicit wake-up metadata:
@@ -92,18 +92,18 @@ The Argo CD Applications that target those sleeping vCluster instances still nee
 - `metadata.labels.vclusterName`
 
 When one of those Applications becomes `OutOfSync`, or when it falls into a
-stale `Synced` / `Unknown` state while Argo records a failed sync or `Unknown`
+stale `Synced` / `Unknown` state while Argo CD records a failed sync or `Unknown`
 health because the destination API is asleep, Argo CD Notifications sends a webhook to the shared
 `vcluster-wakeup-proxy` service. The proxy then issues the wake-triggering
 request to vCluster Platform for the target VCI, instead of waiting for normal
-Argo polling to wake it indirectly.
+Argo CD polling to wake it indirectly.
 
 The shared `vcluster-wakeup-watcher` then complements that proxy flow by
 watching `VirtualClusterInstance` state from the management cluster API. While
 the target is sleeping or waking, it marks the imported Argo CD cluster Secret
-to skip reconcile so Argo does not keep hammering an unavailable destination.
+to skip reconcile so Argo CD does not keep hammering an unavailable destination.
 When the VCI becomes ready again, it removes that pause behavior and triggers an
-Argo refresh for matching `Application` resources. That is why the watcher
+Argo CD refresh for matching `Application` resources. That is why the watcher
 pattern makes sense here: `skip-reconcile=true` while the VCI is sleeping or
 waking, then remove it once the VCI is ready.
 
@@ -183,13 +183,13 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/progressive-delivery/namespace.yaml](manifests/progressive-delivery/namespace.yaml) | Pre-creates the `progressive-delivery` namespace with `kargo.akuity.io/project: "true"` so Kargo can adopt it |
 | [manifests/progressive-delivery/kargo-project.yaml](manifests/progressive-delivery/kargo-project.yaml) | Kargo Project (adopts the labeled `progressive-delivery` namespace) |
 | [manifests/progressive-delivery/kargo-warehouse.yaml](manifests/progressive-delivery/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
-| [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + inline wakeup `http` promotion steps before each Argo-driven promotion |
+| [manifests/progressive-delivery/kargo-stages.yaml](manifests/progressive-delivery/kargo-stages.yaml) | dev, staging, prod Stages + inline wakeup `http` promotion steps before each Argo CD-driven promotion |
 | [manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml](manifests/progressive-delivery/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
-| [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md) | Shared host-Argo wake-up stack used by the stage Applications, including both `vcluster-wakeup-proxy` and `vcluster-wakeup-watcher` |
+| [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md) | Shared host Argo CD wake-up stack used by the stage Applications, including both `vcluster-wakeup-proxy` and `vcluster-wakeup-watcher` |
 | [manifests/progressive-delivery/kargo-analysis-template.yaml](manifests/progressive-delivery/kargo-analysis-template.yaml) | curl health-check AnalysisTemplate |
-| [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vCluster instances with sleep mode enabled and Argo user-agent polling ignored |
+| [manifests/progressive-delivery/kargo-vcluster-template.yaml](manifests/progressive-delivery/kargo-vcluster-template.yaml) | VCT for stage vCluster instances with sleep mode enabled and Argo CD user-agent polling ignored |
 | [manifests/progressive-delivery/kargo-vcluster-instances.yaml](manifests/progressive-delivery/kargo-vcluster-instances.yaml) | pd-dev, pd-staging, pd-prod VCIs |
-| [manifests/progressive-delivery/guestbook-apps.yaml](manifests/progressive-delivery/guestbook-apps.yaml) | Stable ArgoCD Applications for dev, staging, and prod, with wake-up notification subscriptions on the sleeping-vCluster targets |
+| [manifests/progressive-delivery/guestbook-apps.yaml](manifests/progressive-delivery/guestbook-apps.yaml) | Stable Argo CD Applications for dev, staging, and prod, with wake-up notification subscriptions on the sleeping-vCluster targets |
 
 ---
 
@@ -250,12 +250,12 @@ Warehouse ({REPO_NAME}-demo-app from configured OCI registry)
 | [manifests/pre-prod-gate/kargo-warehouse.yaml](manifests/pre-prod-gate/kargo-warehouse.yaml) | Watches `{REPO_NAME}-demo-app` image tags in the configured OCI registry |
 | [manifests/pre-prod-gate/kargo-stages.yaml](manifests/pre-prod-gate/kargo-stages.yaml) | pre-prod and prod Stages + soak time, with an inline wakeup `http` step before pre-prod `argocd-update` |
 | [manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml](manifests/pre-prod-gate/vcluster-wakeup-proxy-secret.yaml) | ESO-managed generic secret for the wakeup-proxy bearer token |
-| [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md) | Shared host-Argo wake-up stack used by the pre-prod Application, including both `vcluster-wakeup-proxy` and `vcluster-wakeup-watcher` |
+| [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md) | Shared host Argo CD wake-up stack used by the pre-prod Application, including both `vcluster-wakeup-proxy` and `vcluster-wakeup-watcher` |
 | [manifests/pre-prod-gate/shared-demo-cluster-store.yaml](manifests/pre-prod-gate/shared-demo-cluster-store.yaml) | Host-cluster Kubernetes-provider `ClusterSecretStore`, source Secret, and RBAC used by both the shared-node pre-prod vCluster app and the host-cluster prod app |
 | [manifests/pre-prod-gate/kargo-analysis-template.yaml](manifests/pre-prod-gate/kargo-analysis-template.yaml) | Integration test Job AnalysisTemplate |
-| [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, ArgoCD import enabled, and Argo user-agent polling ignored |
+| [manifests/pre-prod-gate/kargo-vcluster-template.yaml](manifests/pre-prod-gate/kargo-vcluster-template.yaml) | VCT with 10-minute sleep, Argo CD import enabled, and Argo CD user-agent polling ignored |
 | [manifests/pre-prod-gate/kargo-vcluster-instances.yaml](manifests/pre-prod-gate/kargo-vcluster-instances.yaml) | `pre-prod-gate-pre-prod` VCI |
-| [manifests/pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) | ArgoCD Applications for pre-prod and prod, both pointing at pre-prod-gate-specific stage overlays with a shared host-cluster `ExternalSecret` |
+| [manifests/pre-prod-gate/guestbook-apps.yaml](manifests/pre-prod-gate/guestbook-apps.yaml) | Argo CD Applications for pre-prod and prod, both pointing at pre-prod-gate-specific stage overlays with a shared host-cluster `ExternalSecret` |
 
 The pre-prod-gate guestbook overlays under [guestbook/stages/pre-prod-gate-pre-prod](guestbook/stages/pre-prod-gate-pre-prod/kustomization.yaml) and [guestbook/stages/pre-prod-gate-prod](guestbook/stages/pre-prod-gate-prod/kustomization.yaml) both render the same `guestbook-shared-config` Secret from `ClusterSecretStore/pre-prod-gate-shared-demo-store`, then expose it to the app as `DEMO_SHARED_MESSAGE`. The host and pre-prod ingress hosts follow the same repo-scoped pattern as the other guestbook stages: `guestbook-pre-prod-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}` and `guestbook-prod-{REPLACE_REPO_NAME}.{REPLACE_BASE_DOMAIN}`.
 
@@ -267,14 +267,14 @@ Because this demo store uses ESO's Kubernetes provider, [shared-demo-cluster-sto
 
 ### Kargo admin credentials
 
-The legacy Argo-managed `kargo-helm-app.yaml` path references two placeholders that must be added to `scripts/replace-text-local.sh`:
+The legacy Argo CD-managed `kargo-helm-app.yaml` path references two placeholders that must be added to `scripts/replace-text-local.sh`:
 
 | Placeholder | How to generate |
 |---|---|
 | `{REPLACE_KARGO_ADMIN_PASSWORD_HASH}` | `htpasswd -bnBC 10 "" <password> \| tr -d ':\n' \| sed 's/$2y/$2a/'` |
 | `{REPLACE_KARGO_TOKEN_SIGNING_KEY}` | `openssl rand -base64 32` |
 
-If you prefer not to keep those values in Argo CD Helm values, there is now a Flux-owned host-cluster alternative under [../flux/host-apps/kargo](../flux/host-apps/kargo) that reads auth settings from a Secret via `HelmRelease.valuesFrom`. That Flux path is enabled when `continuousPromotion=true` and `flux=true`. The legacy Argo-managed Kargo install now lives under [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml) and is selected when `legacyArgoKargo=true`. On the `vind` self-contained path, bootstrap sets that label automatically whenever `continuous-promotion` is enabled without `flux`.
+If you prefer not to keep those values in Argo CD Helm values, there is now a Flux-owned host-cluster alternative under [../flux/host-apps/kargo](../flux/host-apps/kargo) that reads auth settings from a Secret via `HelmRelease.valuesFrom`. That Flux path is enabled when `continuousPromotion=true` and `flux=true`. The legacy Argo CD-managed Kargo install now lives under [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml) and is selected when `legacyArgoKargo=true`. On the `vind` self-contained path, bootstrap sets that label automatically whenever `continuous-promotion` is enabled without `flux`.
 
 On the Flux path, the live auth secret is rendered by
 [../flux/host-apps/kargo/auth/kargo-auth-values-external-secret.yaml](../flux/host-apps/kargo/auth/kargo-auth-values-external-secret.yaml).
@@ -291,7 +291,7 @@ critical path:
 
 - the ESO app-of-apps `ApplicationSet` is synced earlier so the operator and
   `ClusterSecretStore` are available sooner
-- the ESO Helm app no longer uses Argo `Replace=true`, which was contributing
+- the ESO Helm app no longer uses Argo CD `Replace=true`, which was contributing
   to webhook/cert bootstrap churn
 - the Kargo auth Secret and per-project wakeup token Secrets are all sourced
   from 1Password-backed `ExternalSecret`s
@@ -308,7 +308,7 @@ cleanly even when ESO takes a while to produce the initial Secrets.
 
 ### Kargo version
 
-Check [github.com/akuity/kargo/releases](https://github.com/akuity/kargo/releases) for the latest chart version and update `targetRevision` in either the Flux `HelmRelease` at [../flux/host-apps/kargo/install/kargo-helmrelease.yaml](../flux/host-apps/kargo/install/kargo-helmrelease.yaml) or the legacy Argo path at [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml).
+Check [github.com/akuity/kargo/releases](https://github.com/akuity/kargo/releases) for the latest chart version and update `targetRevision` in either the Flux `HelmRelease` at [../flux/host-apps/kargo/install/kargo-helmrelease.yaml](../flux/host-apps/kargo/install/kargo-helmrelease.yaml) or the legacy Argo CD path at [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml).
 
 ### Forgejo runner registration
 
@@ -354,9 +354,9 @@ EOF
 done
 ```
 
-### ArgoCD cluster names
+### Argo CD cluster names
 
-The `destination.name` values in the ApplicationSet and ArgoCD Applications follow the pattern `loft-<project>-vcluster-<vci-name>` (e.g. `loft-default-vcluster-pd-dev`). These are set automatically when the VCIs are imported into ArgoCD via the `loft.sh/import-argocd: "true"` label on the VCT.
+The `destination.name` values in the ApplicationSet and Argo CD Applications follow the pattern `loft-<project>-vcluster-<vci-name>` (e.g. `loft-default-vcluster-pd-dev`). These are set automatically when the VCIs are imported into Argo CD via the `loft.sh/import-argocd: "true"` label on the VCT.
 
 ### Production destination (pre-prod-gate)
 

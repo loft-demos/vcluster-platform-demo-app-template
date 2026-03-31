@@ -7,7 +7,7 @@ metadata:
     vcluster.com/template-icon: vcluster-box.svg
 spec:
   displayName: Kargo Stage vCluster Template
-  description: Lightweight vCluster for Kargo promotion stage environments. Registered with ArgoCD so Kargo can promote freight directly into the vCluster.
+  description: Lightweight vCluster for Kargo promotion stage environments. Registered with Argo CD so Kargo can promote freight directly into the vCluster.
   owner:
     team: loft-admins
   template:
@@ -35,7 +35,7 @@ spec:
           annotations:
             sleepmode.loft.sh/ignore-user-agents: argo*
           labels:
-            # Register this vCluster as an ArgoCD cluster destination
+            # Register this vCluster as an Argo CD cluster destination
             loft.sh/import-argocd: 'true'
         instanceTemplate:
           metadata:

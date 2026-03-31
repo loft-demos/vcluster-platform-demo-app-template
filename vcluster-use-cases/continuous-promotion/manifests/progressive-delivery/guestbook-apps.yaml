@@ -1,11 +1,11 @@
-# ArgoCD Applications for the progressive-delivery pipeline.
+# Argo CD Applications for the progressive-delivery pipeline.
 # Kargo updates the image tag on these Applications via argocd-update promotion steps.
 #
 # guestbook-dev:     targets the pd-dev vCluster
 # guestbook-staging: targets the pd-staging vCluster
 # guestbook-prod:    targets the pd-prod vCluster
 #
-# Sync wave 3 ensures VCIs (wave 2) are registered with ArgoCD before these Apps are created.
+# Sync wave 3 ensures VCIs (wave 2) are registered with Argo CD before these Apps are created.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

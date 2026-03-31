@@ -6,7 +6,7 @@ This guide walks through every file that needs to change when adding a new use c
 
 Each use case follows the same activation pattern:
 
-1. A label is set on the ArgoCD `cluster-local` secret (e.g. `myFeature: 'true'`)
+1. A label is set on the Argo CD `cluster-local` secret (e.g. `myFeature: 'true'`)
 2. An **ApplicationSet** in `vcluster-gitops/argocd/app-of-apps/` watches for that label
 3. When the label matches, the ApplicationSet creates an **Application** pointing at `vcluster-use-cases/<use-case>/apps/`
 4. That Application syncs the **manifests** for the use case (Helm releases, VirtualClusterTemplates, secrets, etc.)
@@ -19,7 +19,7 @@ Each use case follows the same activation pattern:
 vcluster-use-cases/my-feature/
 ├── README.md
 ├── apps/
-│   └── my-feature-manifests.yaml        # ArgoCD Application
+│   └── my-feature-manifests.yaml        # Argo CD Application
 └── manifests/
     └── *.yaml                           # Kubernetes resources for this use case
 ```
@@ -43,7 +43,7 @@ vcluster-use-cases/my-feature/
 
 ---
 
-## Step 2 — Create the ArgoCD Application
+## Step 2 — Create the Argo CD Application
 
 **`vcluster-use-cases/my-feature/apps/my-feature-manifests.yaml`**
 
@@ -234,7 +234,7 @@ If the use case should be surfaced in vCP Generator-provisioned environments, up
   section: Use Case Examples
 ```
 
-**2. Add the label to the `cluster-local` ArgoCD secret** in the same template:
+**2. Add the label to the `cluster-local` Argo CD secret** in the same template:
 
 ```yaml
 labels:
@@ -256,7 +256,7 @@ Add your Kubernetes resources to `vcluster-use-cases/my-feature/manifests/`. Com
 | `Secret` | Credentials, connection strings (use `{REPLACE_*}` placeholders for env-specific values) |
 | `VirtualClusterInstance` | A demo instance of the vCluster to show in the UI |
 
-### ArgoCD sync waves
+### Argo CD sync waves
 
 Use `argocd.argoproj.io/sync-wave` annotations to control apply order within a sync:
 
@@ -294,7 +294,7 @@ Add a `README.md` to `vcluster-use-cases/my-feature/` describing:
 
 ## Checklist
 
-- [ ] `vcluster-use-cases/my-feature/apps/my-feature-manifests.yaml` — ArgoCD Application
+- [ ] `vcluster-use-cases/my-feature/apps/my-feature-manifests.yaml` — Argo CD Application
 - [ ] `vcluster-use-cases/my-feature/manifests/*.yaml` — Kubernetes resources
 - [ ] `vcluster-gitops/argocd/app-of-apps/my-feature-appset.yaml` — ApplicationSet
 - [ ] `vcluster-gitops/argocd/app-of-apps/overlays/local-contained/kustomization.yaml` — AppSet added to resources
