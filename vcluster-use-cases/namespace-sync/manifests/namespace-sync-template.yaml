@@ -11,8 +11,6 @@ spec:
   description: This template deploys a virtual cluster with namespace sync enabled.
   template:
     metadata:
-      annotations:
-        sleepmode.loft.sh/ignore-user-agents: argo*
       labels:
         loft.sh/import-argocd: 'true'
     instanceTemplate:

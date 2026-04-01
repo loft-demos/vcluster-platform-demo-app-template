@@ -6,33 +6,6 @@ metadata:
 data:
   context: |
     argocdUrl: https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}
-  # Define the webhook service for vCluster Platform
-  service.webhook.vcluster-platform: |
-    url: http://vcluster-wakeup-proxy.argocd.svc.cluster.local
-    headers:
-    - name: Authorization
-      value: "Bearer $accessKey"
-    - name: User-Agent
-      value: "vcluster-wakeup"
-  # Template for waking up the vCluster via vCluster Platform API
-  template.wakeup-vcluster: |
-    webhook:
-      vcluster-platform:
-        method: POST
-        path: /kubernetes/project/{{ index .app.metadata.labels "vclusterProjectId" }}/virtualcluster/{{ index .app.metadata.labels "vclusterName" }}
-  # Trigger wake-up when the app either becomes OutOfSync or Argo CD reports an
-  # Unknown/failed state against a sleeping destination. Sleeping imported
-  # clusters often surface as sync.status=Unknown rather than Synced.
-  trigger.wakeup-vcluster: |
-    - description: "Wake vCluster when app needs a sleeping destination"
-      when: app.status.sync.status == 'OutOfSync'
-        or ((app.status.sync.status == 'Synced' or app.status.sync.status == 'Unknown')
-          and (
-            app.status.health.status == 'Unknown'
-            or (app.status.operationState != nil
-              and app.status.operationState.phase == 'Failed')
-          ))
-      send: [wakeup-vcluster]
   service.github: |
     appID: $githubAppID
     installationID: $githubAppInstallationID

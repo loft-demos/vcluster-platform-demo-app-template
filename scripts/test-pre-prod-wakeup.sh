@@ -5,11 +5,11 @@ set -euo pipefail
 KUBECTL="${KUBECTL:-kubectl}"
 
 APP_NAMESPACE="${APP_NAMESPACE:-argocd}"
-APP_NAME="${APP_NAME:-guestbook-pre-prod}"
+APP_NAME="${APP_NAME:-guestbook-ppg-pre-prod}"
 VCI_NAMESPACE="${VCI_NAMESPACE:-p-default}"
 VCI_NAME="${VCI_NAME:-pre-prod-gate-pre-prod}"
-NOTIFICATIONS_NAMESPACE="${NOTIFICATIONS_NAMESPACE:-argocd}"
-NOTIFICATIONS_CONFIGMAP="${NOTIFICATIONS_CONFIGMAP:-argocd-notifications-cm}"
+WATCHER_NAMESPACE="${WATCHER_NAMESPACE:-argocd}"
+WATCHER_DEPLOYMENT="${WATCHER_DEPLOYMENT:-vcluster-gitops-watcher}"
 WAIT_SECONDS="${WAIT_SECONDS:-180}"
 POLL_SECONDS="${POLL_SECONDS:-2}"
 
@@ -28,21 +28,21 @@ Environment overrides:
   APP_NAME
   VCI_NAMESPACE
   VCI_NAME
+  WATCHER_NAMESPACE
+  WATCHER_DEPLOYMENT
   WAIT_SECONDS
   POLL_SECONDS
   KUBECTL
 
 What "scenario" does:
   1. Forces the target VCI to sleep
-  2. Starts log tails for notifications + wakeup proxy
+  2. Starts log tails for vcluster-gitops-watcher
   3. Triggers a manual Argo CD sync on the target Application
-  4. Polls app + VCI status until timeout
+  4. Polls app + imported cluster Secret + VCI status until timeout
 
 Notes:
-  - The wake-up path is considered proven once the proxy logs a wake request and
-    the VCI transitions away from Sleeping.
-  - A 403 from the proxy's cluster-secret patch is a separate follow-up issue;
-    it does not mean the wake request itself failed.
+  - The wake-up path is considered proven once the watcher logs a wake attempt
+    and the VCI transitions away from Sleeping.
 EOF
 }
 
@@ -67,6 +67,19 @@ app_snapshot() {
     "${image:-<none>}" "${revision:-<none>}" "${message:-<none>}"
 }
 
+cluster_secret_name() {
+  jsonpath application "$APP_NAMESPACE" "$APP_NAME" '{.spec.destination.name}'
+}
+
+cluster_secret_snapshot() {
+  local name skip refresh
+  name="$(cluster_secret_name)"
+  skip="$(jsonpath secret argocd "$name" '{.metadata.annotations.argocd\.argoproj\.io/skip-reconcile}')"
+  refresh="$(jsonpath secret argocd "$name" '{.metadata.annotations.argocd\.argoproj\.io/refresh}')"
+  printf 'cluster-secret name=%s skip-reconcile=%s refresh=%s\n' \
+    "${name:-<none>}" "${skip:-<none>}" "${refresh:-<none>}"
+}
+
 vci_snapshot() {
   local phase ready_reason force
   phase="$(jsonpath virtualclusterinstance "$VCI_NAMESPACE" "$VCI_NAME" '{.status.phase}')"
@@ -76,15 +89,9 @@ vci_snapshot() {
     "${phase:-<none>}" "${ready_reason:-<none>}" "${force:-<none>}"
 }
 
-show_trigger() {
-  echo "trigger.wakeup-vcluster:"
-  jsonpath configmap "$NOTIFICATIONS_NAMESPACE" "$NOTIFICATIONS_CONFIGMAP" '{.data.trigger\.wakeup-vcluster}'
-  echo
-}
-
 status_cmd() {
-  show_trigger
   app_snapshot
+  cluster_secret_snapshot
   vci_snapshot
 }
 
@@ -132,27 +139,28 @@ wait_for_phase() {
 }
 
 watch_cmd() {
-  local notif_pid proxy_pid status_pid
-  trap 'kill "${notif_pid:-0}" "${proxy_pid:-0}" "${status_pid:-0}" >/dev/null 2>&1 || true' EXIT INT TERM
+  local watcher_pid status_pid
+  trap 'kill "${watcher_pid:-0}" "${status_pid:-0}" >/dev/null 2>&1 || true' EXIT INT TERM
 
-  "$KUBECTL" logs -n "$NOTIFICATIONS_NAMESPACE" deploy/argocd-notifications-controller \
+  "$KUBECTL" logs -n "$WATCHER_NAMESPACE" "deploy/${WATCHER_DEPLOYMENT}" \
     -f --since=2m \
-    | rg --line-buffered "${APP_NAME}|wakeup-vcluster|invalidated cache" \
-    | sed 's/^/[notif] /' &
-  notif_pid=$!
-
-  "$KUBECTL" logs -n argocd deploy/vcluster-wakeup-proxy -f --since=2m \
-    | sed 's/^/[proxy] /' &
-  proxy_pid=$!
+    | rg --line-buffered "${APP_NAME}|${VCI_NAME}|skip-reconcile|refresh|wake" \
+    | sed 's/^/[watcher] /' &
+  watcher_pid=$!
 
   (
-    local last_app="" last_vci="" app_line="" vci_line=""
+    local last_app="" last_secret="" last_vci="" app_line="" secret_line="" vci_line=""
     while :; do
       app_line="$(app_snapshot 2>/dev/null || true)"
+      secret_line="$(cluster_secret_snapshot 2>/dev/null || true)"
       vci_line="$(vci_snapshot 2>/dev/null || true)"
       if [[ "$app_line" != "$last_app" ]]; then
         echo "[status] ${app_line}"
         last_app="$app_line"
+      fi
+      if [[ "$secret_line" != "$last_secret" ]]; then
+        echo "[status] ${secret_line}"
+        last_secret="$secret_line"
       fi
       if [[ "$vci_line" != "$last_vci" ]]; then
         echo "[status] ${vci_line}"

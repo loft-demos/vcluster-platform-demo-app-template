@@ -1,35 +1,38 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: vcluster-wakeup-watcher
+  name: vcluster-gitops-watcher
   namespace: argocd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: vcluster-wakeup-watcher-vci-read
+  name: vcluster-gitops-watcher-vci-read
 rules:
   - apiGroups: ["management.loft.sh"]
     resources: ["virtualclusterinstances"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["kargo.akuity.io"]
+    resources: ["promotions"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: vcluster-wakeup-watcher-vci-read
+  name: vcluster-gitops-watcher-vci-read
 subjects:
   - kind: ServiceAccount
-    name: vcluster-wakeup-watcher
+    name: vcluster-gitops-watcher
     namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: vcluster-wakeup-watcher-vci-read
+  name: vcluster-gitops-watcher-vci-read
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: vcluster-wakeup-watcher-argocd-write
+  name: vcluster-gitops-watcher-argocd-write
   namespace: argocd
 rules:
   - apiGroups: [""]
@@ -45,38 +48,38 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: vcluster-wakeup-watcher-argocd-write
+  name: vcluster-gitops-watcher-argocd-write
   namespace: argocd
 subjects:
   - kind: ServiceAccount
-    name: vcluster-wakeup-watcher
+    name: vcluster-gitops-watcher
     namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: vcluster-wakeup-watcher-argocd-write
+  name: vcluster-gitops-watcher-argocd-write
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vcluster-wakeup-watcher
+  name: vcluster-gitops-watcher
   namespace: argocd
   labels:
-    app.kubernetes.io/name: vcluster-wakeup-watcher
+    app.kubernetes.io/name: vcluster-gitops-watcher
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: vcluster-wakeup-watcher
+      app.kubernetes.io/name: vcluster-gitops-watcher
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: vcluster-wakeup-watcher
+        app.kubernetes.io/name: vcluster-gitops-watcher
     spec:
-      serviceAccountName: vcluster-wakeup-watcher
+      serviceAccountName: vcluster-gitops-watcher
       containers:
         - name: watcher
-          image: ghcr.io/loft-demos/vcluster-wakeup-watcher:0.9.0
+          image: ghcr.io/loft-demos/vcluster-gitops-watcher:1.0.0-rc.6
           imagePullPolicy: IfNotPresent
           env:
             - name: ARGOCD_NAMESPACE
@@ -93,6 +96,18 @@ spec:
               value: "p-,loft-p-"
             - name: WATCH_PATCH_APPLICATION_HEALTH
               value: "true"
+            - name: WATCH_WAKE_UPSTREAM_BASE
+              value: "http://loft.vcluster-platform.svc.cluster.local"
+            - name: WATCH_WAKE_TOKEN_PATH
+              value: "/var/run/secrets/platform/token"
+            - name: WATCH_WAKE_TIMEOUT
+              value: "10s"
+            - name: WATCH_WAKE_RETRY_INTERVAL
+              value: "30s"
+          volumeMounts:
+            - name: platform-token
+              mountPath: /var/run/secrets/platform
+              readOnly: true
           resources:
             requests:
               cpu: 10m
@@ -100,3 +115,10 @@ spec:
             limits:
               cpu: 100m
               memory: 128Mi
+      volumes:
+        - name: platform-token
+          secret:
+            secretName: argocd-notifications-secret
+            items:
+              - key: accessKey
+                path: token

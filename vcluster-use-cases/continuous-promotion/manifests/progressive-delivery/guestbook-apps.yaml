@@ -12,13 +12,9 @@ kind: Application
 metadata:
   name: guestbook-dev
   namespace: argocd
-  labels:
-    vclusterProjectId: default
-    vclusterName: pd-dev
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     kargo.akuity.io/authorized-stage: progressive-delivery:dev
-    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -42,13 +38,9 @@ kind: Application
 metadata:
   name: guestbook-staging
   namespace: argocd
-  labels:
-    vclusterProjectId: default
-    vclusterName: pd-staging
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     kargo.akuity.io/authorized-stage: progressive-delivery:staging
-    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -72,13 +64,9 @@ kind: Application
 metadata:
   name: guestbook-prod
   namespace: argocd
-  labels:
-    vclusterProjectId: default
-    vclusterName: pd-prod
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     kargo.akuity.io/authorized-stage: progressive-delivery:prod
-    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

@@ -2,7 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespace.yaml
-  - vcluster-wakeup-proxy-secret.yaml
   - kargo-project.yaml
   - kargo-analysis-template.yaml
   - kargo-warehouse.yaml

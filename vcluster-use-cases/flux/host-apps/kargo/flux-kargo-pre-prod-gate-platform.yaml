@@ -16,19 +16,6 @@ spec:
   path: ./vcluster-use-cases/continuous-promotion/manifests/pre-prod-gate
   patches:
     - target:
-        group: external-secrets.io
-        version: v1
-        kind: ExternalSecret
-        name: vcluster-wakeup-proxy
-        namespace: pre-prod-gate
-      patch: |
-        $patch: delete
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        metadata:
-          name: vcluster-wakeup-proxy
-          namespace: pre-prod-gate
-    - target:
         group: kargo.akuity.io
         version: v1alpha1
         kind: Project

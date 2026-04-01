@@ -33,7 +33,7 @@ The only thing deployed into the vCluster is the PR preview app itself as other 
       - `headBranch` is the head branch of the Pull Request
 
 3. Once the Argo CD cluster `Secret` is created with the necessary `metadata.labels`, it, along with the properly labeled Pull Request, trigger the second Argo CD `ApplicationSet` that uses the Matrix generator to merge the template parameters from the Pull Request and Cluster generators to generate an `Application` that will deploy the PR preview application into the PR vCluster.
-4. The generated preview-app `Application` may exist before the PR vCluster is fully ready. That is acceptable now: retries, self-heal, and the shared `vcluster-wakeup-watcher` handle the temporary not-ready phase instead of requiring a separate ready-labeling loop.
+4. The generated preview-app `Application` may exist before the PR vCluster is fully ready. That is acceptable now: retries, self-heal, and the shared `vcluster-gitops-watcher` handle the temporary not-ready phase instead of requiring a separate ready-labeling loop.
 5. Additional commits to the Pull Request head branch will automatically be redeployed to the PR vCluster via the second `Application`, deploying the updated container image with a tag based on the short commit sha of the triggering PR commit. However, the vCluster `Application` is associated with the PR head branch, and not a specific commit, so it does not get recreated with every PR commit.
 6. If the Pull Request is merged or closed, or if the `create-pr-vcluster-external-argocd` label is removed, both `Applications` will be deleted resulting in the PR vCluster being deleted.
 
@@ -44,9 +44,22 @@ The only thing deployed into the vCluster is the PR preview app itself as other 
 
 ### Sleep Mode
 
-Sleep mode is enabled for the PR vCluster to prevent long-running pull requests from consuming unnecessary resources. It also allows developers to pause and resume debugging sessions without incurring ongoing infrastructure costs - the vCluster remains dormant until it is explicitly reactivated to troubleshoot problematic changes. To avoid unintentionally waking the vCluster during routine health checks, the vCluster is configured to ignore requests from the `argo*` user agent to its Kubernetes API server. This prevents Argo CD's cluster polling from keeping the vCluster perpetually online, preserving the benefits of sleep mode.
+Sleep mode is enabled for the PR vCluster to prevent long-running pull requests
+from consuming unnecessary resources. In the shared-host-Argo path, the wake-up
+plumbing is now bootstrapped centrally for the host Argo CD instance under
+[../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md).
 
-Because imported sleepy vCluster instances are not unique to this use case, the wake-up plumbing is now bootstrapped centrally for the host Argo CD instance under [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md). That shared stack installs the notification trigger, `vcluster-wakeup-proxy`, and `vcluster-wakeup-watcher`, so any imported vCluster that uses sleep mode and ignores `argo*` user agents can participate in the same flow. The PR preview Applications still add the `subscribe.wakeup-vcluster` annotation plus the `vclusterProjectId` and `vclusterName` labels so the shared notification template can wake the correct `VirtualClusterInstance` when a new commit is pushed to the PR head branch.
+That shared stack now installs `vcluster-gitops-watcher`, not a notification
+trigger plus proxy chain. The watcher observes host Argo CD sync intent,
+wakes the matching `VirtualClusterInstance` directly through the platform API,
+and keeps the imported cluster Secret paused with
+`argocd.argoproj.io/skip-reconcile: "true"` while the destination is sleeping or
+waking.
+
+The PR preview Applications no longer need a wake-up subscription annotation.
+They still carry `vclusterName` and `vclusterProjectId` labels where those are
+useful for metadata and GitHub PR comment templates, but those labels are no
+longer what drives wake-up orchestration.
 
 ### Components
 
@@ -73,9 +86,9 @@ Ideal PR-preview workflow for vCluster with sleep mode.
 
 ✅ Matrix generator using PR x Cluster
 ✅ Label-based cluster filtering (only deploy to matching PR vCluster)
-✅ Argo CD Notification subscription for wake-up only when OutOfSync (new commit to PR head branch)
-✅ Non-intrusive wake-up trigger (via subscribe.*)
-✅ Precise per-vCluster labeling for webhook templating (vclusterName, vclusterProjectId)
+✅ Shared `vcluster-gitops-watcher` wake-up orchestration for sleeping imported destinations
+✅ No wake-specific Argo CD notification subscription required
+✅ Per-vCluster labels still available for preview metadata and PR comment links
 ✅ TLS + ingress config per preview
 ✅ Retries and self-heal enabled for robustness
 ✅ No extra ready-labeling controller required

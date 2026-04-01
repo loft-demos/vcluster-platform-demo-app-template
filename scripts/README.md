@@ -185,6 +185,8 @@ bash scripts/test-pre-prod-wakeup.sh scenario
 ```
 
 The `scenario` mode force-sleeps `pre-prod-gate-pre-prod`, tails the Argo CD
-notifications and wakeup-proxy logs, then triggers a manual sync on
-`guestbook-pre-prod` so you can verify that the backup wake-up path fires for a
-sleeping destination.
+`vcluster-gitops-watcher` logs, then triggers a manual sync on
+`guestbook-ppg-pre-prod` so you can verify that the shared watcher wakes a
+sleeping destination and toggles the imported cluster Secret's
+`skip-reconcile` annotation as the vCluster moves through sleeping, waking, and
+ready states.

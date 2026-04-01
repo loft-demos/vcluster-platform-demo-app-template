@@ -27,10 +27,6 @@ spec:
                   prLabel: deploy-argocd-vcluster-preview
                   repo: {REPLACE_REPO_NAME}
   template:
-    metadata:
-      annotations:
-        $patch: replace
-        notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
     spec:
       info:
         - name: Pull Request

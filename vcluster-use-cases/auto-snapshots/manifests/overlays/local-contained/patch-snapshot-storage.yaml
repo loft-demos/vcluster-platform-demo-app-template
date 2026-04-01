@@ -38,8 +38,6 @@ spec:
     - version: 1.0.0
       template:
         metadata:
-          annotations:
-            sleepmode.loft.sh/ignore-user-agents: argo*
           labels:
             loft.sh/import-argocd: 'true'
         instanceTemplate:

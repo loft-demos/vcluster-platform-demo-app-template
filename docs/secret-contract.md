@@ -31,7 +31,7 @@ These are the first secrets pulled from 1Password into the management cluster.
 | Secret | Namespace | Purpose | Expected Keys |
 | --- | --- | --- | --- |
 | `repo-creds-template` | `argocd` | Argo CD repo access for this cloned repo | `username`, `password` |
-| `argocd-notifications-secret` | `argocd` | Argo CD notifications / wake-up / GitHub app config | `accessKey`, `githubAppID`, `githubAppInstallationID`, `githubAppPrivateKey` |
+| `argocd-notifications-secret` | `argocd` | Argo CD GitHub notification config plus the host watcher wake token | `accessKey`, `githubAppID`, `githubAppInstallationID`, `githubAppPrivateKey` |
 | `ghcr-login-secret` | `vcluster-platform` | Shared GHCR image pull secret | `.dockerconfigjson` |
 | `github-provider-secret` | `crossplane-system` | Crossplane GitHub provider credentials | `credentials` |
 
@@ -41,7 +41,7 @@ These should be added after the base bootstrap is working.
 
 | Secret | Namespace | Purpose | Expected Keys |
 | --- | --- | --- | --- |
-| `demo-admin-access-key` | `p-auth-core` or `p-vcluster-flux-demo` | Flux / connected-cluster / webhook wake-up flows | `accessKey` |
+| `demo-admin-access-key` | `p-auth-core` or `p-vcluster-flux-demo` | Flux and connected-host-cluster access-key flows | `accessKey` |
 | `pr-github-receiver-token` | `p-auth-core` and `kargo-system-resources` | Flux GitHub receiver and Kargo GitHub webhook signing secret | `token` |
 | `oidc-secret` | `p-auth-core` | Argo CD OIDC client secret for PR environments | `clientSecret` |
 | `loft-demo-org-cred` | project namespaces | GitHub token or app credential for Flux / PR automation | `token` or org-specific app credential data |

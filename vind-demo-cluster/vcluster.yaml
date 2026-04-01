@@ -185,6 +185,9 @@ __CLUSTER_LOCAL_USE_CASE_LABELS__
           values: |-
             crds:
               install: true
+            global:
+              image:
+                tag: v3.4.0-rc1
             configs:
               cm:
                 application.resourceTrackingMethod: annotation

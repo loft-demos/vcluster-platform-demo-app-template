@@ -30,7 +30,6 @@ spec:
   template:
     metadata:
       annotations:
-        notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
         notifications.argoproj.io/subscribe.github: ""
         notifications.argoproj.io/subscribe.on-deployed.github: ""
       labels:

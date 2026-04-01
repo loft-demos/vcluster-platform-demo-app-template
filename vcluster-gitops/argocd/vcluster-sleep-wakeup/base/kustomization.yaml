@@ -3,5 +3,4 @@ kind: Kustomization
 resources:
   - argocd-notifications-cm.yaml
   - argocd-notifications-secret.yaml
-  - vcluster-wakeup-proxy.yaml
-  - vcluster-wakeup-watcher.yaml
+  - vcluster-gitops-watcher.yaml

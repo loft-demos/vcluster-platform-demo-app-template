@@ -1,8 +1,8 @@
 # Argo CD Applications for the pre-prod-gate pipeline.
 # Kargo updates the image tag on these Applications via argocd-update promotion steps.
 #
-# guestbook-pre-prod:          targets the pre-prod-gate-pre-prod vCluster
-# guestbook-pre-prod-gate-prod: targets production (update destination to a real prod cluster)
+# guestbook-ppg-pre-prod: targets the pre-prod-gate-pre-prod vCluster
+# guestbook-ppg-prod:     targets production (update destination to a real prod cluster)
 #
 # Sync wave 3 ensures VCIs (wave 2) are registered with Argo CD before these Apps are created.
 ---
@@ -11,13 +11,9 @@ kind: Application
 metadata:
   name: guestbook-ppg-pre-prod
   namespace: argocd
-  labels:
-    vclusterProjectId: default
-    vclusterName: pre-prod-gate-pre-prod
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     kargo.akuity.io/authorized-stage: pre-prod-gate:pre-prod
-    notifications.argoproj.io/subscribe.wakeup-vcluster.vcluster-platform: ''
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

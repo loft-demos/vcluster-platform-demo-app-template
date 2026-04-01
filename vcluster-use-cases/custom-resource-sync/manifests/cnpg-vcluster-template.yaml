@@ -8,8 +8,6 @@ spec:
     metadata:
       labels:
         loft.sh/import-argocd: 'true'
-      annotations:
-        sleepmode.loft.sh/ignore-user-agents: 'argo*'
     objects: {}
     access:
       rules:

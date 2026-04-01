@@ -32,8 +32,6 @@ spec:
     - version: 1.0.0
       template:
         metadata:
-          annotations:
-            sleepmode.loft.sh/ignore-user-agents: argo*
           labels:
             # Register this vCluster as an Argo CD cluster destination
             loft.sh/import-argocd: 'true'
