@@ -37,6 +37,7 @@ vcluster-use-cases/crossplane/
 │   ├── github-provider-config.yaml
 │   ├── kargogithubwebhook-composition.yaml
 │   ├── kubernetes-provider-config.yaml
+│   ├── provider-api-readiness-job.yaml
 │   ├── pullrequestenvironments-composition.yaml
 │   ├── xargocdwebhooks.yaml
 │   ├── xkargogithubwebhooks.yaml
@@ -59,7 +60,8 @@ waves:
    installs Komoplane into `crossplane-system`
 4. [`crossplane-manifests.yaml`](./apps/crossplane-manifests.yaml)
    applies the XRDs, compositions, function, and provider configs from
-   [`manifests/`](./manifests/)
+   [`manifests/`](./manifests/) after a `PreSync` readiness hook confirms the
+   provider APIs are registered
 
 ## What Each Folder Does
 
@@ -76,7 +78,8 @@ This folder contains the top-level Argo CD `Application` resources.
   `komoplane-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}`
 - [`crossplane-manifests.yaml`](./apps/crossplane-manifests.yaml)
   applies the Crossplane XRDs, compositions, function, and `ProviderConfig`
-  resources from [`manifests/`](./manifests/)
+  resources from [`manifests/`](./manifests/) and skips dry-run failures while
+  provider CRDs are still being registered
 
 ### `argocd-webhooks/`
 
@@ -223,6 +226,13 @@ repositories.
 installs the Crossplane function package
 `crossplane-contrib/function-patch-and-transform:v0.6.0`, which the
 `pullrequestenvironments` composition uses in its pipeline.
+
+#### `provider-api-readiness-job.yaml`
+
+[`provider-api-readiness-job.yaml`](./manifests/provider-api-readiness-job.yaml)
+is an Argo CD `PreSync` hook that waits until the GitHub and Kubernetes
+provider APIs are discoverable before the app applies `ProviderConfig`
+resources.
 
 #### Provider Configs
 
