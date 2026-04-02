@@ -22,6 +22,37 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
+      - id: derive-preview-links
+        shell: bash
+        env:
+          VCLUSTER_PLATFORM_URL: ${{ vars.VCLUSTER_PLATFORM_URL }}
+        run: |
+          platform_url="${VCLUSTER_PLATFORM_URL%/}"
+          if [[ -z "$platform_url" ]]; then
+            echo "VCLUSTER_PLATFORM_URL repository variable is required." >&2
+            exit 1
+          fi
+
+          platform_host="${platform_url#*://}"
+          platform_host="${platform_host%%/*}"
+          platform_host_no_port="${platform_host%%:*}"
+
+          if [[ "$platform_host_no_port" != *.* ]]; then
+            echo "VCLUSTER_PLATFORM_URL must include a hostname with a base domain: $platform_url" >&2
+            exit 1
+          fi
+
+          vcluster_name="${platform_host_no_port%%.*}"
+          base_domain="${platform_host_no_port#*.}"
+          preview_url="https://${REPO_NAME}-pr-${{ github.event.pull_request.number }}-${vcluster_name}.${base_domain}"
+          argocd_app_url="https://argocd-${vcluster_name}.${base_domain}/applications/argocd/${REPO_NAME}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree"
+          pods_url="https://${vcluster_name}.${base_domain}/projects/default/vclusters/${REPO_NAME}-pr-${{ github.event.pull_request.number }}/pods"
+
+          {
+            echo "preview_url=${preview_url}"
+            echo "argocd_app_url=${argocd_app_url}"
+            echo "pods_url=${pods_url}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Install vCluster CLI
         uses: loft-sh/setup-vcluster@main
@@ -38,8 +69,8 @@ jobs:
             --template preview-template \
             --set-parameters 'k8sVersion=v1.33.3' \
             --link "GitHub PR=$PR_LINK" \
-            --link "Preview=https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/" \
-            --link "Argo CD=https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree"
+            --link "Preview=${{ steps.derive-preview-links.outputs.preview_url }}/" \
+            --link "Argo CD=${{ steps.derive-preview-links.outputs.argocd_app_url }}"
 
       - id: trigger-argocd-appset
         env:
@@ -52,9 +83,9 @@ jobs:
           number: ${{ github.event.pull_request.number }}
           header: release
           message: |
-            [Preview environment app link](https://${{ env.REPO_NAME}}-pr-${{ github.event.pull_request.number }}-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN})
+            [Preview environment app link](${{ steps.derive-preview-links.outputs.preview_url }})
             
-            [Argo CD App](https://argocd-{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/applications/argocd/${{ env.REPO_NAME}}-${{ github.event.pull_request.head.ref }}-pr${{ github.event.pull_request.number }}?view=tree)
+            [Argo CD App](${{ steps.derive-preview-links.outputs.argocd_app_url }})
             
-            [Preview vcluster pods](https://{REPLACE_VCLUSTER_NAME}.{REPLACE_BASE_DOMAIN}/projects/default/vclusters/$REPO_NAME-pr-${{ github.event.pull_request.number }}/pods)
+            [Preview vcluster pods](${{ steps.derive-preview-links.outputs.pods_url }})
             

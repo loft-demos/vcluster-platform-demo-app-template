@@ -80,35 +80,44 @@ jobs:
           KARGO_WEBHOOK_HOST: ${{ steps.set-vcluster-name.outputs.kargo_webhook_host }}
         run: |
           file_count=0
-
-          while IFS= read -r -d '' file; do
-            file_count=$((file_count + 1))
-            perl -0pi -e '
-              s/\{REPLACE_REPO_NAME\}/$ENV{REPO_NAME}/g;
-              s/\{REPLACE_ORG_NAME\}/$ENV{ORG_NAME}/g;
-              s/\{REPLACE_VCLUSTER_NAME\}/$ENV{VCLUSTER_NAME}/g;
-              s/\{REPLACE_BASE_DOMAIN\}/$ENV{BASE_DOMAIN}/g;
-              s/\{REPLACE_FORGEJO_USERNAME\}/$ENV{GITHUB_ACTOR}/g;
-              s/\{REPLACE_GIT_BASE_URL\}/$ENV{GIT_BASE_URL}/g;
-              s/\{REPLACE_GIT_PUBLIC_URL\}/$ENV{GIT_PUBLIC_URL}/g;
-              s/\{REPLACE_ARGOCD_HOST\}/$ENV{ARGOCD_HOST}/g;
-              s/\{REPLACE_APP_IMAGE_REPOSITORY\}/$ENV{APP_IMAGE_REPOSITORY}/g;
-              s/\{REPLACE_IMAGE_REPOSITORY_PREFIX\}/$ENV{IMAGE_REPOSITORY_PREFIX}/g;
-              s/\{REPLACE_OCI_REGISTRY_HOST\}/$ENV{OCI_REGISTRY_HOST}/g;
-              s/\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}/$ENV{SNAPSHOT_OCI_REPOSITORY}/g;
-              s/\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}/$ENV{IMAGE_PULL_SOURCE_SECRET_NAME}/g;
-              s/\{REPLACE_1PASSWORD_VAULT\}/$ENV{ONEPASSWORD_VAULT}/g;
-              s/\{REPLACE_KARGO_HOST\}/$ENV{KARGO_HOST}/g;
-              s/\{REPLACE_KARGO_WEBHOOK_HOST\}/$ENV{KARGO_WEBHOOK_HOST}/g;
-            ' "$file"
-          done < <(
-            find . \
-              -type f \
-              \( -name '*.yaml' -o -name '*.yml' \) \
-              ! -path './.git/*' \
-              ! -path './.github/workflows/replace-text.yaml' \
-              -print0
+          search_roots=(
+            "./helm-chart"
+            "./self-managed-demo-cluster"
+            "./vind-demo-cluster"
+            "./vcluster-gitops"
+            "./vcluster-use-cases"
           )
+
+          for root in "${search_roots[@]}"; do
+            [[ -d "$root" ]] || continue
+
+            while IFS= read -r -d '' file; do
+              file_count=$((file_count + 1))
+              perl -0pi -e '
+                s/\{REPLACE_REPO_NAME\}/$ENV{REPO_NAME}/g;
+                s/\{REPLACE_ORG_NAME\}/$ENV{ORG_NAME}/g;
+                s/\{REPLACE_VCLUSTER_NAME\}/$ENV{VCLUSTER_NAME}/g;
+                s/\{REPLACE_BASE_DOMAIN\}/$ENV{BASE_DOMAIN}/g;
+                s/\{REPLACE_FORGEJO_USERNAME\}/$ENV{GITHUB_ACTOR}/g;
+                s/\{REPLACE_GIT_BASE_URL\}/$ENV{GIT_BASE_URL}/g;
+                s/\{REPLACE_GIT_PUBLIC_URL\}/$ENV{GIT_PUBLIC_URL}/g;
+                s/\{REPLACE_ARGOCD_HOST\}/$ENV{ARGOCD_HOST}/g;
+                s/\{REPLACE_APP_IMAGE_REPOSITORY\}/$ENV{APP_IMAGE_REPOSITORY}/g;
+                s/\{REPLACE_IMAGE_REPOSITORY_PREFIX\}/$ENV{IMAGE_REPOSITORY_PREFIX}/g;
+                s/\{REPLACE_OCI_REGISTRY_HOST\}/$ENV{OCI_REGISTRY_HOST}/g;
+                s/\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}/$ENV{SNAPSHOT_OCI_REPOSITORY}/g;
+                s/\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}/$ENV{IMAGE_PULL_SOURCE_SECRET_NAME}/g;
+                s/\{REPLACE_1PASSWORD_VAULT\}/$ENV{ONEPASSWORD_VAULT}/g;
+                s/\{REPLACE_KARGO_HOST\}/$ENV{KARGO_HOST}/g;
+                s/\{REPLACE_KARGO_WEBHOOK_HOST\}/$ENV{KARGO_WEBHOOK_HOST}/g;
+              ' "$file"
+            done < <(
+              find "$root" \
+                -type f \
+                \( -name '*.yaml' -o -name '*.yml' \) \
+                -print0
+            )
+          done
 
           if [ "$file_count" -eq 0 ]; then
             echo "[INFO] No YAML files found for replacement."
@@ -118,19 +127,28 @@ jobs:
         shell: bash
         run: |
           unresolved=0
-
-          while IFS= read -r -d '' file; do
-            if grep -nE '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_FORGEJO_USERNAME\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_ARGOCD_HOST\}|\{REPLACE_APP_IMAGE_REPOSITORY\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_HOST\}|\{REPLACE_KARGO_WEBHOOK_HOST\}' "$file"; then
-              unresolved=1
-            fi
-          done < <(
-            find . \
-              -type f \
-              \( -name '*.yaml' -o -name '*.yml' \) \
-              ! -path './.git/*' \
-              ! -path './.github/workflows/replace-text.yaml' \
-              -print0
+          search_roots=(
+            "./helm-chart"
+            "./self-managed-demo-cluster"
+            "./vind-demo-cluster"
+            "./vcluster-gitops"
+            "./vcluster-use-cases"
           )
+
+          for root in "${search_roots[@]}"; do
+            [[ -d "$root" ]] || continue
+
+            while IFS= read -r -d '' file; do
+              if grep -nE '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_FORGEJO_USERNAME\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_ARGOCD_HOST\}|\{REPLACE_APP_IMAGE_REPOSITORY\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_HOST\}|\{REPLACE_KARGO_WEBHOOK_HOST\}' "$file"; then
+                unresolved=1
+              fi
+            done < <(
+              find "$root" \
+                -type f \
+                \( -name '*.yaml' -o -name '*.yml' \) \
+                -print0
+            )
+          done
 
           if [ "$unresolved" -ne 0 ]; then
             echo "[ERROR] Unresolved replace-text workflow placeholders remain in YAML files after replacement."
