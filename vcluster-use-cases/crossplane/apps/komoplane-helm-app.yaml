@@ -18,7 +18,7 @@ spec:
   source:
     chart: komoplane
     repoURL: https://helm-charts.komodor.io
-    targetRevision: 0.1.6
+    targetRevision: 0.1.8
     helm:
       valuesObject:
         ingress:

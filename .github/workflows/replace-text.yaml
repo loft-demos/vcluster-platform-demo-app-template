@@ -17,8 +17,6 @@ on:
         required: false
         default: ""
   push:
-    paths:
-      - 'helm-chart/Chart.yaml'
 env:
   REPO_NAME: ${{ github.event.repository.name }}
   ORG_NAME: ${{ github.repository_owner || 'loft-demos' }}
@@ -83,17 +81,23 @@ jobs:
           KARGO_WEBHOOK_HOST: ${{ steps.set-vcluster-name.outputs.kargo_webhook_host }}
         run: |
           file_count=0
-          search_roots=(
-            "./helm-chart"
-            "./self-managed-demo-cluster"
-            "./vind-demo-cluster"
-            "./vcluster-gitops"
-            "./vcluster-use-cases"
-          )
+          search_roots=()
+
+          for prefix in "." "./project"; do
+            for dir in helm-chart self-managed-demo-cluster vind-demo-cluster vcluster-gitops vcluster-use-cases; do
+              root="${prefix}/${dir}"
+              if [[ -d "$root" ]]; then
+                search_roots+=("$root")
+              fi
+            done
+          done
+
+          if [ "${#search_roots[@]}" -eq 0 ]; then
+            echo "[INFO] No matching repo roots found for replacement."
+            exit 0
+          fi
 
           for root in "${search_roots[@]}"; do
-            [[ -d "$root" ]] || continue
-
             while IFS= read -r -d '' file; do
               file_count=$((file_count + 1))
               perl -0pi -e '
@@ -131,17 +135,23 @@ jobs:
         shell: bash
         run: |
           unresolved=0
-          search_roots=(
-            "./helm-chart"
-            "./self-managed-demo-cluster"
-            "./vind-demo-cluster"
-            "./vcluster-gitops"
-            "./vcluster-use-cases"
-          )
+          search_roots=()
+
+          for prefix in "." "./project"; do
+            for dir in helm-chart self-managed-demo-cluster vind-demo-cluster vcluster-gitops vcluster-use-cases; do
+              root="${prefix}/${dir}"
+              if [[ -d "$root" ]]; then
+                search_roots+=("$root")
+              fi
+            done
+          done
+
+          if [ "${#search_roots[@]}" -eq 0 ]; then
+            echo "[INFO] No matching repo roots found for validation."
+            exit 0
+          fi
 
           for root in "${search_roots[@]}"; do
-            [[ -d "$root" ]] || continue
-
             while IFS= read -r -d '' file; do
               if grep -nE '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_FORGEJO_USERNAME\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_GIT_TARGET_REVISION\}|\{REPLACE_ARGOCD_HOST\}|\{REPLACE_APP_IMAGE_REPOSITORY\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_HOST\}|\{REPLACE_KARGO_WEBHOOK_HOST\}' "$file"; then
                 unresolved=1
@@ -158,6 +168,16 @@ jobs:
             echo "[ERROR] Unresolved replace-text workflow placeholders remain in YAML files after replacement."
             exit 1
           fi
+      - name: write completion marker
+        shell: bash
+        run: |
+          mkdir -p .generator-seed
+          cat > .generator-seed/replace-text-complete.txt <<EOF
+          repo=${REPO_NAME}
+          branch=${GIT_TARGET_REVISION}
+          source_commit=${GITHUB_SHA}
+          completed_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          EOF
       - uses: stefanzweifel/git-auto-commit-action@v5
       - name: delete-package
         id: delete-package
