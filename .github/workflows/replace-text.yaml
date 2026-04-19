@@ -168,6 +168,16 @@ jobs:
             echo "[ERROR] Unresolved replace-text workflow placeholders remain in YAML files after replacement."
             exit 1
           fi
+      - name: write completion marker
+        shell: bash
+        run: |
+          mkdir -p .generator-seed
+          cat > .generator-seed/replace-text-complete.txt <<EOF
+          repo=${REPO_NAME}
+          branch=${GIT_TARGET_REVISION}
+          source_commit=${GITHUB_SHA}
+          completed_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          EOF
       - uses: stefanzweifel/git-auto-commit-action@v5
       - name: delete-package
         id: delete-package
