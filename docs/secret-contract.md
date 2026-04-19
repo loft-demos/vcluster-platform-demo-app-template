@@ -1,16 +1,13 @@
 # Secret Contract
 
-This document defines the initial secret model for repurposing this repo to run
-on a self-hosted `vind` demo cluster with:
+This document defines the initial secret model for repurposing this repo to run on a self-hosted `vind` demo cluster with:
 
 - Argo CD installed directly in the `vind` cluster
 - External Secrets Operator installed directly in the `vind` cluster
 - vCluster Platform installed into that same cluster
 - 1Password used as the source of truth for secrets
 
-The goal is to replace the vCluster Platform Demo Generator's secret
-projection/bootstrap behavior with an explicit, documented, ESO-driven secret
-contract.
+The goal is to replace the vCluster Platform Demo Generator's secret projection/bootstrap behavior with an explicit, documented, ESO-driven secret contract.
 
 ## Secret Model
 
@@ -51,8 +48,7 @@ These should be added after the base bootstrap is working.
 
 ## Same-Org vs Different-Org
 
-This repo should no longer assume that all GitHub-related credentials belong to
-the same org.
+This repo should no longer assume that all GitHub-related credentials belong to the same org.
 
 Use these conceptual buckets:
 
@@ -72,8 +68,7 @@ These values are different. In that case:
 
 - Argo CD repo credentials should be scoped to `REPO_ORG`
 - GHCR pull/push credentials should be scoped to `IMAGE_ORG`
-- Crossplane GitHub provider and PR/webhook credentials should be scoped to
-  `AUTOMATION_GITHUB_ORG`
+- Crossplane GitHub provider and PR/webhook credentials should be scoped to `AUTOMATION_GITHUB_ORG`
 
 ## Key Consumers In This Repo
 
@@ -110,8 +105,7 @@ Status: pending
 
 Status: pending
 
-- Refactor secret-dependent use cases to rely on ESO-managed secrets rather
-  than Demo Generator-projected secrets
+- Refactor secret-dependent use cases to rely on ESO-managed secrets rather than Demo Generator-projected secrets
 - Prioritize:
   - Argo CD notifications
   - Crossplane GitHub provider
@@ -122,8 +116,7 @@ Status: pending
 
 Status: pending
 
-- Separate `REPO_ORG`, `IMAGE_ORG`, and `AUTOMATION_GITHUB_ORG` in docs and
-  templates
+- Separate `REPO_ORG`, `IMAGE_ORG`, and `AUTOMATION_GITHUB_ORG` in docs and templates
 - Audit files that still hardcode `loft-demos`
 - Ensure same-org and different-org modes are both documented
 
@@ -133,15 +126,10 @@ Status: pending
 
 - Document which use cases work unchanged on `vind`
 - Document which require ESO-backed secrets
-- Document which require additional external infrastructure and should stay
-  disabled by default
+- Document which require additional external infrastructure and should stay disabled by default
 
 ## Notes
 
-- This document intentionally defines a contract first, not a complete
-  implementation.
-- Some secrets, especially `database-connector` and `loft-demo-org-cred`, need
-  a final key schema decision based on the chosen same-org or different-org
-  mode.
-- The bootstrap manifests in `vind-demo-cluster/` only cover the initial
-  management-cluster secret set.
+- This document intentionally defines a contract first, not a complete implementation.
+- Some secrets, especially `database-connector` and `loft-demo-org-cred`, need a final key schema decision based on the chosen same-org or different-org mode.
+- The bootstrap manifests in `vind-demo-cluster/` only cover the initial management-cluster secret set.

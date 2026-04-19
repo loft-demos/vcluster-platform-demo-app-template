@@ -1,15 +1,12 @@
 # Self-Service Enablement Demo Flow
 
-This is a cross-cutting demo flow for enablement sessions focused on the
-self-service critical path:
+This is a cross-cutting demo flow for enablement sessions focused on the self-service critical path:
 
 - vCluster provisioning workflow
 - project-based multi-tenancy
 - RBAC for developers vs. platform admins
 
-This is not a standalone deployable use case. It is a guided walkthrough built
-from the repo's existing platform GitOps objects plus a small set of optional
-use cases that deepen the story.
+This is not a standalone deployable use case. It is a guided walkthrough built from the repo's existing platform GitOps objects plus a small set of optional use cases that deepen the story.
 
 ## Recommendation
 
@@ -38,13 +35,9 @@ Optional deeper self-service story:
 
 Why these are the best fit:
 
-- the base repo already demonstrates project scoping, template allow-lists,
-  quotas, and team membership
-- `argocd-in-vcluster` shows what happens after self-service provisioning when a
-  team wants isolated GitOps inside its own vCluster
-- `namespace-sync` is a good follow-on if you want to show how tenant-created
-  Argo CD `Application` objects can surface back into a shared host Argo CD
-  model
+- the base repo already demonstrates project scoping, template allow-lists, quotas, and team membership
+- `argocd-in-vcluster` shows what happens after self-service provisioning when a team wants isolated GitOps inside its own vCluster
+- `namespace-sync` is a good follow-on if you want to show how tenant-created Argo CD `Application` objects can surface back into a shared host Argo CD model
 
 Enable the recommended add-ons directly:
 
@@ -81,12 +74,9 @@ Relevant files:
 
 By the end of the session, the audience should believe:
 
-1. developers can provision a vCluster on their own without asking the platform
-   team for cluster-admin access
-2. projects are the tenancy boundary, so teams get only the templates,
-   clusters, and quotas assigned to them
-3. RBAC can be tuned so developers get enough power to move quickly without
-   becoming full admins
+1. developers can provision a vCluster on their own without asking the platform team for cluster-admin access
+2. projects are the tenancy boundary, so teams get only the templates, clusters, and quotas assigned to them
+3. RBAC can be tuned so developers get enough power to move quickly without becoming full admins
 
 ## Critical Path Demo Flow
 
@@ -94,8 +84,7 @@ This flow is designed for a 20 to 30 minute enablement session.
 
 ### 1. Start with the operating model
 
-Open the Projects view and show that the repo already separates tenants into
-`api-framework` and `auth-core`.
+Open the Projects view and show that the repo already separates tenants into `api-framework` and `auth-core`.
 
 Use these files as the source of truth:
 
@@ -137,8 +126,7 @@ Talk track:
 
 ### 3. Provision a vCluster as the developer
 
-Switch to the `api-framework` project and create a new vCluster from the
-default template.
+Switch to the `api-framework` project and create a new vCluster from the default template.
 
 Use these files as the backing example:
 
@@ -148,10 +136,8 @@ Use these files as the backing example:
 What to show in the UI:
 
 - template selection is limited to what the project allows
-- the developer can choose parameters like `env`, `k8sVersion`, and
-  `sleepAfter`
-- the resulting vCluster lands in the project namespace pattern rather than an
-  arbitrary shared namespace
+- the developer can choose parameters like `env`, `k8sVersion`, and `sleepAfter`
+- the resulting vCluster lands in the project namespace pattern rather than an arbitrary shared namespace
 
 Talk track:
 
@@ -159,8 +145,7 @@ Talk track:
 > cluster by hand. The developer is choosing from an approved template catalog
 > with approved parameters.
 
-If you want the fastest path, use the seeded `api-framework-qa` instance as the
-starting point and explain how it maps back to the project and template.
+If you want the fastest path, use the seeded `api-framework-qa` instance as the starting point and explain how it maps back to the project and template.
 
 ### 4. Prove the tenancy boundary
 
@@ -191,8 +176,7 @@ Use:
 
 Key contrast:
 
-- the `api-framework` team gets
-  `loft-management-project-user-with-vcluster-logs`
+- the `api-framework` team gets `loft-management-project-user-with-vcluster-logs`
 - the `auth-core` team uses the standard `loft-management-project-user`
 - `loft-admins` is assigned `loft-management-project-admin`
 
@@ -200,10 +184,8 @@ What to demonstrate:
 
 - developer can create and view their own vCluster instances
 - developer can inspect vCluster logs in `api-framework`
-- developer cannot edit project membership, project policy, or cross-project
-  access
-- platform admin can change membership, template allow-lists, and project-level
-  policy
+- developer cannot edit project membership, project policy, or cross-project access
+- platform admin can change membership, template allow-lists, and project-level policy
 
 Talk track:
 
@@ -213,8 +195,7 @@ Talk track:
 
 ### 6. Optional deep-dive: isolated GitOps inside the vCluster
 
-If you enabled [`argocd-in-vcluster`](../../vcluster-use-cases/argocd-in-vcluster/README.md),
-use this as the day-2 story after provisioning.
+If you enabled [`argocd-in-vcluster`](../../vcluster-use-cases/argocd-in-vcluster/README.md), use this as the day-2 story after provisioning.
 
 Use:
 
@@ -235,8 +216,7 @@ Talk track:
 
 ### 7. Optional deep-dive: self-service apps with shared host Argo CD
 
-If you enabled [`namespace-sync`](../../vcluster-use-cases/namespace-sync/README.md),
-use it as the follow-on to the Argo CD story.
+If you enabled [`namespace-sync`](../../vcluster-use-cases/namespace-sync/README.md), use it as the follow-on to the Argo CD story.
 
 What to show:
 
@@ -259,8 +239,7 @@ Keep the session framed as:
 4. RBAC keeps developers productive without handing out platform-admin rights
 5. optional add-ons show what day-2 operations look like
 
-That ordering keeps the demo on the self-service critical path instead of
-getting lost in infrastructure details.
+That ordering keeps the demo on the self-service critical path instead of getting lost in infrastructure details.
 
 ## Do We Need a New Demo Use Case?
 
@@ -269,10 +248,8 @@ Short answer: no, not yet.
 Why:
 
 - the core self-service story already lives in the repo's base GitOps objects
-- the most relevant deep-dive extensions already exist as use cases:
-  `argocd-in-vcluster` and `namespace-sync`
-- a new use case would mostly package documentation and seeded demo data rather
-  than introduce new product behavior
+- the most relevant deep-dive extensions already exist as use cases: `argocd-in-vcluster` and `namespace-sync`
+- a new use case would mostly package documentation and seeded demo data rather than introduce new product behavior
 
 Create a new use case only if we want one of these:
 
@@ -281,6 +258,4 @@ Create a new use case only if we want one of these:
 - a more explicit approval or request workflow demo that does not exist today
 - a stronger "golden path" opinionated template catalog just for demos
 
-If we do create one later, a better scope would be something like
-`self-service-guardrails` or `project-onboarding`, not a generic
-`self-service` use case.
+If we do create one later, a better scope would be something like `self-service-guardrails` or `project-onboarding`, not a generic `self-service` use case.

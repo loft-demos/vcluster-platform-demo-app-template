@@ -35,6 +35,7 @@ Optional OrbStack local domain overrides:
   --vcp-host team-a.vcp.local
   --argocd-host argocd.team-a.vcp.local
   --forgejo-host forgejo.team-a.vcp.local
+  --git-target-revision use-case/branch-test
   --ingress-upstream vcluster.lb.team-a.ingress-nginx-controller.ingress-nginx:80
   --onepassword-vault team-a
   --vcp-version 4.8.0
@@ -444,6 +445,7 @@ FORGEJO_OWNER_TYPE="${FORGEJO_OWNER_TYPE:-}"
 GIT_BASE_URL=""
 GIT_BASE_URL_AUTHED=""
 GIT_PUBLIC_URL=""
+GIT_TARGET_REVISION=""
 IMAGE_REPOSITORY_PREFIX=""
 IMAGE_PLATFORM="auto"
 USE_CASES="${USE_CASES:-$DEFAULT_USE_CASE_SPEC}"
@@ -570,6 +572,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --git-public-url)
       GIT_PUBLIC_URL="${2:-}"
+      shift 2
+      ;;
+    --git-target-revision)
+      GIT_TARGET_REVISION="${2:-}"
       shift 2
       ;;
     --image-repository-prefix)
@@ -731,6 +737,17 @@ if [[ -z "$GIT_PUBLIC_URL" ]]; then
   GIT_PUBLIC_URL="${FORGEJO_URL%/}"
 fi
 
+if [[ -z "$GIT_TARGET_REVISION" ]]; then
+  GIT_TARGET_REVISION="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+  GIT_TARGET_REVISION="${GIT_TARGET_REVISION#origin/}"
+  if [[ -z "$GIT_TARGET_REVISION" ]]; then
+    GIT_TARGET_REVISION="$(git branch --show-current 2>/dev/null || true)"
+  fi
+  if [[ -z "$GIT_TARGET_REVISION" ]]; then
+    GIT_TARGET_REVISION="main"
+  fi
+fi
+
 if [[ -z "$IMAGE_REPOSITORY_PREFIX" ]]; then
   IMAGE_REPOSITORY_PREFIX="${FORGEJO_HOST}/${FORGEJO_OWNER}/${REPO_NAME}"
 fi
@@ -865,6 +882,7 @@ if [[ "$SKIP_REPLACE" != "true" ]]; then
     --git-base-url "$GIT_BASE_URL" \
     --git-base-url-authed "$GIT_BASE_URL_AUTHED" \
     --git-public-url "$GIT_PUBLIC_URL" \
+    --git-target-revision "$GIT_TARGET_REVISION" \
     --forgejo-host "$FORGEJO_HOST" \
     --image-repository-prefix "$IMAGE_REPOSITORY_PREFIX" \
     --oci-registry-host "$FORGEJO_HOST" \
@@ -944,6 +962,7 @@ if [[ "$SKIP_FORGEJO" != "true" ]]; then
       --owner "$FORGEJO_OWNER" \
       --owner-type "$FORGEJO_OWNER_TYPE" \
       --repo "$REPO_NAME" \
+      --default-branch "$GIT_TARGET_REVISION" \
       --current-branch-only \
       --skip-tags \
       --include-working-tree

@@ -58,7 +58,7 @@ spec:
             source:
               path: 'k8s-manifests/{{`{{metadata.labels.env}}`}}/'
               repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{{ .Values.loft.clusterAnnotations.domainPrefix }}-app.git'
-              targetRevision: main
+              targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
             syncPolicy:
               automated:
                 selfHeal: true

@@ -1,6 +1,6 @@
 # vCluster with EKS Pod Identity (ACK `PodIdentityAssociation` Integration)
 
-This guide shows how to declaratively enable **EKS Pod Identity** inside a vCluster by syncing the AWS Controllers for Kubernetes (ACK) EKS `PodIdentityAssociation` custom resource from the vCluster to the host cluster.  
+This guide shows how to declaratively enable **EKS Pod Identity** inside a vCluster by syncing the AWS Controllers for Kubernetes (ACK) EKS `PodIdentityAssociation` custom resource from the vCluster to the host cluster.
 
 It provides a fully working example that:
 
@@ -11,8 +11,7 @@ It provides a fully working example that:
 
 ## VirtualClusterTemplate Configuration
 
-In your `VirtualClusterTemplate`, enable syncing of **ServiceAccounts** and **PodIdentityAssociation** custom resources to the host cluster.  
-Add patches to dynamically inject the EKS cluster name and to rewrite fields so ACK can correctly bind to the translated host ServiceAccount. A complete `VirtualClusterTemplate` [example is available here](./manifests/pod-identity-template.yaml).
+In your `VirtualClusterTemplate`, enable syncing of **ServiceAccounts** and **PodIdentityAssociation** custom resources to the host cluster. Add patches to dynamically inject the EKS cluster name and to rewrite fields so ACK can correctly bind to the translated host ServiceAccount. A complete `VirtualClusterTemplate` [example is available here](./manifests/pod-identity-template.yaml).
 
 ```yaml
 sync:

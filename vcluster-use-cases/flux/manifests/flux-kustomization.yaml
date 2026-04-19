@@ -36,7 +36,7 @@ spec:
   interval: 5m0s
   url: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
   ref:
-    branch: main
+    branch: '{REPLACE_GIT_TARGET_REVISION}'
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization

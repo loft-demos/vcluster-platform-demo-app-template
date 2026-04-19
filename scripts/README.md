@@ -16,11 +16,25 @@ bash scripts/replace-text-local.sh \
   --include-md
 ```
 
+Branch-test example:
+
+```bash
+bash scripts/replace-text-local.sh \
+  --repo-name vcp-gitops \
+  --org-name vcluster-demos \
+  --git-target-revision use-case/branch-test \
+  --forgejo-host forgejo.vcp.local \
+  --include-md
+```
+
+Use `--git-target-revision <branch>` when you want self-repo Argo CD and Flux references to render against a non-default test branch.
+
 Defaults:
 
 - repo: `vcp-gitops`
 - org: `vcluster-demos`
 - base domain: `vcp.local`
+- git target revision: `main`
 - Kargo host: `kargo.vcp.local`
 - Kargo webhook host: `kargo-webhooks.vcp.local`
 - git base URL: `http://forgejo-http.forgejo.svc.cluster.local:3000`
@@ -44,18 +58,13 @@ bash scripts/bootstrap-forgejo-repo.sh \
   --include-working-tree
 ```
 
-`--include-working-tree` is what makes the local replacement output show up in
-Forgejo without committing local changes first.
+`--include-working-tree` is what makes the local replacement output show up in Forgejo without committing local changes first.
 
-Use this from the rendered `vind` runtime checkout, not from the template-style
-source checkout with unresolved `{REPLACE_*}` placeholders. The script now
-refuses to push a working-tree snapshot if critical runtime files such as the
-Forgejo build workflow still contain unresolved placeholders.
+Use this from the rendered `vind` runtime checkout, not from the template-style source checkout with unresolved `{REPLACE_*}` placeholders. The script now refuses to push a working-tree snapshot if critical runtime files such as the Forgejo build workflow still contain unresolved placeholders.
 
 ## `build-push-forgejo-image.sh`
 
-Builds a Dockerfile and pushes it to the Forgejo container registry. The
-default path is the demo app image from `src/Dockerfile`.
+Builds a Dockerfile and pushes it to the Forgejo container registry. The default path is the demo app image from `src/Dockerfile`.
 
 Example:
 
@@ -100,10 +109,7 @@ bash scripts/configure-forgejo-webhook.sh \
 
 ## `configure-forgejo-labels.sh`
 
-Creates or updates a single label in a Forgejo repository. Used during bootstrap
-to create the PR workflow labels that the `flux` and `argocd-vcluster-pull-request-environments`
-use cases rely on. This replaces the Crossplane `IssueLabels` resource, which requires the
-GitHub provider and is not available in the vind environment.
+Creates or updates a single label in a Forgejo repository. Used during bootstrap to create the PR workflow labels that the `flux` and `argocd-vcluster-pull-request-environments` use cases rely on. This replaces the Crossplane `IssueLabels` resource, which requires the GitHub provider and is not available in the vind environment.
 
 Example:
 
@@ -121,8 +127,7 @@ bash scripts/configure-forgejo-labels.sh \
 
 ## `configure-forgejo-actions-secret.sh`
 
-Creates or updates a Forgejo repository Actions secret. The `vind` bootstrap now
-uses this to seed `FORGEJO_PASSWORD` for the `build-push` workflow.
+Creates or updates a Forgejo repository Actions secret. The `vind` bootstrap now uses this to seed `FORGEJO_PASSWORD` for the `build-push` workflow.
 
 Example:
 
@@ -139,13 +144,9 @@ bash scripts/configure-forgejo-actions-secret.sh \
 
 ## `configure-flux-webhook.sh`
 
-Registers a Forgejo webhook for the Flux `pr-github-receiver`. Looks up the
-Receiver's dynamic webhook path from the cluster (`.status.webhookPath`), then
-calls `configure-forgejo-webhook.sh` with the full URL. Safe to re-run — if the
-webhook already exists it will be updated rather than duplicated.
+Registers a Forgejo webhook for the Flux `pr-github-receiver`. Looks up the Receiver's dynamic webhook path from the cluster (`.status.webhookPath`), then calls `configure-forgejo-webhook.sh` with the full URL. Safe to re-run — if the webhook already exists it will be updated rather than duplicated.
 
-Use this script when flux is enabled after the initial bootstrap, or to
-re-register the webhook after the Receiver is recreated.
+Use this script when flux is enabled after the initial bootstrap, or to re-register the webhook after the Receiver is recreated.
 
 Example:
 
@@ -184,9 +185,4 @@ bash scripts/test-pre-prod-wakeup.sh status
 bash scripts/test-pre-prod-wakeup.sh scenario
 ```
 
-The `scenario` mode force-sleeps `pre-prod-gate-pre-prod`, tails the Argo CD
-`vcluster-gitops-watcher` logs, then triggers a manual sync on
-`guestbook-ppg-pre-prod` so you can verify that the shared watcher wakes a
-sleeping destination and toggles the imported cluster Secret's
-`skip-reconcile` annotation as the vCluster moves through sleeping, waking, and
-ready states.
+The `scenario` mode force-sleeps `pre-prod-gate-pre-prod`, tails the Argo CD `vcluster-gitops-watcher` logs, then triggers a manual sync on `guestbook-ppg-pre-prod` so you can verify that the shared watcher wakes a sleeping destination and toggles the imported cluster Secret's `skip-reconcile` annotation as the vCluster moves through sleeping, waking, and ready states.

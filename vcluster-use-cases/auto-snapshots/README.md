@@ -1,57 +1,42 @@
 # vCluster Automatic Snapshots
 
-Snapshots are a built-in method to back up a vCluster as an OCI artifact that
-can be pushed to either:
+Snapshots are a built-in method to back up a vCluster as an OCI artifact that can be pushed to either:
 
 - an OCI-compliant container registry
 - an S3 bucket
 
-This demo configures a `VirtualClusterTemplate` and example
-`VirtualClusterInstance` with snapshots configured under `snapshots.auto`.
+This demo configures a `VirtualClusterTemplate` and example `VirtualClusterInstance` with snapshots configured under `snapshots.auto`.
 
 ## Registry Target By Deployment Mode
 
 This use case now has two render paths:
 
-- vCluster Platform Demo Generator / GitHub path:
-  snapshots are pushed to GHCR
-- self-contained `vind` path:
-  snapshots also use GHCR for now
+- vCluster Platform Demo Generator / GitHub path: snapshots are pushed to GHCR
+- self-contained `vind` path: snapshots also use GHCR for now
 
 The OCI image location therefore depends on how the repo was rendered:
 
-- generator / GitHub:
-  `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
-- self-contained `vind`:
-  `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
+- generator / GitHub: `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
+- self-contained `vind`: `oci://ghcr.io/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}`
 
 The corresponding credential secret also differs by render path:
 
 - the original path keeps the GHCR-style secret naming
-- the self-contained path still uses the rendered projected secret name, but it
-  should contain GHCR credentials instead of Forgejo credentials
+- the self-contained path still uses the rendered projected secret name, but it should contain GHCR credentials instead of Forgejo credentials
 
 ## Self-Contained vind Notes
 
 In the self-contained `vind` flow:
 
-- `bootstrap-self-contained.sh` builds and pushes the demo image to the Forgejo
-  container registry
-- the same bootstrap can create the default Platform `ProjectSecret` used for
-  snapshot registry auth when `GHCR_USERNAME` and `GHCR_TOKEN` or
-  `GHCR_PASSWORD` are provided
-- the local-contained overlay points the auto-snapshots manifests at the
-  self-contained version so Argo CD does not fight the populated registry
-  secret
+- `bootstrap-self-contained.sh` builds and pushes the demo image to the Forgejo container registry
+- the same bootstrap can create the default Platform `ProjectSecret` used for snapshot registry auth when `GHCR_USERNAME` and `GHCR_TOKEN` or `GHCR_PASSWORD` are provided
+- the local-contained overlay points the auto-snapshots manifests at the self-contained version so Argo CD does not fight the populated registry secret
 
-The demo app image flow uses Forgejo. Snapshot storage stays on GHCR for the
-local `vind` path because the local Forgejo snapshot registry flow has not been
-validated for the in-cluster snapshot client yet.
+The demo app image flow uses Forgejo. Snapshot storage stays on GHCR for the local `vind` path because the local Forgejo snapshot registry flow has not been validated for the in-cluster snapshot client yet.
 
 ## Schedule
 
-Snapshots are configured to run Monday through Friday at 15 minutes past the
-hour from 7 AM through 5 PM.
+Snapshots are configured to run Monday through Friday at 15 minutes past the hour from 7 AM through 5 PM.
 
 The current snapshot config shape for `0.32+` is:
 
@@ -72,8 +57,7 @@ snapshots:
           secretNamespace: <vcluster-host-namespace>
 ```
 
-This use case does not enable volume snapshots by default. If you need them,
-the config lives under:
+This use case does not enable volume snapshots by default. If you need them, the config lives under:
 
 ```yaml
 snapshots:
@@ -81,8 +65,7 @@ snapshots:
     enabled: true
 ```
 
-but that requires the additional host or virtual cluster volume snapshot
-prerequisites to already be in place.
+but that requires the additional host or virtual cluster volume snapshot prerequisites to already be in place.
 
 ## Restore
 
@@ -104,8 +87,7 @@ vcluster restore snappy oci://{REPLACE_SNAPSHOT_OCI_REPOSITORY}:snappy-202508261
 5. Return to the Platform UI and wait for the `snappy` vCluster instance to restart.
 6. Confirm that the `demo-web` `Deployment` has been restored.
 
-For the original GitHub-rendered path, the snapshot package is available in the
-GitHub package UI here:
+For the original GitHub-rendered path, the snapshot package is available in the GitHub package UI here:
 
 - `https://github.com/orgs/{REPLACE_ORG_NAME}/packages/container/package/{REPLACE_REPO_NAME}`
 

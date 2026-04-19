@@ -38,7 +38,7 @@ spec:
             - name: "server.ingress.hostname"
               value: '{{ index .metadata.labels "vcluster.demo/argocd-hostname" }}'
         - repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
-          targetRevision: main
+          targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
           ref: values
       syncPolicy:
         automated:

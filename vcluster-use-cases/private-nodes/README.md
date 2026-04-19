@@ -1,14 +1,12 @@
 # vCluster Private Nodes
 
-This use case demonstrates the manual Private Nodes model for vCluster
-Platform. The intent is:
+This use case demonstrates the manual Private Nodes model for vCluster Platform. The intent is:
 
 - create a private-node-enabled vCluster
 - provision an external machine yourself
 - use the Private Nodes connect command to join that machine to the vCluster
 
-For the `vind` path, OrbStack is the natural external-machine provider because
-it is already a repo dependency.
+For the `vind` path, OrbStack is the natural external-machine provider because it is already a repo dependency.
 
 ## What This Uses
 
@@ -36,8 +34,7 @@ privateNodes:
       enabled: true
 ```
 
-That is the safer default for the `vind` + OrbStack VM path because the joined
-VM does not need a separate public control-plane endpoint to reach the vCluster.
+That is the safer default for the `vind` + OrbStack VM path because the joined VM does not need a separate public control-plane endpoint to reach the vCluster.
 
 ## OrbStack VM Flow for `vind`
 
@@ -63,8 +60,7 @@ bash vcluster-use-cases/private-nodes/create-orbstack-private-node.sh \
   --background
 ```
 
-This helper intentionally does not use cloud-init. The Private Nodes connect
-command already handles the required node bootstrap.
+This helper intentionally does not use cloud-init. The Private Nodes connect command already handles the required node bootstrap.
 
 ## Demo Flow
 
@@ -88,13 +84,11 @@ LICENSE_TOKEN="$TOKEN" bash vind-demo-cluster/bootstrap-self-contained.sh \
   --use-cases eso,private-nodes
 ```
 
-In the `vind` bootstrap, the default OrbStack VM creation runs in the
-background so the bootstrap does not wait for the initial VM boot.
+In the `vind` bootstrap, the default OrbStack VM creation runs in the background so the bootstrap does not wait for the initial VM boot.
 
 ## What Changed from the Older Cloud Auto-Node Example
 
-This repo previously had a GCP/provider-shaped private-nodes template. For the
-`vind` path, this use case is now focused on the manual join flow first.
+This repo previously had a GCP/provider-shaped private-nodes template. For the `vind` path, this use case is now focused on the manual join flow first.
 
 The older provider artifacts are still present for follow-up work:
 
@@ -104,10 +98,7 @@ Auto Nodes can be added next as a separate step following the workshop model.
 
 ## Auto Nodes (vind only)
 
-The `auto-nodes` sub-use-case in [`auto-nodes/`](./auto-nodes/) uses
-[vcluster-auto-nodes-pod](https://github.com/loft-demos/vcluster-auto-nodes-pod)
-— a Terraform-based `NodeProvider` that provisions pod-nodes (privileged pods
-acting as kubelet worker nodes).
+The `auto-nodes` sub-use-case in [`auto-nodes/`](./auto-nodes/) uses [vcluster-auto-nodes-pod](https://github.com/loft-demos/vcluster-auto-nodes-pod) — a Terraform-based `NodeProvider` that provisions pod-nodes (privileged pods acting as kubelet worker nodes).
 
 > **Cluster requirement:** Pod-nodes rely on nested container runtimes inside a
 > privileged pod. This only works on **container-based clusters** such as `vind`

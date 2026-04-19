@@ -1,10 +1,8 @@
-name: build-push-main
+name: build-push-default-branch
 
-# on merge to main from pull request (recommended)
+# on push to the repository default branch
 on:
   push:
-    branches:
-      - main
     paths:
       - 'src/**'
       - 'helm-chart/**'
@@ -19,7 +17,7 @@ env:
 
 jobs:
   changes:
-    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' }}
+    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' && github.ref_name == github.event.repository.default_branch }}
     runs-on: ubuntu-22.04
     outputs:
       src: ${{ steps.changes.outputs.src }}
@@ -37,7 +35,7 @@ jobs:
 
   app-update:
     needs: changes
-    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' && needs.changes.outputs.src == 'true' }}
+    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' && github.ref_name == github.event.repository.default_branch && needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-22.04
     permissions:
       packages: write
@@ -91,7 +89,7 @@ jobs:
 
   helm-chart-update:
     needs: changes
-    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' && needs.changes.outputs.helm-chart == 'true' }}
+    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' && github.ref_name == github.event.repository.default_branch && needs.changes.outputs.helm-chart == 'true' }}
     runs-on: ubuntu-22.04
     permissions:
       contents: write

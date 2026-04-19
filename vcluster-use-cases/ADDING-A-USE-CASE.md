@@ -63,7 +63,7 @@ spec:
   project: default
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-    targetRevision: HEAD
+    targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
     path: vcluster-use-cases/my-feature/manifests
   destination:
     server: https://kubernetes.default.svc
@@ -114,7 +114,7 @@ spec:
       project: default
       source:
         repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-        targetRevision: HEAD
+        targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
         path: vcluster-use-cases/my-feature/apps
       syncPolicy:
         automated:
@@ -243,6 +243,50 @@ labels:
 
 For use cases that should always be on in generator environments, hardcode the label to `'true'` instead of using a parameter.
 
+### Branch-test support for generated repos
+
+If your use case points back at this same generated repo, use `{REPLACE_GIT_TARGET_REVISION}` for Argo CD `targetRevision` values and Flux `ref.branch` values instead of hardcoding `main` or `HEAD`.
+
+Use the placeholder for:
+
+- `repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}...'`
+- `targetRevision:` on Argo CD `Application` or `ApplicationSet` sources
+- `branch:` on Flux `GitRepository` refs
+
+Do not use the placeholder for:
+
+- upstream repos that are not the generated demo repo
+- docs or examples that intentionally describe a fixed upstream branch
+- local bootstrap apps that should follow the checked-out default branch via `HEAD`
+
+Why this works:
+
+- `loft-demo-base` exposes a `gitRevision` parameter on the demo generator `VirtualClusterTemplate` resource
+- that value is passed into the `DemoRepository` Crossplane claim as `gitTargetRevision`
+- when `gitRevision` is `main`, the generated repo keeps the normal template-copy behavior
+- when `gitRevision` is not `main`, the Crossplane composition in `loft-demo-base` copies all template branches, sets the generated repo default branch to `gitTargetRevision` with a `DefaultBranch` resource, and only then writes the seed `RepositoryFile` commit that triggers the GitHub Actions `replace-text` workflow
+- the `replace-text` workflow and `scripts/replace-text-local.sh` render `{REPLACE_GIT_TARGET_REVISION}` from that selected branch, so self-repo references follow the branch under test
+
+That sequencing matters because the seed commit is what starts the generated repo bootstrap. If the default branch were still `main` at that moment, the repo could render the wrong branch into self-references.
+
+Local validation:
+
+```bash
+bash scripts/replace-text-local.sh \
+  --repo-name vcp-gitops \
+  --org-name vcluster-demos \
+  --git-target-revision use-case/branch-test \
+  --include-md \
+  --dry-run
+```
+
+Generator validation:
+
+1. Create or update your branch in `vcluster-platform-demo-app-template`.
+2. Create a vCluster Platform demo environment from the vCluster Platform Demo virtual cluster template with the `gitRevision` parameter set to that branch name.
+3. Confirm the generated repo default branch matches `gitRevision`.
+4. Check a few self-repo Argo CD or Flux manifests and verify they rendered `targetRevision` or `branch` to the selected branch instead of `main`.
+
 ---
 
 ## Step 7 — Write the manifests
@@ -277,6 +321,7 @@ For values that differ between environments, use placeholders in your manifests.
 | `{REPLACE_GIT_BASE_URL}` | External Git server URL |
 | `{REPLACE_ORG_NAME}` | Git org / owner name |
 | `{REPLACE_REPO_NAME}` | Git repository name |
+| `{REPLACE_GIT_TARGET_REVISION}` | Generated repo branch to use for self-repo Argo CD and Flux references |
 | `{REPLACE_BASE_DOMAIN}` | Base domain for ingress |
 | `{REPLACE_GIT_BASE_URL_AUTHED}` | Internal authenticated Git URL |
 
@@ -284,11 +329,7 @@ For values that differ between environments, use placeholders in your manifests.
 
 ## Step 8 — Write a README
 
-Add a `README.md` to `vcluster-use-cases/my-feature/` describing:
-- What the use case demonstrates
-- Any prerequisites
-- How to enable it: `--use-cases my-feature` (vind) or label `myFeature: 'true'` (managed)
-- Key files and what they do
+Add a `README.md` to `vcluster-use-cases/my-feature/` describing: - What the use case demonstrates - Any prerequisites - How to enable it: `--use-cases my-feature` (vind) or label `myFeature: 'true'` (managed) - Key files and what they do
 
 ---
 
@@ -300,15 +341,11 @@ Add a `README.md` to `vcluster-use-cases/my-feature/` describing:
 - [ ] `vcluster-gitops/argocd/app-of-apps/overlays/local-contained/kustomization.yaml` — AppSet added to resources
 - [ ] `vind-demo-cluster/use-case-labels.sh` — `known_use_case_entries`, `canonical_use_case_name`, `label_key_for_use_case`, `print_known_use_cases`
 - [ ] `self-managed-demo-cluster/argocd-cluster-bootstrap-secret.yaml` — label added
+- [ ] Self-repo Argo CD and Flux refs use `{REPLACE_GIT_TARGET_REVISION}` instead of hardcoded `main` or `HEAD`
 - [ ] `vcluster-use-cases/my-feature/README.md` — documentation
 
 ---
 
 ## Reference: `database-connector` use case
 
-The `database-connector` use case is a good concrete example of this pattern. It has:
-- One Application in `apps/`: a manifests app for the use-case-specific resources
-- A shared CNPG dependency installed separately by `vcluster-gitops/argocd/app-of-apps/cnpg-appset.yaml`
-- Sync waves ordering secrets → CNPG Cluster → VirtualClusterInstance
-- A credential secret using `{REPLACE_DB_CONNECTOR_PASSWORD}` placeholder
-- Label key `databaseConnector` mapped to canonical name `database-connector`
+The `database-connector` use case is a good concrete example of this pattern. It has: - One Application in `apps/`: a manifests app for the use-case-specific resources - A shared CNPG dependency installed separately by `vcluster-gitops/argocd/app-of-apps/cnpg-appset.yaml` - Sync waves ordering secrets → CNPG Cluster → VirtualClusterInstance - A credential secret using `{REPLACE_DB_CONNECTOR_PASSWORD}` placeholder - Label key `databaseConnector` mapped to canonical name `database-connector`

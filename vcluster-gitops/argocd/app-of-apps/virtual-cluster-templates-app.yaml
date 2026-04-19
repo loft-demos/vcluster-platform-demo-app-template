@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-    targetRevision: main
+    targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
     path: vcluster-gitops/virtual-cluster-templates/overlays/prod
   destination:
     server: https://kubernetes.default.svc

@@ -1,7 +1,6 @@
 # Tenant Observability
 
-This use case demonstrates tenant-scoped observability inside each vCluster
-using:
+This use case demonstrates tenant-scoped observability inside each vCluster using:
 
 - Grafana
 - Loki
@@ -9,8 +8,7 @@ using:
 - Promtail
 - a small sample workload that emits logs and exposes Prometheus metrics
 
-Grafana also comes with a small default dashboard so the demo is usable
-immediately after sync.
+Grafana also comes with a small default dashboard so the demo is usable immediately after sync.
 
 > [!IMPORTANT]
 > This use case has been validated on the OrbStack-backed self-contained `vind`
@@ -25,29 +23,23 @@ The important part is the deployment model:
 1. the `tenant-observability-vcluster` template creates a tenant vCluster
 2. that template automatically imports the tenant vCluster into the host Argo CD
 3. a host-side Argo CD `ApplicationSet` sees the imported cluster labels
-4. that `ApplicationSet` installs the observability stack into the tenant
-   vCluster
+4. that `ApplicationSet` installs the observability stack into the tenant vCluster
 
-So this follows the same pattern as `argocd-in-vcluster`, instead of embedding
-the whole observability stack directly in the `VirtualClusterTemplate`.
+So this follows the same pattern as `argocd-in-vcluster`, instead of embedding the whole observability stack directly in the `VirtualClusterTemplate`.
 
 ## What This Demonstrates
 
 - each tenant vCluster gets its own local Grafana, Loki, and Prometheus
 - metrics and dashboards should work anywhere the stack can run
-- the supported path uses Promtail plus Central HostPath Mapper for tenant log
-  collection
-- the host Argo CD instance can manage add-ons inside imported tenant
-  vCluster instances
-- multiple tenant vCluster instances on the same host cluster stay isolated because each
-  vCluster has its own stack and local datasources
+- the supported path uses Promtail plus Central HostPath Mapper for tenant log collection
+- the host Argo CD instance can manage add-ons inside imported tenant vCluster instances
+- multiple tenant vCluster instances on the same host cluster stay isolated because each vCluster has its own stack and local datasources
 
 Promtail is the collector used for the supported path.
 
 ## Recommended Validation Target
 
-This use case is validated on `vind` and should also be validated on a direct
-self-managed host cluster.
+This use case is validated on `vind` and should also be validated on a direct self-managed host cluster.
 
 That is still the cleanest CHPM path:
 
@@ -55,17 +47,14 @@ That is still the cleanest CHPM path:
 - vCluster Platform management cluster
 - tenant vCluster instances
 
-The Demo Generator path is still unvalidated for this use case because it adds
-extra nesting:
+The Demo Generator path is still unvalidated for this use case because it adds extra nesting:
 
 - parent host cluster
 - Generator vCluster
 - child vCluster Platform management vCluster
 - tenant vCluster instances
 
-Even if the final tenant pods land on the parent host nodes, that extra
-virtualization and sync depth may change how CHPM maps virtual pod identity
-back to the physical host log path.
+Even if the final tenant pods land on the parent host nodes, that extra virtualization and sync depth may change how CHPM maps virtual pod identity back to the physical host log path.
 
 ## Host Prerequisites
 
@@ -79,8 +68,7 @@ Why it is needed:
 
 - log collectors usually read pod logs from host paths like `/var/log/pods`
 - vCluster rewrites synced pod names on the host side
-- Central HostPath Mapper provides vCluster-scoped symlinks so collectors
-  inside the vCluster can still reach the correct host log files
+- Central HostPath Mapper provides vCluster-scoped symlinks so collectors inside the vCluster can still reach the correct host log files
 
 The tenant template includes the required vCluster config already:
 
@@ -97,8 +85,7 @@ controlPlane:
     central: true
 ```
 
-When this use case is enabled through this repo, host Argo CD also installs the
-Central HostPath Mapper Helm chart on the host cluster:
+When this use case is enabled through this repo, host Argo CD also installs the Central HostPath Mapper Helm chart on the host cluster:
 
 - [apps/tenant-observability-central-hostpath-mapper.yaml](./apps/tenant-observability-central-hostpath-mapper.yaml)
 
@@ -108,27 +95,19 @@ That `Application` installs:
 - repo: `https://charts.loft.sh/`
 - version: `0.3.0-rc.1`
 
-So for the normal Generator and self-managed host-cluster flows, you do not
-need a separate manual install step for Central HostPath Mapper.
+So for the normal Generator and self-managed host-cluster flows, you do not need a separate manual install step for Central HostPath Mapper.
 
-For the `vind` path, the management cluster also needs an ingress controller if
-you want tenant UIs reachable from your laptop. The `vind` bootstrap installs
-`ingress-nginx`, and the OrbStack/Caddy adapter can route `*.vcp.local` to it.
+For the `vind` path, the management cluster also needs an ingress controller if you want tenant UIs reachable from your laptop. The `vind` bootstrap installs `ingress-nginx`, and the OrbStack/Caddy adapter can route `*.vcp.local` to it.
 
 ## How It Is Bootstrapped
 
 The management-cluster Argo CD flow is:
 
-- [apps/tenant-observability-manifests.yaml](./apps/tenant-observability-manifests.yaml)
-  applies the template and example instance manifests
-- [apps/tenant-observability-applicationsets.yaml](./apps/tenant-observability-applicationsets.yaml)
-  applies the imported-cluster `ApplicationSet`
-- [applicationsets/tenant-observability-cluster-gen.yaml](./applicationsets/tenant-observability-cluster-gen.yaml)
-  watches imported clusters labeled `addons.vcluster.demo/tenant-observability=true`
-  and installs the stack into each one
+- [apps/tenant-observability-manifests.yaml](./apps/tenant-observability-manifests.yaml) applies the template and example instance manifests
+- [apps/tenant-observability-applicationsets.yaml](./apps/tenant-observability-applicationsets.yaml) applies the imported-cluster `ApplicationSet`
+- [applicationsets/tenant-observability-cluster-gen.yaml](./applicationsets/tenant-observability-cluster-gen.yaml) watches imported clusters labeled `addons.vcluster.demo/tenant-observability=true` and installs the stack into each one
 
-On the standard Generator / self-managed host-cluster path, Argo CD also
-installs:
+On the standard Generator / self-managed host-cluster path, Argo CD also installs:
 
 - [apps/tenant-observability-central-hostpath-mapper.yaml](./apps/tenant-observability-central-hostpath-mapper.yaml)
 
@@ -185,8 +164,7 @@ Validation flow:
 6. repeat the same checks in `team-b`
 7. confirm `team-a` data does not appear in `team-b`, and vice versa
 
-The template adds `Grafana` and `Prometheus` custom links to the vCluster
-instance so those UIs are easy to open from the Platform UI.
+The template adds `Grafana` and `Prometheus` custom links to the vCluster instance so those UIs are easy to open from the Platform UI.
 
 For the `vind` local-domain path, those links use the wildcard hostname shape:
 
@@ -211,9 +189,7 @@ That dashboard uses `kube-state-metrics` scraped by Prometheus for:
 - available deployment replicas
 - pod phase breakdown
 
-`metrics-server` is not required for these Grafana dashboards. Prometheus needs
-exported metrics to scrape, and `kube-state-metrics` is the lightweight source
-for the standard Kubernetes object metrics used here.
+`metrics-server` is not required for these Grafana dashboards. Prometheus needs exported metrics to scrape, and `kube-state-metrics` is the lightweight source for the standard Kubernetes object metrics used here.
 
 ## Confirm HostPath Mapper Is Working
 
@@ -228,8 +204,7 @@ Then in Grafana Explore, query Loki for:
 
 - `tenant-observability demo message`
 
-If Central HostPath Mapper is missing on the standard path, Promtail will
-usually start but the tenant workload logs will not show up in Loki.
+If Central HostPath Mapper is missing on the standard path, Promtail will usually start but the tenant workload logs will not show up in Loki.
 
 ## Scaling Notes
 

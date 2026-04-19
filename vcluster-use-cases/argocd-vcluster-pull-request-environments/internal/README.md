@@ -62,7 +62,7 @@ This approach enables fast, isolated, and repeatable CI/CD workflows, enhancing 
     - `XPullRequestEnvironment`
     - `XArgoCDWebhook`
 - Argo CD
-  - ApplicationSet using the Pull Request Generator 
+  - ApplicationSet using the Pull Request Generator
 - Ingress Nginx
 - vCluster - created with a `VirtualClusterTemplate`
   - Argo CD

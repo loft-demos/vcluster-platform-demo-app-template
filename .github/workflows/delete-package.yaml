@@ -1,13 +1,13 @@
 name: delete-old-repo-package
 
-# on merge to main from pull request (recommended)
+# on the repository default branch
 on:
   create:
   workflow_dispatch:
 jobs:
   delete-old-repo-package:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref_name == github.event.repository.default_branch }}
     steps:
       - id: delete-package
         shell: bash

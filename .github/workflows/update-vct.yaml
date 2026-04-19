@@ -5,6 +5,9 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
 
+env:
+  DEFAULT_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -62,12 +65,12 @@ jobs:
         env:
           BRANCH_NAME: ${{ steps.prepare_branch.outputs.branch_name }}
 
-      - name: Check for remaining diffs from main
+      - name: Check for remaining diffs from the default branch
         id: check_diff
         run: |
-          git fetch origin main
-          if git diff --quiet origin/main...HEAD; then
-            echo "No diff from main. Skipping PR."
+          git fetch origin "$DEFAULT_BRANCH"
+          if git diff --quiet "origin/$DEFAULT_BRANCH"...HEAD; then
+            echo "No diff from $DEFAULT_BRANCH. Skipping PR."
             echo "skip_pr=true" >> $GITHUB_OUTPUT
           else
             echo "skip_pr=false" >> $GITHUB_OUTPUT
@@ -99,6 +102,6 @@ jobs:
             --label "auto-update-templates" \
             --body "This PR was automatically generated to update Kubernetes version options in vCluster Templates." \
             --head "${{ steps.prepare_branch.outputs.branch_name }}" \
-            --base main
+            --base "$DEFAULT_BRANCH"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

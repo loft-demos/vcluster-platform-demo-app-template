@@ -78,12 +78,9 @@ Main repo areas:
 
 ## Enable Use Cases Directly with `cluster-local`
 
-Both the Demo Generator path and the self-contained `vind` path use the Argo CD
-cluster secret named `cluster-local` in namespace `argocd` to decide which
-use-case `ApplicationSet`s should match the local management cluster.
+Both the Demo Generator path and the self-contained `vind` path use the Argo CD cluster secret named `cluster-local` in namespace `argocd` to decide which use-case `ApplicationSet`s should match the local management cluster.
 
-That means you can enable or disable use cases directly with `kubectl label`
-without rerunning the full bootstrap.
+That means you can enable or disable use cases directly with `kubectl label` without rerunning the full bootstrap.
 
 Example:
 

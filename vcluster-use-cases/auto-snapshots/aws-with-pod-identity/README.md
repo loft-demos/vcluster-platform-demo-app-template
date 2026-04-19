@@ -20,16 +20,11 @@ Without automation, this quickly becomes a bottleneck when managing **dozens or 
 
 To make EKS Pod Identity scale efficiently across many virtual cluster instances, we combine:
 
-1. **EKS ACK ([AWS Controllers for Kubernetes](https://aws-controllers-k8s.github.io/community/docs/community/overview/))**  
-   Deployed to the host cluster where the virtual cluster instance is deployed, EKS ACK provides the `PodIdentityAssociation` CRD, allowing Pod Identity configuration to be managed declaratively in Kubernetes.
+1. **EKS ACK ([AWS Controllers for Kubernetes](https://aws-controllers-k8s.github.io/community/docs/community/overview/))** Deployed to the host cluster where the virtual cluster instance is deployed, EKS ACK provides the `PodIdentityAssociation` CRD, allowing Pod Identity configuration to be managed declaratively in Kubernetes.
 
-2. **vCluster Platform Virtual Cluster Templates**  
-   Used to dynamically inject configuration (like IAM roles, S3 bucket URLs, and timezones) from the host [vCluster Platform `Cluster` resource](https://www.vcluster.com/docs/platform/api/resources/clusters/) annotations, along with [platform-specific parameter values](https://www.vcluster.com/docs/platform/administer/templates/parameters#platform-specific-parameter-values), directly into each vCluster’s configuration and associated `PodIdentityAssociation`. The EKS ACK `PodIdentityAssociation` resource is created in the virtual cluster host namespace via the `spec.template.spaceTemplate.objects` field.
+2. **vCluster Platform Virtual Cluster Templates** Used to dynamically inject configuration (like IAM roles, S3 bucket URLs, and timezones) from the host [vCluster Platform `Cluster` resource](https://www.vcluster.com/docs/platform/api/resources/clusters/) annotations, along with [platform-specific parameter values](https://www.vcluster.com/docs/platform/administer/templates/parameters#platform-specific-parameter-values), directly into each vCluster’s configuration and associated `PodIdentityAssociation`. The EKS ACK `PodIdentityAssociation` resource is created in the virtual cluster host namespace via the `spec.template.spaceTemplate.objects` field.
 
-This approach enables:
-- Fully declarative Pod Identity and snapshot setup for every vCluster  
-- Centralized management of cluster-specific S3 and IAM configuration  
-- Seamless GitOps integration with Argo CD or Flux  
+This approach enables: - Fully declarative Pod Identity and snapshot setup for every vCluster - Centralized management of cluster-specific S3 and IAM configuration - Seamless GitOps integration with Argo CD or Flux
 
 ## Cluster Configuration Example
 
@@ -63,11 +58,7 @@ Each annotation maps to a reusable configuration field consumed by the Virtual C
 
 ## Template Overview
 
-The `VirtualClusterTemplate` enables:
-- Automatic S3 snapshot configuration  
-- Dynamic timezone and schedule injection  
-- Creation of a `PodIdentityAssociation` per vCluster  
-- Adjustable retention parameters  
+The `VirtualClusterTemplate` enables: - Automatic S3 snapshot configuration - Dynamic timezone and schedule injection - Creation of a `PodIdentityAssociation` per vCluster - Adjustable retention parameters
 
 This lets hundreds of virtual cluster instances share the same template logic, while still targeting the correct AWS S3 bucket and IAM role for the host cluster.
 
@@ -147,38 +138,29 @@ spec:
 
 ## How It Works
 
-1. **Cluster Annotations**  
-   Each vCluster Platform `Cluster` resource defines environment-specific configuration such as IAM role, S3 bucket URL, and timezone via annotations.
+1. **Cluster Annotations** Each vCluster Platform `Cluster` resource defines environment-specific configuration such as IAM role, S3 bucket URL, and timezone via annotations.
 
-2. **Virtual Cluster Template Injection**  
-   When a new virtual cluster instance is created from this template, the placeholders  
-   `.Values.loft.clusterAnnotations[...]` automatically inject those annotation values at runtime.
+2. **Virtual Cluster Template Injection** When a new virtual cluster instance is created from this template, the placeholders `.Values.loft.clusterAnnotations[...]` automatically inject those annotation values at runtime.
 
-3. **Pod Identity Association**  
-   The template’s `spaceTemplate.objects` block creates a `PodIdentityAssociation` in the virtual cluster host (EKS) cluster,  
-   binding the vCluster’s service account to the IAM role from annotations.
+3. **Pod Identity Association** The template’s `spaceTemplate.objects` block creates a `PodIdentityAssociation` in the virtual cluster host (EKS) cluster, binding the vCluster’s service account to the IAM role from annotations.
 
-4. **Auto Snapshot Configuration**  
-   The virtual cluster instance Helm values configure `snapshots.auto` schedule, retention period, timezone, and S3 backend.  
-   Snapshots are automatically stored in the annotated S3 bucket.
+4. **Auto Snapshot Configuration** The virtual cluster instance Helm values configure `snapshots.auto` schedule, retention period, timezone, and S3 backend. Snapshots are automatically stored in the annotated S3 bucket.
 
-5. **Sleep Mode Alignment**  
-   Sleep and wakeup schedules share the same timezone for consistent scheduling behavior.
+5. **Sleep Mode Alignment** Sleep and wakeup schedules share the same timezone for consistent scheduling behavior.
 
 ## Benefits
 
-- **Scales cleanly:** Handles hundreds of virtual cluster instances without manual IAM or Pod Identity management.  
-- **Declarative:** Everything is GitOps-managed through YAML; no imperative setup steps.  
-- **Secure:** Each vCluster’s service account uses least-privilege IAM via Pod Identity.  
-- **Consistent:** Schedules, retention, and timezone come from centralized cluster annotations.  
+- **Scales cleanly:** Handles hundreds of virtual cluster instances without manual IAM or Pod Identity management.
+- **Declarative:** Everything is GitOps-managed through YAML; no imperative setup steps.
+- **Secure:** Each vCluster’s service account uses least-privilege IAM via Pod Identity.
+- **Consistent:** Schedules, retention, and timezone come from centralized cluster annotations.
 - **Reusable:** A single Virtual Cluster Template supports many tenants, clusters, and environments.
 
 ## Operational Notes
 
-- **EKS ACK dependency:** The ACK EKS controller that provides the `PodIdentityAssociation` CRD must be installed and healthy in the host cluster.  
-- **ServiceAccount naming:** The vCluster control plane’s service account defaults to `vc-<vclusterName>`.  
-  Adjust the template if you use a different name.  
-- **S3 pathing:** You can use a shared S3 bucket with per-vCluster folder prefixes or separate buckets per tenant.  
+- **EKS ACK dependency:** The ACK EKS controller that provides the `PodIdentityAssociation` CRD must be installed and healthy in the host cluster.
+- **ServiceAccount naming:** The vCluster control plane’s service account defaults to `vc-<vclusterName>`. Adjust the template if you use a different name.
+- **S3 pathing:** You can use a shared S3 bucket with per-vCluster folder prefixes or separate buckets per tenant.
 - **Timezone default:** If the `use-case.demos.vcluster.com/timezone` annotation is missing, the template falls back to `"America/New_York"`.
 
 ## IAM & S3 Permissions Example
@@ -207,7 +189,7 @@ Ensure the IAM trust policy for this role includes the EKS Pod Identity service 
 
 ## Validation Steps
 
-1. **Create a vCluster instance** using this template.  
+1. **Create a vCluster instance** using this template.
 2. **Verify Pod Identity association:**
 
 ```bash
@@ -220,8 +202,7 @@ kubectl -n <vcluster-host-namespace> get podidentityassociations.eks.services.k8
    kubectl -n vcluster-platform logs deploy/loft | grep snapshot
 ```
 
-4. **Confirm S3 uploads:**  
-   Verify new objects appear in your S3 bucket under vcluster/<vcluster-name>/.
+4. **Confirm S3 uploads:** Verify new objects appear in your S3 bucket under vcluster/<vcluster-name>/.
 
 ## Troubleshooting
 
@@ -236,8 +217,8 @@ kubectl -n <vcluster-host-namespace> get podidentityassociations.eks.services.k8
 
 ## Future Extensions
 
-- Add per-tenant or per-project overrides for snapshot retention and scheduling.  
-- Integrate with **Crossplane** or **Terraform NodeProviders** to provision buckets and IAM roles dynamically.  
+- Add per-tenant or per-project overrides for snapshot retention and scheduling.
+- Integrate with **Crossplane** or **Terraform NodeProviders** to provision buckets and IAM roles dynamically.
 - Extend this pattern to **GCP** or **Azure** storage backends using provider-specific CRDs and annotation injection.
 
 ---

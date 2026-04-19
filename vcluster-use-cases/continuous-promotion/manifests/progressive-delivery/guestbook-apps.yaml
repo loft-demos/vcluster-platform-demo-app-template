@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-    targetRevision: HEAD
+    targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/dev
   destination:
     name: loft-default-vcluster-pd-dev
@@ -47,7 +47,7 @@ spec:
   project: default
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-    targetRevision: HEAD
+    targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/staging
   destination:
     name: loft-default-vcluster-pd-staging
@@ -73,7 +73,7 @@ spec:
   project: default
   source:
     repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-    targetRevision: HEAD
+    targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
     path: vcluster-use-cases/continuous-promotion/guestbook/stages/prod
   destination:
     name: loft-default-vcluster-pd-prod

@@ -8,9 +8,7 @@ The second approach leverages a pre-existing shared Argo CD instance that has be
 
 ## Shared Host Argo Wake-Up
 
-The shared-host-Argo path now consumes the watcher-first stack documented under
-[../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md).
-That same host-side stack is also reused by the continuous-promotion demos.
+The shared-host-Argo path now consumes the watcher-first stack documented under [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md). That same host-side stack is also reused by the continuous-promotion demos.
 
 What the shared resources do:
 
@@ -32,11 +30,7 @@ The shared-host path no longer depends on:
 - a wake-up proxy
 - `sleepmode.loft.sh/ignore-user-agents: argo*`
 
-If Argo CD is installed inside the vCluster instead of managing it from the
-host, this host-side wake-up concern is different: the embedded Argo instance is
-not the thing waking that vCluster from outside. That is why the shared-host
-watcher flow is most relevant for the first approach in this README, not the
-embedded-Argo approach.
+If Argo CD is installed inside the vCluster instead of managing it from the host, this host-side wake-up concern is different: the embedded Argo instance is not the thing waking that vCluster from outside. That is why the shared-host watcher flow is most relevant for the first approach in this README, not the embedded-Argo approach.
 
 ## Pros and Cons of the Two Approaches
 ### 1. Shared Argo CD creates and deplos to ephemeral vCluster:

@@ -1,6 +1,6 @@
 name: replace-text
 
-# on push to main
+# on seed commit or manual dispatch
 on:
   workflow_dispatch:
     inputs:
@@ -12,9 +12,11 @@ on:
         description: "Base domain used to create example host names"
         required: true
         default: "us.demo.dev"
+      git_target_revision:
+        description: "Git branch or revision to render for self-repo references"
+        required: false
+        default: ""
   push:
-    branches:
-      - main
     paths:
       - 'helm-chart/Chart.yaml'
 env:
@@ -23,6 +25,7 @@ env:
   BASE_DOMAIN: ${{ inputs.base_domain || 'us.demo.dev' }}
   GIT_BASE_URL: https://github.com
   GIT_PUBLIC_URL: https://github.com
+  GIT_TARGET_REVISION: ${{ inputs.git_target_revision || github.event.repository.default_branch || 'main' }}
   APP_IMAGE_REPOSITORY: ghcr.io/${{ github.repository_owner || 'loft-demos' }}/${{ github.event.repository.name }}
   IMAGE_REPOSITORY_PREFIX: ghcr.io/${{ github.repository_owner || 'loft-demos' }}
   OCI_REGISTRY_HOST: ghcr.io
@@ -101,6 +104,7 @@ jobs:
                 s/\{REPLACE_FORGEJO_USERNAME\}/$ENV{GITHUB_ACTOR}/g;
                 s/\{REPLACE_GIT_BASE_URL\}/$ENV{GIT_BASE_URL}/g;
                 s/\{REPLACE_GIT_PUBLIC_URL\}/$ENV{GIT_PUBLIC_URL}/g;
+                s/\{REPLACE_GIT_TARGET_REVISION\}/$ENV{GIT_TARGET_REVISION}/g;
                 s/\{REPLACE_ARGOCD_HOST\}/$ENV{ARGOCD_HOST}/g;
                 s/\{REPLACE_APP_IMAGE_REPOSITORY\}/$ENV{APP_IMAGE_REPOSITORY}/g;
                 s/\{REPLACE_IMAGE_REPOSITORY_PREFIX\}/$ENV{IMAGE_REPOSITORY_PREFIX}/g;
@@ -139,7 +143,7 @@ jobs:
             [[ -d "$root" ]] || continue
 
             while IFS= read -r -d '' file; do
-              if grep -nE '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_FORGEJO_USERNAME\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_ARGOCD_HOST\}|\{REPLACE_APP_IMAGE_REPOSITORY\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_HOST\}|\{REPLACE_KARGO_WEBHOOK_HOST\}' "$file"; then
+              if grep -nE '\{REPLACE_REPO_NAME\}|\{REPLACE_ORG_NAME\}|\{REPLACE_VCLUSTER_NAME\}|\{REPLACE_BASE_DOMAIN\}|\{REPLACE_FORGEJO_USERNAME\}|\{REPLACE_GIT_BASE_URL\}|\{REPLACE_GIT_PUBLIC_URL\}|\{REPLACE_GIT_TARGET_REVISION\}|\{REPLACE_ARGOCD_HOST\}|\{REPLACE_APP_IMAGE_REPOSITORY\}|\{REPLACE_IMAGE_REPOSITORY_PREFIX\}|\{REPLACE_OCI_REGISTRY_HOST\}|\{REPLACE_SNAPSHOT_OCI_REPOSITORY\}|\{REPLACE_IMAGE_PULL_SOURCE_SECRET_NAME\}|\{REPLACE_1PASSWORD_VAULT\}|\{REPLACE_KARGO_HOST\}|\{REPLACE_KARGO_WEBHOOK_HOST\}' "$file"; then
                 unresolved=1
               fi
             done < <(

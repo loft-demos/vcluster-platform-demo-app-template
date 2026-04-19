@@ -35,7 +35,7 @@ spec:
       source:
         path: vcluster-use-cases/argocd-vcluster-add-ons/manifests/{{.metadata.labels.env}}/
         repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
-        targetRevision: main
+        targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
       syncPolicy:
         automated:
           selfHeal: true

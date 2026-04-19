@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: crossplane-provider-api-readiness
+  namespace: crossplane-system
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      automountServiceAccountToken: true
+      restartPolicy: Never
+      containers:
+        - name: wait-for-provider-apis
+          image: curlimages/curl:7.88.1
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              token_file="/var/run/secrets/kubernetes.io/serviceaccount/token"
+              ca_file="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+              api_server="https://kubernetes.default.svc"
+
+              wait_for_discovery_resource() {
+                path="$1"
+                resource_name="$2"
+                label="$3"
+                response_file="/tmp/${resource_name}.json"
+                max_attempts=120
+                attempt=1
+
+                while [ "$attempt" -le "$max_attempts" ]; do
+                  status="$(curl -sS -o "$response_file" -w '%{http_code}' \
+                    --cacert "$ca_file" \
+                    -H "Authorization: Bearer $(cat "$token_file")" \
+                    "$api_server$path" || true)"
+
+                  if [ "$status" = "200" ] && grep -Eq "\"name\"[[:space:]]*:[[:space:]]*\"$resource_name\"" "$response_file"; then
+                    echo "$label API is ready."
+                    return 0
+                  fi
+
+                  echo "Attempt $attempt/$max_attempts: waiting for $label API at $path (HTTP $status)."
+                  attempt=$((attempt + 1))
+                  sleep 5
+                done
+
+                echo "Timed out waiting for $label API at $path."
+                return 1
+              }
+
+              wait_for_discovery_resource "/apis/github.upbound.io/v1beta1" "providerconfigs" "GitHub ProviderConfig"
+              wait_for_discovery_resource "/apis/repo.github.upbound.io/v1alpha1" "repositorywebhooks" "GitHub RepositoryWebhook"
+              wait_for_discovery_resource "/apis/kubernetes.crossplane.io/v1alpha1" "providerconfigs" "Kubernetes ProviderConfig"
+              wait_for_discovery_resource "/apis/kubernetes.crossplane.io/v1alpha2" "objects" "Kubernetes Object"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi

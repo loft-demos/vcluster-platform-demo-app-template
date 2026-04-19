@@ -28,32 +28,17 @@ Generator-hosted environments typically expose Kargo at `https://kargo-{REPLACE_
 - **Progressive Delivery demo** — classic dev → staging → prod pipeline
 - **Pre-Prod Gate demo** — pre-prod vCluster → prod pipeline
 
-The default path is for Flux to own the Kargo install and Kargo CR manifests
-when the cluster has both `continuousPromotion=true` and `flux=true`. The
-legacy Argo CD-managed Kargo path is still available through the
-`legacyArgoKargo=true` cluster label.
+The default path is for Flux to own the Kargo install and Kargo CR manifests when the cluster has both `continuousPromotion=true` and `flux=true`. The legacy Argo CD-managed Kargo path is still available through the `legacyArgoKargo=true` cluster label.
 
-On the `vind` self-contained path, that legacy label is derived automatically
-when you enable `continuous-promotion` without `flux`, so local-contained
-bootstraps do not need an extra manual toggle. If you want Flux to own Kargo in
-`vind`, enable both use cases together.
+On the `vind` self-contained path, that legacy label is derived automatically when you enable `continuous-promotion` without `flux`, so local-contained bootstraps do not need an extra manual toggle. If you want Flux to own Kargo in `vind`, enable both use cases together.
 
-On the Flux-owned path, Kargo auth now comes from an ESO-managed
-`ExternalSecret` under
-[../flux/host-apps/kargo/auth/](../flux/host-apps/kargo/auth/) that renders the
-`kargo-auth-values` Secret in `p-vcluster-flux-demo`. Flux now gates the Kargo
-install on that `ExternalSecret` becoming Ready, which avoids the earlier
-half-installed state where Kargo could come up with missing auth values and
-never fully recover after ESO was slow to reconcile.
+On the Flux-owned path, Kargo auth now comes from an ESO-managed `ExternalSecret` under [../flux/host-apps/kargo/auth/](../flux/host-apps/kargo/auth/) that renders the `kargo-auth-values` Secret in `p-vcluster-flux-demo`. Flux now gates the Kargo install on that `ExternalSecret` becoming Ready, which avoids the earlier half-installed state where Kargo could come up with missing auth values and never fully recover after ESO was slow to reconcile.
 
 ---
 
 ## Sleep Mode And Wake-Up
 
-Continuous-promotion stage vClusters are imported into a shared host Argo CD
-instance, so sleep-mode behavior is now handled by the shared
-`vcluster-gitops-watcher` stack documented in
-[../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md).
+Continuous-promotion stage vClusters are imported into a shared host Argo CD instance, so sleep-mode behavior is now handled by the shared `vcluster-gitops-watcher` stack documented in [../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md](../../vcluster-gitops/argocd/vcluster-sleep-wakeup/README.md).
 
 The important change is that this repo no longer relies on:
 
@@ -65,26 +50,13 @@ The important change is that this repo no longer relies on:
 Instead:
 
 1. Kargo promotions end with `argocd-update`.
-2. The shared watcher observes active `Promotion` objects and wakes sleeping
-   destinations directly before Argo CD finishes creating
-   `Application.operation.sync`.
-3. While the destination is sleeping or waking, the watcher patches the
-   imported cluster Secret with
-   `argocd.argoproj.io/skip-reconcile: "true"`.
-4. Once the `VirtualClusterInstance` is ready again, the watcher removes that
-   pause and hard-refreshes the affected apps.
+2. The shared watcher observes active `Promotion` objects and wakes sleeping destinations directly before Argo CD finishes creating `Application.operation.sync`.
+3. While the destination is sleeping or waking, the watcher patches the imported cluster Secret with `argocd.argoproj.io/skip-reconcile: "true"`.
+4. Once the `VirtualClusterInstance` is ready again, the watcher removes that pause and hard-refreshes the affected apps.
 
-That means sleeping-stage promotions no longer need per-project wake tokens,
-inline wake polling, or app-level wake annotations. The Argo CD Applications in
-this demo only need to target the imported cluster normally and keep the
-`kargo.akuity.io/authorized-stage` annotation so the watcher can correlate
-active Promotions with the right destination.
+That means sleeping-stage promotions no longer need per-project wake tokens, inline wake polling, or app-level wake annotations. The Argo CD Applications in this demo only need to target the imported cluster normally and keep the `kargo.akuity.io/authorized-stage` annotation so the watcher can correlate active Promotions with the right destination.
 
-One important caveat still applies: the watcher fixes wake-up orchestration, but
-it does not make an in-flight Kargo verification succeed if the vCluster goes to
-sleep mid-verification. Treat sleep as safe only after the Stage has returned to
-`Ready=True` / `Healthy=True`, unless you intentionally plan to override the
-failed verification.
+One important caveat still applies: the watcher fixes wake-up orchestration, but it does not make an in-flight Kargo verification succeed if the vCluster goes to sleep mid-verification. Treat sleep as safe only after the Stage has returned to `Ready=True` / `Healthy=True`, unless you intentionally plan to override the failed verification.
 
 The shared wake-up stack is now bootstrapped centrally for the host Argo CD instance:
 
@@ -241,32 +213,19 @@ The legacy Argo CD-managed `kargo-helm-app.yaml` path references two placeholder
 
 If you prefer not to keep those values in Argo CD Helm values, there is now a Flux-owned host-cluster alternative under [../flux/host-apps/kargo](../flux/host-apps/kargo) that reads auth settings from a Secret via `HelmRelease.valuesFrom`. That Flux path is enabled when `continuousPromotion=true` and `flux=true`. The legacy Argo CD-managed Kargo install now lives under [apps-legacy-argo-kargo/kargo-helm-app.yaml](apps-legacy-argo-kargo/kargo-helm-app.yaml) and is selected when `legacyArgoKargo=true`. On the `vind` self-contained path, bootstrap sets that label automatically whenever `continuous-promotion` is enabled without `flux`.
 
-On the Flux path, the live auth secret is rendered by
-[../flux/host-apps/kargo/auth/kargo-auth-values-external-secret.yaml](../flux/host-apps/kargo/auth/kargo-auth-values-external-secret.yaml).
-That generated Secret is labeled with `reconcile.fluxcd.io/watch: Enabled`, and
-the Kargo `HelmRelease` now treats it as required instead of optional. The
-Flux bridge also now applies that `ExternalSecret` via its own
-`flux-kargo-auth` `Kustomization`, so Kargo install waits for ESO readiness
-instead of racing it.
+On the Flux path, the live auth secret is rendered by [../flux/host-apps/kargo/auth/kargo-auth-values-external-secret.yaml](../flux/host-apps/kargo/auth/kargo-auth-values-external-secret.yaml). That generated Secret is labeled with `reconcile.fluxcd.io/watch: Enabled`, and the Kargo `HelmRelease` now treats it as required instead of optional. The Flux bridge also now applies that `ExternalSecret` via its own `flux-kargo-auth` `Kustomization`, so Kargo install waits for ESO readiness instead of racing it.
 
 ### ESO / bootstrap sequencing
 
-The continuous-promotion Flux path now assumes ESO is part of the bootstrap
-critical path:
+The continuous-promotion Flux path now assumes ESO is part of the bootstrap critical path:
 
-- the ESO app-of-apps `ApplicationSet` is synced earlier so the operator and
-  `ClusterSecretStore` are available sooner
-- the ESO Helm app no longer uses Argo CD `Replace=true`, which was contributing
-  to webhook/cert bootstrap churn
+- the ESO app-of-apps `ApplicationSet` is synced earlier so the operator and `ClusterSecretStore` are available sooner
+- the ESO Helm app no longer uses Argo CD `Replace=true`, which was contributing to webhook/cert bootstrap churn
 - the Kargo auth Secret is sourced from a 1Password-backed `ExternalSecret`
-- the cluster-level Kargo GitHub webhook receiver secret reads the `token`
-  field from the shared `pr-github-receiver-token` item
-- the cluster-level Kargo receiver secret and `ClusterConfig` are now split into
-  separate Flux `Kustomization`s, so Kargo does not try to publish webhook
-  receivers before ESO has rendered the signing secret
+- the cluster-level Kargo GitHub webhook receiver secret reads the `token` field from the shared `pr-github-receiver-token` item
+- the cluster-level Kargo receiver secret and `ClusterConfig` are now split into separate Flux `Kustomization`s, so Kargo does not try to publish webhook receivers before ESO has rendered the signing secret
 
-That combination is intended to make generator-hosted demo environments recover
-cleanly even when ESO takes a while to produce the initial Secrets.
+That combination is intended to make generator-hosted demo environments recover cleanly even when ESO takes a while to produce the initial Secrets.
 
 ### Kargo version
 

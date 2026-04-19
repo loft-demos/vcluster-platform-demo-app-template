@@ -1,7 +1,6 @@
 # OrbStack Domains for vind
 
-This folder shows one practical way to give a `vind` cluster friendly local
-hostnames like:
+This folder shows one practical way to give a `vind` cluster friendly local hostnames like:
 
 - <https://vcp.local>
 - <https://argocd.vcp.local>
@@ -18,23 +17,17 @@ instead of relying on:
 `vind` and OrbStack solve different parts of the local access problem:
 
 - `vind` exposes wildcard app hosts through Kubernetes `Ingress` resources
-- `vcp.local`, `argocd.vcp.local`, and `forgejo.vcp.local` each keep their own
-  dedicated `LoadBalancer` upstream
+- `vcp.local`, `argocd.vcp.local`, and `forgejo.vcp.local` each keep their own dedicated `LoadBalancer` upstream
 - `ingress-nginx` stays as the wildcard app entrypoint
-- those `LoadBalancer` services are backed by HAProxy containers on the
-  per-cluster Docker network, for example `vcluster.vcp`
+- those `LoadBalancer` services are backed by HAProxy containers on the per-cluster Docker network, for example `vcluster.vcp`
 - OrbStack can assign nice local HTTPS domains to Docker containers
-- OrbStack does not directly assign those friendly domains to Kubernetes
-  services inside `vind`
+- OrbStack does not directly assign those friendly domains to Kubernetes services inside `vind`
 
 So this folder uses a small Caddy container as a bridge:
 
 - OrbStack gives the Caddy container friendly HTTPS hostnames
 - Caddy reverse proxies those hostnames to the mixed `vind` upstreams
-- the same Caddy container also advertises Docker-network aliases for
-  `vcp.local`, `argocd.vcp.local`, and `forgejo.vcp.local`, so machine clients
-  running on the `vind` network can reach the same hostnames without leaving
-  the local Docker network
+- the same Caddy container also advertises Docker-network aliases for `vcp.local`, `argocd.vcp.local`, and `forgejo.vcp.local`, so machine clients running on the `vind` network can reach the same hostnames without leaving the local Docker network
 
 That is the main pattern.
 
@@ -56,20 +49,15 @@ Typical upstreams look like:
 - `vcluster.lb.vcp.forgejo-http.forgejo:3000`
 - `vcluster.lb.vcp.ingress-nginx-controller.ingress-nginx:80`
 
-The Caddy container joins `vcluster.vcp`, so it can resolve and reach those
-HAProxy-backed ingress endpoints directly.
+The Caddy container joins `vcluster.vcp`, so it can resolve and reach those HAProxy-backed ingress endpoints directly.
 
-OrbStack then gives the Caddy container these public-on-your-laptop local
-domains:
+OrbStack then gives the Caddy container these public-on-your-laptop local domains:
 
 - `vcp.local`
 - `argocd.vcp.local`
 - `forgejo.vcp.local`
 
-Docker clients that also join `vcluster.vcp` see those same three hostnames as
-network aliases for the Caddy container itself. That split keeps browser access
-and in-cluster machine access on the same hostnames without leaking Kubernetes
-service DNS names into image tags or callback URLs.
+Docker clients that also join `vcluster.vcp` see those same three hostnames as network aliases for the Caddy container itself. That split keeps browser access and in-cluster machine access on the same hostnames without leaking Kubernetes service DNS names into image tags or callback URLs.
 
 ## Quick Tutorial
 
@@ -110,8 +98,7 @@ docker compose \
 
 ## Manual Overrides
 
-If you want to run multiple `vind` environments on the same laptop, override the
-hostnames and cluster network in the env file.
+If you want to run multiple `vind` environments on the same laptop, override the hostnames and cluster network in the env file.
 
 Example:
 
@@ -139,25 +126,18 @@ The raw URLs are:
 - harder to document
 - tied more directly to the internal `vind` wiring
 
-The Caddy + OrbStack domain pattern gives you a stable local UX that behaves
-more like a real demo environment.
+The Caddy + OrbStack domain pattern gives you a stable local UX that behaves more like a real demo environment.
 
 ## Docker Desktop
 
-Something similar is possible with Docker Desktop, but not in the same clean,
-native way.
+Something similar is possible with Docker Desktop, but not in the same clean, native way.
 
-Docker Desktop can expose Kubernetes services on `localhost`, and its docs note
-that local `LoadBalancer` and ingress access commonly lands on `localhost`.
-That is enough to build a local reverse-proxy pattern with Caddy or Traefik.
+Docker Desktop can expose Kubernetes services on `localhost`, and its docs note that local `LoadBalancer` and ingress access commonly lands on `localhost`. That is enough to build a local reverse-proxy pattern with Caddy or Traefik.
 
-What Docker Desktop does not give you in the same way is OrbStack-style custom
-container domains like `vcp.local` out of the box. So with Docker Desktop, the
-usual shape would be:
+What Docker Desktop does not give you in the same way is OrbStack-style custom container domains like `vcp.local` out of the box. So with Docker Desktop, the usual shape would be:
 
 - `localhost` or local ports for the Kubernetes services
 - plus your own reverse proxy
 - plus your own local DNS or hosts-file mapping if you want nice hostnames
 
-So the general reverse-proxy idea is portable, but the smooth custom-domain
-experience here is specifically an OrbStack advantage.
+So the general reverse-proxy idea is portable, but the smooth custom-domain experience here is specifically an OrbStack advantage.

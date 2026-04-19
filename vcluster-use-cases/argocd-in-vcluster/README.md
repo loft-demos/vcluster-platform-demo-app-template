@@ -124,7 +124,7 @@ spec:
               - $values/vcluster-use-cases/argocd-in-vcluster/helm-values/argocd/values.yaml
               - '$values/vcluster-use-cases/argocd-in-vcluster/helm-values/argocd/{{ index .metadata.labels "vcluster.demo/deployment-env" }}/values.yaml'
         - repoURL: https://github.com/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git
-          targetRevision: main
+          targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
           ref: values
 ```
 
@@ -142,7 +142,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/argoproj/argocd-example-apps
-    targetRevision: HEAD
+    targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
     path: guestbook
   destination:
     server: https://kubernetes.default.svc

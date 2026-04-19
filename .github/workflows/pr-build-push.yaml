@@ -1,11 +1,9 @@
 name: pr-build-push
 
-# on merge to main from pull request (recommended)
+# on pull requests that target the repository default branch
 on:
   pull_request:
     types: [opened, reopened, synchronize]
-    branches:
-      - main
     paths:
       - 'src/**'
 
@@ -17,7 +15,7 @@ env:
 
 jobs:
   build-push-app:
-    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' }}
+    if: ${{ !github.event.repository.is_template && github.repository != 'loft-demos/vcluster-platform-demo-app-template' && github.base_ref == github.event.repository.default_branch }}
     runs-on: ubuntu-22.04
     permissions:
       packages: write
@@ -63,7 +61,7 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
           labels: ${{ steps.meta.outputs.labels }}
   wakeup-vcluster:
-    if: contains(github.event.pull_request.labels.*.name, 'create-pr-vcluster-external-argocd')
+    if: ${{ github.base_ref == github.event.repository.default_branch && contains(github.event.pull_request.labels.*.name, 'create-pr-vcluster-external-argocd') }}
     runs-on: ubuntu-latest
     steps:
       - name: Install vCluster CLI

@@ -43,16 +43,13 @@ The **vCluster Platform Demo Generator** managed mode includes the following fea
 - Crossplane installed via a vCluster Platform App that is part of the _vCluster Platform Demo_ virtual cluster template (used to create GitHub webhooks and configure repo level GitHub Actions secrete and environment variables)
 - A dynamically generated Argo CD cluster `Secret` that controls what vCluster use case examples get installed into the vCluster Platform Demo environment
 
-After a demo environment already exists, the fastest way to change that
-selection is usually to edit the generated `argocd/cluster-local` secret
-directly. See:
+After a demo environment already exists, the fastest way to change that selection is usually to edit the generated `argocd/cluster-local` secret directly. See:
 
 - [top-level README: enable use cases directly with `cluster-local`](./README.md#enable-use-cases-directly-with-cluster-local)
 
 ### `vind` Mode
 
-The `vind` path is the best fit when you want a self-contained demo environment
-that does not depend on the Demo Generator parent platform.
+The `vind` path is the best fit when you want a self-contained demo environment that does not depend on the Demo Generator parent platform.
 
 The current `vind` implementation in this repo provides:
 
@@ -112,35 +109,27 @@ spec:
 
 Inception Mode uses a **Demo Generator vCluster**, itself running in a host cluster with vCluster Platform installed and configured with the necessary templates and _Project Secrets_ to create one or more **Demo Generator vCluster** instances.
 
-You can also deploy this Demo Generator content on any Kubernetes cluster, with
-or without vCluster Platform, and now on a `vind` management cluster using the
-bootstrap content in [`vind-demo-cluster/`](./vind-demo-cluster/README.md).
+You can also deploy this Demo Generator content on any Kubernetes cluster, with or without vCluster Platform, and now on a `vind` management cluster using the bootstrap content in [`vind-demo-cluster/`](./vind-demo-cluster/README.md).
 
 ### Demo Generator includes
 
 - vCluster Platform
 - Argo CD (App of Apps)
 - Crossplane (GitHub + Kubernetes Providers)
-- GitHub repo for GitOps:  
-  [`loft-demos/vcluster-platform-demo-generator`](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator)
+- GitHub repo for GitOps: [`loft-demos/vcluster-platform-demo-generator`](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator)
 
 Each generated demo environment is:
 
 - A vCluster provisioned via a `VirtualClusterTemplate` provisioned as part of the **Demo Generator vCluster** vCluster Platform via GitOps
 - The `VirtualClusterTemplate` includes the Argo CD and Crossplane bootstrap vCluster Platform Apps (Platform packaged applications and scripts that may be included as part of a `VirtualClusterTemplate`)
-- Backed by a dedicated GitHub repo created via Crossplane from  
-  [`vcluster-platform-demo-app-template`](https://github.com/loft-demos/vcluster-platform-demo-app-template)
+- Backed by a dedicated GitHub repo created via Crossplane from [`vcluster-platform-demo-app-template`](https://github.com/loft-demos/vcluster-platform-demo-app-template)
 
 For the `vind` path, the equivalent management cluster can instead be:
 
-- a self-contained `vind` cluster with Argo CD and ESO installed from
-  [`vind-demo-cluster/vcluster.yaml`](./vind-demo-cluster/vcluster.yaml)
-- optionally fronted locally by OrbStack custom domains using
-  [`vind-demo-cluster/orbstack-domains`](./vind-demo-cluster/orbstack-domains)
-- preferably switched to a local-contained SCM path using embedded Forgejo and
-  the [`local-contained` overlay](./vcluster-gitops/overlays/local-contained/README.md)
-- optionally fronted publicly by Cloudflare Tunnel for GitHub-backed fallback
-  flows
+- a self-contained `vind` cluster with Argo CD and ESO installed from [`vind-demo-cluster/vcluster.yaml`](./vind-demo-cluster/vcluster.yaml)
+- optionally fronted locally by OrbStack custom domains using [`vind-demo-cluster/orbstack-domains`](./vind-demo-cluster/orbstack-domains)
+- preferably switched to a local-contained SCM path using embedded Forgejo and the [`local-contained` overlay](./vcluster-gitops/overlays/local-contained/README.md)
+- optionally fronted publicly by Cloudflare Tunnel for GitHub-backed fallback flows
 
 ---
 
@@ -177,7 +166,7 @@ For the `vind` path, the equivalent management cluster can instead be:
 - Custom Resource Sync with Postgres Operator
 - Database Connector with fully managed MySQL Operator install
 - Resolve DNS
-- Kyverno policies & Central Admission Control  
+- Kyverno policies & Central Admission Control
 - External Secrets Operator integration
 - vNode Integration with vCluster
 - Virtual Schedulers
@@ -206,14 +195,11 @@ Yes. You have three realistic options:
 - use a `vind` management cluster and follow [the `vind` guide](./vind-demo-cluster/README.md)
 - use the Demo Generator managed mode if you want the full inception workflow
 
-The `vind` path is currently the best self-contained option in this repo, and
-the intended default is the local-contained Forgejo path.
+The `vind` path is currently the best self-contained option in this repo, and the intended default is the local-contained Forgejo path.
 
 ### Can I use this without a traditional host cluster?
 
-Yes. That is exactly what the `vind` mode is for. It gives you a Docker-backed
-management cluster that can run vCluster Platform, Argo CD, ESO, and selected
-use cases from this repo. See [the `vind` guide](./vind-demo-cluster/README.md).
+Yes. That is exactly what the `vind` mode is for. It gives you a Docker-backed management cluster that can run vCluster Platform, Argo CD, ESO, and selected use cases from this repo. See [the `vind` guide](./vind-demo-cluster/README.md).
 
 ### Is this just for vCluster Platform demos?
 

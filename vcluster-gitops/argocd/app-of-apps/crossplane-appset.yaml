@@ -25,7 +25,7 @@ spec:
       project: default
       source:
         repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
-        targetRevision: HEAD
+        targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
         path: vcluster-use-cases/crossplane/apps
       syncPolicy:
         automated:

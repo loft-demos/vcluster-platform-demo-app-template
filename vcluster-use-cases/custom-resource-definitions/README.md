@@ -1,7 +1,6 @@
 # Custom Resource Definitions
 
-This folder contains CRD-focused examples for demoing custom APIs inside a
-vCluster or alongside Platform-managed resources.
+This folder contains CRD-focused examples for demoing custom APIs inside a vCluster or alongside Platform-managed resources.
 
 Current example:
 
