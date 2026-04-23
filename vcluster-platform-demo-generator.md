@@ -116,6 +116,7 @@ You can also deploy this Demo Generator content on any Kubernetes cluster, with 
 - vCluster Platform
 - Argo CD (App of Apps)
 - Crossplane (GitHub + Kubernetes Providers)
+- External Secrets Operator (1Password secrets)
 - GitHub repo for GitOps: [`loft-demos/vcluster-platform-demo-generator`](https://github.com/loft-demos/loft-demo-base/tree/main/vcluster-platform-demo-generator)
 
 Each generated demo environment is:
@@ -159,12 +160,11 @@ For the `vind` path, the equivalent management cluster can instead be:
 - Default OrbStack local hostname path for `vind`
 - Optional public GitHub path via Cloudflare Tunnel fallback
 
-
-
 ### Use Cases
 
 - Custom Resource Sync with Postgres Operator
 - Database Connector with fully managed MySQL Operator install
+- Auto Nodes with an AWS EC2 Terraform `NodeProvider`
 - Resolve DNS
 - Kyverno policies & Central Admission Control
 - External Secrets Operator integration

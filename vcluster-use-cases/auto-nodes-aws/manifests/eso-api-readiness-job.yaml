@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: auto-nodes-eso-api-readiness
+  namespace: vcluster-platform
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 300
+  template:
+    spec:
+      automountServiceAccountToken: true
+      restartPolicy: Never
+      containers:
+        - name: wait-for-eso-apis
+          image: curlimages/curl:7.88.1
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              token_file="/var/run/secrets/kubernetes.io/serviceaccount/token"
+              ca_file="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+              api_server="https://kubernetes.default.svc"
+
+              wait_for_discovery_resource() {
+                path="$1"
+                resource_name="$2"
+                label="$3"
+                response_file="/tmp/${resource_name}.json"
+                max_attempts=60
+                attempt=1
+
+                while [ "$attempt" -le "$max_attempts" ]; do
+                  status="$(curl -sS -o "$response_file" -w '%{http_code}' \
+                    --cacert "$ca_file" \
+                    -H "Authorization: Bearer $(cat "$token_file")" \
+                    "$api_server$path" || true)"
+
+                  if [ "$status" = "200" ] && grep -Eq "\"name\"[[:space:]]*:[[:space:]]*\"$resource_name\"" "$response_file"; then
+                    echo "$label API is ready."
+                    return 0
+                  fi
+
+                  echo "Attempt $attempt/$max_attempts: waiting for $label API at $path (HTTP $status)."
+                  attempt=$((attempt + 1))
+                  sleep 5
+                done
+
+                echo "Timed out waiting for $label API at $path."
+                return 1
+              }
+
+              wait_for_discovery_resource "/apis/external-secrets.io/v1" "externalsecrets" "ExternalSecret"
+              wait_for_discovery_resource "/apis/external-secrets.io/v1" "clustersecretstores" "ClusterSecretStore"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi

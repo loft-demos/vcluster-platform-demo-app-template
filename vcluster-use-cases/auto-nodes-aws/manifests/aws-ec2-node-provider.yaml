@@ -1,0 +1,67 @@
+apiVersion: management.loft.sh/v1
+kind: NodeProvider
+metadata:
+  name: aws-ec2-node-provider
+spec:
+  displayName: AWS EC2 Node Provider
+  properties:
+    region: us-east-1
+    vcluster.com/ccm-enabled: 'true'
+  terraform:
+    nodeTemplate:
+      git:
+        repository: https://github.com/loft-sh/vcluster-auto-nodes-aws.git
+        tag: v0.1.1
+        subPath: node
+    nodeEnvironmentTemplate:
+      infrastructure:
+        git:
+          repository: https://github.com/loft-sh/vcluster-auto-nodes-aws.git
+          tag: v0.1.1
+          subPath: environment/infrastructure
+      kubernetes:
+        git:
+          repository: https://github.com/loft-sh/vcluster-auto-nodes-aws.git
+          tag: v0.1.1
+          subPath: environment/kubernetes
+    nodeTypes:
+      - properties:
+          instance-type: t3.small
+          terraform.vcluster.com/credentials: '*'
+        resources:
+          cpu: '2'
+          memory: 2Gi
+        name: t3.small
+        metadata: {}
+      - properties:
+          instance-type: t3.medium
+          terraform.vcluster.com/credentials: '*'
+        resources:
+          cpu: '2'
+          memory: 4Gi
+        name: t3.medium
+        metadata: {}
+      - properties:
+          instance-type: t3.large
+          terraform.vcluster.com/credentials: '*'
+        resources:
+          cpu: '2'
+          memory: 8Gi
+        name: t3.large
+        metadata: {}
+      - properties:
+          instance-type: t3.xlarge
+          terraform.vcluster.com/credentials: '*'
+        resources:
+          cpu: '4'
+          memory: 16Gi
+        name: t3.xlarge
+        metadata: {}
+      - properties:
+          instance-type: t3.2xlarge
+          terraform.vcluster.com/credentials: '*'
+        resources:
+          cpu: '8'
+          memory: 32Gi
+        name: t3.2xlarge
+        metadata: {}
