@@ -27,11 +27,11 @@ spec:
     spec:
       destination:
         namespace: {REPLACE_REPO_NAME}-{{.metadata.labels.env}}
-        server: '{{.server}}'
+        name: '{{.name}}'
       info:
         - name: Git Repo
           value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}/'
-      project: 'loft-{{ index .metadata.labels "use-case.demos.vcluster.com/project" }}'
+      project: 'loft-{{ index .metadata.labels "demos.vcluster.com/project" }}'
       source:
         path: vcluster-use-cases/argocd-vcluster-add-ons/manifests/{{.metadata.labels.env}}/
         repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}.git'
