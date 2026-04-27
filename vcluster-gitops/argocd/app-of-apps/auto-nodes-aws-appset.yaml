@@ -1,19 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: auto-nodes-cluster
+  name: auto-nodes-aws-cluster
   namespace: argocd
 spec:
   generators:
     - clusters:
         selector:
           matchLabels:
-            autoNodes: 'true'
+            autoNodesAWS: 'true'
   template:
     metadata:
-      name: auto-nodes-apps
+      name: auto-nodes-aws-apps
       labels:
-        use-case.demos.vcluster.com: auto-nodes
+        use-case.demos.vcluster.com: auto-nodes-aws
     spec:
       destination:
         server: '{{server}}'
@@ -22,7 +22,7 @@ spec:
       source:
         repoURL: '{REPLACE_GIT_BASE_URL}/{REPLACE_ORG_NAME}/{REPLACE_REPO_NAME}'
         targetRevision: '{REPLACE_GIT_TARGET_REVISION}'
-        path: vcluster-use-cases/private-nodes/auto-nodes/apps
+        path: vcluster-use-cases/auto-nodes-aws/apps
       syncPolicy:
         automated:
           prune: true

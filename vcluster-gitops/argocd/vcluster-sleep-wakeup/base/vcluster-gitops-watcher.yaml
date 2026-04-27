@@ -30,6 +30,28 @@ roleRef:
   name: vcluster-gitops-watcher-vci-read
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vcluster-gitops-watcher-vci-status-patch
+rules:
+  - apiGroups: ["management.loft.sh"]
+    resources: ["virtualclusterinstances/status"]
+    verbs: ["patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vcluster-gitops-watcher-vci-status-patch
+subjects:
+  - kind: ServiceAccount
+    name: vcluster-gitops-watcher
+    namespace: argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vcluster-gitops-watcher-vci-status-patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: vcluster-gitops-watcher-argocd-write
@@ -79,7 +101,7 @@ spec:
       serviceAccountName: vcluster-gitops-watcher
       containers:
         - name: watcher
-          image: ghcr.io/loft-demos/vcluster-gitops-watcher:1.0.0-rc.6
+          image: ghcr.io/loft-demos/vcluster-gitops-watcher:1.0.0-rc.14
           imagePullPolicy: IfNotPresent
           env:
             - name: ARGOCD_NAMESPACE
@@ -104,6 +126,12 @@ spec:
               value: "10s"
             - name: WATCH_WAKE_RETRY_INTERVAL
               value: "30s"
+            # Optional: after a successful wake request, patch
+            # status.sleepModeConfig.status.lastActivity on the matching
+            # VirtualClusterInstance to help clear stale sleeping UI state.
+            # Requires the VCI status patch RBAC from deploy/watcher-rbac.yaml.
+            - name: WATCH_UPDATE_VCI_LAST_ACTIVITY_ON_WAKE
+              value: "true"
           volumeMounts:
             - name: platform-token
               mountPath: /var/run/secrets/platform

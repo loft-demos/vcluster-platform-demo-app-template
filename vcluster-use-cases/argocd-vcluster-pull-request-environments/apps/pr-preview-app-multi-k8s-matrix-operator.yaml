@@ -41,7 +41,7 @@ spec:
     spec:
       destination:
         namespace: preview-hello-world-app
-        server: '{{server}}'
+        name: '{{name}}'
       info:
         - name: Git Repo
           value: '{REPLACE_GIT_PUBLIC_URL}/{REPLACE_ORG_NAME}/{{metadata.labels.repo}}/'

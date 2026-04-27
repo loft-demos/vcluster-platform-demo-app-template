@@ -1,0 +1,21 @@
+---
+# Manual example: create this vCluster explicitly when you want to demo AWS Auto
+# Nodes. Delete this VirtualClusterInstance and wait for cleanup to finish before
+# deleting the surrounding demo environment, otherwise EC2 and network resources
+# can be orphaned.
+apiVersion: management.loft.sh/v1
+kind: VirtualClusterInstance
+metadata:
+  name: auto-nodes-aws-demo
+  namespace: p-default
+spec:
+  owner:
+    team: loft-admins
+  templateRef:
+    name: auto-nodes-aws-template
+    version: 1.0.x
+  clusterRef:
+    cluster: loft-cluster
+  parameters: |
+    k8sVersion: v1.33.0
+    autoNodeCount: "3"

@@ -16,7 +16,7 @@ resources:
   - ../../kyverno-appset.yaml
   - ../../database-connector-appset.yaml
   - ../../namespace-sync-appset.yaml
-  - ../../auto-nodes-appset.yaml
+  - ../../auto-nodes-aws-appset.yaml
   - ../../private-nodes-appset.yaml
   - ../../custom-resource-sync-appset.yaml
   - ../../rancher-appset.yaml
