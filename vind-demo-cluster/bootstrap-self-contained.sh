@@ -1604,8 +1604,14 @@ cat <<EOF
 [INFO] Self-contained bootstrap helper complete.
 
 Recommended next steps:
-1. Argo CD login:
-   - url:      https://${ARGOCD_HOST}
+1. Login credentials:
+   vCluster Platform: https://${VCP_HOST}
+   - username: admin
+   - password: my-password
+   Forgejo: http://${FORGEJO_HOST}
+   - username: ${FORGEJO_USERNAME}
+   - password: ${FORGEJO_PASSWORD}
+   Argo CD: https://${ARGOCD_HOST}
    - username: admin
    - password: ${argocd_password:-<not available yet>}
 2. Open the local URLs:
