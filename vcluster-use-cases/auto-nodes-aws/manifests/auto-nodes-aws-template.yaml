@@ -103,6 +103,8 @@ spec:
                     tag: '{{ .Values.k8sVersion }}'
             privateNodes:
               enabled: true
+              vpn:
+                enabled: true
               autoNodes:
                 - provider: aws-ec2-node-provider
                   dynamic:
