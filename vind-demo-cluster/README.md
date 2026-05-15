@@ -13,21 +13,32 @@ It uses:
 
 Required:
 
-- macOS with [OrbStack](https://orbstack.dev/) available
+- macOS or Linux
+- `docker` CLI and Docker runtime
 - `vcluster` CLI `0.33.0+`
 - `kubectl` compatible with Kubernetes `1.35`
 - `helm` `v3.10+`
-- OrbStack's Docker runtime and `docker` CLI available
+- `ripgrep` (`rg`)
+- `jq`, `curl`, `perl`, `openssl`, `base64`, `git`
 - a vCluster Platform `LICENSE_TOKEN`
 - network access to:
   - `ghcr.io`
   - `charts.loft.sh`
   - `code.forgejo.org`
 
-Recommended:
+macOS:
 
-- an OrbStack Pro license, since the `vind` path assumes OrbStack is the local virtualization and domain layer
-- `jq`, `yq`, `curl`, and `perl`, which the bootstrap scripts use directly
+- [OrbStack](https://orbstack.dev/) handles local `.vcp.local` DNS and Docker automatically (recommended)
+- Without OrbStack: the bootstrap patches `/etc/hosts` with the Caddy proxy IP; `sudo` access required
+
+Linux:
+
+- `fs.inotify.max_user_instances` must be `≥ 512` (default 128 is too low):
+  ```bash
+  sudo sysctl -w fs.inotify.max_user_instances=1280
+  # permanent: echo 'fs.inotify.max_user_instances=1280' | sudo tee /etc/sysctl.d/99-vind.conf
+  ```
+- `sudo` access required for `/etc/hosts` patching (no OrbStack on Linux)
 
 Optional, depending on the features you enable:
 

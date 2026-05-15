@@ -48,6 +48,7 @@ Optional OrbStack local domain overrides:
 
 Optional skip flags:
   --build-image
+  --skip-preflight
   --skip-vind
   --skip-replace
   --skip-orbstack-env
@@ -429,6 +430,7 @@ ORG_NAME="vcluster-demos"
 BASE_DOMAIN=""
 VCLUSTER_NAME=""
 INCLUDE_MD="true"
+SKIP_PREFLIGHT="false"
 SKIP_VIND="false"
 SKIP_REPLACE="false"
 SKIP_ORBSTACK_ENV="false"
@@ -649,6 +651,10 @@ while [[ $# -gt 0 ]]; do
       SKIP_ARGOCD_BOOTSTRAP="true"
       shift
       ;;
+    --skip-preflight)
+      SKIP_PREFLIGHT="true"
+      shift
+      ;;
     --skip-vind)
       SKIP_VIND="true"
       shift
@@ -678,6 +684,108 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_cmd bash
+
+preflight_check() {
+  local _errors=0
+  local _os=""
+  local _has_orb="false"
+
+  _os="$(uname -s)"
+  if bash -c 'command -v orb' >/dev/null 2>&1; then
+    _has_orb="true"
+  fi
+
+  for _cmd in docker kubectl helm perl curl jq openssl base64 mktemp nohup git; do
+    if ! command -v "$_cmd" >/dev/null 2>&1; then
+      log_error "Required command not found: $_cmd"
+      _errors=$((_errors + 1))
+    fi
+  done
+
+  if ! command -v vcluster >/dev/null 2>&1; then
+    log_error "Required command not found: vcluster"
+    log_error "  https://www.vcluster.com/docs/vcluster/getting-started/setup"
+    _errors=$((_errors + 1))
+  else
+    local _vc_ver _vc_maj _vc_min
+    _vc_ver="$(vcluster version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+    _vc_maj="$(printf '%s' "$_vc_ver" | cut -d. -f1)"
+    _vc_min="$(printf '%s' "$_vc_ver" | cut -d. -f2)"
+    if [[ -z "$_vc_ver" ]]; then
+      log_warn "Could not determine vcluster CLI version — 0.33.0 or newer is required."
+    elif [[ "$_vc_maj" -eq 0 && "$_vc_min" -lt 33 ]]; then
+      log_error "vcluster CLI ${_vc_ver} is too old — 0.33.0 or newer is required."
+      log_error "  https://www.vcluster.com/docs/vcluster/getting-started/setup"
+      _errors=$((_errors + 1))
+    fi
+  fi
+
+  # rg must be a real binary, not a shell function. Some integrations (e.g. Claude Code)
+  # define rg as a shell function invisible to subprocesses.
+  if ! bash -c 'command -v rg' >/dev/null 2>&1; then
+    log_error "ripgrep (rg) not found as a subprocess-visible binary."
+    if [[ "$_os" == "Darwin" ]]; then
+      log_error "  brew install ripgrep"
+    else
+      log_error "  sudo apt-get install ripgrep"
+      log_error "  Or symlink a bundled copy (e.g. VS Code ships one):"
+      log_error "    ln -s /usr/share/code/resources/app/node_modules/@vscode/ripgrep/bin/rg ~/.local/bin/rg"
+    fi
+    _errors=$((_errors + 1))
+  fi
+
+  # OrbStack handles inotify limits and .local DNS automatically on macOS.
+  if [[ "$_os" != "Darwin" || "$_has_orb" != "true" ]]; then
+
+    # Each vind node runs containerd; the kernel default of 128 is exhausted by
+    # 3 nodes, causing CRI plugin failures.
+    if [[ "$_os" != "Darwin" ]]; then
+      local _inotify_val
+      _inotify_val="$(cat /proc/sys/fs/inotify/max_user_instances 2>/dev/null || true)"
+      if [[ -n "$_inotify_val" && "$_inotify_val" -lt 512 ]]; then
+        log_error "fs.inotify.max_user_instances=${_inotify_val} is too low for vind (need ≥ 512)."
+        log_error "  Temporary:  sudo sysctl -w fs.inotify.max_user_instances=1280"
+        log_error "  Permanent:  echo 'fs.inotify.max_user_instances=1280' | sudo tee /etc/sysctl.d/99-vind.conf"
+        _errors=$((_errors + 1))
+      fi
+    fi
+
+    # Without OrbStack, /etc/hosts entries are needed for .vcp.local domains.
+    # Warn on first run (Caddy not yet started); error on --skip-vind re-runs.
+    local _dns_ok="true"
+    local _host
+    for _host in "$VCP_HOST" "$ARGOCD_HOST" "$FORGEJO_HOST"; do
+      if ! getent hosts "$_host" >/dev/null 2>&1; then
+        _dns_ok="false"
+        break
+      fi
+    done
+
+    if [[ "$_dns_ok" != "true" ]]; then
+      if [[ "$SKIP_VIND" == "true" ]]; then
+        log_error "Local domains ($VCP_HOST, $ARGOCD_HOST, $FORGEJO_HOST) are not resolving."
+        log_error "  Add /etc/hosts entries pointing to the Caddy container IP:"
+        log_error "    caddy_ip=\$(docker inspect vind-local-domains-${CLUSTER_NAME}-vind-local-domains-1 --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}')"
+        log_error "    echo \"\$caddy_ip $FORGEJO_HOST $ARGOCD_HOST $VCP_HOST\" | sudo tee -a /etc/hosts"
+        _errors=$((_errors + 1))
+      else
+        log_warn "Local domains ($VCP_HOST etc.) not resolving yet — normal on a first run."
+        log_warn "The bootstrap will patch /etc/hosts automatically after Caddy starts."
+      fi
+    fi
+  fi
+
+  if [[ "$_errors" -gt 0 ]]; then
+    log_error "Preflight checks failed with ${_errors} error(s). Fix the above and re-run."
+    exit 1
+  fi
+
+  log_done "Preflight checks passed."
+}
+
+if [[ "$SKIP_PREFLIGHT" != "true" ]]; then
+  preflight_check
+fi
 
 if [[ "$SKIP_VIND" != "true" && -z "$LICENSE_TOKEN" ]]; then
   log_error "--license-token or LICENSE_TOKEN is required unless --skip-vind is used." >&2
@@ -930,6 +1038,34 @@ if [[ "$SKIP_ORBSTACK_ENV" != "true" ]]; then
     --forgejo-host "$FORGEJO_HOST" \
     --ingress-upstream "$INGRESS_UPSTREAM" \
     --env-file "$ORBSTACK_ENV_FILE"
+
+  # On Linux (or macOS without OrbStack), patch /etc/hosts so the .vcp.local
+  # domains point to the Caddy container's current IP. The IP changes whenever
+  # the cluster is recreated, so we update it on every bootstrap run.
+  if [[ "$(uname -s)" != "Darwin" ]] || ! bash -c 'command -v orb' >/dev/null 2>&1; then
+    _caddy_container="vind-local-domains-${CLUSTER_NAME}-vind-local-domains-1"
+    _caddy_ip="$(docker inspect "$_caddy_container" \
+      --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+      2>/dev/null | tr -d ' \n')"
+    if [[ -n "$_caddy_ip" ]]; then
+      _hosts_entry="${_caddy_ip} ${FORGEJO_HOST} ${ARGOCD_HOST} ${VCP_HOST}"
+      if grep -qE "${FORGEJO_HOST}|${ARGOCD_HOST}|${VCP_HOST}" /etc/hosts 2>/dev/null; then
+        if ! grep -qF "$_caddy_ip" /etc/hosts; then
+          sudo sh -c "grep -vE '${FORGEJO_HOST}|${ARGOCD_HOST}|${VCP_HOST}' /etc/hosts > /tmp/vind-hosts.tmp \
+            && echo '${_hosts_entry}' >> /tmp/vind-hosts.tmp \
+            && mv /tmp/vind-hosts.tmp /etc/hosts"
+          log_done "Updated /etc/hosts: ${_hosts_entry}"
+        else
+          log_info "/etc/hosts already correct for ${VCP_HOST}"
+        fi
+      else
+        sudo sh -c "echo '${_hosts_entry}' >> /etc/hosts"
+        log_done "Added to /etc/hosts: ${_hosts_entry}"
+      fi
+    else
+      log_warn "Could not determine Caddy container IP — update /etc/hosts manually if needed."
+    fi
+  fi
 fi
 
 if [[ "$SKIP_FORGEJO" != "true" ]]; then
