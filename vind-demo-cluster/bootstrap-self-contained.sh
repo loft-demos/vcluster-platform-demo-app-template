@@ -114,6 +114,19 @@ wait_for_create() {
   return 0
 }
 
+require_namespace() {
+  local namespace="$1"
+  if kubectl get namespace "$namespace" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  log_error "Required namespace ${namespace} was not created." >&2
+  log_error "This self-contained path expects vcluster-gitops to create the backing vCluster Platform Project first." >&2
+  log_error "Check the sync failure for the exact reason:" >&2
+  log_error "  kubectl get application.argoproj.io vcluster-gitops -n argocd -o yaml" >&2
+  exit 1
+}
+
 apply_registry_secrets() {
   require_cmd base64
   require_cmd jq
@@ -1410,6 +1423,7 @@ if command -v kubectl >/dev/null 2>&1 && use_case_list_contains "$resolved_use_c
   # written to source control.
   flux_receiver_token="$(openssl rand -hex 20)"
   wait_for_create 60 5 get namespace p-auth-core
+  require_namespace p-auth-core
   kubectl create secret generic pr-github-receiver-token \
     --namespace p-auth-core \
     --from-literal=token="$flux_receiver_token" \
@@ -1483,6 +1497,7 @@ if command -v kubectl >/dev/null 2>&1; then
 
   step "Create the demo-admin-access-key ProjectSecret"
   wait_for_create 60 5 get namespace p-auth-core
+  require_namespace p-auth-core
   _access_key="$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 64)"
   _connected_key="$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 64)"
   kubectl create secret generic demo-admin-access-key \

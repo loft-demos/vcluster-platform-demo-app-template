@@ -6,12 +6,6 @@ spec:
   displayName: API Framework
   owner:
     team: loft-admins
-  quotas:
-    project:
-      count/virtualclusterinstances.active: '15'
-      requests.nvidia.com/gpu: '10'
-    user:
-      count/virtualclusterinstances: '4'
   allowedClusters:
     - name: loft-cluster
   allowedTemplates:

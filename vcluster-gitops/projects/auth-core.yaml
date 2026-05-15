@@ -21,9 +21,6 @@ spec:
           use-global-project-settings: 'true'
   owner:
     team: loft-admins
-  quotas:
-    project:
-      count/virtualclusterinstances.active: '20'
   allowedClusters:
     - name: '*'
   allowedTemplates:
