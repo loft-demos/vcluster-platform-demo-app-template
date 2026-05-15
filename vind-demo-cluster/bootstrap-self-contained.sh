@@ -1619,8 +1619,14 @@ cat <<EOF
 [INFO] Self-contained bootstrap helper complete.
 
 Recommended next steps:
-1. Argo CD login:
-   - url:      https://${ARGOCD_HOST}
+1. Login credentials:
+   vCluster Platform: https://${VCP_HOST}
+   - username: admin
+   - password: my-password
+   Forgejo: http://${FORGEJO_HOST}
+   - username: ${FORGEJO_USERNAME}
+   - password: ${FORGEJO_PASSWORD}
+   Argo CD: https://${ARGOCD_HOST}
    - username: admin
    - password: ${argocd_password:-<not available yet>}
 2. Open the local URLs:
@@ -1651,10 +1657,17 @@ EOF
 fi
 
 cat <<EOF
-3. Configure 1Password + ESO:
-   - vind-demo-cluster/eso-cluster-store.yaml
-   - vind-demo-cluster/bootstrap-external-secrets.yaml
-   - 1Password vault: ${ONEPASSWORD_VAULT}
+3. Configure 1Password + ESO (optional — required for auto-nodes-aws and GitHub-backed use cases):
+   a. Create a 1Password service account with read access to vault: ${ONEPASSWORD_VAULT}
+      https://developer.1password.com/docs/service-accounts/
+   b. Store the token as a Kubernetes secret:
+        kubectl create namespace eso --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create secret generic one-password-sa-token \\
+          --namespace eso \\
+          --from-literal=token="<your-service-account-token>"
+   c. Apply the ClusterSecretStore:
+        sed 's/{REPLACE_1PASSWORD_VAULT}/${ONEPASSWORD_VAULT}/' \\
+          vind-demo-cluster/eso-cluster-store.yaml | kubectl apply -f -
 4. Confirm Argo CD and vCluster Platform are healthy:
    - kubectl -n argocd get pods
    - kubectl -n vcluster-platform get pods
